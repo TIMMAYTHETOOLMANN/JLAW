@@ -1,0 +1,76 @@
+================================================================================
+ne.
+DOCUMENT LIMIT FIX - QUICK REFERENCE
+================================================================================
+
+ISSUE RESOLVED: Date range no longer overrides document limit
+
+================================================================================
+WHAT CHANGED
+================================================================================
+
+1. DOCUMENT LIMIT = PRIMARY CONSTRAINT
+   - System ALWAYS respects the document limit
+   - Analyzes EXACTLY the number you specify
+   - Date range is now a filter, not an override
+
+2. END DATE = OPTIONAL
+   - Leave end date at today's date = "from start date until now"
+   - Set specific end date = exact date range
+   - UI now shows "To (optional)" to clarify
+
+3. UI IMPROVEMENTS
+   - Document Limit label is BOLD and ORANGE: "PRIMARY - Max filings to analyze"
+   - End date help text: "(YYYY-MM-DD, To defaults to today)"
+   - Clear visual hierarchy
+
+================================================================================
+HOW TO USE
+================================================================================
+
+EXAMPLE 1: First 10 Nike filings from 2019
+  Company: Nike
+  Date Range: Check
+    From: 2019-01-01
+    To: 2025-11-10 (leave at today)
+  Document Limit: Check, enter 10
+  Result: EXACTLY 10 filings (first 10 from 2019)
+
+EXAMPLE 2: Most recent 25 filings (any date)
+  Company: Nike
+  Date Range: Uncheck
+  Document Limit: Check, enter 25
+  Result: EXACTLY 25 most recent filings
+
+EXAMPLE 3: All filings in Q1 2019
+  Company: Nike
+  Date Range: Check
+    From: 2019-01-01
+    To: 2019-03-31
+  Document Limit: Uncheck
+  Result: ALL filings in that quarter
+
+================================================================================
+VALIDATION
+================================================================================
+
+TEST PERFORMED:
+  - Requested 10 filings from Nike 2019
+  - 40 filings were available
+  - System analyzed EXACTLY 10 (as requested)
+
+STATUS: PASS - Fix confirmed working
+
+================================================================================
+LAUNCH UPDATED GUI
+================================================================================
+
+Command: python jarvis_law_gui.py
+
+Look for:
+  - "To (optional)" label on end date
+  - Orange, bold "PRIMARY" label on document limit
+  - System analyzes exact count requested
+
+================================================================================
+
