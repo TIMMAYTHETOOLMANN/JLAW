@@ -1,4 +1,4 @@
-. """
+"""
 Quick test to verify the FraudIndicator serialization fix
 """
 import json
