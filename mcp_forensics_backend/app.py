@@ -20,9 +20,18 @@ try:
     from unified_forensic_system import ForensicInvestigator, ForensicDatabase
     from forensic_output_generator import ForensicOutputGenerator
     FORENSICS_AVAILABLE = True
+    FORENSICS_MODE = "full"
 except ImportError as e:
-    logging.warning(f"Forensic system not available: {e}")
-    FORENSICS_AVAILABLE = False
+    logging.warning(f"Full forensic system not available: {e}")
+    try:
+        from simple_forensics import SimpleForensicInvestigator
+        ForensicInvestigator = SimpleForensicInvestigator
+        FORENSICS_AVAILABLE = True
+        FORENSICS_MODE = "simple"
+        logging.info("Using simplified forensic system for testing")
+    except ImportError:
+        FORENSICS_AVAILABLE = False
+        FORENSICS_MODE = "none"
 
 # Configure logging
 logging.basicConfig(
@@ -53,10 +62,12 @@ output_generator = None
 if FORENSICS_AVAILABLE:
     try:
         investigator = ForensicInvestigator(db_path="forensic_evidence.db")
-        output_generator = ForensicOutputGenerator()
-        logger.info("Forensic system initialized successfully")
+        if FORENSICS_MODE == "full":
+            output_generator = ForensicOutputGenerator()
+        logger.info(f"Forensic system initialized successfully (mode: {FORENSICS_MODE})")
     except Exception as e:
         logger.error(f"Failed to initialize forensic system: {e}")
+        investigator = None
 
 # Global state for investigations
 current_investigation = None
@@ -104,6 +115,7 @@ async def health_check():
         "service": "mcp-forensics-backend",
         "timestamp": datetime.utcnow().isoformat(),
         "forensics_available": FORENSICS_AVAILABLE,
+        "forensics_mode": FORENSICS_MODE,
         "investigator_ready": investigator is not None
     }
 
