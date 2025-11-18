@@ -78,7 +78,6 @@ def search_company():
             "NVDA": "0001045810",
             "NFLX": "0001065280",
             "NIKE": "0000320187",
-            "NKE": "0000320187",  # Nike ticker symbol
             "DIS": "0001001039"
         }
         
@@ -92,7 +91,7 @@ def search_company():
         if not cik:
             return jsonify({
                 "error": f"Company not found: {query}",
-                "suggestion": "Try: NKE, TSLA, AAPL, MSFT, GOOGL, AMZN, META, or enter CIK directly"
+                "suggestion": "Try: TSLA, AAPL, MSFT, GOOGL, AMZN, META, or enter CIK directly"
             }), 404
         
         return jsonify({
@@ -106,13 +105,8 @@ def search_company():
         return jsonify({"error": str(e)}), 500
 
 @app.route('/api/start_investigation', methods=['POST'])
-def start_investigation():
+async def start_investigation():
     """Start forensic investigation with comprehensive output generation"""
-    import asyncio
-    return asyncio.run(_start_investigation_async())
-
-async def _start_investigation_async():
-    """Async implementation of investigation"""
     global current_investigation, investigation_running, current_output_data, current_session_id
     
     if investigation_running:
@@ -122,7 +116,6 @@ async def _start_investigation_async():
     cik = data.get('cik')
     years_back = data.get('years_back', 3)
     forms = data.get('forms', ["10-K", "10-Q", "8-K"])
-    analysis_limit = data.get('analysis_limit', 20)  # Default to 20 if not specified
     
     if not cik:
         return jsonify({"error": "CIK required"}), 400
@@ -131,14 +124,12 @@ async def _start_investigation_async():
         investigation_running = True
         
         logger.info(f"Starting comprehensive forensic investigation for CIK {cik}")
-        logger.info(f"Analysis limit: {analysis_limit} filings")
         
         # Step 1: Run initial investigation to gather data
         investigation_data = await investigator.investigate_company(
             cik=cik,
             years_back=years_back,
-            forms=forms,
-            max_filings=analysis_limit
+            forms=forms
         )
         
         # Step 2: Generate comprehensive output using ForensicOutputGenerator
