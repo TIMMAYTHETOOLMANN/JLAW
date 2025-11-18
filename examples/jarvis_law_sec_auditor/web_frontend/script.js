@@ -221,11 +221,6 @@ async function startInvestigation() {
         
         await simulatePassProgress(pass5Bar, 15);
         
-        // Get analysis limit from UI
-        const docLimit = document.getElementById('doc-limit');
-        const useDocLimit = document.getElementById('use-doc-limit');
-        const analysisLimit = useDocLimit && useDocLimit.checked ? parseInt(docLimit.value) : null;
-        
         // Make the actual API call
         const response = await fetch(`${API_BASE}/start_investigation`, {
             method: 'POST',
@@ -234,8 +229,7 @@ async function startInvestigation() {
                 cik: companyCik,
                 years_back: yearsBack,
                 forms: forms,
-                company_name: companyName,
-                analysis_limit: analysisLimit
+                company_name: companyName
             })
         });
         

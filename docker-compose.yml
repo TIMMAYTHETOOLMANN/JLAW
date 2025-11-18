@@ -1,63 +1,66 @@
-version: '3.9'
+. I. version: '3.8'
 
 services:
-  # Backend API - MCP Forensics
-  backend:
+  jlaw-forensics:
     build:
-      context: ./mcp_forensics_backend
+      context: .
       dockerfile: Dockerfile
-    container_name: mcp_forensics_backend
-    ports:
-      - "8000:8000"
+    image: jlaw-forensics:latest
+    container_name: jlaw-forensics
     environment:
-      - PYTHONUNBUFFERED=1
-      - LOG_LEVEL=INFO
+      - STORAGE_PROVIDER=${STORAGE_PROVIDER:-LOCAL}
+      - FORENSIC_S3_BUCKET=${FORENSIC_S3_BUCKET:-jlaw-forensic-evidence}
+      - GOVINFO_API_KEY=${GOVINFO_API_KEY:-DEMO_KEY}
+      - SEC_USER_AGENT=${SEC_USER_AGENT:-JLAW forensics@jlaw.com}
+      - AWS_REGION=${AWS_REGION:-us-east-1}
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+      - AZURE_STORAGE_CONNECTION=${AZURE_STORAGE_CONNECTION}
+      - RETENTION_DAYS=${RETENTION_DAYS:-2555}
+      - AUDIT_SIGNING_KEY=${AUDIT_SIGNING_KEY:-default_signing_key}
     volumes:
-      - ./mcp_forensics_backend:/app
-      - forensic_data:/app/forensic_exports
+      - forensic-data:/var/forensic/worm
+      - forensic-logs:/app/logs
+      - forensic-models:/app/models
+    networks:
+      - forensic-network
     restart: unless-stopped
+    command: ["verify"]
     healthcheck:
-      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      test: ["CMD", "python", "-c", "from src.forensics import ForensicOrchestrator; print('OK')"]
       interval: 30s
       timeout: 10s
       retries: 3
-      start_period: 40s
+      start_period: 5s
 
-  # Frontend - Static files served via nginx
-  frontend:
-    image: nginx:alpine
-    container_name: mcp_forensics_frontend
-    ports:
-      - "3000:80"
+  jlaw-monitor:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: jlaw-forensics:latest
+    container_name: jlaw-monitor
+    environment:
+      - STORAGE_PROVIDER=${STORAGE_PROVIDER:-LOCAL}
+      - GOVINFO_API_KEY=${GOVINFO_API_KEY:-DEMO_KEY}
     volumes:
-      - ./mcp_forensics_frontend:/usr/share/nginx/html:ro
-      - ./mcp_forensics_frontend/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+      - forensic-data:/var/forensic/worm
+      - forensic-logs:/app/logs
+    networks:
+      - forensic-network
+    restart: unless-stopped
+    command: ["monitor"]
     depends_on:
-      - backend
-    restart: unless-stopped
-
-  # Redis for caching and state management (optional but recommended)
-  redis:
-    image: redis:7-alpine
-    container_name: mcp_forensics_redis
-    ports:
-      - "6379:6379"
-    volumes:
-      - redis_data:/data
-    command: redis-server --appendonly yes
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 10s
-      timeout: 3s
-      retries: 5
+      - jlaw-forensics
 
 volumes:
-  forensic_data:
+  forensic-data:
     driver: local
-  redis_data:
+  forensic-logs:
+    driver: local
+  forensic-models:
     driver: local
 
 networks:
-  default:
-    name: mcp_forensics_network
+  forensic-network:
+    driver: bridge
+
