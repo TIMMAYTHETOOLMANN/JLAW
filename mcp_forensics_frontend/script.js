@@ -242,7 +242,7 @@ async function startInvestigation() {
         const data = await response.json();
         
         if (response.ok) {
-            currentSessionId = data.session_id;
+            currentInvestigation = data.investigation_id;
             
             setProgress(100, 'Investigation complete - Generating comprehensive outputs');
             log('✓ Final synthesis complete', 'success');
@@ -253,29 +253,16 @@ async function startInvestigation() {
             log('INVESTIGATION COMPLETE', 'critical');
             log('='.repeat(60), 'info');
             log(`Investigation ID: ${data.investigation_id}`, 'info');
-            log(`Session ID: ${data.session_id}`, 'info');
             log(`Filings Analyzed: ${data.filings_analyzed}`, 'info');
-            log(`Duration: ${data.duration_seconds.toFixed(2)}s`, 'info');
+            log(`Duration: ${data.duration.toFixed(2)}s`, 'info');
             log('', 'info');
             log(`RISK LEVEL: ${data.risk_level}`, data.risk_level === 'CRITICAL' ? 'critical' : data.risk_level === 'HIGH' ? 'error' : 'warning');
             log(`Risk Score: ${(data.risk_score * 100).toFixed(1)}%`, 'info');
             log(`Fraud Indicators: ${data.fraud_indicators_count}`, 'warning');
-            log(`Criminal Exposure: ${data.criminal_exposure_count} statutes`, 'error');
-            log(`Civil Exposure: ${data.civil_exposure_count} statutes`, 'warning');
             log('', 'info');
-            log('EXECUTIVE SUMMARY:', 'info');
-            log(data.executive_summary, 'info');
-            log('', 'info');
-            log('Generated Output Files:', 'success');
-            log(`- JSON: forensic_analysis_${data.session_id}.json`, 'info');
-            log(`- CSV: forensic_findings_${data.session_id}.csv`, 'info');
-            log(`- HTML Report: forensic_report_${data.session_id}.html`, 'info');
-            log(`- Markdown Summary: forensic_summary_${data.session_id}.md`, 'info');
-            log(`- Timeline: investigation_timeline_${data.session_id}.html`, 'info');
-            log('='.repeat(60), 'info');
             
-            // Display results in UI
-            displayInvestigationResults(data);
+            // Fetch full results and output files
+            await fetchAndDisplayResults();
             
         } else {
             log(`Investigation failed: ${data.error}`, 'error');
@@ -315,126 +302,129 @@ async function simulatePassProgress(passBar, targetWidth) {
     }
 }
 
-function displayInvestigationResults(data) {
+async function fetchAndDisplayResults() {
+    try {
+        // Fetch full investigation results
+        const resultsResponse = await fetch(`${API_BASE}/investigation_results`);
+        const resultsData = await resultsResponse.json();
+        
+        // Fetch available output files
+        const filesResponse = await fetch(`${API_BASE}/output_files`);
+        const filesData = await filesResponse.json();
+        
+        log('Available output files:', 'success');
+        filesData.files.forEach(file => {
+            log(`- ${file.name} (${file.description})`, 'info');
+        });
+        log('='.repeat(60), 'info');
+        
+        // Display results in UI
+        displayInvestigationResults(resultsData, filesData);
+        
+    } catch (error) {
+        log(`Error fetching results: ${error.message}`, 'error');
+    }
+}
+
+function displayInvestigationResults(resultsData, filesData) {
     // Show results summary
     resultsSummary.classList.remove('hidden');
-    summaryRiskScore.textContent = `${(data.risk_score * 100).toFixed(1)}%`;
-    summaryFilings.textContent = data.filings_analyzed;
-    summaryIndicators.textContent = data.fraud_indicators_count;
-    summaryDuration.textContent = `${data.duration_seconds.toFixed(1)}s`;
+    summaryRiskScore.textContent = `${(resultsData.risk_score * 100).toFixed(1)}%`;
+    summaryFilings.textContent = resultsData.filings_analyzed;
+    summaryIndicators.textContent = resultsData.fraud_indicators ? resultsData.fraud_indicators.length : 0;
+    summaryDuration.textContent = `${resultsData.duration ? resultsData.duration.toFixed(1) : 0}s`;
     
     // Show output files section
     outputFilesSection.classList.remove('hidden');
-    displayOutputFiles(data.output_files, data.session_id);
+    displayOutputFiles(filesData);
     
     // Show detailed results
     detailedResults.classList.remove('hidden');
-    displayDetailedFindings(data);
+    displayDetailedFindings(resultsData);
 }
 
-function displayOutputFiles(outputFiles, sessionId) {
+function displayOutputFiles(filesData) {
     outputFilesGrid.innerHTML = '';
     
-    const fileTypes = [
-        { key: 'json', icon: 'database', color: 'blue' },
-        { key: 'csv', icon: 'file-text', color: 'green' },
-        { key: 'html_report', icon: 'globe', color: 'purple' },
-        { key: 'markdown_summary', icon: 'file', color: 'gray' },
-        { key: 'timeline', icon: 'clock', color: 'orange' }
-    ];
+    if (!filesData || !filesData.files) {
+        log('No output files available', 'warning');
+        return;
+    }
     
-    fileTypes.forEach(({ key, icon, color }) => {
-        const fileInfo = outputFiles.files[key];
-        if (fileInfo && fileInfo.exists) {
-            const fileCard = document.createElement('div');
-            fileCard.className = `p-4 bg-gray-800 rounded-lg border border-gray-700 hover:border-${color}-500 transition-all`;
-            
-            fileCard.innerHTML = `
-                <div class="flex items-center justify-between mb-2">
-                    <div class="flex items-center">
-                        <i data-feather="${icon}" class="mr-2 text-${color}-400"></i>
-                        <span class="font-semibold text-${color}-400">${key.toUpperCase()}</span>
-                    </div>
-                    <span class="text-xs text-gray-400">${(fileInfo.size / 1024).toFixed(1)} KB</span>
-                </div>
-                <p class="text-sm text-gray-300 mb-3">${fileInfo.description}</p>
-                <div class="flex gap-2">
-                    <button onclick="downloadFile('${sessionId}', '${key}')" 
-                            class="px-3 py-1 bg-${color}-600 hover:bg-${color}-700 rounded text-sm transition-all">
-                        <i data-feather="download" class="inline mr-1"></i> Download
-                    </button>
-                    <button onclick="previewFile('${sessionId}', '${key}')" 
-                            class="px-3 py-1 bg-gray-600 hover:bg-gray-700 rounded text-sm transition-all">
-                        <i data-feather="eye" class="inline mr-1"></i> Preview
-                    </button>
-                </div>
-            `;
-            
-            outputFilesGrid.appendChild(fileCard);
-        }
+    filesData.files.forEach(file => {
+        const fileCard = document.createElement('div');
+        fileCard.className = 'p-4 bg-gray-800 rounded-lg border border-gray-700 hover:border-cyan-500 transition-all cursor-pointer';
+        
+        fileCard.innerHTML = `
+            <div class="flex items-center mb-2">
+                <i data-feather="${file.icon}" class="mr-2 text-cyan-400"></i>
+                <span class="font-semibold text-cyan-400">${file.type.toUpperCase()}</span>
+            </div>
+            <p class="text-xs text-gray-400 mb-1">${file.name}</p>
+            <p class="text-sm text-gray-300 mb-3">${file.description}</p>
+            <div class="flex gap-2">
+                <button onclick="downloadFile('${file.type}')" 
+                        class="px-3 py-1 bg-cyan-600 hover:bg-cyan-700 rounded text-sm transition-all flex items-center">
+                    <i data-feather="download" class="inline mr-1 w-4 h-4"></i> Download
+                </button>
+            </div>
+        `;
+        
+        outputFilesGrid.appendChild(fileCard);
+    });
+    
+    // Reinitialize feather icons
+    if (typeof feather !== 'undefined') {
+        feather.replace();
+    }
+}
     });
     
     // Update batch download button
-    downloadBatchBtn.onclick = () => downloadBatchFiles(sessionId);
+    downloadBatchBtn.onclick = () => downloadBatchFiles();
 }
 
 function displayDetailedFindings(data) {
     findingsList.innerHTML = '';
     
-    // Get comprehensive results
-    fetch(`${API_BASE}/comprehensive_results/${data.session_id}`)
-        .then(response => response.json())
-        .then(comprehensive => {
-            // Display top findings
-            const findings = comprehensive.detailed_findings || [];
-            const topFindings = findings.slice(0, 5);
-            
-            topFindings.forEach(finding => {
-                const findingDiv = document.createElement('div');
-                findingDiv.className = 'p-3 bg-gray-800 rounded-lg border-l-4 border-yellow-500';
-                
-                findingDiv.innerHTML = `
-                    <div class="flex justify-between items-start mb-2">
-                        <h4 class="font-semibold text-yellow-400">${finding.finding_type}</h4>
-                        <span class="text-sm px-2 py-1 rounded ${
-                            finding.severity >= 0.8 ? 'bg-red-600' :
-                            finding.severity >= 0.6 ? 'bg-orange-600' : 'bg-yellow-600'
-                        }">${(finding.confidence * 100).toFixed(0)}% confidence</span>
-                    </div>
-                    <p class="text-gray-300 text-sm mb-2">${finding.description}</p>
-                    <div class="text-xs text-gray-400">
-                        <span>Lines: ${finding.location_traceback?.line_numbers?.join(', ') || 'N/A'}</span>
-                    </div>
-                `;
-                
-                findingsList.appendChild(findingDiv);
-            });
-        })
-        .catch(error => {
-            log(`Failed to load comprehensive results: ${error.message}`, 'error');
-        });
+    if (!data.fraud_indicators || data.fraud_indicators.length === 0) {
+        findingsList.innerHTML = '<p class="text-gray-400 text-sm">No fraud indicators detected.</p>';
+        return;
+    }
+    
+    // Display fraud indicators
+    data.fraud_indicators.forEach(indicator => {
+        const findingDiv = document.createElement('div');
+        findingDiv.className = 'p-3 bg-gray-800 rounded-lg border-l-4 border-yellow-500';
+        
+        const severityClass = indicator.severity >= 0.8 ? 'bg-red-600' :
+                             indicator.severity >= 0.6 ? 'bg-orange-600' : 'bg-yellow-600';
+        
+        findingDiv.innerHTML = `
+            <div class="flex justify-between items-start mb-2">
+                <h4 class="font-semibold text-yellow-400">${indicator.type}</h4>
+                <span class="text-sm px-2 py-1 rounded ${severityClass}">${(indicator.severity * 100).toFixed(0)}% severity</span>
+            </div>
+            <p class="text-gray-300 text-sm mb-2">${indicator.description}</p>
+            <div class="text-xs text-gray-400">
+                <span>Count: ${indicator.count}</span>
+            </div>
+        `;
+        
+        findingsList.appendChild(findingDiv);
+    });
 }
 
-function downloadFile(sessionId, fileType) {
-    const downloadUrl = `${API_BASE}/download/${sessionId}/${fileType}`;
+function downloadFile(fileType) {
+    const downloadUrl = `${API_BASE}/download/${fileType}`;
     window.open(downloadUrl, '_blank');
     log(`Downloading ${fileType.toUpperCase()} file...`, 'info');
 }
 
-function downloadBatchFiles(sessionId) {
-    const downloadUrl = `${API_BASE}/download/${sessionId}/batch`;
+function downloadBatchFiles() {
+    const downloadUrl = `${API_BASE}/download_all`;
     window.open(downloadUrl, '_blank');
     log('Downloading complete analysis package (ZIP)...', 'info');
-}
-
-function previewFile(sessionId, fileType) {
-    if (fileType === 'html_report' || fileType === 'timeline') {
-        const previewUrl = `${API_BASE}/download/${sessionId}/${fileType}`;
-        window.open(previewUrl, '_blank');
-    } else {
-        // For other file types, download instead
-        downloadFile(sessionId, fileType);
-    }
 }
 
 // Health check on load
