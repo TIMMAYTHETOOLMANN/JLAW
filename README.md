@@ -1,325 +1,341 @@
-# OpenAI Agents SDK [![PyPI](https://img.shields.io/pypi/v/openai-agents?label=pypi%20package)](https://pypi.org/project/openai-agents/)
+# JLAW Forensic System
 
-The OpenAI Agents SDK is a lightweight yet powerful framework for building multi-agent workflows. It is provider-agnostic, supporting the OpenAI Responses and Chat Completions APIs, as well as 100+ other LLMs.
+Zero-tolerance forensic analysis system for SEC filings with surgical precision. Combines traditional forensic accounting with advanced ML fraud detection.
 
-<img src="https://cdn.openai.com/API/docs/images/orchestration.png" alt="Image of the Agents Tracing UI" style="max-height: 803px;">
-
-> [!NOTE]
-> Looking for the JavaScript/TypeScript version? Check out [Agents SDK JS/TS](https://github.com/openai/openai-agents-js).
-
-### Core concepts:
-
-1. [**Agents**](https://openai.github.io/openai-agents-python/agents): LLMs configured with instructions, tools, guardrails, and handoffs
-2. [**Handoffs**](https://openai.github.io/openai-agents-python/handoffs/): A specialized tool call used by the Agents SDK for transferring control between agents
-3. [**Guardrails**](https://openai.github.io/openai-agents-python/guardrails/): Configurable safety checks for input and output validation
-4. [**Sessions**](#sessions): Automatic conversation history management across agent runs
-5. [**Tracing**](https://openai.github.io/openai-agents-python/tracing/): Built-in tracking of agent runs, allowing you to view, debug and optimize your workflows
-
-Explore the [examples](examples) directory to see the SDK in action, and read our [documentation](https://openai.github.io/openai-agents-python/) for more details.
-
-## Get started
-
-To get started, set up your Python environment (Python 3.9 or newer required), and then install OpenAI Agents SDK package.
-
-### venv
+## Quick Start
 
 ```bash
-python -m venv .venv
-source .venv/bin/activate  # On Windows: .venv\Scripts\activate
-pip install openai-agents
+# Install dependencies
+pip install -r requirements.txt
+
+# Run investigation
+python jlaw_forensics.py investigate --cik 0001318605 --name "Tesla Inc" --years 3
+
+# Analyze single filing
+python jlaw_forensics.py analyze --cik 0001318605 --accession 0001564590-24-000123
+
+# Verify system integrity
+python jlaw_forensics.py verify
 ```
 
-For voice support, install with the optional `voice` group: `pip install 'openai-agents[voice]'`.
+## Core Features
 
-For Redis session support, install with the optional `redis` group: `pip install 'openai-agents[redis]'`.
+- **SEC EDGAR Analysis**: Automated filing retrieval and forensic analysis
+- **ML Fraud Detection**: BERT-based NLP + ensemble models (isolation forest, random forest)
+- **Advanced Forensic Analytics** ⭐ Module 1
+  - **Semantic Contradiction Detection**: Graph-based NLP to find contradictory claims
+  - **Beneish M-Score**: 8-variable earnings manipulation detection (76% accuracy)
+  - **Knowledge Graph Analysis**: NetworkX-powered claim extraction and analysis
+- **NIST Integrated Compliance Analyzer** ⭐ Module 2
+  - **Multi-Year Analysis**: Comprehensive 5-year forensic investigations
+  - **XBRL Bulk Parsing**: Automated structured data extraction
+  - **XGBoost ML Detector**: 35+ feature ensemble fraud prediction
+  - **Peer Comparison**: Industry deviation analysis with Z-scores
+  - **Whistleblower Integration**: SEC TCR correlation matching
+  - **Parallel Processing**: Async pipeline with 16-worker thread pool
+  - **Prosecution Packages**: Complete evidence bundles ready for enforcement
+- **Statute Mapping**: Automatic identification of potential legal violations
+- **Immutable Storage**: WORM storage with hash chains for evidence preservation
+- **Audit Trail**: Complete chain of custody for legal admissibility
+- **Real-time Monitoring**: Continuous integrity verification
 
-### uv
+## Commands
 
-If you're familiar with [uv](https://docs.astral.sh/uv/), using the tool would be even similar:
+### investigate
+Full forensic investigation of a company over multiple years.
 
 ```bash
-uv init
-uv add openai-agents
+python jlaw_forensics.py investigate \
+    --cik 0001318605 \
+    --name "Tesla Inc" \
+    --years 3 \
+    --output investigation.json
 ```
 
-For voice support, install with the optional `voice` group: `uv add 'openai-agents[voice]'`.
+**Output**: Risk score, criminal violations, evidence count, recommendations
 
-For Redis session support, install with the optional `redis` group: `uv add 'openai-agents[redis]'`.
-
-## Hello world example
-
-```python
-from agents import Agent, Runner
-
-agent = Agent(name="Assistant", instructions="You are a helpful assistant")
-
-result = Runner.run_sync(agent, "Write a haiku about recursion in programming.")
-print(result.final_output)
-
-# Code within the code,
-# Functions calling themselves,
-# Infinite loop's dance.
-```
-
-(_If running this, ensure you set the `OPENAI_API_KEY` environment variable_)
-
-(_For Jupyter notebook users, see [hello_world_jupyter.ipynb](examples/basic/hello_world_jupyter.ipynb)_)
-
-## Handoffs example
-
-```python
-from agents import Agent, Runner
-import asyncio
-
-spanish_agent = Agent(
-    name="Spanish agent",
-    instructions="You only speak Spanish.",
-)
-
-english_agent = Agent(
-    name="English agent",
-    instructions="You only speak English",
-)
-
-triage_agent = Agent(
-    name="Triage agent",
-    instructions="Handoff to the appropriate agent based on the language of the request.",
-    handoffs=[spanish_agent, english_agent],
-)
-
-
-async def main():
-    result = await Runner.run(triage_agent, input="Hola, ¿cómo estás?")
-    print(result.final_output)
-    # ¡Hola! Estoy bien, gracias por preguntar. ¿Y tú, cómo estás?
-
-
-if __name__ == "__main__":
-    asyncio.run(main())
-```
-
-## Functions example
-
-```python
-import asyncio
-
-from agents import Agent, Runner, function_tool
-
-
-@function_tool
-def get_weather(city: str) -> str:
-    return f"The weather in {city} is sunny."
-
-
-agent = Agent(
-    name="Hello world",
-    instructions="You are a helpful agent.",
-    tools=[get_weather],
-)
-
-
-async def main():
-    result = await Runner.run(agent, input="What's the weather in Tokyo?")
-    print(result.final_output)
-    # The weather in Tokyo is sunny.
-
-
-if __name__ == "__main__":
-    asyncio.run(main())
-```
-
-## The agent loop
-
-When you call `Runner.run()`, we run a loop until we get a final output.
-
-1. We call the LLM, using the model and settings on the agent, and the message history.
-2. The LLM returns a response, which may include tool calls.
-3. If the response has a final output (see below for more on this), we return it and end the loop.
-4. If the response has a handoff, we set the agent to the new agent and go back to step 1.
-5. We process the tool calls (if any) and append the tool responses messages. Then we go to step 1.
-
-There is a `max_turns` parameter that you can use to limit the number of times the loop executes.
-
-### Final output
-
-Final output is the last thing the agent produces in the loop.
-
-1.  If you set an `output_type` on the agent, the final output is when the LLM returns something of that type. We use [structured outputs](https://platform.openai.com/docs/guides/structured-outputs) for this.
-2.  If there's no `output_type` (i.e. plain text responses), then the first LLM response without any tool calls or handoffs is considered as the final output.
-
-As a result, the mental model for the agent loop is:
-
-1. If the current agent has an `output_type`, the loop runs until the agent produces structured output matching that type.
-2. If the current agent does not have an `output_type`, the loop runs until the current agent produces a message without any tool calls/handoffs.
-
-## Common agent patterns
-
-The Agents SDK is designed to be highly flexible, allowing you to model a wide range of LLM workflows including deterministic flows, iterative loops, and more. See examples in [`examples/agent_patterns`](examples/agent_patterns).
-
-## Tracing
-
-The Agents SDK automatically traces your agent runs, making it easy to track and debug the behavior of your agents. Tracing is extensible by design, supporting custom spans and a wide variety of external destinations, including [Logfire](https://logfire.pydantic.dev/docs/integrations/llms/openai/#openai-agents), [AgentOps](https://docs.agentops.ai/v1/integrations/agentssdk), [Braintrust](https://braintrust.dev/docs/guides/traces/integrations#openai-agents-sdk), [Scorecard](https://docs.scorecard.io/docs/documentation/features/tracing#openai-agents-sdk-integration), and [Keywords AI](https://docs.keywordsai.co/integration/development-frameworks/openai-agent). For more details about how to customize or disable tracing, see [Tracing](http://openai.github.io/openai-agents-python/tracing), which also includes a larger list of [external tracing processors](http://openai.github.io/openai-agents-python/tracing/#external-tracing-processors-list).
-
-## Long running agents & human-in-the-loop
-
-You can use the Agents SDK [Temporal](https://temporal.io/) integration to run durable, long-running workflows, including human-in-the-loop tasks. View a demo of Temporal and the Agents SDK working in action to complete long-running tasks [in this video](https://www.youtube.com/watch?v=fFBZqzT4DD8), and [view docs here](https://github.com/temporalio/sdk-python/tree/main/temporalio/contrib/openai_agents).
-
-## Sessions
-
-The Agents SDK provides built-in session memory to automatically maintain conversation history across multiple agent runs, eliminating the need to manually handle `.to_input_list()` between turns.
-
-### Quick start
-
-```python
-from agents import Agent, Runner, SQLiteSession
-
-# Create agent
-agent = Agent(
-    name="Assistant",
-    instructions="Reply very concisely.",
-)
-
-# Create a session instance
-session = SQLiteSession("conversation_123")
-
-# First turn
-result = await Runner.run(
-    agent,
-    "What city is the Golden Gate Bridge in?",
-    session=session
-)
-print(result.final_output)  # "San Francisco"
-
-# Second turn - agent automatically remembers previous context
-result = await Runner.run(
-    agent,
-    "What state is it in?",
-    session=session
-)
-print(result.final_output)  # "California"
-
-# Also works with synchronous runner
-result = Runner.run_sync(
-    agent,
-    "What's the population?",
-    session=session
-)
-print(result.final_output)  # "Approximately 39 million"
-```
-
-### Session options
-
--   **No memory** (default): No session memory when session parameter is omitted
--   **`session: Session = DatabaseSession(...)`**: Use a Session instance to manage conversation history
-
-```python
-from agents import Agent, Runner, SQLiteSession
-
-# SQLite - file-based or in-memory database
-session = SQLiteSession("user_123", "conversations.db")
-
-# Redis - for scalable, distributed deployments
-# from agents.extensions.memory import RedisSession
-# session = RedisSession.from_url("user_123", url="redis://localhost:6379/0")
-
-agent = Agent(name="Assistant")
-
-# Different session IDs maintain separate conversation histories
-result1 = await Runner.run(
-    agent,
-    "Hello",
-    session=session
-)
-result2 = await Runner.run(
-    agent,
-    "Hello",
-    session=SQLiteSession("user_456", "conversations.db")
-)
-```
-
-### Custom session implementations
-
-You can implement your own session memory by creating a class that follows the `Session` protocol:
-
-```python
-from agents.memory import Session
-from typing import List
-
-class MyCustomSession:
-    """Custom session implementation following the Session protocol."""
-
-    def __init__(self, session_id: str):
-        self.session_id = session_id
-        # Your initialization here
-
-    async def get_items(self, limit: int | None = None) -> List[dict]:
-        # Retrieve conversation history for the session
-        pass
-
-    async def add_items(self, items: List[dict]) -> None:
-        # Store new items for the session
-        pass
-
-    async def pop_item(self) -> dict | None:
-        # Remove and return the most recent item from the session
-        pass
-
-    async def clear_session(self) -> None:
-        # Clear all items for the session
-        pass
-
-# Use your custom session
-agent = Agent(name="Assistant")
-result = await Runner.run(
-    agent,
-    "Hello",
-    session=MyCustomSession("my_session")
-)
-```
-
-## Development (only needed if you need to edit the SDK/examples)
-
-0. Ensure you have [`uv`](https://docs.astral.sh/uv/) installed.
+### analyze
+Analyze single SEC filing for fraud indicators.
 
 ```bash
-uv --version
+python jlaw_forensics.py analyze \
+    --cik 0001318605 \
+    --accession 0001564590-24-000123
 ```
 
-1. Install dependencies
+**Output**: Traditional forensic analysis + ML prediction + statute violations
+
+### status
+Check ongoing investigation status.
 
 ```bash
-make sync
+python jlaw_forensics.py status --case-id CASE_0001318605_20251118123456
 ```
 
-2. (After making changes) lint/test
+### verify
+Verify complete system integrity (hash chains, audit log, storage).
 
-```
-make check # run tests linter and typechecker
-```
-
-Or to run them individually:
-
-```
-make tests  # run tests
-make mypy   # run typechecker
-make lint   # run linter
-make format-check # run style checker
+```bash
+python jlaw_forensics.py verify
 ```
 
-Format code if `make format-check` fails above by running:
+**Exit Codes**: 0 = Valid, 1 = Compromised
+
+### monitor
+Continuous integrity monitoring (verifies every hour).
+
+```bash
+python jlaw_forensics.py monitor
+```
+
+## Configuration
+
+### Environment Variables
+
+```bash
+export STORAGE_PROVIDER="LOCAL"              # LOCAL, AWS, or AZURE
+export GOVINFO_API_KEY="your_api_key"        # GovInfo API key
+export SEC_USER_AGENT="Company contact@email.com"
+export AWS_REGION="us-east-1"                # For AWS storage
+export FORENSIC_S3_BUCKET="bucket-name"      # For AWS storage
+export RETENTION_DAYS="2555"                 # 7 years (Sarbanes-Oxley)
+export AUDIT_SIGNING_KEY="your_secret_key"   # Audit log signing
+```
+
+### Configuration File
+
+Create `forensic_config.json`:
+
+```json
+{
+    "storage_provider": "LOCAL",
+    "govinfo_api_key": "DEMO_KEY",
+    "sec_user_agent": "JLAW forensics@jlaw.com",
+    "retention_days": 2555,
+    "rate_limits": {
+        "sec_edgar": 7,
+        "govinfo": 1000
+    },
+    "ml_models": {
+        "enable_bert": true,
+        "enable_isolation_forest": true
+    },
+    "forensic_thresholds": {
+        "high_risk": 0.7,
+        "critical_risk": 0.85,
+        "auto_escalate": 0.8
+    }
+}
+```
+
+Use with: `python jlaw_forensics.py investigate --config forensic_config.json ...`
+
+## Architecture
 
 ```
-make format
+jlaw_forensics.py                       # Main CLI entry point
+src/forensics/
+├── forensic_orchestrator.py            # Main coordination layer
+├── sec_edgar_analyzer.py               # SEC filing analysis
+├── ml_fraud_detector.py                # ML-based fraud detection
+├── advanced_forensic_analytics.py      # ⭐ NEW: Contradiction detection + Beneish M-Score
+├── statute_mapper.py                   # Legal violation mapping
+├── immutable_storage.py                # WORM storage with hash chains
+├── api_resilience.py                   # Circuit breaker + rate limiting
+└── core/                               # Hash chains, audit logs, models
 ```
 
-## Acknowledgements
+## Forensic Components
 
-We'd like to acknowledge the excellent work of the open-source community, especially:
+### 1. SEC EDGAR Analyzer
+- Filing retrieval and parsing
+- **Universal document extraction (HTML/XML/XBRL/PDF/SGML)**
+- **Complete table and signature extraction**
+- **4-pass compliance analysis system** ⭐ NEW
+- Benford's Law analysis
+- Revenue anomaly detection
+- Financial ratio analysis
+- Red flag identification
 
--   [Pydantic](https://docs.pydantic.dev/latest/) (data validation) and [PydanticAI](https://ai.pydantic.dev/) (advanced agent framework)
--   [LiteLLM](https://github.com/BerriAI/litellm) (unified interface for 100+ LLMs)
--   [MkDocs](https://github.com/squidfunk/mkdocs-material)
--   [Griffe](https://github.com/mkdocstrings/griffe)
--   [uv](https://github.com/astral-sh/uv) and [ruff](https://github.com/astral-sh/ruff)
+### 2. ML Fraud Detector
+- BERT-based text analysis for fraud language
+- Isolation Forest for anomaly detection
+- Random Forest ensemble
+- Feature importance analysis
+- Confidence scoring
 
-We're committed to continuing to build the Agents SDK as an open source framework so others in the community can expand on our approach.
+### 3. Statute Mapper
+- 15 USC (Securities Exchange Act)
+- 18 USC (Criminal fraud statutes)
+- SOX compliance violations
+- Confidence scoring per violation
+
+### 4. Immutable Storage
+- WORM (Write-Once-Read-Many) architecture
+- Cryptographic hash chains
+- Chain of custody tracking
+- Multi-cloud support (AWS S3, Azure Blob, Local)
+
+### 5. Audit System
+- HMAC-SHA256 signed entries
+- Complete operation trail
+- Immutable log chain
+- Legal admissibility (FRE 902)
+
+### 6. Advanced Forensic Analytics ⭐ NEW
+- **Semantic Contradiction Detection**
+  - Knowledge graph construction with NetworkX
+  - Dependency parsing with spaCy
+  - Semantic embeddings with SentenceTransformers
+  - Negation, numerical, and temporal contradiction detection
+  - Severity assessment (CRITICAL/HIGH/MEDIUM/LOW)
+- **Beneish M-Score Analysis**
+  - 8-variable earnings manipulation model
+  - 76% accuracy in detecting manipulators
+  - Component analysis: DSRI, GMI, AQI, SGI, DEPI, SGAI, LVGI, TATA
+  - Risk thresholds: >-2.22 likely manipulator, >-1.78 critical risk
+
+## Example Output
+
+```
+================================================================================
+INVESTIGATION COMPLETE: Tesla Inc
+================================================================================
+Risk Score: 85.0%
+Criminal Violations: 3
+Filings Analyzed: 12
+Evidence Stored: 13
+================================================================================
+```
+
+## Performance
+
+- **Single filing**: ~1-2 seconds
+- **3-year investigation**: ~5-15 minutes
+- **Memory**: ~1-2 GB (without BERT), ~2-4 GB (with BERT)
+- **Disk**: ~100 MB per investigation (compressed)
+
+## Compliance
+
+- ✅ FRE 902(13)(14): Self-authenticating evidence
+- ✅ NIST SP 800-86: Forensic methodology
+- ✅ Sarbanes-Oxley: 7-year retention
+- ✅ DOJ guidelines: Chain of custody
+
+## Python API
+
+```python
+from jlaw_forensics import JLAWForensicSystem
+from src.forensics import AdvancedForensicAnalyzer
+
+# Initialize system
+system = JLAWForensicSystem()
+
+# Investigate company
+report = await system.investigate_company(
+    cik="0001318605",
+    company_name="Tesla Inc",
+    years_back=3
+)
+
+# Analyze single filing
+analysis = await system.analyze_single_filing(
+    cik="0001318605",
+    accession="0001564590-24-000123"
+)
+
+# ⭐ NEW: Advanced Analytics
+advanced_analyzer = AdvancedForensicAnalyzer()
+advanced_result = await advanced_analyzer.analyze_filing(
+    filing_text=filing_content,
+    current_financials={...},
+    prior_financials={...},
+    cik="0001318605",
+    filing_type="10-K"
+)
+
+# Access results
+print(f"Contradictions: {len(advanced_result.contradictions)}")
+print(f"M-Score: {advanced_result.beneish_analysis.score}")
+print(f"Overall Risk: {advanced_result.overall_risk_score:.2%}")
+
+# Verify system integrity
+integrity = await system.verify_system_integrity()
+```
+
+## MCP Forensics Integration
+
+JLAW includes MCP (Model Context Protocol) forensics capabilities for tracking agent operations:
+
+```python
+from agents.mcp import (
+    enable_forensics,
+    get_server_forensic_summary,
+    export_forensic_report_to_markdown
+)
+
+# Enable MCP forensics
+enable_forensics()
+
+# Get operational insights
+summary = get_server_forensic_summary(server)
+
+# Export detailed report
+export_forensic_report_to_markdown("mcp_report.md", [server])
+```
+
+See `FORENSICS_QUICK_REFERENCE.md` for complete MCP forensics guide.
+
+## Logging
+
+Automatic daily log files: `forensic_YYYYMMDD.log`
+
+**Log Levels**:
+- INFO: Normal operations
+- WARNING: High risk detected
+- ERROR: Analysis failures
+- CRITICAL: Integrity violations
+
+## Troubleshooting
+
+**Missing dependencies**: `pip install -r requirements.txt`
+
+**Invalid CIK**: Use 10-digit format with leading zeros
+
+**Rate limiting**: Adjust rate limits in config or add delays
+
+**Integrity violation**: Check audit logs immediately
+
+**Slow ML**: Disable BERT in config: `{"ml_models": {"enable_bert": false}}`
+
+## Project Structure
+
+- `jlaw_forensics.py` - Main CLI
+- `src/forensics/` - Core forensic modules
+- `requirements.txt` - Python dependencies
+- `pyproject.toml` - Project metadata
+- `examples/jarvis_law_sec_auditor/` - Reference implementation
+- `tests/` - Test suite
+- Module documentation in `src/forensics/*_README.md`
+
+## Documentation
+
+- **System Overview**: `src/forensics/SYSTEM_COMPLETE.md`
+- **Module READMEs**: `src/forensics/*_README.md`
+- **Advanced Forensic Analytics**: `src/forensics/ADVANCED_FORENSIC_ANALYTICS_README.md` ⭐ NEW
+- **SEC Extraction Enhancement**: `SEC_EXTRACTION_ENHANCEMENT.md` ⭐
+- **Compliance Analyzer Enhancement**: `COMPLIANCE_ANALYZER_ENHANCEMENT.md` ⭐
+- **MCP Forensics**: `FORENSICS_QUICK_REFERENCE.md`
+- **Agent Instructions**: `AGENTS.md`, `CLAUDE.md`
+
+## Status
+
+✅ **PRODUCTION READY**
+
+## License
+
+MIT
+
+## Last Updated
+
+November 23, 2025

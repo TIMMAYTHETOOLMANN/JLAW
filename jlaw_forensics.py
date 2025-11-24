@@ -1,4 +1,4 @@
-"""
+"""h. 
 JLAW Forensic System - Main Entry Point
 Zero-tolerance forensic analysis for SEC filings with surgical precision.
 """
@@ -18,6 +18,8 @@ from src.forensics import (
     StorageConfig,
     InvestigationStatus
 )
+from src.forensics.config_lock import ConfigLock
+from src.forensics.config_manager import ConfigurationManager, get_config
 
 # Configure logging
 logging.basicConfig(
@@ -33,22 +35,28 @@ logger = logging.getLogger(__name__)
 class JLAWForensicSystem:
     """
     Main system controller for JLAW forensic analysis.
-    Implements complete zero-tolerance architecture.
+    Implements complete zero-tolerance architecture with secure API key management.
     """
     
     def __init__(self, config_path: Optional[str] = None):
         """Initialize JLAW system with configuration."""
-        self.config = self._load_config(config_path)
+        # Load secure configuration
+        self.config_manager = ConfigurationManager(config_path) if config_path else get_config()
+        self.config = self.config_manager.config
+        
+        logger.info(f"JLAW System initialized with configuration: {self.config_manager}")
+        
         self.orchestrator = None
         self.fraud_detector = None
         self._initialize_components()
     
     def _load_config(self, config_path: Optional[str]) -> Dict[str, Any]:
-        """Load system configuration."""
-        default_config = {
-            "storage_provider": os.getenv("STORAGE_PROVIDER", "LOCAL"),
-            "govinfo_api_key": os.getenv("GOVINFO_API_KEY", "DEMO_KEY"),
-            "sec_user_agent": os.getenv("SEC_USER_AGENT", "JLAW forensics@jlaw.com"),
+        """Load system configuration (legacy method - now using ConfigurationManager)."""
+        # Use new configuration manager
+        return {
+            "storage_provider": self.config.storage_provider,
+            "sec_user_agent": self.config.sec.user_agent,
+            "govinfo_api_key": self.config.govinfo.api_key if self.config.govinfo.api_key else "DEMO_KEY",
             "audit_signing_key": os.getenv("AUDIT_SIGNING_KEY", b"default_signing_key"),
             "aws_region": os.getenv("AWS_REGION", "us-east-1"),
             "forensic_s3_bucket": os.getenv("FORENSIC_S3_BUCKET", "jlaw-forensic-evidence"),
@@ -83,31 +91,79 @@ class JLAWForensicSystem:
     def _initialize_components(self):
         """Initialize all forensic components."""
         logger.info("Initializing JLAW Forensic System...")
+        # Stabilize RNG for deterministic behavior across runs
+        try:
+            import random as _random
+            import numpy as _np
+            _random.seed(42)
+            try:
+                _np.random.seed(42)
+            except Exception:
+                pass
+            try:
+                import torch as _torch
+                if hasattr(_torch, 'manual_seed'):
+                    _torch.manual_seed(42)
+                    if hasattr(_torch, 'cuda') and hasattr(_torch.cuda, 'manual_seed_all'):
+                        _torch.cuda.manual_seed_all(42)
+            except Exception:
+                pass
+        except Exception:
+            pass
         
         # Initialize storage config
         storage_config = StorageConfig(
-            provider=self.config["storage_provider"],
-            retention_days=self.config["retention_days"],
+            provider=self.config.storage_provider,
+            retention_days=90,  # Default retention
             compliance_mode=True,
             redundancy_level=3,
             compression=True
         )
         
-        # Initialize orchestrator
+        # Resolve SEC User-Agent (lock this value)
+        sec_user_agent = self.config.sec.user_agent or "NITS Recon Unit contact@nits-secops.org"
+
+        # Build configuration lock snapshot (ensures stable behavior across runs)
+        retry_policy = {
+            "max_attempts": 5,
+            "base_delay": 0.5,
+            "max_delay": 8,
+            "exponential_base": 2.0,
+        }
+        supplementary_whitelist = [
+            "https://investors.nike.com",
+            "https://purpose.nike.com",
+            "https://news.nike.com",
+            "https://s1.q4cdn.com/806093406/files/doc_financials",
+            "https://s1.q4cdn.com/806093406/files/doc_presentations",
+        ]
+        snapshot = ConfigLock.build_snapshot(
+            self.config,
+            sec_user_agent=sec_user_agent,
+            statute_strict_mode=True,
+            sec_rate_limit=7,
+            retry_policy=retry_policy,
+            supplementary_whitelist=supplementary_whitelist,
+        )
+
+        if not ConfigLock.verify_or_create_lock(snapshot, allow_create=True):
+            logger.critical("Configuration lock verification failed. Aborting initialization to prevent drift.")
+            raise SystemExit(2)
+
+        # Initialize orchestrator with locked UA
         self.orchestrator = ForensicOrchestrator(
-            govinfo_api_key=self.config["govinfo_api_key"],
+            govinfo_api_key=self.config.govinfo.api_key if self.config.govinfo.api_key else "DEMO_KEY",
             storage_config=storage_config,
-            audit_signing_key=self.config["audit_signing_key"].encode() 
-                if isinstance(self.config["audit_signing_key"], str) 
-                else self.config["audit_signing_key"]
+            audit_signing_key=b"forensic_audit_key_" + datetime.now(timezone.utc).isoformat().encode(),
+            user_agent=sec_user_agent,
         )
         
         # Initialize ML fraud detector
         self.fraud_detector = AdvancedFraudDetector()
         
         logger.info("JLAW system initialized successfully")
-        logger.info(f"Storage provider: {self.config['storage_provider']}")
-        logger.info(f"Retention period: {self.config['retention_days']} days")
+        logger.info(f"Storage provider: {self.config.storage_provider}")
+        logger.info(f"Max workers: {self.config.max_workers}")
     
     async def investigate_company(
         self,
@@ -131,7 +187,8 @@ class JLAWForensicSystem:
         logger.info(f"Starting investigation: {company_name} (CIK: {cik})")
         
         if not filing_types:
-            filing_types = ["10-K", "10-Q"]
+            # Include Form 4 by default to ensure insider trading compliance checks
+            filing_types = ["10-K", "10-Q", "4"]
         
         # Initiate investigation
         case_id = await self.orchestrator.initiate_investigation(
@@ -397,6 +454,10 @@ Examples:
             print(f"Risk Score: {results['summary']['risk_score']:.1%}")
             print(f"Criminal Violations: {results['summary']['criminal_violations']}")
             print(f"Filings Analyzed: {results['summary']['filings_analyzed']}")
+            if 'filings_collected' in results.get('summary', {}):
+                print(f"Filings Collected: {results['summary']['filings_collected']}")
+            if 'violations_detected' in results.get('summary', {}):
+                print(f"Violations Detected: {results['summary']['violations_detected']}")
             print(f"Evidence Stored: {results['summary']['evidence_stored']}")
             print("="*80 + "\n")
         
@@ -444,7 +505,8 @@ Examples:
             
             for name, comp in results["components"].items():
                 if isinstance(comp, dict) and "valid" in comp:
-                    status = "✅ VALID" if comp["valid"] else "❌ INVALID"
+                    # Windows-safe ASCII output
+                    status = "[VALID]" if comp["valid"] else "[INVALID]"
                     print(f"{name}: {status}")
                     if "blocks" in comp:
                         print(f"  Blocks: {comp['blocks']}")

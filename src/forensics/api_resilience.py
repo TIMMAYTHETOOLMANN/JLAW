@@ -419,26 +419,29 @@ class ResilientAPIClient:
         **kwargs
     ) -> Any:
         """Execute function with required headers."""
-        # Add headers to kwargs if it's an HTTP request
-        if "headers" in kwargs:
-            headers = kwargs["headers"]
-        else:
-            headers = {}
-            kwargs["headers"] = headers
-        
-        # Add required headers
-        headers[self.request_id_header] = request_id
-        headers[self.timestamp_header] = datetime.now(timezone.utc).isoformat()
-        
-        # Add idempotency key for non-GET requests
-        if kwargs.get("method", "GET").upper() != "GET":
-            idempotency_key = self._generate_idempotency_key(func.__name__, args, kwargs)
-            headers[self.idempotency_header] = idempotency_key
-        
-        # Add signature if configured
-        if hasattr(self, "signing_key"):
-            signature = self._generate_signature(request_id, headers)
-            headers[self.signature_header] = signature
+        # Only add headers if the function/request actually uses them
+        # Check if this is an HTTP request that needs headers
+        if "headers" in kwargs or any(k in kwargs for k in ['url', 'method', 'session']):
+            # Add headers to kwargs if it's an HTTP request
+            if "headers" in kwargs:
+                headers = kwargs["headers"]
+            else:
+                headers = {}
+                kwargs["headers"] = headers
+            
+            # Add required headers
+            headers[self.request_id_header] = request_id
+            headers[self.timestamp_header] = datetime.now(timezone.utc).isoformat()
+            
+            # Add idempotency key for non-GET requests
+            if kwargs.get("method", "GET").upper() != "GET":
+                idempotency_key = self._generate_idempotency_key(func.__name__, args, kwargs)
+                headers[self.idempotency_header] = idempotency_key
+            
+            # Add signature if configured
+            if hasattr(self, "signing_key"):
+                signature = self._generate_signature(request_id, headers)
+                headers[self.signature_header] = signature
         
         return await func(*args, **kwargs)
     

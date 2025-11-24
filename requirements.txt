@@ -24,4 +24,25 @@ cryptography>=41.0.0
 # Utilities
 python-dateutil>=2.8.2
 pytz>=2023.3
+python-dotenv>=1.0.0
+
+# Document Parsing (SEC Extraction Enhancement)
+beautifulsoup4>=4.12.0
+lxml>=4.9.0
+html2text>=2020.1.16
+pdfplumber>=0.10.0
+pytesseract>=0.3.10
+Pillow>=10.0.0
+python-magic>=0.4.27
+chardet>=5.2.0
+
+# Advanced Forensic Analytics (Module 1)
+networkx>=3.0
+sentence-transformers>=2.2.0
+spacy>=3.5.0
+
+# NIST Integrated Compliance Analyzer (Module 2)
+xgboost>=2.0.0
+redis>=5.0.0
+
 

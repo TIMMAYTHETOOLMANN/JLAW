@@ -1,0 +1,3709 @@
+{
+  "case_id": "CASE_0000320187_20251124105032",
+  "target": {
+    "cik": "0000320187",
+    "company": "Nike Inc"
+  },
+  "investigation": {
+    "investigator": "JLAW_CLI",
+    "start": "2025-11-24T10:50:32.025171+00:00",
+    "end": "2025-11-24T10:51:53.692412+00:00",
+    "duration_hours": 0.022685344722222223
+  },
+  "summary": {
+    "filings_analyzed": 71,
+    "filings_collected": 89,
+    "violations_detected": 1,
+    "criminal_violations": 0,
+    "evidence_stored": 71,
+    "risk_score": 0.05341549295774648,
+    "estimated_damages_total": 2000000,
+    "status": "GENERATING_REPORT"
+  },
+  "detailed_findings": {
+    "revenue_manipulations": [],
+    "accounting_frauds": [],
+    "disclosure_failures": [
+      {
+        "filing": "4 - 2019-12-31 00:00:00",
+        "type": "narrative_inconsistency",
+        "score": 0.0,
+        "severity": "HIGH"
+      },
+      {
+        "filing": "4 - 2019-12-26 00:00:00",
+        "type": "narrative_inconsistency",
+        "score": 0.0,
+        "severity": "HIGH"
+      },
+      {
+        "filing": "4 - 2019-12-26 00:00:00",
+        "type": "narrative_inconsistency",
+        "score": 0.0,
+        "severity": "HIGH"
+      },
+      {
+        "filing": "4 - 2019-12-03 00:00:00",
+        "type": "narrative_inconsistency",
+        "score": 0.0,
+        "severity": "HIGH"
+      },
+      {
+        "filing": "4 - 2019-11-15 00:00:00",
+        "type": "narrative_inconsistency",
+        "score": 0.0,
+        "severity": "HIGH"
+      },
+      {
+        "filing": "4 - 2019-10-31 00:00:00",
+        "type": "narrative_inconsistency",
+        "score": 0.0,
+        "severity": "HIGH"
+      },
+      {
+        "filing": "4 - 2019-10-31 00:00:00",
+        "type": "narrative_inconsistency",
+        "score": 0.0,
+        "severity": "HIGH"
+      },
+      {
+        "filing": "4 - 2019-10-31 00:00:00",
+        "type": "narrative_inconsistency",
+        "score": 0.0,
+        "severity": "HIGH"
+      },
+      {
+        "filing": "4 - 2019-10-31 00:00:00",
+        "type": "narrative_inconsistency",
+        "score": 0.0,
+        "severity": "HIGH"
+      },
+      {
+        "filing": "4 - 2019-10-31 00:00:00",
+        "type": "narrative_inconsistency",
+        "score": 0.0,
+        "severity": "HIGH"
+      },
+      {
+        "filing": "4 - 2019-10-31 00:00:00",
+        "type": "narrative_inconsistency",
+        "score": 0.0,
+        "severity": "HIGH"
+      },
+      {
+        "filing": "4 - 2019-10-04 00:00:00",
+        "type": "narrative_inconsistency",
+        "score": 0.0,
+        "severity": "HIGH"
+      },
+      {
+        "filing": "10-Q - 2019-10-04 00:00:00",
+        "type": "narrative_inconsistency",
+        "score": 0.0,
+        "severity": "HIGH"
+      },
+      {
+        "filing": "4 - 2019-10-02 00:00:00",
+        "type": "narrative_inconsistency",
+        "score": 0.0,
+        "severity": "HIGH"
+      },
+      {
+        "filing": "4 - 2019-09-27 00:00:00",
+        "type": "narrative_inconsistency",
+        "score": 0.0,
+        "severity": "HIGH"
+      },
+      {
+        "filing": "4 - 2019-09-27 00:00:00",
+        "type": "narrative_inconsistency",
+        "score": 0.0,
+        "severity": "HIGH"
+      },
+      {
+        "filing": "4 - 2019-09-23 00:00:00",
+        "type": "narrative_inconsistency",
+        "score": 0.0,
+        "severity": "HIGH"
+      },
+      {
+        "filing": "4 - 2019-09-23 00:00:00",
+        "type": "narrative_inconsistency",
+        "score": 0.0,
+        "severity": "HIGH"
+      },
+      {
+        "filing": "4 - 2019-09-23 00:00:00",
+        "type": "narrative_inconsistency",
+        "score": 0.0,
+        "severity": "HIGH"
+      },
+      {
+        "filing": "4 - 2019-09-23 00:00:00",
+        "type": "narrative_inconsistency",
+        "score": 0.0,
+        "severity": "HIGH"
+      },
+      {
+        "filing": "4 - 2019-09-23 00:00:00",
+        "type": "narrative_inconsistency",
+        "score": 0.0,
+        "severity": "HIGH"
+      },
+      {
+        "filing": "4 - 2019-09-23 00:00:00",
+        "type": "narrative_inconsistency",
+        "score": 0.0,
+        "severity": "HIGH"
+      },
+      {
+        "filing": "4 - 2019-09-23 00:00:00",
+        "type": "narrative_inconsistency",
+        "score": 0.0,
+        "severity": "HIGH"
+      },
+      {
+        "filing": "4 - 2019-09-23 00:00:00",
+        "type": "narrative_inconsistency",
+        "score": 0.0,
+        "severity": "HIGH"
+      },
+      {
+        "filing": "4 - 2019-09-23 00:00:00",
+        "type": "narrative_inconsistency",
+        "score": 0.0,
+        "severity": "HIGH"
+      },
+      {
+        "filing": "4 - 2019-09-23 00:00:00",
+        "type": "narrative_inconsistency",
+        "score": 0.0,
+        "severity": "HIGH"
+      },
+      {
+        "filing": "4 - 2019-09-23 00:00:00",
+        "type": "narrative_inconsistency",
+        "score": 0.0,
+        "severity": "HIGH"
+      },
+      {
+        "filing": "4 - 2019-09-13 00:00:00",
+        "type": "narrative_inconsistency",
+        "score": 0.0,
+        "severity": "HIGH"
+      },
+      {
+        "filing": "4 - 2019-09-13 00:00:00",
+        "type": "narrative_inconsistency",
+        "score": 0.0,
+        "severity": "HIGH"
+      },
+      {
+        "filing": "4 - 2019-09-03 00:00:00",
+        "type": "narrative_inconsistency",
+        "score": 0.0,
+        "severity": "HIGH"
+      },
+      {
+        "filing": "4 - 2019-08-05 00:00:00",
+        "type": "narrative_inconsistency",
+        "score": 0.0,
+        "severity": "HIGH"
+      },
+      {
+        "filing": "4 - 2019-08-05 00:00:00",
+        "type": "narrative_inconsistency",
+        "score": 0.0,
+        "severity": "HIGH"
+      },
+      {
+        "filing": "4 - 2019-08-05 00:00:00",
+        "type": "narrative_inconsistency",
+        "score": 0.0,
+        "severity": "HIGH"
+      },
+      {
+        "filing": "4 - 2019-08-05 00:00:00",
+        "type": "narrative_inconsistency",
+        "score": 0.0,
+        "severity": "HIGH"
+      },
+      {
+        "filing": "4 - 2019-08-05 00:00:00",
+        "type": "narrative_inconsistency",
+        "score": 0.0,
+        "severity": "HIGH"
+      },
+      {
+        "filing": "4 - 2019-08-05 00:00:00",
+        "type": "narrative_inconsistency",
+        "score": 0.0,
+        "severity": "HIGH"
+      },
+      {
+        "filing": "4 - 2019-08-05 00:00:00",
+        "type": "narrative_inconsistency",
+        "score": 0.0,
+        "severity": "HIGH"
+      },
+      {
+        "filing": "4 - 2019-07-29 00:00:00",
+        "type": "narrative_inconsistency",
+        "score": 0.0,
+        "severity": "HIGH"
+      },
+      {
+        "filing": "4 - 2019-07-29 00:00:00",
+        "type": "narrative_inconsistency",
+        "score": 0.0,
+        "severity": "HIGH"
+      },
+      {
+        "filing": "4 - 2019-07-24 00:00:00",
+        "type": "narrative_inconsistency",
+        "score": 0.0,
+        "severity": "HIGH"
+      },
+      {
+        "filing": "4 - 2019-07-24 00:00:00",
+        "type": "narrative_inconsistency",
+        "score": 0.0,
+        "severity": "HIGH"
+      },
+      {
+        "filing": "4 - 2019-07-24 00:00:00",
+        "type": "narrative_inconsistency",
+        "score": 0.0,
+        "severity": "HIGH"
+      },
+      {
+        "filing": "4 - 2019-07-24 00:00:00",
+        "type": "narrative_inconsistency",
+        "score": 0.0,
+        "severity": "HIGH"
+      },
+      {
+        "filing": "4 - 2019-07-24 00:00:00",
+        "type": "narrative_inconsistency",
+        "score": 0.0,
+        "severity": "HIGH"
+      },
+      {
+        "filing": "4 - 2019-07-24 00:00:00",
+        "type": "narrative_inconsistency",
+        "score": 0.0,
+        "severity": "HIGH"
+      },
+      {
+        "filing": "4 - 2019-07-24 00:00:00",
+        "type": "narrative_inconsistency",
+        "score": 0.0,
+        "severity": "HIGH"
+      },
+      {
+        "filing": "10-K - 2019-07-23 00:00:00",
+        "type": "narrative_inconsistency",
+        "score": 0.0,
+        "severity": "HIGH"
+      },
+      {
+        "filing": "4 - 2019-07-17 00:00:00",
+        "type": "narrative_inconsistency",
+        "score": 0.0,
+        "severity": "HIGH"
+      },
+      {
+        "filing": "4 - 2019-07-17 00:00:00",
+        "type": "narrative_inconsistency",
+        "score": 0.0,
+        "severity": "HIGH"
+      },
+      {
+        "filing": "4 - 2019-07-17 00:00:00",
+        "type": "narrative_inconsistency",
+        "score": 0.0,
+        "severity": "HIGH"
+      },
+      {
+        "filing": "4 - 2019-07-17 00:00:00",
+        "type": "narrative_inconsistency",
+        "score": 0.0,
+        "severity": "HIGH"
+      },
+      {
+        "filing": "4 - 2019-07-17 00:00:00",
+        "type": "narrative_inconsistency",
+        "score": 0.0,
+        "severity": "HIGH"
+      },
+      {
+        "filing": "4 - 2019-07-17 00:00:00",
+        "type": "narrative_inconsistency",
+        "score": 0.0,
+        "severity": "HIGH"
+      },
+      {
+        "filing": "4 - 2019-07-17 00:00:00",
+        "type": "narrative_inconsistency",
+        "score": 0.0,
+        "severity": "HIGH"
+      },
+      {
+        "filing": "4 - 2019-07-16 00:00:00",
+        "type": "narrative_inconsistency",
+        "score": 0.0,
+        "severity": "HIGH"
+      },
+      {
+        "filing": "4 - 2019-07-11 00:00:00",
+        "type": "narrative_inconsistency",
+        "score": 0.0,
+        "severity": "HIGH"
+      },
+      {
+        "filing": "4 - 2019-07-03 00:00:00",
+        "type": "narrative_inconsistency",
+        "score": 0.0,
+        "severity": "HIGH"
+      },
+      {
+        "filing": "4 - 2019-05-06 00:00:00",
+        "type": "narrative_inconsistency",
+        "score": 0.0,
+        "severity": "HIGH"
+      },
+      {
+        "filing": "4 - 2019-04-17 00:00:00",
+        "type": "narrative_inconsistency",
+        "score": 0.0,
+        "severity": "HIGH"
+      },
+      {
+        "filing": "10-Q - 2019-04-04 00:00:00",
+        "type": "narrative_inconsistency",
+        "score": 0.0,
+        "severity": "HIGH"
+      },
+      {
+        "filing": "4 - 2019-04-03 00:00:00",
+        "type": "narrative_inconsistency",
+        "score": 0.0,
+        "severity": "HIGH"
+      },
+      {
+        "filing": "4 - 2019-03-20 00:00:00",
+        "type": "narrative_inconsistency",
+        "score": 0.0,
+        "severity": "HIGH"
+      },
+      {
+        "filing": "4 - 2019-02-19 00:00:00",
+        "type": "narrative_inconsistency",
+        "score": 0.0,
+        "severity": "HIGH"
+      },
+      {
+        "filing": "4 - 2019-02-06 00:00:00",
+        "type": "narrative_inconsistency",
+        "score": 0.0,
+        "severity": "HIGH"
+      },
+      {
+        "filing": "4 - 2019-01-22 00:00:00",
+        "type": "narrative_inconsistency",
+        "score": 0.0,
+        "severity": "HIGH"
+      },
+      {
+        "filing": "4 - 2019-01-22 00:00:00",
+        "type": "narrative_inconsistency",
+        "score": 0.0,
+        "severity": "HIGH"
+      },
+      {
+        "filing": "4 - 2019-01-17 00:00:00",
+        "type": "narrative_inconsistency",
+        "score": 0.0,
+        "severity": "HIGH"
+      },
+      {
+        "filing": "4 - 2019-01-09 00:00:00",
+        "type": "narrative_inconsistency",
+        "score": 0.0,
+        "severity": "HIGH"
+      },
+      {
+        "filing": "10-Q - 2019-01-08 00:00:00",
+        "type": "narrative_inconsistency",
+        "score": 0.0,
+        "severity": "HIGH"
+      },
+      {
+        "filing": "4 - 2019-01-04 00:00:00",
+        "type": "narrative_inconsistency",
+        "score": 0.0,
+        "severity": "HIGH"
+      },
+      {
+        "filing": "4 - 2019-01-04 00:00:00",
+        "type": "narrative_inconsistency",
+        "score": 0.0,
+        "severity": "HIGH"
+      }
+    ],
+    "executive_violations": []
+  },
+  "statute_violations": {
+    "15_USC_78j(b)": {
+      "title": 15,
+      "section": "78j(b)",
+      "label": "15 USC 78j(b)",
+      "severity": "CIVIL_CRIMINAL",
+      "max_penalty": "Regulatory sanctions",
+      "violations": [
+        {
+          "description": "Statutory violation detected - missing_mda",
+          "confidence": 0.9,
+          "evidence_refs": [
+            ""
+          ]
+        }
+      ]
+    }
+  },
+  "violations_detailed": [
+    {
+      "title": 15,
+      "section": "78j(b)",
+      "statute": "15 USC 78j(b)",
+      "severity": "CIVIL_CRIMINAL",
+      "description": "Statutory violation detected - missing_mda",
+      "detection_confidence": 0.9,
+      "exact_quote": null,
+      "document_url": null,
+      "viewer_url": null,
+      "document_section": null,
+      "prosecutorial_merit": null,
+      "estimated_damages": 2000000,
+      "fine_amount": null,
+      "evidence_refs": [
+        ""
+      ]
+    }
+  ],
+  "evidence_chain": {
+    "evidence_count": 71,
+    "evidence_ids": [
+      "filing_0000320187_4_2019-12-31",
+      "filing_0000320187_4_2019-12-26",
+      "filing_0000320187_4_2019-12-26",
+      "filing_0000320187_4_2019-12-03",
+      "filing_0000320187_4_2019-11-15",
+      "filing_0000320187_4_2019-10-31",
+      "filing_0000320187_4_2019-10-31",
+      "filing_0000320187_4_2019-10-31",
+      "filing_0000320187_4_2019-10-31",
+      "filing_0000320187_4_2019-10-31",
+      "filing_0000320187_4_2019-10-31",
+      "filing_0000320187_4_2019-10-04",
+      "filing_0000320187_10-Q_2019-10-04",
+      "filing_0000320187_4_2019-10-02",
+      "filing_0000320187_4_2019-09-27",
+      "filing_0000320187_4_2019-09-27",
+      "filing_0000320187_4_2019-09-23",
+      "filing_0000320187_4_2019-09-23",
+      "filing_0000320187_4_2019-09-23",
+      "filing_0000320187_4_2019-09-23",
+      "filing_0000320187_4_2019-09-23",
+      "filing_0000320187_4_2019-09-23",
+      "filing_0000320187_4_2019-09-23",
+      "filing_0000320187_4_2019-09-23",
+      "filing_0000320187_4_2019-09-23",
+      "filing_0000320187_4_2019-09-23",
+      "filing_0000320187_4_2019-09-23",
+      "filing_0000320187_4_2019-09-13",
+      "filing_0000320187_4_2019-09-13",
+      "filing_0000320187_4_2019-09-03",
+      "filing_0000320187_4_2019-08-05",
+      "filing_0000320187_4_2019-08-05",
+      "filing_0000320187_4_2019-08-05",
+      "filing_0000320187_4_2019-08-05",
+      "filing_0000320187_4_2019-08-05",
+      "filing_0000320187_4_2019-08-05",
+      "filing_0000320187_4_2019-08-05",
+      "filing_0000320187_4_2019-07-29",
+      "filing_0000320187_4_2019-07-29",
+      "filing_0000320187_4_2019-07-24",
+      "filing_0000320187_4_2019-07-24",
+      "filing_0000320187_4_2019-07-24",
+      "filing_0000320187_4_2019-07-24",
+      "filing_0000320187_4_2019-07-24",
+      "filing_0000320187_4_2019-07-24",
+      "filing_0000320187_4_2019-07-24",
+      "filing_0000320187_10-K_2019-07-23",
+      "filing_0000320187_4_2019-07-17",
+      "filing_0000320187_4_2019-07-17",
+      "filing_0000320187_4_2019-07-17",
+      "filing_0000320187_4_2019-07-17",
+      "filing_0000320187_4_2019-07-17",
+      "filing_0000320187_4_2019-07-17",
+      "filing_0000320187_4_2019-07-17",
+      "filing_0000320187_4_2019-07-16",
+      "filing_0000320187_4_2019-07-11",
+      "filing_0000320187_4_2019-07-03",
+      "filing_0000320187_4_2019-05-06",
+      "filing_0000320187_4_2019-04-17",
+      "filing_0000320187_10-Q_2019-04-04",
+      "filing_0000320187_4_2019-04-03",
+      "filing_0000320187_4_2019-03-20",
+      "filing_0000320187_4_2019-02-19",
+      "filing_0000320187_4_2019-02-06",
+      "filing_0000320187_4_2019-01-22",
+      "filing_0000320187_4_2019-01-22",
+      "filing_0000320187_4_2019-01-17",
+      "filing_0000320187_4_2019-01-09",
+      "filing_0000320187_10-Q_2019-01-08",
+      "filing_0000320187_4_2019-01-04",
+      "filing_0000320187_4_2019-01-04"
+    ],
+    "hash_verification": true,
+    "chain_integrity": true,
+    "audit_trail": {
+      "log_name": "forensic_investigations",
+      "total_entries": 74,
+      "date_range": {
+        "start": "2025-11-24T10:50:32.025171+00:00",
+        "end": "2025-11-24T10:51:53.690906+00:00"
+      },
+      "integrity_verified": true,
+      "entries": [
+        {
+          "sequence": 0,
+          "timestamp": "2025-11-24T10:50:32.025171+00:00",
+          "event": "INVESTIGATION_INITIATED",
+          "actor": "JLAW_CLI",
+          "action": "INITIATE",
+          "target": "Nike Inc (CIK: 0000320187)",
+          "result": "SUCCESS",
+          "details": {
+            "case_id": "CASE_0000320187_20251124105032",
+            "notes": "Automated investigation: 6 years analysis"
+          },
+          "prev_hash": "0000000000000000000000000000000000000000000000000000000000000000",
+          "curr_hash": "c76ec344d7d15541644cf71bb4d4dc15094daa5f1012b1c0157bdb554d7844c9",
+          "signature": "ce1057a95b944bd3eb7ee88bb1d0e094b141cf465d79f2d6b292917cbc8bd633"
+        },
+        {
+          "sequence": 1,
+          "timestamp": "2025-11-24T10:50:59.745255+00:00",
+          "event": "FILINGS_COLLECTED",
+          "actor": "SYSTEM",
+          "action": "COLLECT",
+          "target": "CASE_0000320187_20251124105032",
+          "result": "SUCCESS",
+          "details": {
+            "filing_types": [
+              "10-K",
+              "10-Q",
+              "4"
+            ],
+            "date_range": "2019-01-01 to 2019-12-31",
+            "filings_found": 89
+          },
+          "prev_hash": "c76ec344d7d15541644cf71bb4d4dc15094daa5f1012b1c0157bdb554d7844c9",
+          "curr_hash": "1c2928b149fae87ced3955a4f3ae938fe3315e0c48213500328868586d34b47a",
+          "signature": "a547e8c9ea8a55baddbb59d6af184fb0c77227ea6ebf55b4dc4517eb28e31533"
+        },
+        {
+          "sequence": 2,
+          "timestamp": "2025-11-24T10:51:00.535534+00:00",
+          "event": "FILING_ANALYZED",
+          "actor": "SYSTEM",
+          "action": "ANALYZE",
+          "target": "filing_0000320187_4_2019-12-31",
+          "result": "SUCCESS",
+          "details": {
+            "fraud_risk": 0,
+            "red_flags": 0
+          },
+          "prev_hash": "1c2928b149fae87ced3955a4f3ae938fe3315e0c48213500328868586d34b47a",
+          "curr_hash": "60eacd58da34c7fa8d4eb2ebb205be106ee4b18e5dff92a6978d32aa8d42b0cc",
+          "signature": "ff398f9640f02a11c34688fa9e183a91e0b2e24c6b02d587b38d055101f99b7a"
+        },
+        {
+          "sequence": 3,
+          "timestamp": "2025-11-24T10:51:01.324358+00:00",
+          "event": "FILING_ANALYZED",
+          "actor": "SYSTEM",
+          "action": "ANALYZE",
+          "target": "filing_0000320187_4_2019-12-26",
+          "result": "SUCCESS",
+          "details": {
+            "fraud_risk": 0,
+            "red_flags": 0
+          },
+          "prev_hash": "60eacd58da34c7fa8d4eb2ebb205be106ee4b18e5dff92a6978d32aa8d42b0cc",
+          "curr_hash": "696cc14f40fb1cbfb33682625ac6238f40fff55d5154a492300beb5234c4c2e8",
+          "signature": "7ac94e856931872183c33a0e0d33dd9a07b9a11d339e35bbdd29d92920db00fa"
+        },
+        {
+          "sequence": 4,
+          "timestamp": "2025-11-24T10:51:02.076503+00:00",
+          "event": "FILING_ANALYZED",
+          "actor": "SYSTEM",
+          "action": "ANALYZE",
+          "target": "filing_0000320187_4_2019-12-26",
+          "result": "SUCCESS",
+          "details": {
+            "fraud_risk": 0,
+            "red_flags": 0
+          },
+          "prev_hash": "696cc14f40fb1cbfb33682625ac6238f40fff55d5154a492300beb5234c4c2e8",
+          "curr_hash": "bbf800600af31b229fd59d6687e700ef69c85aa3a0a4d90bc34a2d09ea084f58",
+          "signature": "70405c9ac17ddd55a296f3b33dafa38c6245b3d079e6921a4b59cb74287073d9"
+        },
+        {
+          "sequence": 5,
+          "timestamp": "2025-11-24T10:51:02.866460+00:00",
+          "event": "FILING_ANALYZED",
+          "actor": "SYSTEM",
+          "action": "ANALYZE",
+          "target": "filing_0000320187_4_2019-12-03",
+          "result": "SUCCESS",
+          "details": {
+            "fraud_risk": 0,
+            "red_flags": 0
+          },
+          "prev_hash": "bbf800600af31b229fd59d6687e700ef69c85aa3a0a4d90bc34a2d09ea084f58",
+          "curr_hash": "ecca0cc8d829d02d5e54a0f0d7156852ab904796d8e4067d56b8171410950e61",
+          "signature": "315ee9420ef02221f85c0dba185f9878a957b16fe5d85f584d85720173e0a9a4"
+        },
+        {
+          "sequence": 6,
+          "timestamp": "2025-11-24T10:51:03.602129+00:00",
+          "event": "FILING_ANALYZED",
+          "actor": "SYSTEM",
+          "action": "ANALYZE",
+          "target": "filing_0000320187_4_2019-11-15",
+          "result": "SUCCESS",
+          "details": {
+            "fraud_risk": 0,
+            "red_flags": 0
+          },
+          "prev_hash": "ecca0cc8d829d02d5e54a0f0d7156852ab904796d8e4067d56b8171410950e61",
+          "curr_hash": "762ef763d061a12bf03196be6dc321c9ab798a0d104561db8b5843434ea44efb",
+          "signature": "fb63b54bcf86ff4b5409f1204519eae310836d47e3608b6657802e374cc7612c"
+        },
+        {
+          "sequence": 7,
+          "timestamp": "2025-11-24T10:51:04.379074+00:00",
+          "event": "FILING_ANALYZED",
+          "actor": "SYSTEM",
+          "action": "ANALYZE",
+          "target": "filing_0000320187_4_2019-10-31",
+          "result": "SUCCESS",
+          "details": {
+            "fraud_risk": 0,
+            "red_flags": 0
+          },
+          "prev_hash": "762ef763d061a12bf03196be6dc321c9ab798a0d104561db8b5843434ea44efb",
+          "curr_hash": "cf23c021ab24169ecf70adc82895c242d11779d3e1489e4af525239e929e5ed7",
+          "signature": "84ea4823a1cd633e864382efc0631b80baaef14a5abab3c8884c6bb66d56f3ba"
+        },
+        {
+          "sequence": 8,
+          "timestamp": "2025-11-24T10:51:05.166986+00:00",
+          "event": "FILING_ANALYZED",
+          "actor": "SYSTEM",
+          "action": "ANALYZE",
+          "target": "filing_0000320187_4_2019-10-31",
+          "result": "SUCCESS",
+          "details": {
+            "fraud_risk": 0,
+            "red_flags": 0
+          },
+          "prev_hash": "cf23c021ab24169ecf70adc82895c242d11779d3e1489e4af525239e929e5ed7",
+          "curr_hash": "7ecd98436e44f62f66c7b0980185c3260f570364253b1f48bf3cfbfde95da04e",
+          "signature": "c9273dee9de3f6a865cffe0c56b9407b9a1f635e01588e954eda92c313308578"
+        },
+        {
+          "sequence": 9,
+          "timestamp": "2025-11-24T10:51:05.921584+00:00",
+          "event": "FILING_ANALYZED",
+          "actor": "SYSTEM",
+          "action": "ANALYZE",
+          "target": "filing_0000320187_4_2019-10-31",
+          "result": "SUCCESS",
+          "details": {
+            "fraud_risk": 0,
+            "red_flags": 0
+          },
+          "prev_hash": "7ecd98436e44f62f66c7b0980185c3260f570364253b1f48bf3cfbfde95da04e",
+          "curr_hash": "c493093c4eb3f7b65f28aadd4781da6fd5072e7a7ccaa92e4edbf5e9ea367550",
+          "signature": "13a6426524b77f73124c55a9d1dd86612892cb7687c6fe32c6b32e9808782b68"
+        },
+        {
+          "sequence": 10,
+          "timestamp": "2025-11-24T10:51:06.751522+00:00",
+          "event": "FILING_ANALYZED",
+          "actor": "SYSTEM",
+          "action": "ANALYZE",
+          "target": "filing_0000320187_4_2019-10-31",
+          "result": "SUCCESS",
+          "details": {
+            "fraud_risk": 0,
+            "red_flags": 0
+          },
+          "prev_hash": "c493093c4eb3f7b65f28aadd4781da6fd5072e7a7ccaa92e4edbf5e9ea367550",
+          "curr_hash": "d67f19bce5585675985b92e626fba9cc88a3d8f520388ed09ccde6f45d614fe3",
+          "signature": "17688d761d8dc9ef7baa000a245267da6cffa21a54c0fdf027ca54565a3b9ad3"
+        },
+        {
+          "sequence": 11,
+          "timestamp": "2025-11-24T10:51:07.493283+00:00",
+          "event": "FILING_ANALYZED",
+          "actor": "SYSTEM",
+          "action": "ANALYZE",
+          "target": "filing_0000320187_4_2019-10-31",
+          "result": "SUCCESS",
+          "details": {
+            "fraud_risk": 0,
+            "red_flags": 0
+          },
+          "prev_hash": "d67f19bce5585675985b92e626fba9cc88a3d8f520388ed09ccde6f45d614fe3",
+          "curr_hash": "dc4bb378bead47a25525f3670cbbae38c50db08d7f48b67ab290632f89e82326",
+          "signature": "980fa0641dc373618db37a940e0a7e96693b91d13c6a7b7f6c2fa0a650a3cd80"
+        },
+        {
+          "sequence": 12,
+          "timestamp": "2025-11-24T10:51:08.208040+00:00",
+          "event": "FILING_ANALYZED",
+          "actor": "SYSTEM",
+          "action": "ANALYZE",
+          "target": "filing_0000320187_4_2019-10-31",
+          "result": "SUCCESS",
+          "details": {
+            "fraud_risk": 0,
+            "red_flags": 0
+          },
+          "prev_hash": "dc4bb378bead47a25525f3670cbbae38c50db08d7f48b67ab290632f89e82326",
+          "curr_hash": "1f31d19621ce9308f9045a1eb3b467a9dc5211b83911d6eb68d604cd449a1cf4",
+          "signature": "5a73d080d211d3314b4922ec5f0d0d6d3a97915b17b8615a95698a861ff91dcd"
+        },
+        {
+          "sequence": 13,
+          "timestamp": "2025-11-24T10:51:08.936446+00:00",
+          "event": "FILING_ANALYZED",
+          "actor": "SYSTEM",
+          "action": "ANALYZE",
+          "target": "filing_0000320187_4_2019-10-04",
+          "result": "SUCCESS",
+          "details": {
+            "fraud_risk": 0,
+            "red_flags": 0
+          },
+          "prev_hash": "1f31d19621ce9308f9045a1eb3b467a9dc5211b83911d6eb68d604cd449a1cf4",
+          "curr_hash": "d5818c471ea1ed8ff78ab3324c328d6526dc49e7b8f3cfa6bd7ad8077968f719",
+          "signature": "dcf1bcb1fcd1e7512cb8c4284d85f9a21a9f9b9c4e165910934c458ccd819694"
+        },
+        {
+          "sequence": 14,
+          "timestamp": "2025-11-24T10:51:09.617285+00:00",
+          "event": "FILING_ANALYZED",
+          "actor": "SYSTEM",
+          "action": "ANALYZE",
+          "target": "filing_0000320187_10-Q_2019-10-04",
+          "result": "SUCCESS",
+          "details": {
+            "fraud_risk": 0.3,
+            "red_flags": 1
+          },
+          "prev_hash": "d5818c471ea1ed8ff78ab3324c328d6526dc49e7b8f3cfa6bd7ad8077968f719",
+          "curr_hash": "ff28a4c19c500713eb01e3d997beeb3a76c8b02f0c45427264591f01756b939d",
+          "signature": "1ca0cc40f36b8397ba5ec58b5a73afaea6f3549c44b4f5dddbfc1daf4d8d637b"
+        },
+        {
+          "sequence": 15,
+          "timestamp": "2025-11-24T10:51:10.417975+00:00",
+          "event": "FILING_ANALYZED",
+          "actor": "SYSTEM",
+          "action": "ANALYZE",
+          "target": "filing_0000320187_4_2019-10-02",
+          "result": "SUCCESS",
+          "details": {
+            "fraud_risk": 0,
+            "red_flags": 0
+          },
+          "prev_hash": "ff28a4c19c500713eb01e3d997beeb3a76c8b02f0c45427264591f01756b939d",
+          "curr_hash": "f94dcc43a5f8cc845fb68feb3c9bdf9474b60925cd746f8d5567fee61852beed",
+          "signature": "d85ebcd4a8579281efa0239878caa27c6c71b0dd4f5d0cadc6779127f1d8dfe1"
+        },
+        {
+          "sequence": 16,
+          "timestamp": "2025-11-24T10:51:11.151283+00:00",
+          "event": "FILING_ANALYZED",
+          "actor": "SYSTEM",
+          "action": "ANALYZE",
+          "target": "filing_0000320187_4_2019-09-27",
+          "result": "SUCCESS",
+          "details": {
+            "fraud_risk": 0,
+            "red_flags": 0
+          },
+          "prev_hash": "f94dcc43a5f8cc845fb68feb3c9bdf9474b60925cd746f8d5567fee61852beed",
+          "curr_hash": "efec4a623ebdc61943d259a638fd88e1882e1fe4a95540661de453eac7898011",
+          "signature": "d7b5dfcc9ffb8af500bb547a036b2748cf340b0b20b455a69081d774b3163339"
+        },
+        {
+          "sequence": 17,
+          "timestamp": "2025-11-24T10:51:11.864211+00:00",
+          "event": "FILING_ANALYZED",
+          "actor": "SYSTEM",
+          "action": "ANALYZE",
+          "target": "filing_0000320187_4_2019-09-27",
+          "result": "SUCCESS",
+          "details": {
+            "fraud_risk": 0,
+            "red_flags": 0
+          },
+          "prev_hash": "efec4a623ebdc61943d259a638fd88e1882e1fe4a95540661de453eac7898011",
+          "curr_hash": "215ffc7a22ec3677c291a170d2fdf8d848f5e17d4ebc9d4006cb7d143005c2e7",
+          "signature": "f0fc5e5a5add4b10ccb1e3a507e5b22d58f10fa1166f18d27534afff5a3d42d2"
+        },
+        {
+          "sequence": 18,
+          "timestamp": "2025-11-24T10:51:12.607950+00:00",
+          "event": "FILING_ANALYZED",
+          "actor": "SYSTEM",
+          "action": "ANALYZE",
+          "target": "filing_0000320187_4_2019-09-23",
+          "result": "SUCCESS",
+          "details": {
+            "fraud_risk": 0,
+            "red_flags": 0
+          },
+          "prev_hash": "215ffc7a22ec3677c291a170d2fdf8d848f5e17d4ebc9d4006cb7d143005c2e7",
+          "curr_hash": "8f44e65b110b986a13537de38a2bbe83d3b5fd6ea0076152d2e89d5af0915b6e",
+          "signature": "4d0ab80149d086e17fe06a90380f0daa0fd254d8db730d1a840abc6b1b92307d"
+        },
+        {
+          "sequence": 19,
+          "timestamp": "2025-11-24T10:51:13.340833+00:00",
+          "event": "FILING_ANALYZED",
+          "actor": "SYSTEM",
+          "action": "ANALYZE",
+          "target": "filing_0000320187_4_2019-09-23",
+          "result": "SUCCESS",
+          "details": {
+            "fraud_risk": 0,
+            "red_flags": 0
+          },
+          "prev_hash": "8f44e65b110b986a13537de38a2bbe83d3b5fd6ea0076152d2e89d5af0915b6e",
+          "curr_hash": "cfb85e7acfb04dedb6fa0b83976c492f3c147b7b712fd626da06e62ac0d64fa9",
+          "signature": "18b57768c15f922216d9936218d76471ff32eb8211697c2c44affe60acd10224"
+        },
+        {
+          "sequence": 20,
+          "timestamp": "2025-11-24T10:51:14.054304+00:00",
+          "event": "FILING_ANALYZED",
+          "actor": "SYSTEM",
+          "action": "ANALYZE",
+          "target": "filing_0000320187_4_2019-09-23",
+          "result": "SUCCESS",
+          "details": {
+            "fraud_risk": 0,
+            "red_flags": 0
+          },
+          "prev_hash": "cfb85e7acfb04dedb6fa0b83976c492f3c147b7b712fd626da06e62ac0d64fa9",
+          "curr_hash": "eab38b1cecbda4a0696d92262b550bdafdf48e61cf3b6d1fbf9f3ab600599044",
+          "signature": "5bcccc9d67f040581c37cda6bbe25b4c0c251000d40dfcc31266d9df84ee3745"
+        },
+        {
+          "sequence": 21,
+          "timestamp": "2025-11-24T10:51:14.773993+00:00",
+          "event": "FILING_ANALYZED",
+          "actor": "SYSTEM",
+          "action": "ANALYZE",
+          "target": "filing_0000320187_4_2019-09-23",
+          "result": "SUCCESS",
+          "details": {
+            "fraud_risk": 0,
+            "red_flags": 0
+          },
+          "prev_hash": "eab38b1cecbda4a0696d92262b550bdafdf48e61cf3b6d1fbf9f3ab600599044",
+          "curr_hash": "4c7551648342caecc2ddd03c7ff49c59391e8b680dcac957d3ade6b10fb855ff",
+          "signature": "96be34c13123b3e35fddf5e3403aa58448644d15d6c739e18e23ab1b039b5c8b"
+        },
+        {
+          "sequence": 22,
+          "timestamp": "2025-11-24T10:51:15.498835+00:00",
+          "event": "FILING_ANALYZED",
+          "actor": "SYSTEM",
+          "action": "ANALYZE",
+          "target": "filing_0000320187_4_2019-09-23",
+          "result": "SUCCESS",
+          "details": {
+            "fraud_risk": 0,
+            "red_flags": 0
+          },
+          "prev_hash": "4c7551648342caecc2ddd03c7ff49c59391e8b680dcac957d3ade6b10fb855ff",
+          "curr_hash": "5ba3905b3436b71effaa63164e3fe021c371f329606b1346cf8e9596584314f5",
+          "signature": "bd3432a13aa6ccd6179df33763dbc3ee1a5de4ab40bbec0b87fc747cb161edfd"
+        },
+        {
+          "sequence": 23,
+          "timestamp": "2025-11-24T10:51:16.208873+00:00",
+          "event": "FILING_ANALYZED",
+          "actor": "SYSTEM",
+          "action": "ANALYZE",
+          "target": "filing_0000320187_4_2019-09-23",
+          "result": "SUCCESS",
+          "details": {
+            "fraud_risk": 0,
+            "red_flags": 0
+          },
+          "prev_hash": "5ba3905b3436b71effaa63164e3fe021c371f329606b1346cf8e9596584314f5",
+          "curr_hash": "d24bd95ecf4671938a85d6c68b70e1189639500f3b37c28f0834587db6685a58",
+          "signature": "0f15fb61663a5214097057d44e8760bea8747970dff223d2ee936bbc732e320a"
+        },
+        {
+          "sequence": 24,
+          "timestamp": "2025-11-24T10:51:16.928008+00:00",
+          "event": "FILING_ANALYZED",
+          "actor": "SYSTEM",
+          "action": "ANALYZE",
+          "target": "filing_0000320187_4_2019-09-23",
+          "result": "SUCCESS",
+          "details": {
+            "fraud_risk": 0,
+            "red_flags": 0
+          },
+          "prev_hash": "d24bd95ecf4671938a85d6c68b70e1189639500f3b37c28f0834587db6685a58",
+          "curr_hash": "e1ff13f0efa3c0ff75fe6e1add101b84c142a8fe65328f27f9cb2309dc7a4ce2",
+          "signature": "b4aa32777c7551cb714b86e18162b7b3d19d3e68a16aea27212d3ba69e01c7a3"
+        },
+        {
+          "sequence": 25,
+          "timestamp": "2025-11-24T10:51:17.638265+00:00",
+          "event": "FILING_ANALYZED",
+          "actor": "SYSTEM",
+          "action": "ANALYZE",
+          "target": "filing_0000320187_4_2019-09-23",
+          "result": "SUCCESS",
+          "details": {
+            "fraud_risk": 0,
+            "red_flags": 0
+          },
+          "prev_hash": "e1ff13f0efa3c0ff75fe6e1add101b84c142a8fe65328f27f9cb2309dc7a4ce2",
+          "curr_hash": "1f1db6bb4ed983cee6da0ae48337072880374a3020bbe8de42113af050afb0b3",
+          "signature": "d53a5262c809611b19377d093f63150dd785a48a96bb40a7d0e1f1bfe4397eab"
+        },
+        {
+          "sequence": 26,
+          "timestamp": "2025-11-24T10:51:18.429833+00:00",
+          "event": "FILING_ANALYZED",
+          "actor": "SYSTEM",
+          "action": "ANALYZE",
+          "target": "filing_0000320187_4_2019-09-23",
+          "result": "SUCCESS",
+          "details": {
+            "fraud_risk": 0,
+            "red_flags": 0
+          },
+          "prev_hash": "1f1db6bb4ed983cee6da0ae48337072880374a3020bbe8de42113af050afb0b3",
+          "curr_hash": "6d6a8a94f3121e1edc25fc5ae8fc6b89ce61f889f981e646ff87ec6aa029fe1d",
+          "signature": "1c510b4c937844527424dd907cf89b1816d283c74244cec0bee534ac4d929dae"
+        },
+        {
+          "sequence": 27,
+          "timestamp": "2025-11-24T10:51:19.141235+00:00",
+          "event": "FILING_ANALYZED",
+          "actor": "SYSTEM",
+          "action": "ANALYZE",
+          "target": "filing_0000320187_4_2019-09-23",
+          "result": "SUCCESS",
+          "details": {
+            "fraud_risk": 0,
+            "red_flags": 0
+          },
+          "prev_hash": "6d6a8a94f3121e1edc25fc5ae8fc6b89ce61f889f981e646ff87ec6aa029fe1d",
+          "curr_hash": "c4342ce7266e5601d6f7de076e5db14cb4a04092f30639fb0535b09fd3f3dd36",
+          "signature": "d1beb622f838f8e0cbda831ad99bb0694aead4926cba8db468a11e11d09da9fa"
+        },
+        {
+          "sequence": 28,
+          "timestamp": "2025-11-24T10:51:19.896504+00:00",
+          "event": "FILING_ANALYZED",
+          "actor": "SYSTEM",
+          "action": "ANALYZE",
+          "target": "filing_0000320187_4_2019-09-23",
+          "result": "SUCCESS",
+          "details": {
+            "fraud_risk": 0,
+            "red_flags": 0
+          },
+          "prev_hash": "c4342ce7266e5601d6f7de076e5db14cb4a04092f30639fb0535b09fd3f3dd36",
+          "curr_hash": "a34fc6419a957ba37ddb237853beb2af555ae8db0db63b5adbd1c128ee0363ad",
+          "signature": "a821301e9aad6e2b22e104d0862ffcb76108f2e318b47e25730a671d9c0440a6"
+        },
+        {
+          "sequence": 29,
+          "timestamp": "2025-11-24T10:51:20.707116+00:00",
+          "event": "FILING_ANALYZED",
+          "actor": "SYSTEM",
+          "action": "ANALYZE",
+          "target": "filing_0000320187_4_2019-09-13",
+          "result": "SUCCESS",
+          "details": {
+            "fraud_risk": 0,
+            "red_flags": 0
+          },
+          "prev_hash": "a34fc6419a957ba37ddb237853beb2af555ae8db0db63b5adbd1c128ee0363ad",
+          "curr_hash": "966329df97954df978423ef58eda316b76cc565d6e51f656d8af0a4ac7e24bad",
+          "signature": "c2ae4989bb66f3008654f58e367ac47758250af91269d02ef9caf4d9fe908536"
+        },
+        {
+          "sequence": 30,
+          "timestamp": "2025-11-24T10:51:21.634274+00:00",
+          "event": "FILING_ANALYZED",
+          "actor": "SYSTEM",
+          "action": "ANALYZE",
+          "target": "filing_0000320187_4_2019-09-13",
+          "result": "SUCCESS",
+          "details": {
+            "fraud_risk": 0,
+            "red_flags": 0
+          },
+          "prev_hash": "966329df97954df978423ef58eda316b76cc565d6e51f656d8af0a4ac7e24bad",
+          "curr_hash": "1a0c9dda93da431f18dd7a1587e7005a1e7e72fd1767fb29ab51f5cad62c3489",
+          "signature": "f7b3178c941f4d58ca088d1c2a043c7182ffb05deece63ac3eed79277fb49d0a"
+        },
+        {
+          "sequence": 31,
+          "timestamp": "2025-11-24T10:51:22.346726+00:00",
+          "event": "FILING_ANALYZED",
+          "actor": "SYSTEM",
+          "action": "ANALYZE",
+          "target": "filing_0000320187_4_2019-09-03",
+          "result": "SUCCESS",
+          "details": {
+            "fraud_risk": 0,
+            "red_flags": 0
+          },
+          "prev_hash": "1a0c9dda93da431f18dd7a1587e7005a1e7e72fd1767fb29ab51f5cad62c3489",
+          "curr_hash": "b975e631df19b6689f750125c459934cba2c99fe162aeb97b7a983d7e67e3983",
+          "signature": "b82500af20310a75715b9134b0ba258aecd40e705d10371013e4cdf070ecaad6"
+        },
+        {
+          "sequence": 32,
+          "timestamp": "2025-11-24T10:51:23.075327+00:00",
+          "event": "FILING_ANALYZED",
+          "actor": "SYSTEM",
+          "action": "ANALYZE",
+          "target": "filing_0000320187_4_2019-08-05",
+          "result": "SUCCESS",
+          "details": {
+            "fraud_risk": 0,
+            "red_flags": 0
+          },
+          "prev_hash": "b975e631df19b6689f750125c459934cba2c99fe162aeb97b7a983d7e67e3983",
+          "curr_hash": "f7115b782009011477eb6e2ad797a936aea4a56540d3bd0a891fa082b04d5c49",
+          "signature": "ddafbfa9a6201616b79cad3c9ad0b50c1f072853015c1a7cb03464fe8a3c4f9f"
+        },
+        {
+          "sequence": 33,
+          "timestamp": "2025-11-24T10:51:23.849247+00:00",
+          "event": "FILING_ANALYZED",
+          "actor": "SYSTEM",
+          "action": "ANALYZE",
+          "target": "filing_0000320187_4_2019-08-05",
+          "result": "SUCCESS",
+          "details": {
+            "fraud_risk": 0,
+            "red_flags": 0
+          },
+          "prev_hash": "f7115b782009011477eb6e2ad797a936aea4a56540d3bd0a891fa082b04d5c49",
+          "curr_hash": "983db06f3981b34d6053c51cde541c42190407e667014294fffdda727a5253d6",
+          "signature": "9aed7886f6d6db5707a205da71b452b023bb8d48883c39e67b4b04d6bf0169ba"
+        },
+        {
+          "sequence": 34,
+          "timestamp": "2025-11-24T10:51:24.559634+00:00",
+          "event": "FILING_ANALYZED",
+          "actor": "SYSTEM",
+          "action": "ANALYZE",
+          "target": "filing_0000320187_4_2019-08-05",
+          "result": "SUCCESS",
+          "details": {
+            "fraud_risk": 0,
+            "red_flags": 0
+          },
+          "prev_hash": "983db06f3981b34d6053c51cde541c42190407e667014294fffdda727a5253d6",
+          "curr_hash": "3f90ada6811f62fcd43090b6b63ce7bba201db7e61624f3deba6ce5708b12734",
+          "signature": "382a447e1be7bb9cb29d6f12097dca955b4218c25f6344c19c1e42001ba5cde8"
+        },
+        {
+          "sequence": 35,
+          "timestamp": "2025-11-24T10:51:25.326773+00:00",
+          "event": "FILING_ANALYZED",
+          "actor": "SYSTEM",
+          "action": "ANALYZE",
+          "target": "filing_0000320187_4_2019-08-05",
+          "result": "SUCCESS",
+          "details": {
+            "fraud_risk": 0,
+            "red_flags": 0
+          },
+          "prev_hash": "3f90ada6811f62fcd43090b6b63ce7bba201db7e61624f3deba6ce5708b12734",
+          "curr_hash": "ccea30ea5720e10592271c244415ab7d78ff647155cac5f3f6512299d6b7b74f",
+          "signature": "f1b7f6b39a4d95f458634a2cd3be675f9473ac772b80b8e838a047c29005185f"
+        },
+        {
+          "sequence": 36,
+          "timestamp": "2025-11-24T10:51:26.048327+00:00",
+          "event": "FILING_ANALYZED",
+          "actor": "SYSTEM",
+          "action": "ANALYZE",
+          "target": "filing_0000320187_4_2019-08-05",
+          "result": "SUCCESS",
+          "details": {
+            "fraud_risk": 0,
+            "red_flags": 0
+          },
+          "prev_hash": "ccea30ea5720e10592271c244415ab7d78ff647155cac5f3f6512299d6b7b74f",
+          "curr_hash": "c53ab8a06b5839705516b5716c970ac03bb8e294b7be2f88a5a7b6d6fd2cb4d6",
+          "signature": "500867e84d8928fef95e680226c30f4ff696934b5c25a434b524aebe22c269a5"
+        },
+        {
+          "sequence": 37,
+          "timestamp": "2025-11-24T10:51:26.788652+00:00",
+          "event": "FILING_ANALYZED",
+          "actor": "SYSTEM",
+          "action": "ANALYZE",
+          "target": "filing_0000320187_4_2019-08-05",
+          "result": "SUCCESS",
+          "details": {
+            "fraud_risk": 0,
+            "red_flags": 0
+          },
+          "prev_hash": "c53ab8a06b5839705516b5716c970ac03bb8e294b7be2f88a5a7b6d6fd2cb4d6",
+          "curr_hash": "ebd3e62b51c1ecbbdaab0c1ee6616ae379bec789f16495895adc71949a27f4b9",
+          "signature": "b7f71f1c0a0846058df817477479fb37921ed3866dc51676c34351f2ab86712f"
+        },
+        {
+          "sequence": 38,
+          "timestamp": "2025-11-24T10:51:27.519695+00:00",
+          "event": "FILING_ANALYZED",
+          "actor": "SYSTEM",
+          "action": "ANALYZE",
+          "target": "filing_0000320187_4_2019-08-05",
+          "result": "SUCCESS",
+          "details": {
+            "fraud_risk": 0,
+            "red_flags": 0
+          },
+          "prev_hash": "ebd3e62b51c1ecbbdaab0c1ee6616ae379bec789f16495895adc71949a27f4b9",
+          "curr_hash": "21f193d8fa0750431f9b2e80c674507b5af60f45ac32226dbab3c515afc45cd2",
+          "signature": "98b062694aa96a8bd53c9a9db5e50ccbea873581dd440c6b3f710fab7793a737"
+        },
+        {
+          "sequence": 39,
+          "timestamp": "2025-11-24T10:51:28.251175+00:00",
+          "event": "FILING_ANALYZED",
+          "actor": "SYSTEM",
+          "action": "ANALYZE",
+          "target": "filing_0000320187_4_2019-07-29",
+          "result": "SUCCESS",
+          "details": {
+            "fraud_risk": 0,
+            "red_flags": 0
+          },
+          "prev_hash": "21f193d8fa0750431f9b2e80c674507b5af60f45ac32226dbab3c515afc45cd2",
+          "curr_hash": "4be3e3bef8c2e010f62891ffcce3a3dc631a94cf80d7b49ef7390a9beb6db743",
+          "signature": "35deb587d1afac7c6377381f3b2a9be6e6bc698f2b78c0d1ce58d3969346d448"
+        },
+        {
+          "sequence": 40,
+          "timestamp": "2025-11-24T10:51:28.998593+00:00",
+          "event": "FILING_ANALYZED",
+          "actor": "SYSTEM",
+          "action": "ANALYZE",
+          "target": "filing_0000320187_4_2019-07-29",
+          "result": "SUCCESS",
+          "details": {
+            "fraud_risk": 0,
+            "red_flags": 0
+          },
+          "prev_hash": "4be3e3bef8c2e010f62891ffcce3a3dc631a94cf80d7b49ef7390a9beb6db743",
+          "curr_hash": "bf79446678c841992ccf83b12bc521df6d47da3b3805f27f4e77e493782fab00",
+          "signature": "0df1dbcf550e0ecb7a032565867f6b92c94625f396d082bb99b74970bd7796e8"
+        },
+        {
+          "sequence": 41,
+          "timestamp": "2025-11-24T10:51:29.719034+00:00",
+          "event": "FILING_ANALYZED",
+          "actor": "SYSTEM",
+          "action": "ANALYZE",
+          "target": "filing_0000320187_4_2019-07-24",
+          "result": "SUCCESS",
+          "details": {
+            "fraud_risk": 0,
+            "red_flags": 0
+          },
+          "prev_hash": "bf79446678c841992ccf83b12bc521df6d47da3b3805f27f4e77e493782fab00",
+          "curr_hash": "ba7afdfa56697f061a1efc9ce73e15e0558cbd6e0d80f3339b6a9ca10a912bc8",
+          "signature": "16049ec5a1c9dee26272a88ce4451bab9bcff7d995cd8848680262d5ca5fecbc"
+        },
+        {
+          "sequence": 42,
+          "timestamp": "2025-11-24T10:51:30.435906+00:00",
+          "event": "FILING_ANALYZED",
+          "actor": "SYSTEM",
+          "action": "ANALYZE",
+          "target": "filing_0000320187_4_2019-07-24",
+          "result": "SUCCESS",
+          "details": {
+            "fraud_risk": 0,
+            "red_flags": 0
+          },
+          "prev_hash": "ba7afdfa56697f061a1efc9ce73e15e0558cbd6e0d80f3339b6a9ca10a912bc8",
+          "curr_hash": "dfa7e675d89ec3abd09b13873d3b9ca21c6d70fb2bd94855b7a64504273d4f2b",
+          "signature": "a4fc80b3d7efc374050b3181b3a95c767950acdb6a57539aade0c1362bd353b8"
+        },
+        {
+          "sequence": 43,
+          "timestamp": "2025-11-24T10:51:31.165458+00:00",
+          "event": "FILING_ANALYZED",
+          "actor": "SYSTEM",
+          "action": "ANALYZE",
+          "target": "filing_0000320187_4_2019-07-24",
+          "result": "SUCCESS",
+          "details": {
+            "fraud_risk": 0,
+            "red_flags": 0
+          },
+          "prev_hash": "dfa7e675d89ec3abd09b13873d3b9ca21c6d70fb2bd94855b7a64504273d4f2b",
+          "curr_hash": "d7fb752ffcdf83a90a1c6f2f2ef6c331e13c489462d17d40b6bf30b0e7a03274",
+          "signature": "db16eb945b368895a574f4ac33659895aa60a221ecf618a558e80d1250d69e78"
+        },
+        {
+          "sequence": 44,
+          "timestamp": "2025-11-24T10:51:31.885037+00:00",
+          "event": "FILING_ANALYZED",
+          "actor": "SYSTEM",
+          "action": "ANALYZE",
+          "target": "filing_0000320187_4_2019-07-24",
+          "result": "SUCCESS",
+          "details": {
+            "fraud_risk": 0,
+            "red_flags": 0
+          },
+          "prev_hash": "d7fb752ffcdf83a90a1c6f2f2ef6c331e13c489462d17d40b6bf30b0e7a03274",
+          "curr_hash": "1c681e71538ad0b8790bf036bda49575b56e7ba5209df1bf61378d1af798ca3f",
+          "signature": "216e55cd96a13cb0b2089211df5d7ba01da49d8e82971b4cccd10d6a115890da"
+        },
+        {
+          "sequence": 45,
+          "timestamp": "2025-11-24T10:51:32.614083+00:00",
+          "event": "FILING_ANALYZED",
+          "actor": "SYSTEM",
+          "action": "ANALYZE",
+          "target": "filing_0000320187_4_2019-07-24",
+          "result": "SUCCESS",
+          "details": {
+            "fraud_risk": 0,
+            "red_flags": 0
+          },
+          "prev_hash": "1c681e71538ad0b8790bf036bda49575b56e7ba5209df1bf61378d1af798ca3f",
+          "curr_hash": "4b37f831431ff33beb6c6ab35c15801f29c5f0fe092d25f57015bfe0be3621d8",
+          "signature": "7ce4bdcdea63088c2f45fe2ac31e800280d15475f8d5bbe2dcd10f5d804b15d9"
+        },
+        {
+          "sequence": 46,
+          "timestamp": "2025-11-24T10:51:33.325108+00:00",
+          "event": "FILING_ANALYZED",
+          "actor": "SYSTEM",
+          "action": "ANALYZE",
+          "target": "filing_0000320187_4_2019-07-24",
+          "result": "SUCCESS",
+          "details": {
+            "fraud_risk": 0,
+            "red_flags": 0
+          },
+          "prev_hash": "4b37f831431ff33beb6c6ab35c15801f29c5f0fe092d25f57015bfe0be3621d8",
+          "curr_hash": "5f6ee8f4c73648d0fb7f2d858d7dbc12471a2e8911c4157c3b78584c2c16ebbe",
+          "signature": "7eeb63b4fa846276e699265b910933f7aa6af4cc69cdc15d72b916e512c1a096"
+        },
+        {
+          "sequence": 47,
+          "timestamp": "2025-11-24T10:51:34.074786+00:00",
+          "event": "FILING_ANALYZED",
+          "actor": "SYSTEM",
+          "action": "ANALYZE",
+          "target": "filing_0000320187_4_2019-07-24",
+          "result": "SUCCESS",
+          "details": {
+            "fraud_risk": 0,
+            "red_flags": 0
+          },
+          "prev_hash": "5f6ee8f4c73648d0fb7f2d858d7dbc12471a2e8911c4157c3b78584c2c16ebbe",
+          "curr_hash": "ec248c6fae7c316302d9ccabf44e4fe3d9a49897f9967d1ab0d94350f75979a2",
+          "signature": "236832ac7408eb805965d3df76d6c56b5f06980fd98a5836763eda85585f3434"
+        },
+        {
+          "sequence": 48,
+          "timestamp": "2025-11-24T10:51:34.711763+00:00",
+          "event": "FILING_ANALYZED",
+          "actor": "SYSTEM",
+          "action": "ANALYZE",
+          "target": "filing_0000320187_10-K_2019-07-23",
+          "result": "SUCCESS",
+          "details": {
+            "fraud_risk": 0.3,
+            "red_flags": 1
+          },
+          "prev_hash": "ec248c6fae7c316302d9ccabf44e4fe3d9a49897f9967d1ab0d94350f75979a2",
+          "curr_hash": "d97d9abacac4acec09c60c389e33d980c628efa03dce2584f10e1aa777e63c56",
+          "signature": "2ca25ea2dc87ec1867f94a92f5b84d8147ca685c0b22db4f684d379bfb737c3d"
+        },
+        {
+          "sequence": 49,
+          "timestamp": "2025-11-24T10:51:35.441158+00:00",
+          "event": "FILING_ANALYZED",
+          "actor": "SYSTEM",
+          "action": "ANALYZE",
+          "target": "filing_0000320187_4_2019-07-17",
+          "result": "SUCCESS",
+          "details": {
+            "fraud_risk": 0,
+            "red_flags": 0
+          },
+          "prev_hash": "d97d9abacac4acec09c60c389e33d980c628efa03dce2584f10e1aa777e63c56",
+          "curr_hash": "147030ec8a01ca2830602f04010fa75c9a1212801cdab9b9b871f229cdac8a28",
+          "signature": "35480edb1fd70976701ff94324e62c859caf132ae98e558bfc0c41b128c8715e"
+        },
+        {
+          "sequence": 50,
+          "timestamp": "2025-11-24T10:51:36.171592+00:00",
+          "event": "FILING_ANALYZED",
+          "actor": "SYSTEM",
+          "action": "ANALYZE",
+          "target": "filing_0000320187_4_2019-07-17",
+          "result": "SUCCESS",
+          "details": {
+            "fraud_risk": 0,
+            "red_flags": 0
+          },
+          "prev_hash": "147030ec8a01ca2830602f04010fa75c9a1212801cdab9b9b871f229cdac8a28",
+          "curr_hash": "9a54c3ceeb1438c113701436546aa92cbbd68e4debc56ca68d8878c05b37329b",
+          "signature": "42d4c5a836b68bda413e9a26caa5fb70ebfd5704fb7ed112f37ea6f32731c5a4"
+        },
+        {
+          "sequence": 51,
+          "timestamp": "2025-11-24T10:51:36.951045+00:00",
+          "event": "FILING_ANALYZED",
+          "actor": "SYSTEM",
+          "action": "ANALYZE",
+          "target": "filing_0000320187_4_2019-07-17",
+          "result": "SUCCESS",
+          "details": {
+            "fraud_risk": 0,
+            "red_flags": 0
+          },
+          "prev_hash": "9a54c3ceeb1438c113701436546aa92cbbd68e4debc56ca68d8878c05b37329b",
+          "curr_hash": "0e9fcd2037bc02a3882ab840382808a58fdb6aaa0c8f32b1b470a71cda1b4179",
+          "signature": "72c65784799e5ca5ceb1ef8958ee4da1029a77867efc5397379e488928e9ef91"
+        },
+        {
+          "sequence": 52,
+          "timestamp": "2025-11-24T10:51:37.753839+00:00",
+          "event": "FILING_ANALYZED",
+          "actor": "SYSTEM",
+          "action": "ANALYZE",
+          "target": "filing_0000320187_4_2019-07-17",
+          "result": "SUCCESS",
+          "details": {
+            "fraud_risk": 0,
+            "red_flags": 0
+          },
+          "prev_hash": "0e9fcd2037bc02a3882ab840382808a58fdb6aaa0c8f32b1b470a71cda1b4179",
+          "curr_hash": "b70225a9246a4cbb31b60a714994994ce166b8adeb4bcb60741a4887c28dc8dc",
+          "signature": "95a65947f1ca353300ce8b80ea9014f26ac2260dde57663664267c5a0145986f"
+        },
+        {
+          "sequence": 53,
+          "timestamp": "2025-11-24T10:51:38.475625+00:00",
+          "event": "FILING_ANALYZED",
+          "actor": "SYSTEM",
+          "action": "ANALYZE",
+          "target": "filing_0000320187_4_2019-07-17",
+          "result": "SUCCESS",
+          "details": {
+            "fraud_risk": 0,
+            "red_flags": 0
+          },
+          "prev_hash": "b70225a9246a4cbb31b60a714994994ce166b8adeb4bcb60741a4887c28dc8dc",
+          "curr_hash": "5e0c1a0168b9f93ef940bbe4f9babd1df406dbf9d5ff67654c87da50de0f43c1",
+          "signature": "e2a38b9cdb866d88f26f934c2b1e4ec5924758dd5b3c8c32a3360af2f5192af9"
+        },
+        {
+          "sequence": 54,
+          "timestamp": "2025-11-24T10:51:39.201201+00:00",
+          "event": "FILING_ANALYZED",
+          "actor": "SYSTEM",
+          "action": "ANALYZE",
+          "target": "filing_0000320187_4_2019-07-17",
+          "result": "SUCCESS",
+          "details": {
+            "fraud_risk": 0,
+            "red_flags": 0
+          },
+          "prev_hash": "5e0c1a0168b9f93ef940bbe4f9babd1df406dbf9d5ff67654c87da50de0f43c1",
+          "curr_hash": "38cd03216c9f6e7b2105502cfe455e824ce8fbe7db84d8a3016ceffbe06ea1df",
+          "signature": "da5a9830cec05c0203be82f8b274e72275d868b66d981effba0dbb03fb01c7fb"
+        },
+        {
+          "sequence": 55,
+          "timestamp": "2025-11-24T10:51:39.930426+00:00",
+          "event": "FILING_ANALYZED",
+          "actor": "SYSTEM",
+          "action": "ANALYZE",
+          "target": "filing_0000320187_4_2019-07-17",
+          "result": "SUCCESS",
+          "details": {
+            "fraud_risk": 0,
+            "red_flags": 0
+          },
+          "prev_hash": "38cd03216c9f6e7b2105502cfe455e824ce8fbe7db84d8a3016ceffbe06ea1df",
+          "curr_hash": "06eddf646c5d40e77a269e53c1c0cee227f2d6e52ab2486d72667462ebded33e",
+          "signature": "537faab0fc5d9ed3ad6e248dfc8c75de19a92fdc78c9e253241977e23ff1e1db"
+        },
+        {
+          "sequence": 56,
+          "timestamp": "2025-11-24T10:51:40.655350+00:00",
+          "event": "FILING_ANALYZED",
+          "actor": "SYSTEM",
+          "action": "ANALYZE",
+          "target": "filing_0000320187_4_2019-07-16",
+          "result": "SUCCESS",
+          "details": {
+            "fraud_risk": 0,
+            "red_flags": 0
+          },
+          "prev_hash": "06eddf646c5d40e77a269e53c1c0cee227f2d6e52ab2486d72667462ebded33e",
+          "curr_hash": "2c911ca7897bf2dcc4936eda1b7e3aa816ab0e803b82109c062bf4634487b235",
+          "signature": "d51db1fa1f96a92e814904f1c1ea345fed2f345c9ba30183d27e404ab469e101"
+        },
+        {
+          "sequence": 57,
+          "timestamp": "2025-11-24T10:51:41.405131+00:00",
+          "event": "FILING_ANALYZED",
+          "actor": "SYSTEM",
+          "action": "ANALYZE",
+          "target": "filing_0000320187_4_2019-07-11",
+          "result": "SUCCESS",
+          "details": {
+            "fraud_risk": 0,
+            "red_flags": 0
+          },
+          "prev_hash": "2c911ca7897bf2dcc4936eda1b7e3aa816ab0e803b82109c062bf4634487b235",
+          "curr_hash": "7fd34525c00e5e4c7187d19e590c1398288e99f701b8aa43ddd381f78f73738b",
+          "signature": "4dc561b2da943b29639781084d535ab64e72fb64785437abb7544ea6e8373799"
+        },
+        {
+          "sequence": 58,
+          "timestamp": "2025-11-24T10:51:42.141250+00:00",
+          "event": "FILING_ANALYZED",
+          "actor": "SYSTEM",
+          "action": "ANALYZE",
+          "target": "filing_0000320187_4_2019-07-03",
+          "result": "SUCCESS",
+          "details": {
+            "fraud_risk": 0,
+            "red_flags": 0
+          },
+          "prev_hash": "7fd34525c00e5e4c7187d19e590c1398288e99f701b8aa43ddd381f78f73738b",
+          "curr_hash": "b617021a8eb9ca6ea72605ffcf4f18c02f71228e32cecdb6401f7f091909e0c5",
+          "signature": "9631c3e3293f9a6307fd698eb28771d6e4a9c87b87c6fb16d08c793408e6586f"
+        },
+        {
+          "sequence": 59,
+          "timestamp": "2025-11-24T10:51:42.865209+00:00",
+          "event": "FILING_ANALYZED",
+          "actor": "SYSTEM",
+          "action": "ANALYZE",
+          "target": "filing_0000320187_4_2019-05-06",
+          "result": "SUCCESS",
+          "details": {
+            "fraud_risk": 0,
+            "red_flags": 0
+          },
+          "prev_hash": "b617021a8eb9ca6ea72605ffcf4f18c02f71228e32cecdb6401f7f091909e0c5",
+          "curr_hash": "035bb88b41c34ac1b9702b4f9d1e73c56da43a925ed836213e781cf099cd1691",
+          "signature": "4cdd926a349fcf36423815327a8805532b2cb9c3866e00ee7c0d56b7b5cc4307"
+        },
+        {
+          "sequence": 60,
+          "timestamp": "2025-11-24T10:51:43.612868+00:00",
+          "event": "FILING_ANALYZED",
+          "actor": "SYSTEM",
+          "action": "ANALYZE",
+          "target": "filing_0000320187_4_2019-04-17",
+          "result": "SUCCESS",
+          "details": {
+            "fraud_risk": 0,
+            "red_flags": 0
+          },
+          "prev_hash": "035bb88b41c34ac1b9702b4f9d1e73c56da43a925ed836213e781cf099cd1691",
+          "curr_hash": "f812b90795e203630bc082423de970b2c0f6186df2435da0c1c868c301b54d94",
+          "signature": "3ae6d8f28d1da58ab5135dbbdb420b31775d4ba94e5488f79d1912bcc4d4ff46"
+        },
+        {
+          "sequence": 61,
+          "timestamp": "2025-11-24T10:51:44.257275+00:00",
+          "event": "FILING_ANALYZED",
+          "actor": "SYSTEM",
+          "action": "ANALYZE",
+          "target": "filing_0000320187_10-Q_2019-04-04",
+          "result": "SUCCESS",
+          "details": {
+            "fraud_risk": 0.3,
+            "red_flags": 1
+          },
+          "prev_hash": "f812b90795e203630bc082423de970b2c0f6186df2435da0c1c868c301b54d94",
+          "curr_hash": "b48b0b751bdada9c27630604833f0c6c0da5bd456b8473c64a6889b0b0a33dd6",
+          "signature": "e2c0131cd91a7635e91d4831652a044933077f512d983b8bb9a4337924202933"
+        },
+        {
+          "sequence": 62,
+          "timestamp": "2025-11-24T10:51:44.987119+00:00",
+          "event": "FILING_ANALYZED",
+          "actor": "SYSTEM",
+          "action": "ANALYZE",
+          "target": "filing_0000320187_4_2019-04-03",
+          "result": "SUCCESS",
+          "details": {
+            "fraud_risk": 0,
+            "red_flags": 0
+          },
+          "prev_hash": "b48b0b751bdada9c27630604833f0c6c0da5bd456b8473c64a6889b0b0a33dd6",
+          "curr_hash": "1a18e47c49639402f1917fc6811f03cca040e00b27b82279f439292fe9eefe4d",
+          "signature": "7831f83fe5bdfa892a006d9a377b757e7f01346f944c212adee2743e827578fe"
+        },
+        {
+          "sequence": 63,
+          "timestamp": "2025-11-24T10:51:45.713494+00:00",
+          "event": "FILING_ANALYZED",
+          "actor": "SYSTEM",
+          "action": "ANALYZE",
+          "target": "filing_0000320187_4_2019-03-20",
+          "result": "SUCCESS",
+          "details": {
+            "fraud_risk": 0,
+            "red_flags": 0
+          },
+          "prev_hash": "1a18e47c49639402f1917fc6811f03cca040e00b27b82279f439292fe9eefe4d",
+          "curr_hash": "a9d8f41a2244f8a441fc8fc3ef2c1c63cb2521e8c70a32074556e66788cf6e0c",
+          "signature": "6eca152c3f6054411ab409e8d918f4bfedb252ee5926d3daedb16717bf8a2896"
+        },
+        {
+          "sequence": 64,
+          "timestamp": "2025-11-24T10:51:46.467273+00:00",
+          "event": "FILING_ANALYZED",
+          "actor": "SYSTEM",
+          "action": "ANALYZE",
+          "target": "filing_0000320187_4_2019-02-19",
+          "result": "SUCCESS",
+          "details": {
+            "fraud_risk": 0,
+            "red_flags": 0
+          },
+          "prev_hash": "a9d8f41a2244f8a441fc8fc3ef2c1c63cb2521e8c70a32074556e66788cf6e0c",
+          "curr_hash": "60eb5b6b2782af198ae2a916c223afb5d93893617d4b417e9113cf9a5271ece9",
+          "signature": "8f20fe2d02e5a40aef6162132871fbb5daf77016b85c77f54d340516aaabfe59"
+        },
+        {
+          "sequence": 65,
+          "timestamp": "2025-11-24T10:51:47.247360+00:00",
+          "event": "FILING_ANALYZED",
+          "actor": "SYSTEM",
+          "action": "ANALYZE",
+          "target": "filing_0000320187_4_2019-02-06",
+          "result": "SUCCESS",
+          "details": {
+            "fraud_risk": 0,
+            "red_flags": 0
+          },
+          "prev_hash": "60eb5b6b2782af198ae2a916c223afb5d93893617d4b417e9113cf9a5271ece9",
+          "curr_hash": "e10c64f0d6d7baf9983daa792767d70567c08dd2657f862a3b28db026b56f0ba",
+          "signature": "3128de3643c0e5a330d0d4ce0b2e33bf5bfb2a6871bfc51fb46fe1bddaed1204"
+        },
+        {
+          "sequence": 66,
+          "timestamp": "2025-11-24T10:51:47.967489+00:00",
+          "event": "FILING_ANALYZED",
+          "actor": "SYSTEM",
+          "action": "ANALYZE",
+          "target": "filing_0000320187_4_2019-01-22",
+          "result": "SUCCESS",
+          "details": {
+            "fraud_risk": 0,
+            "red_flags": 0
+          },
+          "prev_hash": "e10c64f0d6d7baf9983daa792767d70567c08dd2657f862a3b28db026b56f0ba",
+          "curr_hash": "c9dcf8e5b7d6a0dd0c742d9174cf01b8316a4581d12e4d15cb73d785bdbebfa2",
+          "signature": "b0714fdd3959be8a2126187a53fd645d58e1c10c0d631611514abe96d9d2b521"
+        },
+        {
+          "sequence": 67,
+          "timestamp": "2025-11-24T10:51:48.692333+00:00",
+          "event": "FILING_ANALYZED",
+          "actor": "SYSTEM",
+          "action": "ANALYZE",
+          "target": "filing_0000320187_4_2019-01-22",
+          "result": "SUCCESS",
+          "details": {
+            "fraud_risk": 0,
+            "red_flags": 0
+          },
+          "prev_hash": "c9dcf8e5b7d6a0dd0c742d9174cf01b8316a4581d12e4d15cb73d785bdbebfa2",
+          "curr_hash": "dba975b7e0864ed3d404d99e085b720f2173231f41a6222e7af5c97c1c1e0aaa",
+          "signature": "ce48c1f0385b4b97855cefd553a5b32b981faaf2e13f0d5340c156bdcf8bfcb7"
+        },
+        {
+          "sequence": 68,
+          "timestamp": "2025-11-24T10:51:49.416210+00:00",
+          "event": "FILING_ANALYZED",
+          "actor": "SYSTEM",
+          "action": "ANALYZE",
+          "target": "filing_0000320187_4_2019-01-17",
+          "result": "SUCCESS",
+          "details": {
+            "fraud_risk": 0,
+            "red_flags": 0
+          },
+          "prev_hash": "dba975b7e0864ed3d404d99e085b720f2173231f41a6222e7af5c97c1c1e0aaa",
+          "curr_hash": "357d7c5da05c3908ef33ce60600d75e5959596bf918788a4d40a5b3908e08cbe",
+          "signature": "5bdc95c6f64f7b66d49ce7164c4eb3a6b16fa55830eff685a5033b0cf72befca"
+        },
+        {
+          "sequence": 69,
+          "timestamp": "2025-11-24T10:51:50.139976+00:00",
+          "event": "FILING_ANALYZED",
+          "actor": "SYSTEM",
+          "action": "ANALYZE",
+          "target": "filing_0000320187_4_2019-01-09",
+          "result": "SUCCESS",
+          "details": {
+            "fraud_risk": 0,
+            "red_flags": 0
+          },
+          "prev_hash": "357d7c5da05c3908ef33ce60600d75e5959596bf918788a4d40a5b3908e08cbe",
+          "curr_hash": "bd742396ed1fadd91eea63331d19a480134b55039ffb663be05e65164ad3dd29",
+          "signature": "2a3bb5d0a5836e65b73593476b1d7000fb189cfd8a341a3dc39d9549594a5775"
+        },
+        {
+          "sequence": 70,
+          "timestamp": "2025-11-24T10:51:50.850373+00:00",
+          "event": "FILING_ANALYZED",
+          "actor": "SYSTEM",
+          "action": "ANALYZE",
+          "target": "filing_0000320187_10-Q_2019-01-08",
+          "result": "SUCCESS",
+          "details": {
+            "fraud_risk": 0.3,
+            "red_flags": 1
+          },
+          "prev_hash": "bd742396ed1fadd91eea63331d19a480134b55039ffb663be05e65164ad3dd29",
+          "curr_hash": "820469256c7ee4b5576cba356eb97f015aeb2da762063b63accddb41f1e4f129",
+          "signature": "548d526056d04c0a6bad6dc964ec6f23aa5cdd3673fc5f503b5af74abe0871e0"
+        },
+        {
+          "sequence": 71,
+          "timestamp": "2025-11-24T10:51:51.577157+00:00",
+          "event": "FILING_ANALYZED",
+          "actor": "SYSTEM",
+          "action": "ANALYZE",
+          "target": "filing_0000320187_4_2019-01-04",
+          "result": "SUCCESS",
+          "details": {
+            "fraud_risk": 0,
+            "red_flags": 0
+          },
+          "prev_hash": "820469256c7ee4b5576cba356eb97f015aeb2da762063b63accddb41f1e4f129",
+          "curr_hash": "b48a5e7d2a245e02a9e9cf2540a54b08cb1006ae584c9ef3f5406f9c7a68642c",
+          "signature": "3c8f50e8a4a2568175933363517ddd2630262972f6218035544c6d5648ac063f"
+        },
+        {
+          "sequence": 72,
+          "timestamp": "2025-11-24T10:51:52.306285+00:00",
+          "event": "FILING_ANALYZED",
+          "actor": "SYSTEM",
+          "action": "ANALYZE",
+          "target": "filing_0000320187_4_2019-01-04",
+          "result": "SUCCESS",
+          "details": {
+            "fraud_risk": 0,
+            "red_flags": 0
+          },
+          "prev_hash": "b48a5e7d2a245e02a9e9cf2540a54b08cb1006ae584c9ef3f5406f9c7a68642c",
+          "curr_hash": "425e37b536da1d082232032e9250da6bc6b9d1a50d516a2b2889c3d3063e8e5e",
+          "signature": "e7de944823cd4a1f6a0cc78335076d79c3af558235948a725d6f02b49db59f4d"
+        },
+        {
+          "sequence": 73,
+          "timestamp": "2025-11-24T10:51:53.690906+00:00",
+          "event": "VIOLATIONS_MAPPED",
+          "actor": "SYSTEM",
+          "action": "MAP",
+          "target": "CASE_0000320187_20251124105032",
+          "result": "SUCCESS",
+          "details": {
+            "total_violations": 1
+          },
+          "prev_hash": "425e37b536da1d082232032e9250da6bc6b9d1a50d516a2b2889c3d3063e8e5e",
+          "curr_hash": "a970c9bd0274b9cb7d54b6f4a705f66c91617090daabeb01fa238a04e3ea8d02",
+          "signature": "cf5085497548493b4c81eb5ea1ee6ff0bf0788da1b533f56aee2e748bb46905a"
+        },
+        {
+          "sequence": 74,
+          "timestamp": "2025-11-24T10:51:57.047309+00:00",
+          "event": "INVESTIGATION_COMPLETE",
+          "actor": "JLAW_CLI",
+          "action": "COMPLETE",
+          "target": "CASE_0000320187_20251124105032",
+          "result": "SUCCESS",
+          "details": {
+            "risk_score": 0.05341549295774648,
+            "violations": 1
+          },
+          "prev_hash": "a970c9bd0274b9cb7d54b6f4a705f66c91617090daabeb01fa238a04e3ea8d02",
+          "curr_hash": "2e073af5ced3f5061d368627d80e1f21dadf7ab714f86f385c4b4fe54fd47fdb",
+          "signature": "21fd249d16f3c376268e59902648661bf04e26e29c85dbe6a33b7d8ff1c93548"
+        }
+      ],
+      "hash_chain": {
+        "chain_id": "audit_log_forensic_investigations",
+        "algorithm": "sha256",
+        "blocks": [
+          {
+            "sequence": 0,
+            "timestamp": "2025-11-24T10:50:30.465242+00:00",
+            "data": {
+              "type": "GENESIS_BLOCK",
+              "chain_id": "audit_log_forensic_investigations"
+            },
+            "previous_hash": "0000000000000000000000000000000000000000000000000000000000000000",
+            "current_hash": "77c411dfe11bfae6fec754ce894d803ab81e058163d587030435b27e748b3ca0",
+            "integrity_level": "GENESIS",
+            "evidence_id": "fcba5826-289e-46a2-9939-545195f71d11",
+            "signatures": {}
+          },
+          {
+            "sequence": 1,
+            "timestamp": "2025-11-24T10:50:32.025675+00:00",
+            "data": {
+              "sequence": 0,
+              "timestamp": "2025-11-24T10:50:32.025171+00:00",
+              "event": "INVESTIGATION_INITIATED",
+              "actor": "JLAW_CLI",
+              "action": "INITIATE",
+              "target": "Nike Inc (CIK: 0000320187)",
+              "result": "SUCCESS",
+              "details": {
+                "case_id": "CASE_0000320187_20251124105032",
+                "notes": "Automated investigation: 6 years analysis"
+              },
+              "prev_hash": "0000000000000000000000000000000000000000000000000000000000000000",
+              "curr_hash": "c76ec344d7d15541644cf71bb4d4dc15094daa5f1012b1c0157bdb554d7844c9",
+              "signature": "ce1057a95b944bd3eb7ee88bb1d0e094b141cf465d79f2d6b292917cbc8bd633"
+            },
+            "previous_hash": "77c411dfe11bfae6fec754ce894d803ab81e058163d587030435b27e748b3ca0",
+            "current_hash": "674691460f9450795c7dd70ebf044c9affae8710a910df611e8308d06517c982",
+            "integrity_level": "HIGH",
+            "evidence_id": "4449ca83-320e-4892-9e08-cc5ea8eed241",
+            "signatures": {}
+          },
+          {
+            "sequence": 2,
+            "timestamp": "2025-11-24T10:50:59.745255+00:00",
+            "data": {
+              "sequence": 1,
+              "timestamp": "2025-11-24T10:50:59.745255+00:00",
+              "event": "FILINGS_COLLECTED",
+              "actor": "SYSTEM",
+              "action": "COLLECT",
+              "target": "CASE_0000320187_20251124105032",
+              "result": "SUCCESS",
+              "details": {
+                "filing_types": [
+                  "10-K",
+                  "10-Q",
+                  "4"
+                ],
+                "date_range": "2019-01-01 to 2019-12-31",
+                "filings_found": 89
+              },
+              "prev_hash": "c76ec344d7d15541644cf71bb4d4dc15094daa5f1012b1c0157bdb554d7844c9",
+              "curr_hash": "1c2928b149fae87ced3955a4f3ae938fe3315e0c48213500328868586d34b47a",
+              "signature": "a547e8c9ea8a55baddbb59d6af184fb0c77227ea6ebf55b4dc4517eb28e31533"
+            },
+            "previous_hash": "674691460f9450795c7dd70ebf044c9affae8710a910df611e8308d06517c982",
+            "current_hash": "bca0e3e71277cab4fbec95d5254c8a022a786265952f2edf76b5d9878a95582c",
+            "integrity_level": "HIGH",
+            "evidence_id": "8b64d3ca-ee4a-4174-9a5c-70a4ed2b9c9c",
+            "signatures": {}
+          },
+          {
+            "sequence": 3,
+            "timestamp": "2025-11-24T10:51:00.535534+00:00",
+            "data": {
+              "sequence": 2,
+              "timestamp": "2025-11-24T10:51:00.535534+00:00",
+              "event": "FILING_ANALYZED",
+              "actor": "SYSTEM",
+              "action": "ANALYZE",
+              "target": "filing_0000320187_4_2019-12-31",
+              "result": "SUCCESS",
+              "details": {
+                "fraud_risk": 0,
+                "red_flags": 0
+              },
+              "prev_hash": "1c2928b149fae87ced3955a4f3ae938fe3315e0c48213500328868586d34b47a",
+              "curr_hash": "60eacd58da34c7fa8d4eb2ebb205be106ee4b18e5dff92a6978d32aa8d42b0cc",
+              "signature": "ff398f9640f02a11c34688fa9e183a91e0b2e24c6b02d587b38d055101f99b7a"
+            },
+            "previous_hash": "bca0e3e71277cab4fbec95d5254c8a022a786265952f2edf76b5d9878a95582c",
+            "current_hash": "89e7b61ae067fc84263f9140dd7c430232f8c180bbbb40b4bced94543c95047d",
+            "integrity_level": "HIGH",
+            "evidence_id": "70d73615-a499-4785-92b9-746e2a7ee128",
+            "signatures": {}
+          },
+          {
+            "sequence": 4,
+            "timestamp": "2025-11-24T10:51:01.324358+00:00",
+            "data": {
+              "sequence": 3,
+              "timestamp": "2025-11-24T10:51:01.324358+00:00",
+              "event": "FILING_ANALYZED",
+              "actor": "SYSTEM",
+              "action": "ANALYZE",
+              "target": "filing_0000320187_4_2019-12-26",
+              "result": "SUCCESS",
+              "details": {
+                "fraud_risk": 0,
+                "red_flags": 0
+              },
+              "prev_hash": "60eacd58da34c7fa8d4eb2ebb205be106ee4b18e5dff92a6978d32aa8d42b0cc",
+              "curr_hash": "696cc14f40fb1cbfb33682625ac6238f40fff55d5154a492300beb5234c4c2e8",
+              "signature": "7ac94e856931872183c33a0e0d33dd9a07b9a11d339e35bbdd29d92920db00fa"
+            },
+            "previous_hash": "89e7b61ae067fc84263f9140dd7c430232f8c180bbbb40b4bced94543c95047d",
+            "current_hash": "65ae27abf955fd93607d2172dbdc67490a700e8e63b07104cc338ec6b4570952",
+            "integrity_level": "HIGH",
+            "evidence_id": "388c9713-d853-4830-8534-100ca07925dc",
+            "signatures": {}
+          },
+          {
+            "sequence": 5,
+            "timestamp": "2025-11-24T10:51:02.076503+00:00",
+            "data": {
+              "sequence": 4,
+              "timestamp": "2025-11-24T10:51:02.076503+00:00",
+              "event": "FILING_ANALYZED",
+              "actor": "SYSTEM",
+              "action": "ANALYZE",
+              "target": "filing_0000320187_4_2019-12-26",
+              "result": "SUCCESS",
+              "details": {
+                "fraud_risk": 0,
+                "red_flags": 0
+              },
+              "prev_hash": "696cc14f40fb1cbfb33682625ac6238f40fff55d5154a492300beb5234c4c2e8",
+              "curr_hash": "bbf800600af31b229fd59d6687e700ef69c85aa3a0a4d90bc34a2d09ea084f58",
+              "signature": "70405c9ac17ddd55a296f3b33dafa38c6245b3d079e6921a4b59cb74287073d9"
+            },
+            "previous_hash": "65ae27abf955fd93607d2172dbdc67490a700e8e63b07104cc338ec6b4570952",
+            "current_hash": "2b4011f00f323386bc91af3de1c858d5466b4dfcb993c010b9c1acb7b9cb4427",
+            "integrity_level": "HIGH",
+            "evidence_id": "5b271b48-fafc-42a0-a351-0164b3a7b23b",
+            "signatures": {}
+          },
+          {
+            "sequence": 6,
+            "timestamp": "2025-11-24T10:51:02.866959+00:00",
+            "data": {
+              "sequence": 5,
+              "timestamp": "2025-11-24T10:51:02.866460+00:00",
+              "event": "FILING_ANALYZED",
+              "actor": "SYSTEM",
+              "action": "ANALYZE",
+              "target": "filing_0000320187_4_2019-12-03",
+              "result": "SUCCESS",
+              "details": {
+                "fraud_risk": 0,
+                "red_flags": 0
+              },
+              "prev_hash": "bbf800600af31b229fd59d6687e700ef69c85aa3a0a4d90bc34a2d09ea084f58",
+              "curr_hash": "ecca0cc8d829d02d5e54a0f0d7156852ab904796d8e4067d56b8171410950e61",
+              "signature": "315ee9420ef02221f85c0dba185f9878a957b16fe5d85f584d85720173e0a9a4"
+            },
+            "previous_hash": "2b4011f00f323386bc91af3de1c858d5466b4dfcb993c010b9c1acb7b9cb4427",
+            "current_hash": "4037e3f50ae521e231f47ddc3e3c32261764c80891a319c43a977770b60b2257",
+            "integrity_level": "HIGH",
+            "evidence_id": "57380ce4-cc33-490e-be0a-6cdd009e3a3c",
+            "signatures": {}
+          },
+          {
+            "sequence": 7,
+            "timestamp": "2025-11-24T10:51:03.602129+00:00",
+            "data": {
+              "sequence": 6,
+              "timestamp": "2025-11-24T10:51:03.602129+00:00",
+              "event": "FILING_ANALYZED",
+              "actor": "SYSTEM",
+              "action": "ANALYZE",
+              "target": "filing_0000320187_4_2019-11-15",
+              "result": "SUCCESS",
+              "details": {
+                "fraud_risk": 0,
+                "red_flags": 0
+              },
+              "prev_hash": "ecca0cc8d829d02d5e54a0f0d7156852ab904796d8e4067d56b8171410950e61",
+              "curr_hash": "762ef763d061a12bf03196be6dc321c9ab798a0d104561db8b5843434ea44efb",
+              "signature": "fb63b54bcf86ff4b5409f1204519eae310836d47e3608b6657802e374cc7612c"
+            },
+            "previous_hash": "4037e3f50ae521e231f47ddc3e3c32261764c80891a319c43a977770b60b2257",
+            "current_hash": "c19b54b1c2b34ead327ab69876b6af530aadfc0d91035baaab4f2458a614bec2",
+            "integrity_level": "HIGH",
+            "evidence_id": "8cbca870-57a4-4b17-b6ae-76d9b99445b6",
+            "signatures": {}
+          },
+          {
+            "sequence": 8,
+            "timestamp": "2025-11-24T10:51:04.379582+00:00",
+            "data": {
+              "sequence": 7,
+              "timestamp": "2025-11-24T10:51:04.379074+00:00",
+              "event": "FILING_ANALYZED",
+              "actor": "SYSTEM",
+              "action": "ANALYZE",
+              "target": "filing_0000320187_4_2019-10-31",
+              "result": "SUCCESS",
+              "details": {
+                "fraud_risk": 0,
+                "red_flags": 0
+              },
+              "prev_hash": "762ef763d061a12bf03196be6dc321c9ab798a0d104561db8b5843434ea44efb",
+              "curr_hash": "cf23c021ab24169ecf70adc82895c242d11779d3e1489e4af525239e929e5ed7",
+              "signature": "84ea4823a1cd633e864382efc0631b80baaef14a5abab3c8884c6bb66d56f3ba"
+            },
+            "previous_hash": "c19b54b1c2b34ead327ab69876b6af530aadfc0d91035baaab4f2458a614bec2",
+            "current_hash": "2a8385ddeb4ed3f8bf0cac1c4ab5703ac1960f19eae16c51a480f1403294a3d6",
+            "integrity_level": "HIGH",
+            "evidence_id": "d4f9978d-70fe-44fc-a949-ad20751955ef",
+            "signatures": {}
+          },
+          {
+            "sequence": 9,
+            "timestamp": "2025-11-24T10:51:05.166986+00:00",
+            "data": {
+              "sequence": 8,
+              "timestamp": "2025-11-24T10:51:05.166986+00:00",
+              "event": "FILING_ANALYZED",
+              "actor": "SYSTEM",
+              "action": "ANALYZE",
+              "target": "filing_0000320187_4_2019-10-31",
+              "result": "SUCCESS",
+              "details": {
+                "fraud_risk": 0,
+                "red_flags": 0
+              },
+              "prev_hash": "cf23c021ab24169ecf70adc82895c242d11779d3e1489e4af525239e929e5ed7",
+              "curr_hash": "7ecd98436e44f62f66c7b0980185c3260f570364253b1f48bf3cfbfde95da04e",
+              "signature": "c9273dee9de3f6a865cffe0c56b9407b9a1f635e01588e954eda92c313308578"
+            },
+            "previous_hash": "2a8385ddeb4ed3f8bf0cac1c4ab5703ac1960f19eae16c51a480f1403294a3d6",
+            "current_hash": "7e197b14be739a2dca78210dcc3a1d01e23857f5b03d6a2031eeb6cc6a9cef7d",
+            "integrity_level": "HIGH",
+            "evidence_id": "79595149-e5be-4cfe-8b23-88ea4aa99876",
+            "signatures": {}
+          },
+          {
+            "sequence": 10,
+            "timestamp": "2025-11-24T10:51:05.921584+00:00",
+            "data": {
+              "sequence": 9,
+              "timestamp": "2025-11-24T10:51:05.921584+00:00",
+              "event": "FILING_ANALYZED",
+              "actor": "SYSTEM",
+              "action": "ANALYZE",
+              "target": "filing_0000320187_4_2019-10-31",
+              "result": "SUCCESS",
+              "details": {
+                "fraud_risk": 0,
+                "red_flags": 0
+              },
+              "prev_hash": "7ecd98436e44f62f66c7b0980185c3260f570364253b1f48bf3cfbfde95da04e",
+              "curr_hash": "c493093c4eb3f7b65f28aadd4781da6fd5072e7a7ccaa92e4edbf5e9ea367550",
+              "signature": "13a6426524b77f73124c55a9d1dd86612892cb7687c6fe32c6b32e9808782b68"
+            },
+            "previous_hash": "7e197b14be739a2dca78210dcc3a1d01e23857f5b03d6a2031eeb6cc6a9cef7d",
+            "current_hash": "9d93b945164e74c617ec4055d9103c7c585a63d207cc69b324bf82b58ad527e8",
+            "integrity_level": "HIGH",
+            "evidence_id": "f161458b-a9e8-44a2-96bf-10cd18b2ad3e",
+            "signatures": {}
+          },
+          {
+            "sequence": 11,
+            "timestamp": "2025-11-24T10:51:06.751522+00:00",
+            "data": {
+              "sequence": 10,
+              "timestamp": "2025-11-24T10:51:06.751522+00:00",
+              "event": "FILING_ANALYZED",
+              "actor": "SYSTEM",
+              "action": "ANALYZE",
+              "target": "filing_0000320187_4_2019-10-31",
+              "result": "SUCCESS",
+              "details": {
+                "fraud_risk": 0,
+                "red_flags": 0
+              },
+              "prev_hash": "c493093c4eb3f7b65f28aadd4781da6fd5072e7a7ccaa92e4edbf5e9ea367550",
+              "curr_hash": "d67f19bce5585675985b92e626fba9cc88a3d8f520388ed09ccde6f45d614fe3",
+              "signature": "17688d761d8dc9ef7baa000a245267da6cffa21a54c0fdf027ca54565a3b9ad3"
+            },
+            "previous_hash": "9d93b945164e74c617ec4055d9103c7c585a63d207cc69b324bf82b58ad527e8",
+            "current_hash": "a55a99b6265b894274b181a3ed178030fc009721ae2b59186e53d3d65a385e1a",
+            "integrity_level": "HIGH",
+            "evidence_id": "2c8082a7-2e73-4f33-9b4b-c6544a46d43f",
+            "signatures": {}
+          },
+          {
+            "sequence": 12,
+            "timestamp": "2025-11-24T10:51:07.493783+00:00",
+            "data": {
+              "sequence": 11,
+              "timestamp": "2025-11-24T10:51:07.493283+00:00",
+              "event": "FILING_ANALYZED",
+              "actor": "SYSTEM",
+              "action": "ANALYZE",
+              "target": "filing_0000320187_4_2019-10-31",
+              "result": "SUCCESS",
+              "details": {
+                "fraud_risk": 0,
+                "red_flags": 0
+              },
+              "prev_hash": "d67f19bce5585675985b92e626fba9cc88a3d8f520388ed09ccde6f45d614fe3",
+              "curr_hash": "dc4bb378bead47a25525f3670cbbae38c50db08d7f48b67ab290632f89e82326",
+              "signature": "980fa0641dc373618db37a940e0a7e96693b91d13c6a7b7f6c2fa0a650a3cd80"
+            },
+            "previous_hash": "a55a99b6265b894274b181a3ed178030fc009721ae2b59186e53d3d65a385e1a",
+            "current_hash": "914bb979a218b33703e62a84a0b6d2220248f49baad744244006fe186f75bdd3",
+            "integrity_level": "HIGH",
+            "evidence_id": "2817add5-f904-417f-9398-0047a5eb3f55",
+            "signatures": {}
+          },
+          {
+            "sequence": 13,
+            "timestamp": "2025-11-24T10:51:08.209094+00:00",
+            "data": {
+              "sequence": 12,
+              "timestamp": "2025-11-24T10:51:08.208040+00:00",
+              "event": "FILING_ANALYZED",
+              "actor": "SYSTEM",
+              "action": "ANALYZE",
+              "target": "filing_0000320187_4_2019-10-31",
+              "result": "SUCCESS",
+              "details": {
+                "fraud_risk": 0,
+                "red_flags": 0
+              },
+              "prev_hash": "dc4bb378bead47a25525f3670cbbae38c50db08d7f48b67ab290632f89e82326",
+              "curr_hash": "1f31d19621ce9308f9045a1eb3b467a9dc5211b83911d6eb68d604cd449a1cf4",
+              "signature": "5a73d080d211d3314b4922ec5f0d0d6d3a97915b17b8615a95698a861ff91dcd"
+            },
+            "previous_hash": "914bb979a218b33703e62a84a0b6d2220248f49baad744244006fe186f75bdd3",
+            "current_hash": "abae9e0c5f785c6e950d3a79da1c07aef04c371630a4211047deb3d863d6e32b",
+            "integrity_level": "HIGH",
+            "evidence_id": "1bac911a-c10b-4426-91e5-0694e2b9fd85",
+            "signatures": {}
+          },
+          {
+            "sequence": 14,
+            "timestamp": "2025-11-24T10:51:08.936446+00:00",
+            "data": {
+              "sequence": 13,
+              "timestamp": "2025-11-24T10:51:08.936446+00:00",
+              "event": "FILING_ANALYZED",
+              "actor": "SYSTEM",
+              "action": "ANALYZE",
+              "target": "filing_0000320187_4_2019-10-04",
+              "result": "SUCCESS",
+              "details": {
+                "fraud_risk": 0,
+                "red_flags": 0
+              },
+              "prev_hash": "1f31d19621ce9308f9045a1eb3b467a9dc5211b83911d6eb68d604cd449a1cf4",
+              "curr_hash": "d5818c471ea1ed8ff78ab3324c328d6526dc49e7b8f3cfa6bd7ad8077968f719",
+              "signature": "dcf1bcb1fcd1e7512cb8c4284d85f9a21a9f9b9c4e165910934c458ccd819694"
+            },
+            "previous_hash": "abae9e0c5f785c6e950d3a79da1c07aef04c371630a4211047deb3d863d6e32b",
+            "current_hash": "ac414f70e6372fe077052b5741a835cb6edd394ae77d0669e7d07b9dbba37725",
+            "integrity_level": "HIGH",
+            "evidence_id": "1cb3ea4f-6542-4f0a-9071-b430e50214b9",
+            "signatures": {}
+          },
+          {
+            "sequence": 15,
+            "timestamp": "2025-11-24T10:51:09.617285+00:00",
+            "data": {
+              "sequence": 14,
+              "timestamp": "2025-11-24T10:51:09.617285+00:00",
+              "event": "FILING_ANALYZED",
+              "actor": "SYSTEM",
+              "action": "ANALYZE",
+              "target": "filing_0000320187_10-Q_2019-10-04",
+              "result": "SUCCESS",
+              "details": {
+                "fraud_risk": 0.3,
+                "red_flags": 1
+              },
+              "prev_hash": "d5818c471ea1ed8ff78ab3324c328d6526dc49e7b8f3cfa6bd7ad8077968f719",
+              "curr_hash": "ff28a4c19c500713eb01e3d997beeb3a76c8b02f0c45427264591f01756b939d",
+              "signature": "1ca0cc40f36b8397ba5ec58b5a73afaea6f3549c44b4f5dddbfc1daf4d8d637b"
+            },
+            "previous_hash": "ac414f70e6372fe077052b5741a835cb6edd394ae77d0669e7d07b9dbba37725",
+            "current_hash": "7c2e0689adfda2f722419f1a75b62682a9493e620db37b2e5be8539d6a700d2e",
+            "integrity_level": "HIGH",
+            "evidence_id": "c3517d7a-5ad0-4e0b-a002-18886532625b",
+            "signatures": {}
+          },
+          {
+            "sequence": 16,
+            "timestamp": "2025-11-24T10:51:10.417975+00:00",
+            "data": {
+              "sequence": 15,
+              "timestamp": "2025-11-24T10:51:10.417975+00:00",
+              "event": "FILING_ANALYZED",
+              "actor": "SYSTEM",
+              "action": "ANALYZE",
+              "target": "filing_0000320187_4_2019-10-02",
+              "result": "SUCCESS",
+              "details": {
+                "fraud_risk": 0,
+                "red_flags": 0
+              },
+              "prev_hash": "ff28a4c19c500713eb01e3d997beeb3a76c8b02f0c45427264591f01756b939d",
+              "curr_hash": "f94dcc43a5f8cc845fb68feb3c9bdf9474b60925cd746f8d5567fee61852beed",
+              "signature": "d85ebcd4a8579281efa0239878caa27c6c71b0dd4f5d0cadc6779127f1d8dfe1"
+            },
+            "previous_hash": "7c2e0689adfda2f722419f1a75b62682a9493e620db37b2e5be8539d6a700d2e",
+            "current_hash": "f416811ac70542fab7810eb946acce4e46a7a9042184e4db935ed8ba11899d7d",
+            "integrity_level": "HIGH",
+            "evidence_id": "860412c0-4f08-4933-84b0-974798809916",
+            "signatures": {}
+          },
+          {
+            "sequence": 17,
+            "timestamp": "2025-11-24T10:51:11.151790+00:00",
+            "data": {
+              "sequence": 16,
+              "timestamp": "2025-11-24T10:51:11.151283+00:00",
+              "event": "FILING_ANALYZED",
+              "actor": "SYSTEM",
+              "action": "ANALYZE",
+              "target": "filing_0000320187_4_2019-09-27",
+              "result": "SUCCESS",
+              "details": {
+                "fraud_risk": 0,
+                "red_flags": 0
+              },
+              "prev_hash": "f94dcc43a5f8cc845fb68feb3c9bdf9474b60925cd746f8d5567fee61852beed",
+              "curr_hash": "efec4a623ebdc61943d259a638fd88e1882e1fe4a95540661de453eac7898011",
+              "signature": "d7b5dfcc9ffb8af500bb547a036b2748cf340b0b20b455a69081d774b3163339"
+            },
+            "previous_hash": "f416811ac70542fab7810eb946acce4e46a7a9042184e4db935ed8ba11899d7d",
+            "current_hash": "02c1610bae0b07903005894abf63e017b34986284ad378024c689e66d97eb3ba",
+            "integrity_level": "HIGH",
+            "evidence_id": "3776329f-6a83-4b92-8884-2316f143d6fd",
+            "signatures": {}
+          },
+          {
+            "sequence": 18,
+            "timestamp": "2025-11-24T10:51:11.864709+00:00",
+            "data": {
+              "sequence": 17,
+              "timestamp": "2025-11-24T10:51:11.864211+00:00",
+              "event": "FILING_ANALYZED",
+              "actor": "SYSTEM",
+              "action": "ANALYZE",
+              "target": "filing_0000320187_4_2019-09-27",
+              "result": "SUCCESS",
+              "details": {
+                "fraud_risk": 0,
+                "red_flags": 0
+              },
+              "prev_hash": "efec4a623ebdc61943d259a638fd88e1882e1fe4a95540661de453eac7898011",
+              "curr_hash": "215ffc7a22ec3677c291a170d2fdf8d848f5e17d4ebc9d4006cb7d143005c2e7",
+              "signature": "f0fc5e5a5add4b10ccb1e3a507e5b22d58f10fa1166f18d27534afff5a3d42d2"
+            },
+            "previous_hash": "02c1610bae0b07903005894abf63e017b34986284ad378024c689e66d97eb3ba",
+            "current_hash": "6b33274931c4f9317f7756078f5c4982009d7af2962815992706d8491a46ca09",
+            "integrity_level": "HIGH",
+            "evidence_id": "80dbdc3a-f8d6-4e12-ac1c-4e6403840a97",
+            "signatures": {}
+          },
+          {
+            "sequence": 19,
+            "timestamp": "2025-11-24T10:51:12.607950+00:00",
+            "data": {
+              "sequence": 18,
+              "timestamp": "2025-11-24T10:51:12.607950+00:00",
+              "event": "FILING_ANALYZED",
+              "actor": "SYSTEM",
+              "action": "ANALYZE",
+              "target": "filing_0000320187_4_2019-09-23",
+              "result": "SUCCESS",
+              "details": {
+                "fraud_risk": 0,
+                "red_flags": 0
+              },
+              "prev_hash": "215ffc7a22ec3677c291a170d2fdf8d848f5e17d4ebc9d4006cb7d143005c2e7",
+              "curr_hash": "8f44e65b110b986a13537de38a2bbe83d3b5fd6ea0076152d2e89d5af0915b6e",
+              "signature": "4d0ab80149d086e17fe06a90380f0daa0fd254d8db730d1a840abc6b1b92307d"
+            },
+            "previous_hash": "6b33274931c4f9317f7756078f5c4982009d7af2962815992706d8491a46ca09",
+            "current_hash": "c32c39fd9392f64d73d0f30d7c713f172b58d45bcc48267e92f7d9d3efa27262",
+            "integrity_level": "HIGH",
+            "evidence_id": "82264cda-ddf6-4b1c-afd9-0dd5401929d7",
+            "signatures": {}
+          },
+          {
+            "sequence": 20,
+            "timestamp": "2025-11-24T10:51:13.341334+00:00",
+            "data": {
+              "sequence": 19,
+              "timestamp": "2025-11-24T10:51:13.340833+00:00",
+              "event": "FILING_ANALYZED",
+              "actor": "SYSTEM",
+              "action": "ANALYZE",
+              "target": "filing_0000320187_4_2019-09-23",
+              "result": "SUCCESS",
+              "details": {
+                "fraud_risk": 0,
+                "red_flags": 0
+              },
+              "prev_hash": "8f44e65b110b986a13537de38a2bbe83d3b5fd6ea0076152d2e89d5af0915b6e",
+              "curr_hash": "cfb85e7acfb04dedb6fa0b83976c492f3c147b7b712fd626da06e62ac0d64fa9",
+              "signature": "18b57768c15f922216d9936218d76471ff32eb8211697c2c44affe60acd10224"
+            },
+            "previous_hash": "c32c39fd9392f64d73d0f30d7c713f172b58d45bcc48267e92f7d9d3efa27262",
+            "current_hash": "ff465d3b5fbdaf05189386e1f1f122662e16340c2529552ea305f1b986a910de",
+            "integrity_level": "HIGH",
+            "evidence_id": "c9b49427-3ed2-41c6-a6de-c104e2558036",
+            "signatures": {}
+          },
+          {
+            "sequence": 21,
+            "timestamp": "2025-11-24T10:51:14.054304+00:00",
+            "data": {
+              "sequence": 20,
+              "timestamp": "2025-11-24T10:51:14.054304+00:00",
+              "event": "FILING_ANALYZED",
+              "actor": "SYSTEM",
+              "action": "ANALYZE",
+              "target": "filing_0000320187_4_2019-09-23",
+              "result": "SUCCESS",
+              "details": {
+                "fraud_risk": 0,
+                "red_flags": 0
+              },
+              "prev_hash": "cfb85e7acfb04dedb6fa0b83976c492f3c147b7b712fd626da06e62ac0d64fa9",
+              "curr_hash": "eab38b1cecbda4a0696d92262b550bdafdf48e61cf3b6d1fbf9f3ab600599044",
+              "signature": "5bcccc9d67f040581c37cda6bbe25b4c0c251000d40dfcc31266d9df84ee3745"
+            },
+            "previous_hash": "ff465d3b5fbdaf05189386e1f1f122662e16340c2529552ea305f1b986a910de",
+            "current_hash": "37a4abe358ebb529913f0c01cfdc3e4eaa9582f7b03372bf1328d1f0ad1f506d",
+            "integrity_level": "HIGH",
+            "evidence_id": "b0dc28c6-6191-40c1-90b2-352685e09c1f",
+            "signatures": {}
+          },
+          {
+            "sequence": 22,
+            "timestamp": "2025-11-24T10:51:14.773993+00:00",
+            "data": {
+              "sequence": 21,
+              "timestamp": "2025-11-24T10:51:14.773993+00:00",
+              "event": "FILING_ANALYZED",
+              "actor": "SYSTEM",
+              "action": "ANALYZE",
+              "target": "filing_0000320187_4_2019-09-23",
+              "result": "SUCCESS",
+              "details": {
+                "fraud_risk": 0,
+                "red_flags": 0
+              },
+              "prev_hash": "eab38b1cecbda4a0696d92262b550bdafdf48e61cf3b6d1fbf9f3ab600599044",
+              "curr_hash": "4c7551648342caecc2ddd03c7ff49c59391e8b680dcac957d3ade6b10fb855ff",
+              "signature": "96be34c13123b3e35fddf5e3403aa58448644d15d6c739e18e23ab1b039b5c8b"
+            },
+            "previous_hash": "37a4abe358ebb529913f0c01cfdc3e4eaa9582f7b03372bf1328d1f0ad1f506d",
+            "current_hash": "3083b31889b54cfaed50b3ebcbbe989a88bdc51b09d5a74e497eae507de2251c",
+            "integrity_level": "HIGH",
+            "evidence_id": "8dd6bae9-9f98-468a-860c-43feef2ef811",
+            "signatures": {}
+          },
+          {
+            "sequence": 23,
+            "timestamp": "2025-11-24T10:51:15.498835+00:00",
+            "data": {
+              "sequence": 22,
+              "timestamp": "2025-11-24T10:51:15.498835+00:00",
+              "event": "FILING_ANALYZED",
+              "actor": "SYSTEM",
+              "action": "ANALYZE",
+              "target": "filing_0000320187_4_2019-09-23",
+              "result": "SUCCESS",
+              "details": {
+                "fraud_risk": 0,
+                "red_flags": 0
+              },
+              "prev_hash": "4c7551648342caecc2ddd03c7ff49c59391e8b680dcac957d3ade6b10fb855ff",
+              "curr_hash": "5ba3905b3436b71effaa63164e3fe021c371f329606b1346cf8e9596584314f5",
+              "signature": "bd3432a13aa6ccd6179df33763dbc3ee1a5de4ab40bbec0b87fc747cb161edfd"
+            },
+            "previous_hash": "3083b31889b54cfaed50b3ebcbbe989a88bdc51b09d5a74e497eae507de2251c",
+            "current_hash": "6aec07b7be22354c525611844f68895e9a6dfeb4d3f86564b4f1ff049b0113a8",
+            "integrity_level": "HIGH",
+            "evidence_id": "883d5fd3-01e6-48d4-a2ef-56b1dad5c29c",
+            "signatures": {}
+          },
+          {
+            "sequence": 24,
+            "timestamp": "2025-11-24T10:51:16.209379+00:00",
+            "data": {
+              "sequence": 23,
+              "timestamp": "2025-11-24T10:51:16.208873+00:00",
+              "event": "FILING_ANALYZED",
+              "actor": "SYSTEM",
+              "action": "ANALYZE",
+              "target": "filing_0000320187_4_2019-09-23",
+              "result": "SUCCESS",
+              "details": {
+                "fraud_risk": 0,
+                "red_flags": 0
+              },
+              "prev_hash": "5ba3905b3436b71effaa63164e3fe021c371f329606b1346cf8e9596584314f5",
+              "curr_hash": "d24bd95ecf4671938a85d6c68b70e1189639500f3b37c28f0834587db6685a58",
+              "signature": "0f15fb61663a5214097057d44e8760bea8747970dff223d2ee936bbc732e320a"
+            },
+            "previous_hash": "6aec07b7be22354c525611844f68895e9a6dfeb4d3f86564b4f1ff049b0113a8",
+            "current_hash": "fc074f7aee03e2673093e72d6c389891d92d1abe7fc17d6ba7500131f81120ac",
+            "integrity_level": "HIGH",
+            "evidence_id": "55ccc1ce-24b3-4443-90f2-0bf5fe21638c",
+            "signatures": {}
+          },
+          {
+            "sequence": 25,
+            "timestamp": "2025-11-24T10:51:16.928512+00:00",
+            "data": {
+              "sequence": 24,
+              "timestamp": "2025-11-24T10:51:16.928008+00:00",
+              "event": "FILING_ANALYZED",
+              "actor": "SYSTEM",
+              "action": "ANALYZE",
+              "target": "filing_0000320187_4_2019-09-23",
+              "result": "SUCCESS",
+              "details": {
+                "fraud_risk": 0,
+                "red_flags": 0
+              },
+              "prev_hash": "d24bd95ecf4671938a85d6c68b70e1189639500f3b37c28f0834587db6685a58",
+              "curr_hash": "e1ff13f0efa3c0ff75fe6e1add101b84c142a8fe65328f27f9cb2309dc7a4ce2",
+              "signature": "b4aa32777c7551cb714b86e18162b7b3d19d3e68a16aea27212d3ba69e01c7a3"
+            },
+            "previous_hash": "fc074f7aee03e2673093e72d6c389891d92d1abe7fc17d6ba7500131f81120ac",
+            "current_hash": "84362f84b5dd72d3c8f87a82e679785b349bee45cbfb53280f77947341d84ff0",
+            "integrity_level": "HIGH",
+            "evidence_id": "f5924e87-0c0e-456a-b468-eb85e3a02ab1",
+            "signatures": {}
+          },
+          {
+            "sequence": 26,
+            "timestamp": "2025-11-24T10:51:17.638770+00:00",
+            "data": {
+              "sequence": 25,
+              "timestamp": "2025-11-24T10:51:17.638265+00:00",
+              "event": "FILING_ANALYZED",
+              "actor": "SYSTEM",
+              "action": "ANALYZE",
+              "target": "filing_0000320187_4_2019-09-23",
+              "result": "SUCCESS",
+              "details": {
+                "fraud_risk": 0,
+                "red_flags": 0
+              },
+              "prev_hash": "e1ff13f0efa3c0ff75fe6e1add101b84c142a8fe65328f27f9cb2309dc7a4ce2",
+              "curr_hash": "1f1db6bb4ed983cee6da0ae48337072880374a3020bbe8de42113af050afb0b3",
+              "signature": "d53a5262c809611b19377d093f63150dd785a48a96bb40a7d0e1f1bfe4397eab"
+            },
+            "previous_hash": "84362f84b5dd72d3c8f87a82e679785b349bee45cbfb53280f77947341d84ff0",
+            "current_hash": "cb63b3afc42ce57ff2221253c476f00be15dfeb7063c04668e84fc2378ccc513",
+            "integrity_level": "HIGH",
+            "evidence_id": "ded34ea7-faa2-4c05-867a-d61ffc5a9724",
+            "signatures": {}
+          },
+          {
+            "sequence": 27,
+            "timestamp": "2025-11-24T10:51:18.430332+00:00",
+            "data": {
+              "sequence": 26,
+              "timestamp": "2025-11-24T10:51:18.429833+00:00",
+              "event": "FILING_ANALYZED",
+              "actor": "SYSTEM",
+              "action": "ANALYZE",
+              "target": "filing_0000320187_4_2019-09-23",
+              "result": "SUCCESS",
+              "details": {
+                "fraud_risk": 0,
+                "red_flags": 0
+              },
+              "prev_hash": "1f1db6bb4ed983cee6da0ae48337072880374a3020bbe8de42113af050afb0b3",
+              "curr_hash": "6d6a8a94f3121e1edc25fc5ae8fc6b89ce61f889f981e646ff87ec6aa029fe1d",
+              "signature": "1c510b4c937844527424dd907cf89b1816d283c74244cec0bee534ac4d929dae"
+            },
+            "previous_hash": "cb63b3afc42ce57ff2221253c476f00be15dfeb7063c04668e84fc2378ccc513",
+            "current_hash": "eb1a9750dec1cc4b90c13aa49074b37a5ad1312761af39096f29305104f52a25",
+            "integrity_level": "HIGH",
+            "evidence_id": "40a06c6c-d724-438c-8c6e-680987b88d82",
+            "signatures": {}
+          },
+          {
+            "sequence": 28,
+            "timestamp": "2025-11-24T10:51:19.142265+00:00",
+            "data": {
+              "sequence": 27,
+              "timestamp": "2025-11-24T10:51:19.141235+00:00",
+              "event": "FILING_ANALYZED",
+              "actor": "SYSTEM",
+              "action": "ANALYZE",
+              "target": "filing_0000320187_4_2019-09-23",
+              "result": "SUCCESS",
+              "details": {
+                "fraud_risk": 0,
+                "red_flags": 0
+              },
+              "prev_hash": "6d6a8a94f3121e1edc25fc5ae8fc6b89ce61f889f981e646ff87ec6aa029fe1d",
+              "curr_hash": "c4342ce7266e5601d6f7de076e5db14cb4a04092f30639fb0535b09fd3f3dd36",
+              "signature": "d1beb622f838f8e0cbda831ad99bb0694aead4926cba8db468a11e11d09da9fa"
+            },
+            "previous_hash": "eb1a9750dec1cc4b90c13aa49074b37a5ad1312761af39096f29305104f52a25",
+            "current_hash": "995d4c7841f574354d0a1aabedc0be677d4ffda4f0ef6410e685d110eb74987f",
+            "integrity_level": "HIGH",
+            "evidence_id": "3bfebd94-124c-4e2d-b4f7-8762ccf44098",
+            "signatures": {}
+          },
+          {
+            "sequence": 29,
+            "timestamp": "2025-11-24T10:51:19.897006+00:00",
+            "data": {
+              "sequence": 28,
+              "timestamp": "2025-11-24T10:51:19.896504+00:00",
+              "event": "FILING_ANALYZED",
+              "actor": "SYSTEM",
+              "action": "ANALYZE",
+              "target": "filing_0000320187_4_2019-09-23",
+              "result": "SUCCESS",
+              "details": {
+                "fraud_risk": 0,
+                "red_flags": 0
+              },
+              "prev_hash": "c4342ce7266e5601d6f7de076e5db14cb4a04092f30639fb0535b09fd3f3dd36",
+              "curr_hash": "a34fc6419a957ba37ddb237853beb2af555ae8db0db63b5adbd1c128ee0363ad",
+              "signature": "a821301e9aad6e2b22e104d0862ffcb76108f2e318b47e25730a671d9c0440a6"
+            },
+            "previous_hash": "995d4c7841f574354d0a1aabedc0be677d4ffda4f0ef6410e685d110eb74987f",
+            "current_hash": "a6a9dccbc0ae96becf710f077d54794dcf7e63d84e720be9bcd2e1fa517dce1c",
+            "integrity_level": "HIGH",
+            "evidence_id": "eee633b1-06f5-409f-86ea-3c5e99ea5465",
+            "signatures": {}
+          },
+          {
+            "sequence": 30,
+            "timestamp": "2025-11-24T10:51:20.707116+00:00",
+            "data": {
+              "sequence": 29,
+              "timestamp": "2025-11-24T10:51:20.707116+00:00",
+              "event": "FILING_ANALYZED",
+              "actor": "SYSTEM",
+              "action": "ANALYZE",
+              "target": "filing_0000320187_4_2019-09-13",
+              "result": "SUCCESS",
+              "details": {
+                "fraud_risk": 0,
+                "red_flags": 0
+              },
+              "prev_hash": "a34fc6419a957ba37ddb237853beb2af555ae8db0db63b5adbd1c128ee0363ad",
+              "curr_hash": "966329df97954df978423ef58eda316b76cc565d6e51f656d8af0a4ac7e24bad",
+              "signature": "c2ae4989bb66f3008654f58e367ac47758250af91269d02ef9caf4d9fe908536"
+            },
+            "previous_hash": "a6a9dccbc0ae96becf710f077d54794dcf7e63d84e720be9bcd2e1fa517dce1c",
+            "current_hash": "ead096bcf8f328ad85ceea9b15f37e5d73e872d8ffc6cb8575fc98161f0b02c8",
+            "integrity_level": "HIGH",
+            "evidence_id": "b6ef88c1-f3fe-4f14-8b3c-2d85b353a8c3",
+            "signatures": {}
+          },
+          {
+            "sequence": 31,
+            "timestamp": "2025-11-24T10:51:21.634777+00:00",
+            "data": {
+              "sequence": 30,
+              "timestamp": "2025-11-24T10:51:21.634274+00:00",
+              "event": "FILING_ANALYZED",
+              "actor": "SYSTEM",
+              "action": "ANALYZE",
+              "target": "filing_0000320187_4_2019-09-13",
+              "result": "SUCCESS",
+              "details": {
+                "fraud_risk": 0,
+                "red_flags": 0
+              },
+              "prev_hash": "966329df97954df978423ef58eda316b76cc565d6e51f656d8af0a4ac7e24bad",
+              "curr_hash": "1a0c9dda93da431f18dd7a1587e7005a1e7e72fd1767fb29ab51f5cad62c3489",
+              "signature": "f7b3178c941f4d58ca088d1c2a043c7182ffb05deece63ac3eed79277fb49d0a"
+            },
+            "previous_hash": "ead096bcf8f328ad85ceea9b15f37e5d73e872d8ffc6cb8575fc98161f0b02c8",
+            "current_hash": "b136535af44d44d9d49286642bc404c7ce9cea9def39f848e4833b4fef41f647",
+            "integrity_level": "HIGH",
+            "evidence_id": "79208400-44c6-41d9-a9b8-268721dde6e8",
+            "signatures": {}
+          },
+          {
+            "sequence": 32,
+            "timestamp": "2025-11-24T10:51:22.347227+00:00",
+            "data": {
+              "sequence": 31,
+              "timestamp": "2025-11-24T10:51:22.346726+00:00",
+              "event": "FILING_ANALYZED",
+              "actor": "SYSTEM",
+              "action": "ANALYZE",
+              "target": "filing_0000320187_4_2019-09-03",
+              "result": "SUCCESS",
+              "details": {
+                "fraud_risk": 0,
+                "red_flags": 0
+              },
+              "prev_hash": "1a0c9dda93da431f18dd7a1587e7005a1e7e72fd1767fb29ab51f5cad62c3489",
+              "curr_hash": "b975e631df19b6689f750125c459934cba2c99fe162aeb97b7a983d7e67e3983",
+              "signature": "b82500af20310a75715b9134b0ba258aecd40e705d10371013e4cdf070ecaad6"
+            },
+            "previous_hash": "b136535af44d44d9d49286642bc404c7ce9cea9def39f848e4833b4fef41f647",
+            "current_hash": "449793eb510f4ec17cd98c17c87446fad193f4531fd6dea8c4ede876550aed72",
+            "integrity_level": "HIGH",
+            "evidence_id": "dce3598a-ac30-41cb-baa3-5e99e3fc8d9c",
+            "signatures": {}
+          },
+          {
+            "sequence": 33,
+            "timestamp": "2025-11-24T10:51:23.075826+00:00",
+            "data": {
+              "sequence": 32,
+              "timestamp": "2025-11-24T10:51:23.075327+00:00",
+              "event": "FILING_ANALYZED",
+              "actor": "SYSTEM",
+              "action": "ANALYZE",
+              "target": "filing_0000320187_4_2019-08-05",
+              "result": "SUCCESS",
+              "details": {
+                "fraud_risk": 0,
+                "red_flags": 0
+              },
+              "prev_hash": "b975e631df19b6689f750125c459934cba2c99fe162aeb97b7a983d7e67e3983",
+              "curr_hash": "f7115b782009011477eb6e2ad797a936aea4a56540d3bd0a891fa082b04d5c49",
+              "signature": "ddafbfa9a6201616b79cad3c9ad0b50c1f072853015c1a7cb03464fe8a3c4f9f"
+            },
+            "previous_hash": "449793eb510f4ec17cd98c17c87446fad193f4531fd6dea8c4ede876550aed72",
+            "current_hash": "ba9cac8efcbdba0f5a0f2eb027d0f6dcbcb6013e3606d81bea4d68e61dd2360f",
+            "integrity_level": "HIGH",
+            "evidence_id": "aa8d6c7c-178d-4a8f-9d6e-8b456ad692bd",
+            "signatures": {}
+          },
+          {
+            "sequence": 34,
+            "timestamp": "2025-11-24T10:51:23.849749+00:00",
+            "data": {
+              "sequence": 33,
+              "timestamp": "2025-11-24T10:51:23.849247+00:00",
+              "event": "FILING_ANALYZED",
+              "actor": "SYSTEM",
+              "action": "ANALYZE",
+              "target": "filing_0000320187_4_2019-08-05",
+              "result": "SUCCESS",
+              "details": {
+                "fraud_risk": 0,
+                "red_flags": 0
+              },
+              "prev_hash": "f7115b782009011477eb6e2ad797a936aea4a56540d3bd0a891fa082b04d5c49",
+              "curr_hash": "983db06f3981b34d6053c51cde541c42190407e667014294fffdda727a5253d6",
+              "signature": "9aed7886f6d6db5707a205da71b452b023bb8d48883c39e67b4b04d6bf0169ba"
+            },
+            "previous_hash": "ba9cac8efcbdba0f5a0f2eb027d0f6dcbcb6013e3606d81bea4d68e61dd2360f",
+            "current_hash": "3847ab0b9c6934d2e7a0e772476e9041c281474d5ddf25e1cbbf60c9acadd44d",
+            "integrity_level": "HIGH",
+            "evidence_id": "559d9a84-d0f7-4904-994e-08a142e96639",
+            "signatures": {}
+          },
+          {
+            "sequence": 35,
+            "timestamp": "2025-11-24T10:51:24.560130+00:00",
+            "data": {
+              "sequence": 34,
+              "timestamp": "2025-11-24T10:51:24.559634+00:00",
+              "event": "FILING_ANALYZED",
+              "actor": "SYSTEM",
+              "action": "ANALYZE",
+              "target": "filing_0000320187_4_2019-08-05",
+              "result": "SUCCESS",
+              "details": {
+                "fraud_risk": 0,
+                "red_flags": 0
+              },
+              "prev_hash": "983db06f3981b34d6053c51cde541c42190407e667014294fffdda727a5253d6",
+              "curr_hash": "3f90ada6811f62fcd43090b6b63ce7bba201db7e61624f3deba6ce5708b12734",
+              "signature": "382a447e1be7bb9cb29d6f12097dca955b4218c25f6344c19c1e42001ba5cde8"
+            },
+            "previous_hash": "3847ab0b9c6934d2e7a0e772476e9041c281474d5ddf25e1cbbf60c9acadd44d",
+            "current_hash": "1d5a92fbb655981d9d3a82da273e5bbb32031c9e12caaa7ec76b19282da8097e",
+            "integrity_level": "HIGH",
+            "evidence_id": "babb67dd-af1d-46db-b45a-1abfa0e051b7",
+            "signatures": {}
+          },
+          {
+            "sequence": 36,
+            "timestamp": "2025-11-24T10:51:25.327273+00:00",
+            "data": {
+              "sequence": 35,
+              "timestamp": "2025-11-24T10:51:25.326773+00:00",
+              "event": "FILING_ANALYZED",
+              "actor": "SYSTEM",
+              "action": "ANALYZE",
+              "target": "filing_0000320187_4_2019-08-05",
+              "result": "SUCCESS",
+              "details": {
+                "fraud_risk": 0,
+                "red_flags": 0
+              },
+              "prev_hash": "3f90ada6811f62fcd43090b6b63ce7bba201db7e61624f3deba6ce5708b12734",
+              "curr_hash": "ccea30ea5720e10592271c244415ab7d78ff647155cac5f3f6512299d6b7b74f",
+              "signature": "f1b7f6b39a4d95f458634a2cd3be675f9473ac772b80b8e838a047c29005185f"
+            },
+            "previous_hash": "1d5a92fbb655981d9d3a82da273e5bbb32031c9e12caaa7ec76b19282da8097e",
+            "current_hash": "17143646b8a262d0f5cfb8d0a8581eaa0814b641a1cf64ba0031da817041108b",
+            "integrity_level": "HIGH",
+            "evidence_id": "6c5d610b-b5b1-4c0c-abfb-a0feed837dde",
+            "signatures": {}
+          },
+          {
+            "sequence": 37,
+            "timestamp": "2025-11-24T10:51:26.048833+00:00",
+            "data": {
+              "sequence": 36,
+              "timestamp": "2025-11-24T10:51:26.048327+00:00",
+              "event": "FILING_ANALYZED",
+              "actor": "SYSTEM",
+              "action": "ANALYZE",
+              "target": "filing_0000320187_4_2019-08-05",
+              "result": "SUCCESS",
+              "details": {
+                "fraud_risk": 0,
+                "red_flags": 0
+              },
+              "prev_hash": "ccea30ea5720e10592271c244415ab7d78ff647155cac5f3f6512299d6b7b74f",
+              "curr_hash": "c53ab8a06b5839705516b5716c970ac03bb8e294b7be2f88a5a7b6d6fd2cb4d6",
+              "signature": "500867e84d8928fef95e680226c30f4ff696934b5c25a434b524aebe22c269a5"
+            },
+            "previous_hash": "17143646b8a262d0f5cfb8d0a8581eaa0814b641a1cf64ba0031da817041108b",
+            "current_hash": "c6b1a293d7c63afeb651ef4bcfc40733e5066bfe8659f11e70e0aa9cc896eae7",
+            "integrity_level": "HIGH",
+            "evidence_id": "ff82338e-fca3-44fe-881c-e3a5c0529336",
+            "signatures": {}
+          },
+          {
+            "sequence": 38,
+            "timestamp": "2025-11-24T10:51:26.789152+00:00",
+            "data": {
+              "sequence": 37,
+              "timestamp": "2025-11-24T10:51:26.788652+00:00",
+              "event": "FILING_ANALYZED",
+              "actor": "SYSTEM",
+              "action": "ANALYZE",
+              "target": "filing_0000320187_4_2019-08-05",
+              "result": "SUCCESS",
+              "details": {
+                "fraud_risk": 0,
+                "red_flags": 0
+              },
+              "prev_hash": "c53ab8a06b5839705516b5716c970ac03bb8e294b7be2f88a5a7b6d6fd2cb4d6",
+              "curr_hash": "ebd3e62b51c1ecbbdaab0c1ee6616ae379bec789f16495895adc71949a27f4b9",
+              "signature": "b7f71f1c0a0846058df817477479fb37921ed3866dc51676c34351f2ab86712f"
+            },
+            "previous_hash": "c6b1a293d7c63afeb651ef4bcfc40733e5066bfe8659f11e70e0aa9cc896eae7",
+            "current_hash": "8f17c5b8b555d893ea151b884de044a933bb1a792e07274364feed40a6f7875e",
+            "integrity_level": "HIGH",
+            "evidence_id": "b48ac159-ab62-4727-b7b8-c10f392a991e",
+            "signatures": {}
+          },
+          {
+            "sequence": 39,
+            "timestamp": "2025-11-24T10:51:27.520695+00:00",
+            "data": {
+              "sequence": 38,
+              "timestamp": "2025-11-24T10:51:27.519695+00:00",
+              "event": "FILING_ANALYZED",
+              "actor": "SYSTEM",
+              "action": "ANALYZE",
+              "target": "filing_0000320187_4_2019-08-05",
+              "result": "SUCCESS",
+              "details": {
+                "fraud_risk": 0,
+                "red_flags": 0
+              },
+              "prev_hash": "ebd3e62b51c1ecbbdaab0c1ee6616ae379bec789f16495895adc71949a27f4b9",
+              "curr_hash": "21f193d8fa0750431f9b2e80c674507b5af60f45ac32226dbab3c515afc45cd2",
+              "signature": "98b062694aa96a8bd53c9a9db5e50ccbea873581dd440c6b3f710fab7793a737"
+            },
+            "previous_hash": "8f17c5b8b555d893ea151b884de044a933bb1a792e07274364feed40a6f7875e",
+            "current_hash": "2d4ff5c4777f5650bc9aafc26c7ae83d3435006c1b2efceb0299574eb8e95783",
+            "integrity_level": "HIGH",
+            "evidence_id": "9453fa29-ad85-4d4f-b979-8b1b8d3e9ac9",
+            "signatures": {}
+          },
+          {
+            "sequence": 40,
+            "timestamp": "2025-11-24T10:51:28.251671+00:00",
+            "data": {
+              "sequence": 39,
+              "timestamp": "2025-11-24T10:51:28.251175+00:00",
+              "event": "FILING_ANALYZED",
+              "actor": "SYSTEM",
+              "action": "ANALYZE",
+              "target": "filing_0000320187_4_2019-07-29",
+              "result": "SUCCESS",
+              "details": {
+                "fraud_risk": 0,
+                "red_flags": 0
+              },
+              "prev_hash": "21f193d8fa0750431f9b2e80c674507b5af60f45ac32226dbab3c515afc45cd2",
+              "curr_hash": "4be3e3bef8c2e010f62891ffcce3a3dc631a94cf80d7b49ef7390a9beb6db743",
+              "signature": "35deb587d1afac7c6377381f3b2a9be6e6bc698f2b78c0d1ce58d3969346d448"
+            },
+            "previous_hash": "2d4ff5c4777f5650bc9aafc26c7ae83d3435006c1b2efceb0299574eb8e95783",
+            "current_hash": "13ad52732d924be42d89f5d39033a97ccab534eee5295d805fd4e14e9f233ff7",
+            "integrity_level": "HIGH",
+            "evidence_id": "19947a08-85e1-408b-8456-b4b832417762",
+            "signatures": {}
+          },
+          {
+            "sequence": 41,
+            "timestamp": "2025-11-24T10:51:28.999104+00:00",
+            "data": {
+              "sequence": 40,
+              "timestamp": "2025-11-24T10:51:28.998593+00:00",
+              "event": "FILING_ANALYZED",
+              "actor": "SYSTEM",
+              "action": "ANALYZE",
+              "target": "filing_0000320187_4_2019-07-29",
+              "result": "SUCCESS",
+              "details": {
+                "fraud_risk": 0,
+                "red_flags": 0
+              },
+              "prev_hash": "4be3e3bef8c2e010f62891ffcce3a3dc631a94cf80d7b49ef7390a9beb6db743",
+              "curr_hash": "bf79446678c841992ccf83b12bc521df6d47da3b3805f27f4e77e493782fab00",
+              "signature": "0df1dbcf550e0ecb7a032565867f6b92c94625f396d082bb99b74970bd7796e8"
+            },
+            "previous_hash": "13ad52732d924be42d89f5d39033a97ccab534eee5295d805fd4e14e9f233ff7",
+            "current_hash": "e2cd01a4d56b487a98787a38cc8fd7d2897f021bb5fd9b6aca83eb203464a1d4",
+            "integrity_level": "HIGH",
+            "evidence_id": "2ba91f7e-7870-41ad-b87c-8ad2829c50e5",
+            "signatures": {}
+          },
+          {
+            "sequence": 42,
+            "timestamp": "2025-11-24T10:51:29.719534+00:00",
+            "data": {
+              "sequence": 41,
+              "timestamp": "2025-11-24T10:51:29.719034+00:00",
+              "event": "FILING_ANALYZED",
+              "actor": "SYSTEM",
+              "action": "ANALYZE",
+              "target": "filing_0000320187_4_2019-07-24",
+              "result": "SUCCESS",
+              "details": {
+                "fraud_risk": 0,
+                "red_flags": 0
+              },
+              "prev_hash": "bf79446678c841992ccf83b12bc521df6d47da3b3805f27f4e77e493782fab00",
+              "curr_hash": "ba7afdfa56697f061a1efc9ce73e15e0558cbd6e0d80f3339b6a9ca10a912bc8",
+              "signature": "16049ec5a1c9dee26272a88ce4451bab9bcff7d995cd8848680262d5ca5fecbc"
+            },
+            "previous_hash": "e2cd01a4d56b487a98787a38cc8fd7d2897f021bb5fd9b6aca83eb203464a1d4",
+            "current_hash": "2f8e28bb93d1affe126130c8e1e010119430093fa88cb2c1e30ff9adcbea0196",
+            "integrity_level": "HIGH",
+            "evidence_id": "4744d72b-538a-45f7-9821-9ce1f1243c0a",
+            "signatures": {}
+          },
+          {
+            "sequence": 43,
+            "timestamp": "2025-11-24T10:51:30.436908+00:00",
+            "data": {
+              "sequence": 42,
+              "timestamp": "2025-11-24T10:51:30.435906+00:00",
+              "event": "FILING_ANALYZED",
+              "actor": "SYSTEM",
+              "action": "ANALYZE",
+              "target": "filing_0000320187_4_2019-07-24",
+              "result": "SUCCESS",
+              "details": {
+                "fraud_risk": 0,
+                "red_flags": 0
+              },
+              "prev_hash": "ba7afdfa56697f061a1efc9ce73e15e0558cbd6e0d80f3339b6a9ca10a912bc8",
+              "curr_hash": "dfa7e675d89ec3abd09b13873d3b9ca21c6d70fb2bd94855b7a64504273d4f2b",
+              "signature": "a4fc80b3d7efc374050b3181b3a95c767950acdb6a57539aade0c1362bd353b8"
+            },
+            "previous_hash": "2f8e28bb93d1affe126130c8e1e010119430093fa88cb2c1e30ff9adcbea0196",
+            "current_hash": "46e070b5f3bd9c8eaf3fbdae498f88ae96917837eb48f728350daea9fd483e40",
+            "integrity_level": "HIGH",
+            "evidence_id": "dfae2393-4b54-4356-aa82-0cb4e5e635bd",
+            "signatures": {}
+          },
+          {
+            "sequence": 44,
+            "timestamp": "2025-11-24T10:51:31.165957+00:00",
+            "data": {
+              "sequence": 43,
+              "timestamp": "2025-11-24T10:51:31.165458+00:00",
+              "event": "FILING_ANALYZED",
+              "actor": "SYSTEM",
+              "action": "ANALYZE",
+              "target": "filing_0000320187_4_2019-07-24",
+              "result": "SUCCESS",
+              "details": {
+                "fraud_risk": 0,
+                "red_flags": 0
+              },
+              "prev_hash": "dfa7e675d89ec3abd09b13873d3b9ca21c6d70fb2bd94855b7a64504273d4f2b",
+              "curr_hash": "d7fb752ffcdf83a90a1c6f2f2ef6c331e13c489462d17d40b6bf30b0e7a03274",
+              "signature": "db16eb945b368895a574f4ac33659895aa60a221ecf618a558e80d1250d69e78"
+            },
+            "previous_hash": "46e070b5f3bd9c8eaf3fbdae498f88ae96917837eb48f728350daea9fd483e40",
+            "current_hash": "d3afaf75cbfb957957e79bebc3d7f27154f358b6a6080d5bc2002320badffa1a",
+            "integrity_level": "HIGH",
+            "evidence_id": "6c5627d7-bbf8-45b6-8533-24759d8160e0",
+            "signatures": {}
+          },
+          {
+            "sequence": 45,
+            "timestamp": "2025-11-24T10:51:31.885536+00:00",
+            "data": {
+              "sequence": 44,
+              "timestamp": "2025-11-24T10:51:31.885037+00:00",
+              "event": "FILING_ANALYZED",
+              "actor": "SYSTEM",
+              "action": "ANALYZE",
+              "target": "filing_0000320187_4_2019-07-24",
+              "result": "SUCCESS",
+              "details": {
+                "fraud_risk": 0,
+                "red_flags": 0
+              },
+              "prev_hash": "d7fb752ffcdf83a90a1c6f2f2ef6c331e13c489462d17d40b6bf30b0e7a03274",
+              "curr_hash": "1c681e71538ad0b8790bf036bda49575b56e7ba5209df1bf61378d1af798ca3f",
+              "signature": "216e55cd96a13cb0b2089211df5d7ba01da49d8e82971b4cccd10d6a115890da"
+            },
+            "previous_hash": "d3afaf75cbfb957957e79bebc3d7f27154f358b6a6080d5bc2002320badffa1a",
+            "current_hash": "f964f68610c474db04836ed841464711924c2c993843f86f60402ac1571ddc7d",
+            "integrity_level": "HIGH",
+            "evidence_id": "7b4fdd2f-3ede-4f63-93c9-8759963b250e",
+            "signatures": {}
+          },
+          {
+            "sequence": 46,
+            "timestamp": "2025-11-24T10:51:32.614583+00:00",
+            "data": {
+              "sequence": 45,
+              "timestamp": "2025-11-24T10:51:32.614083+00:00",
+              "event": "FILING_ANALYZED",
+              "actor": "SYSTEM",
+              "action": "ANALYZE",
+              "target": "filing_0000320187_4_2019-07-24",
+              "result": "SUCCESS",
+              "details": {
+                "fraud_risk": 0,
+                "red_flags": 0
+              },
+              "prev_hash": "1c681e71538ad0b8790bf036bda49575b56e7ba5209df1bf61378d1af798ca3f",
+              "curr_hash": "4b37f831431ff33beb6c6ab35c15801f29c5f0fe092d25f57015bfe0be3621d8",
+              "signature": "7ce4bdcdea63088c2f45fe2ac31e800280d15475f8d5bbe2dcd10f5d804b15d9"
+            },
+            "previous_hash": "f964f68610c474db04836ed841464711924c2c993843f86f60402ac1571ddc7d",
+            "current_hash": "acfbdc5c06ae33fd0b2210a886ff89fe2779b3a36a8158027c55f82ca63bfdd6",
+            "integrity_level": "HIGH",
+            "evidence_id": "182aad66-d71a-482c-affc-fb29e19117f4",
+            "signatures": {}
+          },
+          {
+            "sequence": 47,
+            "timestamp": "2025-11-24T10:51:33.326112+00:00",
+            "data": {
+              "sequence": 46,
+              "timestamp": "2025-11-24T10:51:33.325108+00:00",
+              "event": "FILING_ANALYZED",
+              "actor": "SYSTEM",
+              "action": "ANALYZE",
+              "target": "filing_0000320187_4_2019-07-24",
+              "result": "SUCCESS",
+              "details": {
+                "fraud_risk": 0,
+                "red_flags": 0
+              },
+              "prev_hash": "4b37f831431ff33beb6c6ab35c15801f29c5f0fe092d25f57015bfe0be3621d8",
+              "curr_hash": "5f6ee8f4c73648d0fb7f2d858d7dbc12471a2e8911c4157c3b78584c2c16ebbe",
+              "signature": "7eeb63b4fa846276e699265b910933f7aa6af4cc69cdc15d72b916e512c1a096"
+            },
+            "previous_hash": "acfbdc5c06ae33fd0b2210a886ff89fe2779b3a36a8158027c55f82ca63bfdd6",
+            "current_hash": "8714216f81c7daa041ee2521076df0fdd297d9bb483aa187d8f02660e723f9d2",
+            "integrity_level": "HIGH",
+            "evidence_id": "34ccfb3c-f0a3-428a-837a-d3b7cda9cc89",
+            "signatures": {}
+          },
+          {
+            "sequence": 48,
+            "timestamp": "2025-11-24T10:51:34.075286+00:00",
+            "data": {
+              "sequence": 47,
+              "timestamp": "2025-11-24T10:51:34.074786+00:00",
+              "event": "FILING_ANALYZED",
+              "actor": "SYSTEM",
+              "action": "ANALYZE",
+              "target": "filing_0000320187_4_2019-07-24",
+              "result": "SUCCESS",
+              "details": {
+                "fraud_risk": 0,
+                "red_flags": 0
+              },
+              "prev_hash": "5f6ee8f4c73648d0fb7f2d858d7dbc12471a2e8911c4157c3b78584c2c16ebbe",
+              "curr_hash": "ec248c6fae7c316302d9ccabf44e4fe3d9a49897f9967d1ab0d94350f75979a2",
+              "signature": "236832ac7408eb805965d3df76d6c56b5f06980fd98a5836763eda85585f3434"
+            },
+            "previous_hash": "8714216f81c7daa041ee2521076df0fdd297d9bb483aa187d8f02660e723f9d2",
+            "current_hash": "c95070e8b2d81ac9ea628f940ba2206c0eb012820f5cce1d9c1f2e69689904ac",
+            "integrity_level": "HIGH",
+            "evidence_id": "bcde84cd-c7dd-4529-9b32-af0c3b997fc9",
+            "signatures": {}
+          },
+          {
+            "sequence": 49,
+            "timestamp": "2025-11-24T10:51:34.712262+00:00",
+            "data": {
+              "sequence": 48,
+              "timestamp": "2025-11-24T10:51:34.711763+00:00",
+              "event": "FILING_ANALYZED",
+              "actor": "SYSTEM",
+              "action": "ANALYZE",
+              "target": "filing_0000320187_10-K_2019-07-23",
+              "result": "SUCCESS",
+              "details": {
+                "fraud_risk": 0.3,
+                "red_flags": 1
+              },
+              "prev_hash": "ec248c6fae7c316302d9ccabf44e4fe3d9a49897f9967d1ab0d94350f75979a2",
+              "curr_hash": "d97d9abacac4acec09c60c389e33d980c628efa03dce2584f10e1aa777e63c56",
+              "signature": "2ca25ea2dc87ec1867f94a92f5b84d8147ca685c0b22db4f684d379bfb737c3d"
+            },
+            "previous_hash": "c95070e8b2d81ac9ea628f940ba2206c0eb012820f5cce1d9c1f2e69689904ac",
+            "current_hash": "ef99632609cc74696a507526e0da875c5573dbde441269eba0d83d77b2cf8d61",
+            "integrity_level": "HIGH",
+            "evidence_id": "48ac5f5a-bbb1-4109-b228-fd63f2948c4b",
+            "signatures": {}
+          },
+          {
+            "sequence": 50,
+            "timestamp": "2025-11-24T10:51:35.442695+00:00",
+            "data": {
+              "sequence": 49,
+              "timestamp": "2025-11-24T10:51:35.441158+00:00",
+              "event": "FILING_ANALYZED",
+              "actor": "SYSTEM",
+              "action": "ANALYZE",
+              "target": "filing_0000320187_4_2019-07-17",
+              "result": "SUCCESS",
+              "details": {
+                "fraud_risk": 0,
+                "red_flags": 0
+              },
+              "prev_hash": "d97d9abacac4acec09c60c389e33d980c628efa03dce2584f10e1aa777e63c56",
+              "curr_hash": "147030ec8a01ca2830602f04010fa75c9a1212801cdab9b9b871f229cdac8a28",
+              "signature": "35480edb1fd70976701ff94324e62c859caf132ae98e558bfc0c41b128c8715e"
+            },
+            "previous_hash": "ef99632609cc74696a507526e0da875c5573dbde441269eba0d83d77b2cf8d61",
+            "current_hash": "198d272f2e5adb4ae1649e354cdaa8a15ec37eb4dca1ed8a9df2eed803463cfe",
+            "integrity_level": "HIGH",
+            "evidence_id": "a3362c5a-a8af-4000-927f-723f85f46756",
+            "signatures": {}
+          },
+          {
+            "sequence": 51,
+            "timestamp": "2025-11-24T10:51:36.172598+00:00",
+            "data": {
+              "sequence": 50,
+              "timestamp": "2025-11-24T10:51:36.171592+00:00",
+              "event": "FILING_ANALYZED",
+              "actor": "SYSTEM",
+              "action": "ANALYZE",
+              "target": "filing_0000320187_4_2019-07-17",
+              "result": "SUCCESS",
+              "details": {
+                "fraud_risk": 0,
+                "red_flags": 0
+              },
+              "prev_hash": "147030ec8a01ca2830602f04010fa75c9a1212801cdab9b9b871f229cdac8a28",
+              "curr_hash": "9a54c3ceeb1438c113701436546aa92cbbd68e4debc56ca68d8878c05b37329b",
+              "signature": "42d4c5a836b68bda413e9a26caa5fb70ebfd5704fb7ed112f37ea6f32731c5a4"
+            },
+            "previous_hash": "198d272f2e5adb4ae1649e354cdaa8a15ec37eb4dca1ed8a9df2eed803463cfe",
+            "current_hash": "778d4a36e5b787e036bcda419f5603e7e3e915915c033c3bf4e00464c0e75e59",
+            "integrity_level": "HIGH",
+            "evidence_id": "2b579f77-e816-4f51-b066-72b450c12774",
+            "signatures": {}
+          },
+          {
+            "sequence": 52,
+            "timestamp": "2025-11-24T10:51:36.952061+00:00",
+            "data": {
+              "sequence": 51,
+              "timestamp": "2025-11-24T10:51:36.951045+00:00",
+              "event": "FILING_ANALYZED",
+              "actor": "SYSTEM",
+              "action": "ANALYZE",
+              "target": "filing_0000320187_4_2019-07-17",
+              "result": "SUCCESS",
+              "details": {
+                "fraud_risk": 0,
+                "red_flags": 0
+              },
+              "prev_hash": "9a54c3ceeb1438c113701436546aa92cbbd68e4debc56ca68d8878c05b37329b",
+              "curr_hash": "0e9fcd2037bc02a3882ab840382808a58fdb6aaa0c8f32b1b470a71cda1b4179",
+              "signature": "72c65784799e5ca5ceb1ef8958ee4da1029a77867efc5397379e488928e9ef91"
+            },
+            "previous_hash": "778d4a36e5b787e036bcda419f5603e7e3e915915c033c3bf4e00464c0e75e59",
+            "current_hash": "ee5829b502966b98e1bba9eb5eeffb0ba1a5219a7f4b9cd931559324bac61e0a",
+            "integrity_level": "HIGH",
+            "evidence_id": "57871b4d-5a81-44b2-a0c2-fa2d72f9550d",
+            "signatures": {}
+          },
+          {
+            "sequence": 53,
+            "timestamp": "2025-11-24T10:51:37.755342+00:00",
+            "data": {
+              "sequence": 52,
+              "timestamp": "2025-11-24T10:51:37.753839+00:00",
+              "event": "FILING_ANALYZED",
+              "actor": "SYSTEM",
+              "action": "ANALYZE",
+              "target": "filing_0000320187_4_2019-07-17",
+              "result": "SUCCESS",
+              "details": {
+                "fraud_risk": 0,
+                "red_flags": 0
+              },
+              "prev_hash": "0e9fcd2037bc02a3882ab840382808a58fdb6aaa0c8f32b1b470a71cda1b4179",
+              "curr_hash": "b70225a9246a4cbb31b60a714994994ce166b8adeb4bcb60741a4887c28dc8dc",
+              "signature": "95a65947f1ca353300ce8b80ea9014f26ac2260dde57663664267c5a0145986f"
+            },
+            "previous_hash": "ee5829b502966b98e1bba9eb5eeffb0ba1a5219a7f4b9cd931559324bac61e0a",
+            "current_hash": "9b7f4457b550c7ccc53a32897809d5e313f112c5ffcc6d285cdd7202fee20048",
+            "integrity_level": "HIGH",
+            "evidence_id": "2a6a0f19-beb7-4432-8bbd-96db90a8ee24",
+            "signatures": {}
+          },
+          {
+            "sequence": 54,
+            "timestamp": "2025-11-24T10:51:38.478137+00:00",
+            "data": {
+              "sequence": 53,
+              "timestamp": "2025-11-24T10:51:38.475625+00:00",
+              "event": "FILING_ANALYZED",
+              "actor": "SYSTEM",
+              "action": "ANALYZE",
+              "target": "filing_0000320187_4_2019-07-17",
+              "result": "SUCCESS",
+              "details": {
+                "fraud_risk": 0,
+                "red_flags": 0
+              },
+              "prev_hash": "b70225a9246a4cbb31b60a714994994ce166b8adeb4bcb60741a4887c28dc8dc",
+              "curr_hash": "5e0c1a0168b9f93ef940bbe4f9babd1df406dbf9d5ff67654c87da50de0f43c1",
+              "signature": "e2a38b9cdb866d88f26f934c2b1e4ec5924758dd5b3c8c32a3360af2f5192af9"
+            },
+            "previous_hash": "9b7f4457b550c7ccc53a32897809d5e313f112c5ffcc6d285cdd7202fee20048",
+            "current_hash": "54afaf39f65ecfc27e2d007445a62746652429f62555101e7eca53509aea1cde",
+            "integrity_level": "HIGH",
+            "evidence_id": "495e8cbd-855c-47db-b3a6-a48a4b651c22",
+            "signatures": {}
+          },
+          {
+            "sequence": 55,
+            "timestamp": "2025-11-24T10:51:39.202234+00:00",
+            "data": {
+              "sequence": 54,
+              "timestamp": "2025-11-24T10:51:39.201201+00:00",
+              "event": "FILING_ANALYZED",
+              "actor": "SYSTEM",
+              "action": "ANALYZE",
+              "target": "filing_0000320187_4_2019-07-17",
+              "result": "SUCCESS",
+              "details": {
+                "fraud_risk": 0,
+                "red_flags": 0
+              },
+              "prev_hash": "5e0c1a0168b9f93ef940bbe4f9babd1df406dbf9d5ff67654c87da50de0f43c1",
+              "curr_hash": "38cd03216c9f6e7b2105502cfe455e824ce8fbe7db84d8a3016ceffbe06ea1df",
+              "signature": "da5a9830cec05c0203be82f8b274e72275d868b66d981effba0dbb03fb01c7fb"
+            },
+            "previous_hash": "54afaf39f65ecfc27e2d007445a62746652429f62555101e7eca53509aea1cde",
+            "current_hash": "3de3eb37811763d3bb3800878a8801b2311fcf0b5679df24d1dfc1cc0ba4d2e5",
+            "integrity_level": "HIGH",
+            "evidence_id": "e4abbfa9-1784-4814-8b18-6a867dbabec5",
+            "signatures": {}
+          },
+          {
+            "sequence": 56,
+            "timestamp": "2025-11-24T10:51:39.932944+00:00",
+            "data": {
+              "sequence": 55,
+              "timestamp": "2025-11-24T10:51:39.930426+00:00",
+              "event": "FILING_ANALYZED",
+              "actor": "SYSTEM",
+              "action": "ANALYZE",
+              "target": "filing_0000320187_4_2019-07-17",
+              "result": "SUCCESS",
+              "details": {
+                "fraud_risk": 0,
+                "red_flags": 0
+              },
+              "prev_hash": "38cd03216c9f6e7b2105502cfe455e824ce8fbe7db84d8a3016ceffbe06ea1df",
+              "curr_hash": "06eddf646c5d40e77a269e53c1c0cee227f2d6e52ab2486d72667462ebded33e",
+              "signature": "537faab0fc5d9ed3ad6e248dfc8c75de19a92fdc78c9e253241977e23ff1e1db"
+            },
+            "previous_hash": "3de3eb37811763d3bb3800878a8801b2311fcf0b5679df24d1dfc1cc0ba4d2e5",
+            "current_hash": "1cb3ab978fc29cd158552f25ada4a4e91742531fcf78c5394d8a23fe46a80733",
+            "integrity_level": "HIGH",
+            "evidence_id": "c8eda189-82f5-4565-b84b-a00a1e8a2b65",
+            "signatures": {}
+          },
+          {
+            "sequence": 57,
+            "timestamp": "2025-11-24T10:51:40.655849+00:00",
+            "data": {
+              "sequence": 56,
+              "timestamp": "2025-11-24T10:51:40.655350+00:00",
+              "event": "FILING_ANALYZED",
+              "actor": "SYSTEM",
+              "action": "ANALYZE",
+              "target": "filing_0000320187_4_2019-07-16",
+              "result": "SUCCESS",
+              "details": {
+                "fraud_risk": 0,
+                "red_flags": 0
+              },
+              "prev_hash": "06eddf646c5d40e77a269e53c1c0cee227f2d6e52ab2486d72667462ebded33e",
+              "curr_hash": "2c911ca7897bf2dcc4936eda1b7e3aa816ab0e803b82109c062bf4634487b235",
+              "signature": "d51db1fa1f96a92e814904f1c1ea345fed2f345c9ba30183d27e404ab469e101"
+            },
+            "previous_hash": "1cb3ab978fc29cd158552f25ada4a4e91742531fcf78c5394d8a23fe46a80733",
+            "current_hash": "8b249db066354b6a9462a9bed51a7544bfd9b0936735dcfc82ae658cd5c403fd",
+            "integrity_level": "HIGH",
+            "evidence_id": "5c26e7f6-db6b-4a30-b59f-59690073f683",
+            "signatures": {}
+          },
+          {
+            "sequence": 58,
+            "timestamp": "2025-11-24T10:51:41.407126+00:00",
+            "data": {
+              "sequence": 57,
+              "timestamp": "2025-11-24T10:51:41.405131+00:00",
+              "event": "FILING_ANALYZED",
+              "actor": "SYSTEM",
+              "action": "ANALYZE",
+              "target": "filing_0000320187_4_2019-07-11",
+              "result": "SUCCESS",
+              "details": {
+                "fraud_risk": 0,
+                "red_flags": 0
+              },
+              "prev_hash": "2c911ca7897bf2dcc4936eda1b7e3aa816ab0e803b82109c062bf4634487b235",
+              "curr_hash": "7fd34525c00e5e4c7187d19e590c1398288e99f701b8aa43ddd381f78f73738b",
+              "signature": "4dc561b2da943b29639781084d535ab64e72fb64785437abb7544ea6e8373799"
+            },
+            "previous_hash": "8b249db066354b6a9462a9bed51a7544bfd9b0936735dcfc82ae658cd5c403fd",
+            "current_hash": "5f684c9d71e30d36aa8d4d96633b4215927c1070acf0bf8ead30fe6dfd95e3e8",
+            "integrity_level": "HIGH",
+            "evidence_id": "8c6538a7-2dd3-44df-8353-0fccaa96018d",
+            "signatures": {}
+          },
+          {
+            "sequence": 59,
+            "timestamp": "2025-11-24T10:51:42.142781+00:00",
+            "data": {
+              "sequence": 58,
+              "timestamp": "2025-11-24T10:51:42.141250+00:00",
+              "event": "FILING_ANALYZED",
+              "actor": "SYSTEM",
+              "action": "ANALYZE",
+              "target": "filing_0000320187_4_2019-07-03",
+              "result": "SUCCESS",
+              "details": {
+                "fraud_risk": 0,
+                "red_flags": 0
+              },
+              "prev_hash": "7fd34525c00e5e4c7187d19e590c1398288e99f701b8aa43ddd381f78f73738b",
+              "curr_hash": "b617021a8eb9ca6ea72605ffcf4f18c02f71228e32cecdb6401f7f091909e0c5",
+              "signature": "9631c3e3293f9a6307fd698eb28771d6e4a9c87b87c6fb16d08c793408e6586f"
+            },
+            "previous_hash": "5f684c9d71e30d36aa8d4d96633b4215927c1070acf0bf8ead30fe6dfd95e3e8",
+            "current_hash": "259b5e98e376f65f28910fed06b54530efc9d389c565f423f8852146f45c56f8",
+            "integrity_level": "HIGH",
+            "evidence_id": "53346fbb-db02-4130-9462-2be62621364e",
+            "signatures": {}
+          },
+          {
+            "sequence": 60,
+            "timestamp": "2025-11-24T10:51:42.866214+00:00",
+            "data": {
+              "sequence": 59,
+              "timestamp": "2025-11-24T10:51:42.865209+00:00",
+              "event": "FILING_ANALYZED",
+              "actor": "SYSTEM",
+              "action": "ANALYZE",
+              "target": "filing_0000320187_4_2019-05-06",
+              "result": "SUCCESS",
+              "details": {
+                "fraud_risk": 0,
+                "red_flags": 0
+              },
+              "prev_hash": "b617021a8eb9ca6ea72605ffcf4f18c02f71228e32cecdb6401f7f091909e0c5",
+              "curr_hash": "035bb88b41c34ac1b9702b4f9d1e73c56da43a925ed836213e781cf099cd1691",
+              "signature": "4cdd926a349fcf36423815327a8805532b2cb9c3866e00ee7c0d56b7b5cc4307"
+            },
+            "previous_hash": "259b5e98e376f65f28910fed06b54530efc9d389c565f423f8852146f45c56f8",
+            "current_hash": "4b164ac576b6ec02dc88c89094ba94b07a73a4dabf089f9acb6e7178136d6889",
+            "integrity_level": "HIGH",
+            "evidence_id": "4bcf4897-7497-4730-b6a0-0f87014bdf86",
+            "signatures": {}
+          },
+          {
+            "sequence": 61,
+            "timestamp": "2025-11-24T10:51:43.614375+00:00",
+            "data": {
+              "sequence": 60,
+              "timestamp": "2025-11-24T10:51:43.612868+00:00",
+              "event": "FILING_ANALYZED",
+              "actor": "SYSTEM",
+              "action": "ANALYZE",
+              "target": "filing_0000320187_4_2019-04-17",
+              "result": "SUCCESS",
+              "details": {
+                "fraud_risk": 0,
+                "red_flags": 0
+              },
+              "prev_hash": "035bb88b41c34ac1b9702b4f9d1e73c56da43a925ed836213e781cf099cd1691",
+              "curr_hash": "f812b90795e203630bc082423de970b2c0f6186df2435da0c1c868c301b54d94",
+              "signature": "3ae6d8f28d1da58ab5135dbbdb420b31775d4ba94e5488f79d1912bcc4d4ff46"
+            },
+            "previous_hash": "4b164ac576b6ec02dc88c89094ba94b07a73a4dabf089f9acb6e7178136d6889",
+            "current_hash": "c4f25881e05ba06df8d2337e14bdf79f86cd927238c7c650cf9f484a4fe468bf",
+            "integrity_level": "HIGH",
+            "evidence_id": "ebd5b2b3-6689-4f1a-9caf-a6a119f0e8c2",
+            "signatures": {}
+          },
+          {
+            "sequence": 62,
+            "timestamp": "2025-11-24T10:51:44.258279+00:00",
+            "data": {
+              "sequence": 61,
+              "timestamp": "2025-11-24T10:51:44.257275+00:00",
+              "event": "FILING_ANALYZED",
+              "actor": "SYSTEM",
+              "action": "ANALYZE",
+              "target": "filing_0000320187_10-Q_2019-04-04",
+              "result": "SUCCESS",
+              "details": {
+                "fraud_risk": 0.3,
+                "red_flags": 1
+              },
+              "prev_hash": "f812b90795e203630bc082423de970b2c0f6186df2435da0c1c868c301b54d94",
+              "curr_hash": "b48b0b751bdada9c27630604833f0c6c0da5bd456b8473c64a6889b0b0a33dd6",
+              "signature": "e2c0131cd91a7635e91d4831652a044933077f512d983b8bb9a4337924202933"
+            },
+            "previous_hash": "c4f25881e05ba06df8d2337e14bdf79f86cd927238c7c650cf9f484a4fe468bf",
+            "current_hash": "699c7fa31d7f69034ac96c92683a3983780f1c5ccb1e7df8b71402f7c2f3c866",
+            "integrity_level": "HIGH",
+            "evidence_id": "b37f3b88-880c-4358-a70e-dee75afccf8b",
+            "signatures": {}
+          },
+          {
+            "sequence": 63,
+            "timestamp": "2025-11-24T10:51:44.987119+00:00",
+            "data": {
+              "sequence": 62,
+              "timestamp": "2025-11-24T10:51:44.987119+00:00",
+              "event": "FILING_ANALYZED",
+              "actor": "SYSTEM",
+              "action": "ANALYZE",
+              "target": "filing_0000320187_4_2019-04-03",
+              "result": "SUCCESS",
+              "details": {
+                "fraud_risk": 0,
+                "red_flags": 0
+              },
+              "prev_hash": "b48b0b751bdada9c27630604833f0c6c0da5bd456b8473c64a6889b0b0a33dd6",
+              "curr_hash": "1a18e47c49639402f1917fc6811f03cca040e00b27b82279f439292fe9eefe4d",
+              "signature": "7831f83fe5bdfa892a006d9a377b757e7f01346f944c212adee2743e827578fe"
+            },
+            "previous_hash": "699c7fa31d7f69034ac96c92683a3983780f1c5ccb1e7df8b71402f7c2f3c866",
+            "current_hash": "162b8ab4bc25e5a9fe1ac92e5d4fd8a30cf85b5e79911f8fc95ae57e45142835",
+            "integrity_level": "HIGH",
+            "evidence_id": "08d81ce8-35c2-4610-b024-d05210aac754",
+            "signatures": {}
+          },
+          {
+            "sequence": 64,
+            "timestamp": "2025-11-24T10:51:45.714494+00:00",
+            "data": {
+              "sequence": 63,
+              "timestamp": "2025-11-24T10:51:45.713494+00:00",
+              "event": "FILING_ANALYZED",
+              "actor": "SYSTEM",
+              "action": "ANALYZE",
+              "target": "filing_0000320187_4_2019-03-20",
+              "result": "SUCCESS",
+              "details": {
+                "fraud_risk": 0,
+                "red_flags": 0
+              },
+              "prev_hash": "1a18e47c49639402f1917fc6811f03cca040e00b27b82279f439292fe9eefe4d",
+              "curr_hash": "a9d8f41a2244f8a441fc8fc3ef2c1c63cb2521e8c70a32074556e66788cf6e0c",
+              "signature": "6eca152c3f6054411ab409e8d918f4bfedb252ee5926d3daedb16717bf8a2896"
+            },
+            "previous_hash": "162b8ab4bc25e5a9fe1ac92e5d4fd8a30cf85b5e79911f8fc95ae57e45142835",
+            "current_hash": "d41d1d888c910d15d2aae12b7a90dd7973714567be1d6bc7d8c6c590e2248309",
+            "integrity_level": "HIGH",
+            "evidence_id": "d06ea3bc-ed41-409e-8c38-3dc287dd0e26",
+            "signatures": {}
+          },
+          {
+            "sequence": 65,
+            "timestamp": "2025-11-24T10:51:46.468783+00:00",
+            "data": {
+              "sequence": 64,
+              "timestamp": "2025-11-24T10:51:46.467273+00:00",
+              "event": "FILING_ANALYZED",
+              "actor": "SYSTEM",
+              "action": "ANALYZE",
+              "target": "filing_0000320187_4_2019-02-19",
+              "result": "SUCCESS",
+              "details": {
+                "fraud_risk": 0,
+                "red_flags": 0
+              },
+              "prev_hash": "a9d8f41a2244f8a441fc8fc3ef2c1c63cb2521e8c70a32074556e66788cf6e0c",
+              "curr_hash": "60eb5b6b2782af198ae2a916c223afb5d93893617d4b417e9113cf9a5271ece9",
+              "signature": "8f20fe2d02e5a40aef6162132871fbb5daf77016b85c77f54d340516aaabfe59"
+            },
+            "previous_hash": "d41d1d888c910d15d2aae12b7a90dd7973714567be1d6bc7d8c6c590e2248309",
+            "current_hash": "b2900fdf692e00523ea8001eae8c648b62019ed6357513afe870b8d8a0fbaad8",
+            "integrity_level": "HIGH",
+            "evidence_id": "b8d08177-af2f-49df-b3a3-2e2a0cfe8cf1",
+            "signatures": {}
+          },
+          {
+            "sequence": 66,
+            "timestamp": "2025-11-24T10:51:47.248878+00:00",
+            "data": {
+              "sequence": 65,
+              "timestamp": "2025-11-24T10:51:47.247360+00:00",
+              "event": "FILING_ANALYZED",
+              "actor": "SYSTEM",
+              "action": "ANALYZE",
+              "target": "filing_0000320187_4_2019-02-06",
+              "result": "SUCCESS",
+              "details": {
+                "fraud_risk": 0,
+                "red_flags": 0
+              },
+              "prev_hash": "60eb5b6b2782af198ae2a916c223afb5d93893617d4b417e9113cf9a5271ece9",
+              "curr_hash": "e10c64f0d6d7baf9983daa792767d70567c08dd2657f862a3b28db026b56f0ba",
+              "signature": "3128de3643c0e5a330d0d4ce0b2e33bf5bfb2a6871bfc51fb46fe1bddaed1204"
+            },
+            "previous_hash": "b2900fdf692e00523ea8001eae8c648b62019ed6357513afe870b8d8a0fbaad8",
+            "current_hash": "8c08beb6bc8c4fad87dba67636c1992fae145e51e3bdd147b56d086817823520",
+            "integrity_level": "HIGH",
+            "evidence_id": "cefceed1-f6d5-4def-a8ed-7bda97d9dd0a",
+            "signatures": {}
+          },
+          {
+            "sequence": 67,
+            "timestamp": "2025-11-24T10:51:47.969502+00:00",
+            "data": {
+              "sequence": 66,
+              "timestamp": "2025-11-24T10:51:47.967489+00:00",
+              "event": "FILING_ANALYZED",
+              "actor": "SYSTEM",
+              "action": "ANALYZE",
+              "target": "filing_0000320187_4_2019-01-22",
+              "result": "SUCCESS",
+              "details": {
+                "fraud_risk": 0,
+                "red_flags": 0
+              },
+              "prev_hash": "e10c64f0d6d7baf9983daa792767d70567c08dd2657f862a3b28db026b56f0ba",
+              "curr_hash": "c9dcf8e5b7d6a0dd0c742d9174cf01b8316a4581d12e4d15cb73d785bdbebfa2",
+              "signature": "b0714fdd3959be8a2126187a53fd645d58e1c10c0d631611514abe96d9d2b521"
+            },
+            "previous_hash": "8c08beb6bc8c4fad87dba67636c1992fae145e51e3bdd147b56d086817823520",
+            "current_hash": "4b05d1dce07fbbf195eb1d31bc5b580f99658005205238378c329a3b623c3fc6",
+            "integrity_level": "HIGH",
+            "evidence_id": "20d6e9d0-fb27-4ce5-97b6-83c36fe3c1a5",
+            "signatures": {}
+          },
+          {
+            "sequence": 68,
+            "timestamp": "2025-11-24T10:51:48.693338+00:00",
+            "data": {
+              "sequence": 67,
+              "timestamp": "2025-11-24T10:51:48.692333+00:00",
+              "event": "FILING_ANALYZED",
+              "actor": "SYSTEM",
+              "action": "ANALYZE",
+              "target": "filing_0000320187_4_2019-01-22",
+              "result": "SUCCESS",
+              "details": {
+                "fraud_risk": 0,
+                "red_flags": 0
+              },
+              "prev_hash": "c9dcf8e5b7d6a0dd0c742d9174cf01b8316a4581d12e4d15cb73d785bdbebfa2",
+              "curr_hash": "dba975b7e0864ed3d404d99e085b720f2173231f41a6222e7af5c97c1c1e0aaa",
+              "signature": "ce48c1f0385b4b97855cefd553a5b32b981faaf2e13f0d5340c156bdcf8bfcb7"
+            },
+            "previous_hash": "4b05d1dce07fbbf195eb1d31bc5b580f99658005205238378c329a3b623c3fc6",
+            "current_hash": "d21d1a4c8b5a2b384dcd029105210db887e17f98438ed8dd28172fa87d63231a",
+            "integrity_level": "HIGH",
+            "evidence_id": "136e6bb9-a2f8-4599-9167-32f4e00ef26c",
+            "signatures": {}
+          },
+          {
+            "sequence": 69,
+            "timestamp": "2025-11-24T10:51:49.417212+00:00",
+            "data": {
+              "sequence": 68,
+              "timestamp": "2025-11-24T10:51:49.416210+00:00",
+              "event": "FILING_ANALYZED",
+              "actor": "SYSTEM",
+              "action": "ANALYZE",
+              "target": "filing_0000320187_4_2019-01-17",
+              "result": "SUCCESS",
+              "details": {
+                "fraud_risk": 0,
+                "red_flags": 0
+              },
+              "prev_hash": "dba975b7e0864ed3d404d99e085b720f2173231f41a6222e7af5c97c1c1e0aaa",
+              "curr_hash": "357d7c5da05c3908ef33ce60600d75e5959596bf918788a4d40a5b3908e08cbe",
+              "signature": "5bdc95c6f64f7b66d49ce7164c4eb3a6b16fa55830eff685a5033b0cf72befca"
+            },
+            "previous_hash": "d21d1a4c8b5a2b384dcd029105210db887e17f98438ed8dd28172fa87d63231a",
+            "current_hash": "e342753b3a9ecd7887ecfc64026981ff83a526e6f41109360e02d9ec0563823b",
+            "integrity_level": "HIGH",
+            "evidence_id": "b2d56d2c-f720-43e6-8bc9-cf4ff0378ca0",
+            "signatures": {}
+          },
+          {
+            "sequence": 70,
+            "timestamp": "2025-11-24T10:51:50.140980+00:00",
+            "data": {
+              "sequence": 69,
+              "timestamp": "2025-11-24T10:51:50.139976+00:00",
+              "event": "FILING_ANALYZED",
+              "actor": "SYSTEM",
+              "action": "ANALYZE",
+              "target": "filing_0000320187_4_2019-01-09",
+              "result": "SUCCESS",
+              "details": {
+                "fraud_risk": 0,
+                "red_flags": 0
+              },
+              "prev_hash": "357d7c5da05c3908ef33ce60600d75e5959596bf918788a4d40a5b3908e08cbe",
+              "curr_hash": "bd742396ed1fadd91eea63331d19a480134b55039ffb663be05e65164ad3dd29",
+              "signature": "2a3bb5d0a5836e65b73593476b1d7000fb189cfd8a341a3dc39d9549594a5775"
+            },
+            "previous_hash": "e342753b3a9ecd7887ecfc64026981ff83a526e6f41109360e02d9ec0563823b",
+            "current_hash": "870fafd98ee1983869e6071d686dabeded148ec3c1fcaebaf5eb0573ce695cd4",
+            "integrity_level": "HIGH",
+            "evidence_id": "3c611693-3657-4002-aacb-5a6b8a4a6b6e",
+            "signatures": {}
+          },
+          {
+            "sequence": 71,
+            "timestamp": "2025-11-24T10:51:50.852386+00:00",
+            "data": {
+              "sequence": 70,
+              "timestamp": "2025-11-24T10:51:50.850373+00:00",
+              "event": "FILING_ANALYZED",
+              "actor": "SYSTEM",
+              "action": "ANALYZE",
+              "target": "filing_0000320187_10-Q_2019-01-08",
+              "result": "SUCCESS",
+              "details": {
+                "fraud_risk": 0.3,
+                "red_flags": 1
+              },
+              "prev_hash": "bd742396ed1fadd91eea63331d19a480134b55039ffb663be05e65164ad3dd29",
+              "curr_hash": "820469256c7ee4b5576cba356eb97f015aeb2da762063b63accddb41f1e4f129",
+              "signature": "548d526056d04c0a6bad6dc964ec6f23aa5cdd3673fc5f503b5af74abe0871e0"
+            },
+            "previous_hash": "870fafd98ee1983869e6071d686dabeded148ec3c1fcaebaf5eb0573ce695cd4",
+            "current_hash": "4d014cca3c4e144705b48555767a716fbe6b1fbe71dfd25ec51efb1dcd4176e0",
+            "integrity_level": "HIGH",
+            "evidence_id": "694847ad-b826-4068-a87e-bd4a8e36c0a2",
+            "signatures": {}
+          },
+          {
+            "sequence": 72,
+            "timestamp": "2025-11-24T10:51:51.578164+00:00",
+            "data": {
+              "sequence": 71,
+              "timestamp": "2025-11-24T10:51:51.577157+00:00",
+              "event": "FILING_ANALYZED",
+              "actor": "SYSTEM",
+              "action": "ANALYZE",
+              "target": "filing_0000320187_4_2019-01-04",
+              "result": "SUCCESS",
+              "details": {
+                "fraud_risk": 0,
+                "red_flags": 0
+              },
+              "prev_hash": "820469256c7ee4b5576cba356eb97f015aeb2da762063b63accddb41f1e4f129",
+              "curr_hash": "b48a5e7d2a245e02a9e9cf2540a54b08cb1006ae584c9ef3f5406f9c7a68642c",
+              "signature": "3c8f50e8a4a2568175933363517ddd2630262972f6218035544c6d5648ac063f"
+            },
+            "previous_hash": "4d014cca3c4e144705b48555767a716fbe6b1fbe71dfd25ec51efb1dcd4176e0",
+            "current_hash": "a6ac04c4adcfa93da21ad191bebfc9de1efa5fea91733a44d029e7ecb2b3a739",
+            "integrity_level": "HIGH",
+            "evidence_id": "a5a43c6a-e55e-4958-bd19-ea26526d7c63",
+            "signatures": {}
+          },
+          {
+            "sequence": 73,
+            "timestamp": "2025-11-24T10:51:52.306786+00:00",
+            "data": {
+              "sequence": 72,
+              "timestamp": "2025-11-24T10:51:52.306285+00:00",
+              "event": "FILING_ANALYZED",
+              "actor": "SYSTEM",
+              "action": "ANALYZE",
+              "target": "filing_0000320187_4_2019-01-04",
+              "result": "SUCCESS",
+              "details": {
+                "fraud_risk": 0,
+                "red_flags": 0
+              },
+              "prev_hash": "b48a5e7d2a245e02a9e9cf2540a54b08cb1006ae584c9ef3f5406f9c7a68642c",
+              "curr_hash": "425e37b536da1d082232032e9250da6bc6b9d1a50d516a2b2889c3d3063e8e5e",
+              "signature": "e7de944823cd4a1f6a0cc78335076d79c3af558235948a725d6f02b49db59f4d"
+            },
+            "previous_hash": "a6ac04c4adcfa93da21ad191bebfc9de1efa5fea91733a44d029e7ecb2b3a739",
+            "current_hash": "190f771313ea72be24155d682e83a70d2c3a938476f581f99b48f77fe06c01c5",
+            "integrity_level": "HIGH",
+            "evidence_id": "0050a32b-bac5-44e7-ba2b-3a8e7ee2146e",
+            "signatures": {}
+          },
+          {
+            "sequence": 74,
+            "timestamp": "2025-11-24T10:51:53.691914+00:00",
+            "data": {
+              "sequence": 73,
+              "timestamp": "2025-11-24T10:51:53.690906+00:00",
+              "event": "VIOLATIONS_MAPPED",
+              "actor": "SYSTEM",
+              "action": "MAP",
+              "target": "CASE_0000320187_20251124105032",
+              "result": "SUCCESS",
+              "details": {
+                "total_violations": 1
+              },
+              "prev_hash": "425e37b536da1d082232032e9250da6bc6b9d1a50d516a2b2889c3d3063e8e5e",
+              "curr_hash": "a970c9bd0274b9cb7d54b6f4a705f66c91617090daabeb01fa238a04e3ea8d02",
+              "signature": "cf5085497548493b4c81eb5ea1ee6ff0bf0788da1b533f56aee2e748bb46905a"
+            },
+            "previous_hash": "190f771313ea72be24155d682e83a70d2c3a938476f581f99b48f77fe06c01c5",
+            "current_hash": "74c12fc57da301f174df41468506020edd2c43c00afc4a4e9d697d0338b959d4",
+            "integrity_level": "HIGH",
+            "evidence_id": "9345d3e8-2cf1-41ce-931d-efa1fdd44b0b",
+            "signatures": {}
+          }
+        ],
+        "merkle_checkpoints": {},
+        "external_anchors": []
+      }
+    }
+  },
+  "recommendations": [],
+  "legal_actions": [],
+  "forensic_certification": {
+    "certification_id": "CERT_CASE_0000320187_20251124105032",
+    "timestamp": "2025-11-24T10:51:53.694415+00:00",
+    "examiner": {
+      "system": "JLAW Forensic System v1.0",
+      "methodology": "NIST SP 800-86 compliant",
+      "standards": [
+        "FRE 902(13)",
+        "FRE 902(14)",
+        "NIST IR 8387"
+      ]
+    },
+    "process": {
+      "data_collection": "Automated SEC EDGAR retrieval",
+      "hash_algorithm": "SHA-256 per FIPS 180-4",
+      "chain_of_custody": "Maintained per DOJ guidelines",
+      "integrity_verification": "Blockchain-style hash chain with Merkle trees"
+    },
+    "attestation": "I certify that the electronic process used to collect, analyze, and preserve the evidence in this case was accurate and reliable, and that the evidence has not been altered since collection.",
+    "hash_verification": {
+      "master_chain": true,
+      "audit_log": true,
+      "evidence_count": 71,
+      "all_verified": true
+    },
+    "signature": "9b9234b030462ff2e1bac891a25bbcf053583f05f25b154ebfb6426f49ef60193cad49c4c5c24f284b246999d0142c71a4e53fff4a528b7a53d1b81a35fd19fc"
+  },
+  "dossier": {
+    "id": "JLAW-DOSSIER-20251124-105157",
+    "json_path": "dossiers\\JLAW-DOSSIER-20251124-105157.json",
+    "total_pages": 201,
+    "total_exhibits": 73
+  },
+  "cli_summary": {
+    "case_id": "CASE_0000320187_20251124105032",
+    "company": "Nike Inc",
+    "cik": "0000320187",
+    "analysis_timestamp": "2025-11-24T10:51:57.049329+00:00",
+    "years_analyzed": 6,
+    "filing_types": [
+      "10-K",
+      "10-Q",
+      "4"
+    ]
+  }
+}

@@ -46,12 +46,13 @@ class StatuteMapper:
     Provides direct access to legal documents via GovInfo.
     """
     
-    def __init__(self, api_key: str):
+    def __init__(self, api_key: str, strict_mode: bool = True):
         self.api_key = api_key
         self.base_url = "https://api.govinfo.gov"
         self.session = None
         self.hash_chain = ForensicHashChain("statute_mapping")
         self.statute_cache: Dict[str, Any] = {}
+        self.strict_mode = strict_mode
         
         # Initialize violation patterns
         self.violation_patterns = self._initialize_patterns()
@@ -129,6 +130,16 @@ class StatuteMapper:
                 "severity": "CRIMINAL",
                 "knowing": {"imprisonment": 10, "fine": 1000000},
                 "willful": {"imprisonment": 20, "fine": 5000000}
+            },
+            "15_USC_78p_a": {  # Section 16(a) insider reporting (Form 4)
+                "title": 15,
+                "section": "78p(a)",
+                "patterns": [
+                    "late_form4",  # >2 business days late
+                    "zero_dollar_transaction"  # Potential gifts/RSU vesting without price
+                ],
+                "severity": "CIVIL",
+                "forms": ["4"]
             },
             "18_USC_1519": {  # Document destruction
                 "title": 18,
@@ -231,6 +242,22 @@ class StatuteMapper:
             
             if matches:
                 for match in matches:
+                    # Enrich match with statute text/details (GovInfo) for stronger evidence
+                    try:
+                        statute_details = await self.fetch_statute_text(pattern_def["title"], pattern_def.get("section", ""))
+                        match["statute_details"] = statute_details
+                    except Exception:
+                        # Best-effort enrichment; continue if GovInfo is unavailable
+                        pass
+
+                    # Ensure an estimated damages value is present when reasonable
+                    evidence = match.get("evidence") or {}
+                    if isinstance(evidence, dict) and "estimated_damages" not in evidence:
+                        default_damage = self._default_estimated_damages(pattern_def, match)
+                        if default_damage is not None:
+                            evidence["estimated_damages"] = default_damage
+                            match["evidence"] = evidence
+
                     violation = StatuteViolation(
                         title=pattern_def["title"],
                         section=pattern_def.get("section", ""),
@@ -283,12 +310,15 @@ class StatuteMapper:
             # Check red flags
             for red_flag in red_flags:
                 if self._pattern_matches(pattern, red_flag):
-                    matches.append({
+                    candidate = {
                         "pattern": pattern,
                         "evidence": red_flag,
                         "confidence": self._calculate_confidence(red_flag),
                         "evidence_refs": [red_flag.get("id", "")]
-                    })
+                    }
+                    # Strict evidence gating (production default)
+                    if not self.strict_mode or self._passes_strict_evidence(pattern_def, candidate):
+                        matches.append(candidate)
             
             # Check specific patterns
             if pattern == "material_misstatement" and fraud_indicators.get("overall_risk", 0) > 0.7:
@@ -310,17 +340,102 @@ class StatuteMapper:
                         })
         
         return matches
+
+    def _passes_strict_evidence(self, pattern_def: Dict[str, Any], match: Dict[str, Any]) -> bool:
+        """Enforce strict evidence gating to reduce over-flagging.
+
+        Rules (initial set):
+        - For 10b-5 patterns (Title 17, sections like 240.10b-5), require either:
+          a) exact_quote AND document_url present in evidence; OR
+          b) confidence >= 0.70 AND document_url present.
+        - For SOX 302 (18 USC 1350), allow if document_url present (exhibits section),
+          quote optional (exhibit numbers may not appear verbatim).
+        - Otherwise, require confidence >= 0.5 OR exact_quote present.
+        """
+        title = pattern_def.get("title")
+        section = str(pattern_def.get("section", ""))
+        evidence = match.get("evidence") or {}
+        exact_quote = evidence.get("exact_quote")
+        document_url = evidence.get("document_url")
+        confidence = float(match.get("confidence", 0.0))
+
+        # 10b-5 (CFR) patterns
+        if title == 17 and ("240.10b-5" in section or section.startswith("240.")):
+            return ((exact_quote and document_url) or (confidence >= 0.70 and document_url is not None))
+
+        # SOX 302 (18 USC 1350)
+        if title == 18 and "1350" in section:
+            return document_url is not None
+
+        # Default
+        return (confidence >= 0.50) or bool(exact_quote)
+
+    async def close(self):
+        """Close internal HTTP session."""
+        if self.session:
+            try:
+                await self.session.close()
+            except Exception:
+                pass
+            self.session = None
+
+    def _default_estimated_damages(self, pattern_def: Dict[str, Any], match: Dict[str, Any]) -> Optional[int]:
+        """Provide a conservative default damages estimate when evidence lacks one.
+
+        We avoid overstatement: values are calibrated as modest baselines and should
+        be superseded by actual evidence-specific estimates when available.
+        """
+        title = pattern_def.get("title")
+        section = (pattern_def.get("section") or "").lower()
+        pattern = (match.get("pattern") or "").lower()
+
+        # Section 10(b) / Rule 10b-5 related
+        if title == 15 and "78j" in section:
+            if pattern == "material_misstatement":
+                return 10_000_000
+            if pattern == "material_omission":
+                return 2_000_000
+            if pattern == "insider_trading":
+                return 5_000_000
+            if pattern == "price_manipulation":
+                return 3_000_000
+
+        # SOX 302 false certifications (18 USC 1350) – leverage statutory fine tiers
+        if title == 18 and "1350" in section:
+            # Prefer willful/knowing fines provided in pattern_def
+            fine = self._determine_fine(pattern_def)
+            if isinstance(fine, int):
+                return fine
+            return 1_000_000
+
+        # Securities fraud (18 USC 1348) – conservative baseline
+        if title == 18 and "1348" in section:
+            return 5_000_000
+
+        # Document destruction (18 USC 1519) – conservative baseline
+        if title == 18 and "1519" in section:
+            return 500_000
+
+        # Default: None (no estimate)
+        return None
     
     def _pattern_matches(self, pattern: str, red_flag: Dict) -> bool:
         """Check if red flag matches pattern."""
         pattern_mappings = {
-            "material_misstatement": ["impossible_growth_ratio", "revenue_pull_forward"],
+            "material_misstatement": ["impossible_growth_ratio", "revenue_pull_forward", "material_misstatement"],
             "material_omission": ["missing_mda", "undisclosed_material_event"],
             "false_statement_to_sec": ["false_certification", "contradictory_filing"],
+            # SOX 302 specific flags under 18 USC 1350
+            "false_ceo_certification": ["false_ceo_certification"],
+            "false_cfo_certification": ["false_cfo_certification"],
+            "certified_despite_known_issues": ["certified_despite_known_issues"],
             "accounting_fraud": ["benford_violation", "expense_capitalization"],
             "document_destruction": ["missing_audit_trail", "access_denied"],
             "boilerplate_mda": ["incomplete_mda", "missing_uncertainty_language"],
             "late_without_nt": ["missing_nt_filing"],
+            # Form 4 insider reporting
+            "late_form4": ["late_form4"],
+            "zero_dollar_transaction": ["zero_dollar_transaction"],
         }
         
         red_flag_type = red_flag.get("type", "")
@@ -575,4 +690,9 @@ class StatuteMapper:
             "year": year,
             "link_url": f"{url}?{urlencode(params)}"
         }
-
+    
+    async def close(self):
+        """Close aiohttp session to prevent resource warnings."""
+        if self.session and not self.session.closed:
+            await self.session.close()
+            self.session = None

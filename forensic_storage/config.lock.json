@@ -1,0 +1,28 @@
+{
+  "timestamp": "2025-11-24T10:50:30.459716+00:00",
+  "system": {
+    "storage_provider": "LOCAL",
+    "max_workers": 16
+  },
+  "sec": {
+    "user_agent": "Academic-Research-Tool/1.0 (Forensic Analysis Platform)",
+    "rate_limit": 7
+  },
+  "statute_mapper": {
+    "strict_mode": true
+  },
+  "retry_policy": {
+    "max_attempts": 5,
+    "base_delay": 0.5,
+    "max_delay": 8,
+    "exponential_base": 2.0
+  },
+  "supplementary_whitelist": [
+    "https://investors.nike.com",
+    "https://purpose.nike.com",
+    "https://news.nike.com",
+    "https://s1.q4cdn.com/806093406/files/doc_financials",
+    "https://s1.q4cdn.com/806093406/files/doc_presentations"
+  ],
+  "signature": "7c43691783b46bb84f9dc81a2e69023b64a101b0b248cbc8d2a31c6260703910"
+}
