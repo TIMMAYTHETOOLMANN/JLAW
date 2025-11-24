@@ -135,6 +135,13 @@ class UniversalDocumentExtractor:
         # Content-based detection
         content_lower = content.lower().strip()
         
+        # Check for SGML first (SEC filings have specific structure)
+        # This needs to be before HTML check since SGML can contain HTML
+        if ('<sec-document>' in content_lower or 
+            '<sec-header>' in content_lower or
+            ('<document>' in content_lower and '<type>' in content_lower)):
+            return DocumentFormat.SGML
+        
         # Check for XBRL (has higher priority than XML)
         if ('xbrl' in content_lower or 
             'http://www.xbrl.org' in content_lower or
@@ -150,12 +157,6 @@ class UniversalDocumentExtractor:
             content_lower.startswith('<html') or
             '<html>' in content_lower):
             return DocumentFormat.HTML
-        
-        # Check for SGML (SEC filings often start with specific tags)
-        if ('<sec-document>' in content_lower or 
-            '<sec-header>' in content_lower or
-            '<document>' in content_lower and '<type>' in content_lower):
-            return DocumentFormat.SGML
         
         # Check for binary PDF signature
         if content.startswith('%PDF'):
@@ -513,9 +514,9 @@ class UniversalDocumentExtractor:
         text = content.strip()
         
         # Calculate confidence based on text characteristics
-        confidence = 0.80
+        confidence = 0.50  # Start lower for empty/minimal content
         if len(text) > 100:
-            confidence = 0.85
+            confidence = 0.80
         if len(text) > 1000:
             confidence = 0.90
         
