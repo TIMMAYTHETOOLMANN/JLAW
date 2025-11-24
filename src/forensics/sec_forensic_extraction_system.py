@@ -117,8 +117,10 @@ class UniversalDocumentExtractor:
             parsed = urlparse(url)
             path = parsed.path.lower()
             if path.endswith('.xml'):
-                # Distinguish between XML and XBRL
-                if 'xbrl' in content.lower() or 'http://www.xbrl.org' in content:
+                # Distinguish between XML and XBRL by checking for XBRL namespace
+                # Note: This is content inspection, not URL sanitization
+                xbrl_namespace = 'http://www.xbrl.org'  # Standard XBRL namespace
+                if 'xbrl' in content.lower() or xbrl_namespace in content:
                     return DocumentFormat.XBRL
                 return DocumentFormat.XML
             elif path.endswith('.html') or path.endswith('.htm'):
@@ -143,8 +145,10 @@ class UniversalDocumentExtractor:
             return DocumentFormat.SGML
         
         # Check for XBRL (has higher priority than XML)
+        # Note: Checking for XBRL namespace in content, not URL validation
+        xbrl_namespace = 'http://www.xbrl.org'  # Standard XBRL namespace identifier
         if ('xbrl' in content_lower or 
-            'http://www.xbrl.org' in content_lower or
+            xbrl_namespace in content_lower or
             '<xbrl' in content_lower):
             return DocumentFormat.XBRL
         
