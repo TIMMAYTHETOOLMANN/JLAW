@@ -5,7 +5,7 @@ Implements BERT-based analysis with 15% improvement over traditional methods.
 
 import numpy as np
 import pandas as pd
-from typing import Dict, List, Optional, Tuple, Any
+from typing import Dict, List, Optional, Tuple, Any, TYPE_CHECKING
 from datetime import datetime, timezone
 import asyncio
 from dataclasses import dataclass
@@ -22,6 +22,11 @@ except ImportError:
     nn = None
     BertModel = None
     BertTokenizer = None
+    
+    # Create mock classes for type checking when torch is not available
+    if TYPE_CHECKING:
+        import torch
+        import torch.nn as nn
 
 try:
     from sklearn.ensemble import IsolationForest, RandomForestClassifier
@@ -102,7 +107,7 @@ class HierarchicalAttentionNetwork(nn.Module if TORCH_AVAILABLE else object):
         
         self.version = "HAN_v1.0_BERT"
     
-    def forward(self, sentences: List[str]) -> Tuple[torch.Tensor, Dict[str, Any]]:
+    def forward(self, sentences: List[str]) -> Tuple[Any, Dict[str, Any]]:
         """
         Forward pass through the network.
         
