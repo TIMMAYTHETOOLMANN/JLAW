@@ -337,6 +337,98 @@ print(f"Related CFR: {statute_ref.related_cfr}")
 print(f"Criminal Penalties: {statute_ref.criminal_penalties}")
 ```
 
+### Example 5: Search API - Simple Query
+```python
+# Simple text search across all collections
+results = await client.search(
+    query="Securities Exchange Act",
+    page_size=25
+)
+
+for result in results.results:
+    print(f"Title: {result.title}")
+    print(f"Collection: {result.collectionCode}")
+    print(f"Package: {result.packageId}")
+```
+
+### Example 6: Search API - Collection Filter
+```python
+# Search only USCODE for specific title
+results = await client.search(
+    query='collectionCode:USCODE AND title:15 AND "insider trading"',
+    page_size=10
+)
+```
+
+### Example 7: Search API - Date Range
+```python
+# Find all Federal Register documents from 2023
+results = await client.search_by_date_range(
+    start_date="2023-01-01",
+    end_date="2023-12-31",
+    collection="FR",
+    page_size=50
+)
+```
+
+### Example 8: Search API - Topic Research
+```python
+# Research securities fraud statutes
+results = await client.search_statutes_by_topic(
+    topic="securities fraud",
+    collection="USCODE",
+    page_size=25
+)
+```
+
+### Example 9: Search API - Agency Regulations
+```python
+# Find all SEC regulations in CFR Title 17
+results = await client.search_regulations_by_agency(
+    agency="Securities and Exchange Commission",
+    cfr_title=17,
+    page_size=50
+)
+```
+
+### Example 10: Search API - Court Opinions
+```python
+# Search for SEC-related court cases
+results = await client.search_court_opinions(
+    court_name="Circuit",
+    keywords="Securities and Exchange Commission",
+    page_size=25
+)
+```
+
+### Example 11: Search API - Complex Boolean Query
+```python
+from src.forensics.govinfo_api_client import SearchSort
+
+# Complex query with multiple field operators
+results = await client.search(
+    query='collectionCode:USCODE AND (title:15 OR title:17) AND (fraud OR manipulation)',
+    page_size=25,
+    sorts=[SearchSort(field="publishdate", sortOrder="DESC")]
+)
+```
+
+### Example 12: Search API - Pagination
+```python
+# Get first page
+page1 = await client.search(
+    query="securities",
+    page_size=25
+)
+
+# Get next page
+page2 = await client.search(
+    query="securities",
+    page_size=25,
+    offset_mark=page1.offsetMark
+)
+```
+
 ---
 
 ## 🔐 SECURITY & BEST PRACTICES

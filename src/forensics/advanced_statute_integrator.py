@@ -34,6 +34,12 @@ from urllib.parse import quote, urlencode
 
 logger = logging.getLogger(__name__)
 
+# Optional import to avoid hard dependency at import time
+try:
+    from .govinfo_api_client import GovInfoAPIClient
+except Exception:
+    GovInfoAPIClient = None  # Will be validated at runtime
+
 
 class DocumentType(Enum):
     """GovInfo document types."""
@@ -133,13 +139,15 @@ class AdvancedStatuteIntegrator:
     5. Enforcement precedent analysis
     """
     
-    def __init__(self, govinfo_api_key: str, strict_api_mode: bool = True):
+    def __init__(self, govinfo_api_key: str, strict_api_mode: bool = True, *, dual_agent: bool = False, govinfo_client: Optional[Any] = None):
         """
         Initialize advanced statute integrator.
         
         Args:
             govinfo_api_key: GovInfo API key from data.gov
             strict_api_mode: If True, fail when API unavailable (NO FALLBACK). Default: True
+            dual_agent: Enable dual-agent cooperation with GovInfoAPIClient to cross-check and enrich results.
+            govinfo_client: Optional pre-initialized GovInfoAPIClient instance (advanced use)
         """
         if not govinfo_api_key or govinfo_api_key == "DEMO_KEY":
             raise ValueError(
@@ -151,6 +159,25 @@ class AdvancedStatuteIntegrator:
         self.base_url = "https://api.govinfo.gov"
         self.session: Optional[aiohttp.ClientSession] = None
         self.strict_api_mode = strict_api_mode
+        self.dual_agent = dual_agent
+        self._own_govinfo_client = False
+        self.govinfo_client: Optional[Any] = govinfo_client
+        # Lazily create GovInfoAPIClient if dual_agent requested and not provided
+        if self.dual_agent and self.govinfo_client is None:
+            if GovInfoAPIClient is None:
+                if self.strict_api_mode:
+                    raise RuntimeError("Dual-agent mode requested but GovInfoAPIClient is unavailable")
+                else:
+                    logger.warning("Dual-agent mode requested but GovInfoAPIClient not importable; proceeding without it")
+            else:
+                try:
+                    self.govinfo_client = GovInfoAPIClient(self.api_key)
+                    self._own_govinfo_client = True
+                    logger.info("Dual-agent integration: GovInfoAPIClient instantiated")
+                except Exception as e:
+                    if self.strict_api_mode:
+                        raise
+                    logger.warning(f"Failed to initialize GovInfoAPIClient: {e}")
         
         # Caching for performance only
         self.statute_cache: Dict[str, StatuteReference] = {}
@@ -164,7 +191,7 @@ class AdvancedStatuteIntegrator:
         
         logger.info(
             f"AdvancedStatuteIntegrator initialized with GovInfo API "
-            f"(strict_api_mode={'ON - NO FALLBACK' if strict_api_mode else 'OFF - FALLBACK ENABLED'})"
+            f"(strict_api_mode={'ON - NO FALLBACK' if strict_api_mode else 'OFF - FALLBACK ENABLED'}, dual_agent={'ON' if self.dual_agent and self.govinfo_client else 'OFF'})"
         )
     
     def _initialize_securities_statutes(self) -> Dict[str, Dict[str, Any]]:
@@ -533,8 +560,26 @@ class AdvancedStatuteIntegrator:
                 )
                 violation["govinfo_regulation"] = cfr_data
             
-            # Add related authorities
-            violation["related_authorities"] = await self._find_related_authorities(parsed)
+            # Add related authorities from heuristic mapping first
+            related_auths = await self._find_related_authorities(parsed)
+            
+            # Dual-agent augmentation using GovInfoAPIClient relationship features
+            if self.dual_agent and self.govinfo_client and "govinfo_statute" in violation:
+                try:
+                    statute_ref: StatuteReference = violation["govinfo_statute"]
+                    if statute_ref.govinfo_package_id:
+                        rel = await self.govinfo_client.find_implementing_regulations(statute_ref.govinfo_package_id)
+                        # Incorporate CFR references
+                        for r in rel or []:
+                            cfr_cite = r.get("citation") or r.get("title")
+                            if cfr_cite and cfr_cite not in related_auths:
+                                related_auths.append(cfr_cite)
+                except Exception as de:
+                    if self.strict_api_mode:
+                        raise
+                    logger.warning(f"Dual-agent related authority augmentation failed: {de}")
+            
+            violation["related_authorities"] = related_auths
             
             # Add enforcement precedents
             violation["enforcement_precedents"] = await self._find_enforcement_precedents(parsed)
@@ -611,30 +656,51 @@ class AdvancedStatuteIntegrator:
         # Clean section identifier
         clean_section = re.sub(r'[()]', '', section)
         base_section = re.match(r'(\d+[a-z]?)', clean_section).group(1)
-        
-        # Construct package and granule IDs
         package_id = f"USCODE-{year}-title{title}"
         granule_id = f"USCODE-{year}-title{title}-section{base_section}"
         
-        # Try primary endpoint first
-        url = f"{self.base_url}/packages/{package_id}/granules/{granule_id}"
+        # Prefer GovInfoAPIClient in dual-agent mode when available
+        if self.govinfo_client is not None:
+            try:
+                data = await self.govinfo_client.fetch_usc_statute_by_collection(title, base_section, year)
+                statute_ref = StatuteReference(
+                    citation=data.get("citation", f"{title} U.S.C. § {section}"),
+                    title=title,
+                    section=section,
+                    govinfo_package_id=data.get("package_id", package_id),
+                    govinfo_granule_id=granule_id,
+                    text_url=(data.get("download_links", {}) or {}).get("text"),
+                    pdf_url=(data.get("download_links", {}) or {}).get("pdf"),
+                    xml_url=(data.get("download_links", {}) or {}).get("xml"),
+                )
+                db_key = f"{title}_USC_{base_section}"
+                if db_key in self.securities_statutes:
+                    db_info = self.securities_statutes[db_key]
+                    statute_ref.short_title = db_info.get("short_title")
+                    statute_ref.related_cfr = db_info.get("related_cfr", [])
+                    statute_ref.criminal_penalties = db_info.get("criminal")
+                    statute_ref.civil_penalties = {"applicable": db_info.get("civil", False)}
+                self.statute_cache[cache_key] = statute_ref
+                return statute_ref
+            except Exception as e:
+                logger.warning(f"GovInfoAPIClient collection fetch failed for {title} USC {section}: {e}")
+                if self.strict_api_mode:
+                    # Fall through to raise via direct call below to preserve strict behavior
+                    pass
         
+        # Direct HTTP path (legacy) as fallback
+        url = f"{self.base_url}/packages/{package_id}/granules/{granule_id}"
         try:
             async with self.session.get(
                 url,
                 params={"api_key": self.api_key},
                 timeout=aiohttp.ClientTimeout(total=30)
             ) as response:
-                
-                # If 500 error, try alternative package summary endpoint
                 if response.status == 500:
                     logger.warning(f"Granule endpoint returned 500, trying package summary for {title} USC {section}")
                     return await self._fetch_usc_via_package_summary(title, section, year, package_id)
-                
-                # Continue with normal processing for other status codes
                 if response.status == 200:
                     data = await response.json()
-                    
                     statute_ref = StatuteReference(
                         citation=f"{title} U.S.C. § {section}",
                         title=title,
@@ -645,8 +711,6 @@ class AdvancedStatuteIntegrator:
                         pdf_url=data.get("download", {}).get("pdfLink"),
                         xml_url=data.get("download", {}).get("xmlLink")
                     )
-                    
-                    # Enrich with local database info
                     db_key = f"{title}_USC_{base_section}"
                     if db_key in self.securities_statutes:
                         db_info = self.securities_statutes[db_key]
@@ -654,15 +718,12 @@ class AdvancedStatuteIntegrator:
                         statute_ref.related_cfr = db_info.get("related_cfr", [])
                         statute_ref.criminal_penalties = db_info.get("criminal")
                         statute_ref.civil_penalties = {"applicable": db_info.get("civil", False)}
-                    
                     self.statute_cache[cache_key] = statute_ref
                     return statute_ref
-                
                 elif response.status == 404:
                     if self.strict_api_mode:
                         raise ValueError(
-                            f"GovInfo API returned 404 for {title} USC {section}. "
-                            f"Statute not found. Package: {package_id}, Granule: {granule_id}"
+                            f"GovInfo API returned 404 for {title} USC {section}. Statute not found. Package: {package_id}, Granule: {granule_id}"
                         )
                     return await self._fetch_usc_fallback(title, section, year)
                 else:
@@ -670,18 +731,14 @@ class AdvancedStatuteIntegrator:
                     logger.error(error_msg)
                     if self.strict_api_mode:
                         raise ConnectionError(
-                            f"{error_msg}. GovInfo API may be unavailable. "
-                            f"Check https://api.data.gov/docs/ for service status."
+                            f"{error_msg}. GovInfo API may be unavailable. Check https://api.data.gov/docs/ for service status."
                         )
                     return self._create_default_statute_ref(title, section)
-                    
         except asyncio.TimeoutError:
             error_msg = f"GovInfo USC fetch timeout for {title} USC {section}"
             logger.error(error_msg)
             if self.strict_api_mode:
-                raise TimeoutError(
-                    f"{error_msg}. GovInfo API did not respond within 30 seconds."
-                )
+                raise TimeoutError(f"{error_msg}. GovInfo API did not respond within 30 seconds.")
             return self._create_default_statute_ref(title, section)
         except (ValueError, ConnectionError, TimeoutError):
             raise
@@ -689,9 +746,7 @@ class AdvancedStatuteIntegrator:
             error_msg = f"GovInfo USC fetch error for {title} USC {section}: {e}"
             logger.error(error_msg)
             if self.strict_api_mode:
-                raise RuntimeError(
-                    f"{error_msg}. Unexpected error during GovInfo API call."
-                ) from e
+                raise RuntimeError(f"{error_msg}. Unexpected error during GovInfo API call.") from e
             return self._create_default_statute_ref(title, section)
     
     async def _fetch_usc_via_package_summary(
@@ -846,16 +901,23 @@ class AdvancedStatuteIntegrator:
             if datetime.now().month < 4:
                 year -= 1
         
-        # Use proper GovInfo API client
-        from src.forensics.govinfo_api_client import GovInfoAPIClient
-        
         try:
             if not self.session:
                 self.session = aiohttp.ClientSession()
             
-            # Initialize GovInfo client
-            govinfo_client = GovInfoAPIClient(self.api_key)
-            govinfo_client.session = self.session
+            # Initialize or reuse GovInfo client
+            govinfo_client = self.govinfo_client
+            if govinfo_client is None:
+                if GovInfoAPIClient is None:
+                    raise RuntimeError("GovInfoAPIClient not available")
+                govinfo_client = GovInfoAPIClient(self.api_key)
+                self._own_govinfo_client = True
+                self.govinfo_client = govinfo_client
+            # Reuse same aiohttp session for efficiency
+            try:
+                govinfo_client.session = self.session
+            except Exception:
+                pass
             
             # Fetch using collection-based API
             cfr_data = await govinfo_client.fetch_cfr_regulation_by_collection(
@@ -1089,6 +1151,12 @@ class AdvancedStatuteIntegrator:
         if self.session and not self.session.closed:
             await self.session.close()
             self.session = None
+        # Also close owned GovInfoAPIClient session if we created it
+        try:
+            if self._own_govinfo_client and self.govinfo_client:
+                await self.govinfo_client.close()
+        except Exception:
+            pass
     
     def __del__(self):
         """Cleanup on deletion."""
