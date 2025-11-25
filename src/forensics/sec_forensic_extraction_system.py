@@ -7,16 +7,20 @@ Supports: PDF, DOCX, XLSX, XML, HTML, XBRL, SGML, Images, Scanned documents
 from __future__ import annotations
 
 import asyncio
+import csv
 import hashlib
 import io
+import json
 import logging
 import re
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from enum import Enum
+from io import StringIO
 from typing import Any, Dict, List, Optional
 from urllib.parse import urlparse
 
+import aiohttp
 from bs4 import BeautifulSoup
 
 logger = logging.getLogger(__name__)
@@ -914,11 +918,9 @@ class ForensicSECAnalyzer:
         # JSON detection
         if content.strip().startswith("{") or content.strip().startswith("["):
             try:
-                import json as json_module
-
-                json_module.loads(content)
+                json.loads(content)
                 return EnhancedDocumentFormat.JSON
-            except (ValueError, json_module.JSONDecodeError):
+            except (ValueError, json.JSONDecodeError):
                 pass
 
         # CSV detection (simple heuristic)
@@ -1022,8 +1024,6 @@ class ForensicSECAnalyzer:
         Returns:
             Document content
         """
-        import aiohttp
-
         headers = {
             "User-Agent": "Mozilla/5.0 (compatible; ForensicSECAnalyzer/1.0)",
             "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
@@ -1686,8 +1686,6 @@ class ForensicSECAnalyzer:
 
     async def _extract_json(self, content: str, url: Optional[str]) -> Dict[str, Any]:
         """Extract JSON data."""
-        import json as json_module
-
         result: Dict[str, Any] = {
             "text": "",
             "elements": [],
@@ -1704,10 +1702,10 @@ class ForensicSECAnalyzer:
         }
 
         try:
-            data = json_module.loads(content)
+            data = json.loads(content)
 
             # Convert to text representation
-            result["text"] = json_module.dumps(data, indent=2)
+            result["text"] = json.dumps(data, indent=2)
 
             # Store structure
             result["document_structure"]["json_data"] = data
@@ -1726,7 +1724,7 @@ class ForensicSECAnalyzer:
                     }
                 )
 
-        except json_module.JSONDecodeError as e:
+        except json.JSONDecodeError as e:
             result["text"] = content
             result["metadata"]["parse_error"] = str(e)
 
@@ -1734,9 +1732,6 @@ class ForensicSECAnalyzer:
 
     async def _extract_csv(self, content: str, url: Optional[str]) -> Dict[str, Any]:
         """Extract CSV data."""
-        import csv
-        from io import StringIO
-
         result: Dict[str, Any] = {
             "text": "",
             "elements": [],

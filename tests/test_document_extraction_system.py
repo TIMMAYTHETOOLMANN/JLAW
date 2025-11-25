@@ -13,6 +13,10 @@ from src.forensics.sec_forensic_extraction_system import (
     DocumentFormat,
     ExtractionResult,
     FinancialMetrics,
+    ForensicSECAnalyzer,
+    EnhancedDocumentFormat,
+    ComprehensiveExtractionResult,
+    SECPatternMatch,
 )
 
 
@@ -536,13 +540,6 @@ async def test_extract_multiple_formats_sequentially():
 # ============================================================================
 # TESTS - ForensicSECAnalyzer (Complete Document Extraction)
 # ============================================================================
-
-from src.forensics.sec_forensic_extraction_system import (
-    ForensicSECAnalyzer,
-    EnhancedDocumentFormat,
-    ComprehensiveExtractionResult,
-    SECPatternMatch,
-)
 
 
 @pytest.fixture
