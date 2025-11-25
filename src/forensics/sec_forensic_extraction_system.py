@@ -786,7 +786,8 @@ class ForensicSECAnalyzer:
 
     # Financial pattern recognition
     FINANCIAL_PATTERNS = {
-        "monetary_amount": r"\$\s*([\d,]+(?:\.\d{2})?)\s*(?:million|billion|thousand|M|B|K)?",
+        # Matches $1,000.00 or ($1,000.00) for negatives, with optional suffixes
+        "monetary_amount": r"(?:\(?\$\s*([\d,]+(?:\.\d{2})?)\)?)\s*(?:million|billion|thousand|M|B|K)?",
         "percentage": r"([\d.]+)\s*%",
         "fiscal_year": r"(?:fiscal\s*(?:year\s*)?|FY\s*)(20\d{2})",
         "quarter": r"(?:Q|quarter\s*)([1-4])",
@@ -1369,10 +1370,10 @@ class ForensicSECAnalyzer:
 
     def _is_numeric_cell(self, text: str) -> bool:
         """Check if cell contains numeric data."""
-        # Remove common formatting
-        cleaned = re.sub(r"[$,%()[\]\s]", "", text)
-        cleaned = cleaned.replace("-", "")
-        return bool(cleaned) and cleaned.replace(".", "").replace(",", "").isdigit()
+        # Remove common formatting (currency, percentages, parentheses, brackets, whitespace)
+        cleaned = re.sub(r"[$,%()[\]\s\-]", "", text)
+        # Check if remaining string is numeric (digits with optional decimal)
+        return bool(cleaned) and cleaned.replace(".", "", 1).isdigit()
 
     def _extract_form(self, form_element, idx: int) -> Optional[Dict[str, Any]]:
         """Extract form structure."""
