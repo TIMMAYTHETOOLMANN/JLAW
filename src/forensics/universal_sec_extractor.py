@@ -10,13 +10,21 @@ from src.forensics.sec_forensic_extraction_system import (
     UniversalDocumentExtractor,
     ForensicSECDocumentAnalyzer,
     UniversalSECExtractor,
+    ForensicSECAnalyzer,
+    EnhancedDocumentFormat,
+    ComprehensiveExtractionResult,
+    SECPatternMatch,
 )
 
 __all__ = [
-    'DocumentFormat',
-    'ExtractionResult',
-    'FinancialMetrics',
-    'UniversalDocumentExtractor',
-    'ForensicSECDocumentAnalyzer',
-    'UniversalSECExtractor',
+    "DocumentFormat",
+    "ExtractionResult",
+    "FinancialMetrics",
+    "UniversalDocumentExtractor",
+    "ForensicSECDocumentAnalyzer",
+    "UniversalSECExtractor",
+    "ForensicSECAnalyzer",
+    "EnhancedDocumentFormat",
+    "ComprehensiveExtractionResult",
+    "SECPatternMatch",
 ]
