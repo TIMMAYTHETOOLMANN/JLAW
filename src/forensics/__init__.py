@@ -78,8 +78,26 @@ from src.forensics.config_manager import (
     get_config, reload_config
 )
 
+# Multi-Agent AI Components (Optional - require additional SDKs)
+try:
+    from src.forensics.agent_sec_analyzer import AgentSECForensicAnalyzer
+except ImportError:
+    AgentSECForensicAnalyzer = None
+
+try:
+    from src.forensics.anthropic_agent_analyzer import AnthropicAgentAnalyzer
+except ImportError:
+    AnthropicAgentAnalyzer = None
+
+try:
+    from src.forensics.multipass_strategy import MultiPassAnalysisStrategy, MultiPassResult
+except ImportError:
+    MultiPassAnalysisStrategy = None
+    MultiPassResult = None
+
 __all__ = [
     "__version__",
+    # Core analyzers
     "SECForensicAnalyzer",
     "FilingAnalysis",
     "StatuteMapper",
@@ -188,6 +206,10 @@ __all__ = [
     "GovInfoConfig",
     "SystemConfig",
     "get_config",
-    "reload_config"
+    "reload_config",
+    # Multi-agent
+    "AgentSECForensicAnalyzer",
+    "AnthropicAgentAnalyzer",
+    "MultiPassAnalysisStrategy",
+    "MultiPassResult"
 ]
-

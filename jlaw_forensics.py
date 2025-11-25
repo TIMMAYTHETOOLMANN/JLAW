@@ -425,11 +425,60 @@ Examples:
     parser.add_argument("--config", help="Configuration file path")
     parser.add_argument("--output", help="Output file for results (JSON)")
     
+    # AI Provider Selection
+    parser.add_argument("--ai-provider", type=str, 
+                       choices=["AUTO", "OPENAI", "ANTHROPIC", "NONE"],
+                       help="AI provider selection (default: AUTO from config)")
+    parser.add_argument("--multipass", action="store_true",
+                       help="Enable multi-pass analysis with multiple AI providers")
+    parser.add_argument("--passes", type=int,
+                       help="Maximum number of analysis passes (default: 4)")
+    parser.add_argument("--llm-model", type=str,
+                       help="Override LLM model (e.g., gpt-4-turbo, claude-3-5-sonnet)")
+    
     args = parser.parse_args()
     
     # Initialize system
     try:
-        system = JLAWForensicSystem(args.config)
+        # Override AI provider config if specified via CLI
+        if args.ai_provider:
+            os.environ['AI_PROVIDER'] = args.ai_provider
+        if args.multipass:
+            os.environ['ENABLE_MULTIPASS_ANALYSIS'] = 'true'
+        if args.passes:
+            os.environ['MAX_ANALYSIS_PASSES'] = str(args.passes)
+        if args.llm_model:
+            # Determine which provider based on model name
+            if 'gpt' in args.llm_model.lower() or 'openai' in args.llm_model.lower():
+                os.environ['OPENAI_MODEL'] = args.llm_model
+            elif 'claude' in args.llm_model.lower() or 'anthropic' in args.llm_model.lower():
+                os.environ['ANTHROPIC_MODEL'] = args.llm_model
+        
+        system = JLAWForensicSystem(config_path=args.config)
+        
+        # Display runtime banner
+        config = system.config
+        print("\n" + "="*80)
+        print("JLAW FORENSIC SYSTEM - MULTI-AGENT AI ANALYSIS")
+        print("="*80)
+        print(f"AI Provider: {config.ai_provider.provider}")
+        
+        if config.openai.api_key:
+            print(f"  ✅ OpenAI: {config.openai.model}")
+        else:
+            print(f"  ⚠️  OpenAI: Not configured")
+        
+        if config.anthropic.api_key:
+            print(f"  ✅ Anthropic: {config.anthropic.model}")
+        else:
+            print(f"  ⚠️  Anthropic: Not configured")
+        
+        print(f"Multi-Pass Analysis: {'✅ Enabled' if config.ai_provider.enable_multipass else '❌ Disabled'}")
+        if config.ai_provider.enable_multipass:
+            print(f"  Max Passes: {config.ai_provider.max_passes}")
+        
+        print(f"Active Analyzer: {type(system.orchestrator.sec_analyzer).__name__}")
+        print("="*80 + "\n")
     except Exception as e:
         logger.critical(f"Failed to initialize system: {e}", exc_info=True)
         sys.exit(1)

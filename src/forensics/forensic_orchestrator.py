@@ -67,10 +67,106 @@ class ForensicOrchestrator:
         self.storage_config = storage_config
         self.user_agent = user_agent
         
-        # Initialize components
-        self.sec_analyzer = SECForensicAnalyzer(user_agent=self.user_agent)
+        # Initialize components with multi-provider AI support
+        self.logger = logging.getLogger("ForensicOrchestrator")
+        
+        try:
+            from src.forensics.agent_sec_analyzer import AgentSECForensicAnalyzer
+            from src.forensics.anthropic_agent_analyzer import AnthropicAgentAnalyzer
+            from src.forensics.multipass_strategy import MultiPassAnalysisStrategy
+            from src.forensics.config_manager import get_config
+            
+            config = get_config()
+            ai_config = config.config.ai_provider
+            
+            # Initialize available analyzers
+            openai_analyzer = None
+            anthropic_analyzer = None
+            
+            # OpenAI setup
+            if config.config.openai.api_key:
+                try:
+                    openai_analyzer = AgentSECForensicAnalyzer(
+                        api_key=config.config.openai.api_key,
+                        user_agent=self.user_agent
+                    )
+                    self.logger.info(f"✅ OpenAI analyzer ready (model: {config.config.openai.model})")
+                except Exception as e:
+                    self.logger.warning(f"⚠️ OpenAI analyzer init failed: {e}")
+            
+            # Anthropic setup
+            if config.config.anthropic.api_key:
+                try:
+                    anthropic_analyzer = AnthropicAgentAnalyzer(
+                        api_key=config.config.anthropic.api_key,
+                        user_agent=self.user_agent
+                    )
+                    self.logger.info(f"✅ Anthropic analyzer ready (model: {config.config.anthropic.model})")
+                except Exception as e:
+                    self.logger.warning(f"⚠️ Anthropic analyzer init failed: {e}")
+            
+            # Manual fallback
+            manual_analyzer = SECForensicAnalyzer(user_agent=self.user_agent)
+            
+            # Provider selection logic
+            provider = ai_config.provider
+            
+            if provider == 'NONE' or (not openai_analyzer and not anthropic_analyzer):
+                self.sec_analyzer = manual_analyzer
+                self.logger.info("🔧 Using manual analyzer (AI providers disabled or unavailable)")
+            
+            elif provider == 'OPENAI':
+                self.sec_analyzer = openai_analyzer or manual_analyzer
+                self.logger.info("🤖 Using OpenAI analyzer (explicit override)")
+            
+            elif provider == 'ANTHROPIC':
+                self.sec_analyzer = anthropic_analyzer or manual_analyzer
+                self.logger.info("🧠 Using Anthropic analyzer (explicit override)")
+            
+            elif provider == 'AUTO':
+                # AUTO mode: prefer OpenAI for speed, Anthropic for depth
+                if ai_config.enable_multipass and anthropic_analyzer:
+                    self.logger.info("🔄 Multi-pass mode enabled with both providers")
+                    # Use multi-pass strategy
+                    self.multipass_strategy = MultiPassAnalysisStrategy(
+                        openai_analyzer=openai_analyzer,
+                        anthropic_analyzer=anthropic_analyzer,
+                        manual_analyzer=manual_analyzer,
+                        enable_multipass=True,
+                        max_passes=ai_config.max_passes
+                    )
+                    self.sec_analyzer = openai_analyzer or anthropic_analyzer or manual_analyzer
+                elif openai_analyzer:
+                    self.sec_analyzer = openai_analyzer
+                    self.logger.info("🚀 Using OpenAI analyzer (AUTO mode, fast analysis)")
+                elif anthropic_analyzer:
+                    self.sec_analyzer = anthropic_analyzer
+                    self.logger.info("🧠 Using Anthropic analyzer (AUTO mode, deep analysis)")
+                else:
+                    self.sec_analyzer = manual_analyzer
+                    self.logger.info("🔧 Using manual analyzer (AUTO mode, no AI available)")
+            
+            # Store analyzer references for potential multi-pass use
+            self.openai_analyzer = openai_analyzer
+            self.anthropic_analyzer = anthropic_analyzer
+            self.manual_analyzer = manual_analyzer
+            self.multipass_strategy = getattr(self, 'multipass_strategy', None)
+            
+        except Exception as e:
+            self.sec_analyzer = SECForensicAnalyzer(user_agent=self.user_agent)
+            self.logger.warning(f"⚠️ Multi-provider init failed: {e}, using manual analyzer")
+        
         # Enable strict evidence gating by default (production)
         self.statute_mapper = StatuteMapper(govinfo_api_key, strict_mode=True)
+        
+        # Advanced statute integrator with full GovInfo intelligence
+        # strict_api_mode=True: No fallback, fail fast if API unavailable
+        from src.forensics.advanced_statute_integrator import AdvancedStatuteIntegrator
+        self.advanced_statute_integrator = AdvancedStatuteIntegrator(
+            govinfo_api_key,
+            strict_api_mode=True  # NO FALLBACK - API must be functional
+        )
+        
         self.storage = ImmutableStorage(storage_config)
         
         # Resilient API client wrapping
@@ -367,19 +463,23 @@ class ForensicOrchestrator:
                                         if not any(r['accession'] == record['accession'] for r in all_filings):
                                             all_filings.append(record)
 
-                        # Now, build the analysis list (10-K/10-Q/4 only; include /A variants)
+                        # Now, build the analysis list
+                        # BENCHMARK MODE: Analyze ALL form types for comprehensive coverage (matches 89 filing benchmark)
+                        # This includes 8-K, SC 13G/A, DEF 14A, 11-K, etc. which contain additional violations
                         allowed = set()
                         if not filing_types:
-                            allowed = {"10-K", "10-K/A", "10-Q", "10-Q/A", "4", "4/A"}
+                            # Default: ALL forms for comprehensive forensic analysis
+                            filings = all_filings.copy()
                         else:
+                            # User specified specific forms
                             for ft in filing_types:
                                 allowed.add(ft)
                                 if not ft.endswith("/A"):
                                     allowed.add(f"{ft}/A")
-                        for rec in all_filings:
-                            form_type = (rec['form_type'] or '').upper()
-                            if form_type in {s.upper() for s in allowed}:
-                                filings.append(rec)
+                            for rec in all_filings:
+                                form_type = (rec['form_type'] or '').upper()
+                                if form_type in {s.upper() for s in allowed}:
+                                    filings.append(rec)
 
                         # Log per-form coverage counts for diagnostics
                         try:
@@ -563,23 +663,9 @@ class ForensicOrchestrator:
             }
         )
         
-        # CRITICAL FIX: Remove xslF345X03 folder path from Form 4 URLs
-        # The xslF345X03 folder contains HTML/XSLT rendering, not raw XML
-        # We need the root-level edgardoc.xml or form4.xml files for parsing
-        for filing in filings:
-            if filing.get('form_type', '').upper() in ('4', '4/A'):
-                doc_url = filing.get('document_url', '')
-                # Remove xslF345X03 folder from path
-                if '/xslF345X03/' in doc_url:
-                    # Extract accession number and reconstruct URL to root XML
-                    parts = doc_url.split('/xslF345X03/')
-                    if len(parts) == 2:
-                        base_url = parts[0]  # e.g., .../000112760219035995
-                        filename = parts[1]  # e.g., form4.xml or edgardoc.xml
-                        # Always prefer edgardoc.xml at root, fallback to form4.xml
-                        filing['document_url'] = f"{base_url}/edgardoc.xml"
-                        filing['text_url'] = filing['document_url']
-                        self.logger.info(f"[Form4 Fix] Corrected URL: {doc_url} → {filing['document_url']}")
+        # IMPORTANT: Do NOT rewrite Form 4 document URLs here.
+        # Many accessions store the XML under xslF345X03/ or use wf-form4*.xml names.
+        # URL resolution is handled robustly inside InsiderForm4Analyzer.
         
         # Store coverage count on case for reporting
         try:
@@ -879,7 +965,8 @@ class ForensicOrchestrator:
             except Exception:
                 statute_label = str(getattr(v, 'section', 'UNKNOWN'))
             ev = getattr(v, 'pattern_matched', {}).get('evidence', {}) if getattr(v, 'pattern_matched', None) else {}
-            violations_list.append({
+            
+            violation_dict = {
                 "statute": statute_label,
                 "description": getattr(v, 'description', ''),
                 "evidence": getattr(v, 'evidence_refs', []),
@@ -891,7 +978,27 @@ class ForensicOrchestrator:
                 "document_section": ev.get('section'),
                 "prosecutorial_merit": ev.get('prosecutorial_merit'),
                 "estimated_damages": ev.get('estimated_damages'),
-            })
+            }
+            
+            violations_list.append(violation_dict)
+        
+        # ADVANCED ENHANCEMENT: Enrich violations with GovInfo statute intelligence
+        try:
+            self.logger.info("🔍 Enriching violations with advanced GovInfo statute intelligence...")
+            enriched_violations = []
+            for violation in violations_list:
+                enriched = await self.advanced_statute_integrator.enrich_violation_with_govinfo(violation)
+                enriched_violations.append(enriched)
+            violations_list = enriched_violations
+            
+            # Get comprehensive legal framework
+            legal_framework = await self.advanced_statute_integrator.get_comprehensive_legal_framework(violations_list)
+            self.logger.info(f"✅ Legal framework compiled: {len(legal_framework.get('primary_statutes', []))} statutes, "
+                           f"{len(legal_framework.get('regulations', []))} regulations, "
+                           f"{len(legal_framework.get('criminal_statutes', []))} criminal provisions")
+        except Exception as e:
+            self.logger.warning(f"⚠️ Advanced statute enrichment failed: {e}")
+            legal_framework = None
 
         # Quantitative signals derived from filing analyses
         variances = []
@@ -968,7 +1075,8 @@ class ForensicOrchestrator:
                 "cik": case.target_cik,
                 "period_start": report["investigation"]["start"],
                 "period_end": report["investigation"]["end"],
-                "distribution_list": ["SEC Enforcement Division", "Internal Review"]
+                "distribution_list": ["SEC Enforcement Division", "Internal Review"],
+                "advanced_legal_framework": legal_framework  # Pass enriched framework
             }
             dossier = await generator.generate_forensic_dossier(analysis_results, dossier_metadata)
             # Export dossier JSON to dossiers directory

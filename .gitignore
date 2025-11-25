@@ -1,6 +1,16 @@
 # macOS Files
 .DS_Store
 
+# Secrets and Configuration (CRITICAL - DO NOT COMMIT)
+.env
+.env.*
+!.env.example
+*.key
+*.pem
+secrets/
+config/secrets/
+*_API_KEY*
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 **/__pycache__/

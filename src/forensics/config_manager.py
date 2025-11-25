@@ -30,10 +30,37 @@ class GovInfoConfig:
 
 
 @dataclass
+class OpenAIConfig:
+    """OpenAI Agent SDK configuration."""
+    api_key: Optional[str]
+    model: str = "gpt-4-turbo"
+    max_tokens: int = 4096
+
+
+@dataclass
+class AnthropicConfig:
+    """Anthropic Claude configuration."""
+    api_key: Optional[str]
+    model: str = "claude-3-5-sonnet-20241022"
+    max_tokens: int = 8192
+
+
+@dataclass
+class AIProviderConfig:
+    """AI provider selection configuration."""
+    provider: str = "AUTO"
+    enable_multipass: bool = False
+    max_passes: int = 4
+
+
+@dataclass
 class SystemConfig:
     """Complete system configuration."""
     sec: SECConfig
     govinfo: GovInfoConfig
+    openai: OpenAIConfig
+    anthropic: AnthropicConfig
+    ai_provider: AIProviderConfig
     storage_provider: str
     storage_path: str
     log_level: str
@@ -116,10 +143,65 @@ class ConfigurationManager:
             api_key=self._get_env('GOVINFO_API_KEY', '')
         )
         
+        # OpenAI Agent SDK Configuration (for intelligent web scraping)
+        openai_api_key = self._get_env('OPENAI_API_KEY', '')
+        if not openai_api_key:
+            logger.warning("OPENAI_API_KEY not set - OpenAI Agent features disabled")
+        else:
+            logger.info("OpenAI Agent SDK enabled - intelligent document extraction available")
+        
+        openai = OpenAIConfig(
+            api_key=openai_api_key,
+            model=self._get_env('OPENAI_MODEL', 'gpt-4-turbo'),
+            max_tokens=int(self._get_env('OPENAI_MAX_TOKENS', '4096'))
+        )
+        
+        # Anthropic Claude Configuration (for multi-pass deep analysis)
+        anthropic_api_key = self._get_env('ANTHROPIC_API_KEY', '')
+        if not anthropic_api_key:
+            logger.info("ANTHROPIC_API_KEY not set - Anthropic features disabled")
+        else:
+            logger.info("Anthropic Claude enabled - multi-pass deep analysis available")
+        
+        anthropic = AnthropicConfig(
+            api_key=anthropic_api_key,
+            model=self._get_env('ANTHROPIC_MODEL', 'claude-3-5-sonnet-20241022'),
+            max_tokens=int(self._get_env('ANTHROPIC_MAX_TOKENS', '8192'))
+        )
+        
+        # AI Provider Selection Configuration
+        ai_provider = AIProviderConfig(
+            provider=self._get_env('AI_PROVIDER', 'AUTO').upper(),
+            enable_multipass=self._get_env('ENABLE_MULTIPASS_ANALYSIS', 'false').lower() == 'true',
+            max_passes=int(self._get_env('MAX_ANALYSIS_PASSES', '4'))
+        )
+        
+        # Validate AI provider selection
+        valid_providers = {'AUTO', 'OPENAI', 'ANTHROPIC', 'NONE'}
+        if ai_provider.provider not in valid_providers:
+            logger.warning(f"Invalid AI_PROVIDER '{ai_provider.provider}', defaulting to AUTO")
+            ai_provider.provider = 'AUTO'
+        
+        # Log selected provider
+        if ai_provider.provider == 'AUTO':
+            if anthropic_api_key and openai_api_key:
+                logger.info("AI Provider: AUTO (Both OpenAI and Anthropic available)")
+            elif openai_api_key:
+                logger.info("AI Provider: AUTO (OpenAI only)")
+            elif anthropic_api_key:
+                logger.info("AI Provider: AUTO (Anthropic only)")
+            else:
+                logger.info("AI Provider: AUTO (No AI providers available, using manual)")
+        else:
+            logger.info(f"AI Provider: {ai_provider.provider} (Explicit override)")
+        
         # System Configuration
         config = SystemConfig(
             sec=sec,
             govinfo=govinfo,
+            openai=openai,
+            anthropic=anthropic,
+            ai_provider=ai_provider,
             storage_provider=self._get_env('STORAGE_PROVIDER', 'LOCAL'),
             storage_path=self._get_env('STORAGE_PATH', './forensic_storage'),
             log_level=self._get_env('LOG_LEVEL', 'INFO'),
@@ -251,32 +333,41 @@ class ConfigurationManager:
         )
 
 
-# Global configuration instance
-_config_manager = None
+# Global configuration singleton
+_global_config: Optional[ConfigurationManager] = None
 
 
-def get_config() -> ConfigurationManager:
-    """Get global configuration manager instance."""
-    global _config_manager
-    if _config_manager is None:
-        _config_manager = ConfigurationManager()
-    return _config_manager
+def get_config(config_path: Optional[str] = None) -> ConfigurationManager:
+    """
+    Get global configuration manager instance.
+    
+    Args:
+        config_path: Optional path to .env file
+    
+    Returns:
+        ConfigurationManager instance
+    """
+    global _global_config
+    if _global_config is None or config_path:
+        _global_config = ConfigurationManager(config_path)
+    return _global_config
 
 
 def reload_config(config_path: Optional[str] = None):
-    """Reload configuration."""
-    global _config_manager
-    _config_manager = ConfigurationManager(config_path)
-    return _config_manager
+    """Force reload of configuration."""
+    global _global_config
+    _global_config = ConfigurationManager(config_path)
+    return _global_config
 
 
-# Backward compatibility exports
 __all__ = [
     'ConfigurationManager',
     'SECConfig',
     'GovInfoConfig',
+    'OpenAIConfig',
+    'AnthropicConfig',
+    'AIProviderConfig',
     'SystemConfig',
     'get_config',
     'reload_config'
 ]
-
