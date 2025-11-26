@@ -22,7 +22,9 @@ from src.forensics.ml_fraud_detector import (
 )
 from src.forensics.sec_forensic_extraction_system import (
     UniversalDocumentExtractor, ForensicSECDocumentAnalyzer,
-    ExtractionResult, DocumentFormat
+    ExtractionResult, DocumentFormat,
+    ForensicSECAnalyzer, EnhancedDocumentFormat,
+    ComprehensiveExtractionResult, SECPatternMatch
 )
 from src.forensics.multi_pass_compliance_analyzer import (
     MultiPassComplianceAnalyzer, ComplianceViolation,
@@ -128,6 +130,10 @@ __all__ = [
     "ForensicSECDocumentAnalyzer",
     "ExtractionResult",
     "DocumentFormat",
+    "ForensicSECAnalyzer",
+    "EnhancedDocumentFormat",
+    "ComprehensiveExtractionResult",
+    "SECPatternMatch",
     "MultiPassComplianceAnalyzer",
     "ComplianceViolation",
     "ComplianceAnalysisResult",
