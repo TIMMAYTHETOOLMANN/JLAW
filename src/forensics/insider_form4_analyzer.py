@@ -390,12 +390,43 @@ class InsiderForm4Analyzer:
 
     async def _resolve_form4_xml_url(self, xml_url: str) -> Tuple[str, str]:
         """Resolve a robust Form 4 XML URL and return (resolved_url, content).
-        Tries original, common alternates, and directory index discovery.
+        CRITICAL FIX: Fetch the raw .txt filing file and extract XML from <TEXT><XML>...</XML></TEXT>
         """
         attempts: List[str] = []
-        # 1) Try the provided URL first
+        
+        # CRITICAL: The xslF345X03/form4.xml URLs return HTML, not XML!
+        # We need to get the raw .txt file instead
+        
+        # Extract accession number from URL
+        # Example: .../000112760219035995/xslF345X03/form4.xml -> 000112760219035995
+        accession_match = re.search(r'/(\d{18})/', xml_url)
+        if accession_match:
+            accession = accession_match.group(1)
+            # Format as 0001127602-19-035995
+            formatted_accession = f"{accession[:10]}-{accession[10:12]}-{accession[12:]}"
+            
+            # Construct the .txt file URL
+            txt_url = xml_url.split('/xslF345X03')[0] if '/xslF345X03' in xml_url else xml_url.rsplit('/', 1)[0]
+            txt_url = f"{txt_url}/{formatted_accession}.txt"
+            
+            logger.info(f"[Form4 URL Resolver] Fetching raw filing: {txt_url}")
+            status, text = await self._try_get(txt_url)
+            if status == 200 and text:
+                # Extract XML from <TEXT><XML>...</XML></TEXT> section
+                xml_match = re.search(r'<TEXT>\s*<XML>(.*?)</XML>\s*</TEXT>', text, re.DOTALL | re.IGNORECASE)
+                if xml_match:
+                    xml_content = xml_match.group(1).strip()
+                    logger.info(f"[Form4 URL Resolver] Successfully extracted XML ({len(xml_content)} bytes)")
+                    return txt_url, xml_content
+                else:
+                    logger.warning(f"[Form4 URL Resolver] No <XML> section found in {txt_url}")
+                    attempts.append(f"{txt_url} -> XML section not found")
+            else:
+                attempts.append(f"{txt_url} -> {status}")
+        
+        # Fallback: Try the provided URL first
         status, text = await self._try_get(xml_url)
-        if status == 200 and text:
+        if status == 200 and text and '<ownershipDocument>' in text:
             return xml_url, text
         attempts.append(f"{xml_url} -> {status}")
 

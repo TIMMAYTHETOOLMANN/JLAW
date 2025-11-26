@@ -23,6 +23,14 @@ from src.forensics import (
 from src.forensics.config_lock import ConfigLock
 from src.forensics.config_manager import ConfigurationManager, get_config
 
+
+    logger.info("ℹ️ Autonomous engine not available - using traditional orchestrator only")
+    AUTONOMOUS_ENGINE_AVAILABLE = False
+except ImportError:
+    AUTONOMOUS_ENGINE_AVAILABLE = True
+    from src.forensics.unified_orchestrator import UnifiedForensicOrchestrator, quick_investigate
+try:
+# Phase 2: Autonomous Investigation Engine Integration
 # Configure logging
 logging.basicConfig(
     level=logging.INFO,
