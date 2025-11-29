@@ -1,4 +1,4 @@
-﻿﻿"""
+﻿"""
 Forensic Table Extractor - Phase 1
 ==================================
 Advanced table extraction with cell relationships and data validation

@@ -12,7 +12,7 @@ from typing import Dict, List, Optional, Any, Tuple, Union
 from dataclasses import dataclass, field
 from datetime import datetime
 
-from ..universal_document_extractor import (
+from ..sec_forensic_extraction_system import (
     UniversalDocumentExtractor,
     ExtractionResult,
     DocumentFormat
@@ -120,7 +120,8 @@ class EnhancedDocumentProcessor:
         
         # Use existing base extractor
         base_result = await self.base_extractor.extract_document(content, url)
-        text = base_result.raw_text if base_result.success else str(content)
+        # ExtractionResult uses 'content' field; 'success' is inferred from whether content exists
+        text = base_result.content if base_result and base_result.content else str(content)
         
         # Extract entities
         entities = await self._extract_entities(text)
@@ -401,8 +402,9 @@ class EnhancedDocumentProcessor:
         
         scores = {}
         
-        # Base extraction success
-        scores['base'] = 0.90 if base_result.success else 0.40
+        # Base extraction success - inferred from whether content exists
+        has_success = base_result and base_result.content
+        scores['base'] = 0.90 if has_success else 0.40
         
         # Entity extraction quality
         if len(entities) > 10:
