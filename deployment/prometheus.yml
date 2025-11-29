@@ -1,0 +1,43 @@
+# Prometheus Monitoring Configuration for JLAW Forensics
+
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+  external_labels:
+    cluster: 'jlaw-forensics'
+    environment: 'production'
+
+# Alertmanager configuration
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets:
+            - 'alertmanager:9093'
+
+# Scrape configurations
+scrape_configs:
+  # JLAW Forensics API
+  - job_name: 'jlaw-forensics'
+    static_configs:
+      - targets: ['localhost:8000']
+    metrics_path: '/metrics'
+    
+  # System metrics
+  - job_name: 'node'
+    static_configs:
+      - targets: ['localhost:9100']
+  
+  # Database metrics
+  - job_name: 'neo4j'
+    static_configs:
+      - targets: ['localhost:2004']
+  
+  # Elasticsearch metrics
+  - job_name: 'elasticsearch'
+    static_configs:
+      - targets: ['localhost:9200']
+
+# Alerting rules
+rule_files:
+  - 'alerts/*.yml'
+

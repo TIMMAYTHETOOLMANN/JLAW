@@ -80,6 +80,53 @@ from src.forensics.config_manager import (
     get_config, reload_config
 )
 
+# Phase 4: Temporal Analysis & Timeline Reconstruction
+from src.forensics.temporal_analysis import (
+    ForensicTimelineReconstructor, TemporalEvent, ForensicTimeline,
+    TemporalContradiction, TemporalAnomaly, NarrativeSequence,
+    EventCorrelator, EventCorrelation, CausalChain,
+    TemporalParser, TemporalExtractor, DateExtractionResult,
+    TemporalAnomalyDetector, GapAnomaly, ClusterAnomaly, PatternBreak
+)
+
+# Phase 5: Decision Engine & Prosecution Path Builder
+from src.forensics.decision_engine import (
+    ProsecutionPathBuilder, ProsecutionPath, DecisionPath, ProsecutionStrategy,
+    ForensicEvidenceEvaluator, EvaluatedEvidence, Admissibility, EvidenceStrength,
+    DecisionTree, DecisionNode, DecisionBranch, PathScore,
+    Evidence, EvidenceType, ProsecutionObjective, EnforcementAction
+)
+
+# Phase 6: Advanced Contradiction Detection
+from src.forensics.contradiction_detection import (
+    OmniscientContradictionDetector, ContradictionReport, Contradiction,
+    ContradictionNetwork, ContradictionType, Severity
+)
+
+# Phase 7: Comprehensive Reporting & Visualization
+# NOTE: Reporting module being refactored - temporarily disabled
+# from src.forensics.reporting import (
+#     ProsecutionReportGenerator, ProsecutionPackage, ExecutiveSummary,
+#     VisualizationEngine, Visualizations,
+#     RegulatoryFormGenerator, SECFormTCR, DOJReferral,
+#     HTMLDashboardGenerator, DashboardConfig
+# )
+
+# Phase 8: Master Forensic Controller & Integration
+# NOTE: Orchestrator module imports temporarily disabled
+# from src.forensics.orchestrator import (
+#     MasterForensicController, InvestigationConfig, InvestigationResult,
+#     SystemConfiguration, IntegrationTestSuite, SystemHealth
+# )
+
+# Phase 9: Deployment & Optimization
+# NOTE: Deployment module imports temporarily disabled
+# from src.forensics.deployment import (
+#     DeploymentManager, DeploymentConfig, DeploymentStatus,
+#     SystemHealthCheck, HealthStatus, ComponentHealth,
+#     SystemOptimizer, OptimizationProfile, PerformanceMetrics
+# )
+
 # Multi-Agent AI Components (Optional - require additional SDKs)
 try:
     from src.forensics.agent_sec_analyzer import AgentSECForensicAnalyzer

@@ -1,0 +1,39 @@
+version: "3.9"
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: jlaw-app
+    environment:
+      - METRICS_PORT=8000
+      - PYTHONUNBUFFERED=1
+      # Add any required API keys here or mount via secrets
+      # - GOVINFO_API_KEY=${GOVINFO_API_KEY}
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./forensic_storage:/app/forensic_storage
+      - ./logs:/app/logs
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/metrics').read(10)"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    restart: unless-stopped
+
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: jlaw-prometheus
+    volumes:
+      - ./deployment/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    ports:
+      - "9090:9090"
+    depends_on:
+      - app
+    restart: unless-stopped
+
+volumes:
+  logs: {}
+  forensic_storage: {}

@@ -33,8 +33,8 @@ class GovInfoConfig:
 class OpenAIConfig:
     """OpenAI Agent SDK configuration."""
     api_key: Optional[str]
-    model: str = "gpt-4-turbo"
-    max_tokens: int = 4096
+    model: str = "gpt-5"
+    max_tokens: int = 8192
 
 
 @dataclass
@@ -49,8 +49,8 @@ class AnthropicConfig:
 class AIProviderConfig:
     """AI provider selection configuration."""
     provider: str = "AUTO"
-    enable_multipass: bool = False
-    max_passes: int = 4
+    enable_multipass: bool = True
+    max_passes: int = 6
 
 
 @dataclass
@@ -152,9 +152,18 @@ class ConfigurationManager:
         
         openai = OpenAIConfig(
             api_key=openai_api_key,
-            model=self._get_env('OPENAI_MODEL', 'gpt-4-turbo'),
-            max_tokens=int(self._get_env('OPENAI_MAX_TOKENS', '4096'))
+            model=self._get_env('OPENAI_MODEL', 'gpt-5'),
+            max_tokens=int(self._get_env('OPENAI_MAX_TOKENS', '8192'))
         )
+
+        # Propagate highest-sophistication default to Agents SDK if not explicitly set
+        try:
+            if not os.getenv('OPENAI_DEFAULT_MODEL'):
+                os.environ['OPENAI_DEFAULT_MODEL'] = openai.model
+                logger.info("OPENAI_DEFAULT_MODEL set to %s", openai.model)
+        except Exception:
+            # Non-fatal if environment mutation is restricted
+            pass
         
         # Anthropic Claude Configuration (for multi-pass deep analysis)
         anthropic_api_key = self._get_env('ANTHROPIC_API_KEY', '')
@@ -172,8 +181,8 @@ class ConfigurationManager:
         # AI Provider Selection Configuration
         ai_provider = AIProviderConfig(
             provider=self._get_env('AI_PROVIDER', 'AUTO').upper(),
-            enable_multipass=self._get_env('ENABLE_MULTIPASS_ANALYSIS', 'false').lower() == 'true',
-            max_passes=int(self._get_env('MAX_ANALYSIS_PASSES', '4'))
+            enable_multipass=self._get_env('ENABLE_MULTIPASS_ANALYSIS', 'true').lower() == 'true',
+            max_passes=int(self._get_env('MAX_ANALYSIS_PASSES', '6'))
         )
         
         # Validate AI provider selection

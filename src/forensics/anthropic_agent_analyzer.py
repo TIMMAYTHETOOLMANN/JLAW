@@ -53,6 +53,23 @@ class AnthropicAgentAnalyzer:
         self.manual_analyzer = SECForensicAnalyzer(user_agent=self.user_agent)
         
         logger.info(f"✅ Anthropic agent analyzer initialized with model: {self.model}")
+
+    async def analyze_text(self, content: str, context: Optional[Dict] = None) -> Dict[str, Any]:
+        """Analyze arbitrary text content using Claude's deep reasoning path.
+
+        Returns a dict with status, violations (if any), and raw analysis fields.
+        """
+        try:
+            return await self.analyze_filing_deep(
+                content=content,
+                filing_type=context.get("filing_type", "TEXT") if context else "TEXT",
+                document_url=context.get("document_url", "inline://content") if context else "inline://content",
+                filing_date=context.get("filing_date") if context else None,
+                context=context,
+            )
+        except Exception as e:
+            logger.error("[Anthropic Text] Analysis failed: %s", e)
+            return {"status": "error", "analyzer": "anthropic_claude", "violations": [], "error": str(e)}
     
     def _get_system_prompt(self) -> str:
         """Get system prompt for forensic SEC analysis with Claude."""

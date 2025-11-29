@@ -1,4 +1,4 @@
-﻿"""
+﻿﻿"""
 Forensic Table Extractor - Phase 1
 ==================================
 Advanced table extraction with cell relationships and data validation
@@ -37,26 +37,123 @@ class ForensicTableExtractor:
     async def extract_tables_with_context(
         self,
         content: str,
-        format_hint: Optional[str] = None
+        format_hint: Optional[str] = None,
+        file_path: Optional[str] = None
     ) -> List[ExtractedTable]:
-        """Extract tables using multiple strategies"""
+        """Extract tables using multiple strategies
+        
+        Strategies:
+        1. HTML table tags (highest accuracy for HTML)
+        2. ML-based PDF table extraction (Camelot)
+        3. Structured text parsing
+        4. Financial indicator detection
+        """
         tables = []
+        
         # Strategy 1: HTML tables
         try:
             html_tables = await self._extract_via_html_table(content)
             tables.extend(html_tables)
         except Exception as e:
             logger.debug(f"HTML extraction failed: {e}")
-        # Strategy 2: Structured text
+        
+        # Strategy 2: ML-based PDF extraction (if file path provided)
+        if file_path and file_path.lower().endswith('.pdf'):
+            try:
+                pdf_tables = await self._extract_via_camelot(file_path)
+                tables.extend(pdf_tables)
+            except Exception as e:
+                logger.debug(f"Camelot PDF extraction failed: {e}")
+        
+        # Strategy 3: Structured text
         try:
             text_tables = await self._extract_via_structured_text(content)
             tables.extend(text_tables)
         except Exception as e:
             logger.debug(f"Text extraction failed: {e}")
+        
+        # Enhance tables with financial indicator detection
+        for table in tables:
+            table.financial_indicators = self._detect_financial_indicators(table)
+        
         # Deduplicate and validate
         tables = self._merge_and_validate_tables(tables)
+        
         logger.info(f"📊 Extracted {len(tables)} tables with context")
         return tables
+    
+    async def _extract_via_camelot(self, pdf_path: str) -> List[ExtractedTable]:
+        """Extract tables from PDF using Camelot ML-based detection"""
+        tables = []
+        try:
+            import camelot
+            
+            # Try lattice mode first (for tables with lines)
+            try:
+                camelot_tables = camelot.read_pdf(pdf_path, flavor='lattice', pages='all')
+            except Exception:
+                # Fallback to stream mode (for tables without lines)
+                camelot_tables = camelot.read_pdf(pdf_path, flavor='stream', pages='all')
+            
+            for camelot_table in camelot_tables:
+                df = camelot_table.df
+                
+                # Convert to ExtractedTable format
+                headers = df.iloc[0].tolist() if len(df) > 0 else []
+                data = df.iloc[1:].values.tolist() if len(df) > 1 else []
+                
+                # Clean headers and data
+                headers = [str(h).strip() for h in headers]
+                data = [[str(cell).strip() for cell in row] for row in data]
+                
+                table = ExtractedTable(
+                    data=data,
+                    headers=headers,
+                    row_count=len(data),
+                    col_count=len(headers),
+                    confidence=float(camelot_table.accuracy) / 100.0,
+                    table_type='pdf_ml'
+                )
+                tables.append(table)
+            
+            logger.info(f"🤖 Camelot extracted {len(tables)} tables from PDF")
+        except ImportError:
+            logger.debug("Camelot not available - install with: pip install camelot-py[cv]")
+        except Exception as e:
+            logger.debug(f"Camelot extraction error: {e}")
+        
+        return tables
+    
+    def _detect_financial_indicators(self, table: ExtractedTable) -> List[str]:
+        """Detect financial indicators in table content
+        
+        Returns list of detected indicator types
+        """
+        indicators = []
+        
+        # Combine headers and data for analysis
+        text_content = ' '.join(table.headers).lower()
+        for row in table.data[:5]:  # Check first 5 rows
+            text_content += ' ' + ' '.join(str(cell) for cell in row).lower()
+        
+        # Check for each indicator type
+        indicator_patterns = {
+            'revenue': ['revenue', 'sales', 'turnover'],
+            'income': ['income', 'earnings', 'profit', 'loss'],
+            'assets': ['assets', 'property', 'equipment'],
+            'liabilities': ['liabilities', 'debt', 'payable'],
+            'cash_flow': ['cash flow', 'operating activities', 'financing activities'],
+            'equity': ['equity', 'shareholders', 'stockholders'],
+            'ebitda': ['ebitda', 'operating income'],
+            'eps': ['eps', 'earnings per share', 'per share'],
+            'dividends': ['dividend', 'distribution']
+        }
+        
+        for indicator, keywords in indicator_patterns.items():
+            if any(keyword in text_content for keyword in keywords):
+                indicators.append(indicator)
+        
+        return indicators
     async def _extract_via_html_table(self, content: str) -> List[ExtractedTable]:
         """Extract tables from HTML table tags"""
         from bs4 import BeautifulSoup

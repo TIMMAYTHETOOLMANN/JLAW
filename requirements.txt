@@ -48,4 +48,53 @@ spacy>=3.5.0
 xgboost>=2.0.0
 redis>=5.0.0
 
+# Phase 1: Advanced Document Parsing - Enhanced Stack
+pymupdf>=1.24.0  # PyMuPDF for fast PDF processing
+pypdfium2>=4.26.0  # Alternative PDF renderer
+python-docx>=1.1.0  # DOCX processing
+openpyxl>=3.1.5  # XLSX processing
+paddlepaddle>=2.6.0  # PaddleOCR backend
+paddleocr>=2.7.0  # Primary OCR engine
+python-doctr[torch]>=0.9.0  # Document-aware OCR
+easyocr>=1.7.0  # Fallback OCR
+camelot-py[cv]>=0.11.0  # Table extraction from PDFs
+tabula-py>=2.9.0  # Alternative table extraction
+sec-edgar-downloader>=5.0.2  # SEC EDGAR access
+edgartools>=2.0.0  # EDGAR parsing utilities
+xbrl>=1.1.1  # XBRL financial data parsing
+python-xbrl>=1.1.1  # XBRL utilities
+
+# Phase 2: Omniscient Intelligence Gathering
+# Core async and web
+# Already have: aiohttp, beautifulsoup4, lxml, python-dateutil
+
+# Financial data
+yfinance>=0.2.32  # Yahoo Finance data
+
+# Social media (optional - requires API keys)
+# praw>=7.7.0  # Reddit API (uncomment if using)
+# tweepy>=4.14.0  # Twitter API (uncomment if using)
+
+# Stealth browsing
+playwright>=1.40.0  # Undetectable headless browser
+
+# NLP for sentiment analysis
+# Already have: transformers, torch, spacy
+
+# Phase 4: Temporal Analysis and Timeline Reconstruction
+dateparser>=1.1.8  # Natural language date parsing
+# Already have: python-dateutil, networkx, spacy
+
+# Phase 6: Advanced Contradiction Detection
+sentence-transformers>=2.2.0  # Semantic similarity
+# Already have: transformers (for BART-MNLI, RoBERTa-MNLI)
+
+# Phase 7: Comprehensive Reporting Engine
+reportlab>=4.0.0  # PDF generation
+# plotly.js via CDN (no install needed)
+
+# Phase 9: Deployment & Health Check
+psutil>=5.9.0  # System monitoring
+prometheus-client>=0.19.0  # Metrics exposition
+
 
