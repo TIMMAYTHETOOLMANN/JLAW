@@ -1,4 +1,4 @@
-﻿﻿"""
+﻿"""
 . Now. 
 Financial Data Parser - Phase 1
 ===============================
@@ -180,6 +180,48 @@ class FinancialDataParser:
         except (IndexError, ZeroDivisionError, KeyError):
             pass
         return ratios
+
+    def _calculate_yoy_changes(self, metrics: FinancialMetrics) -> Dict[str, float]:
+        """Calculate year-over-year changes for financial metrics
+        
+        Compares current period to prior period values where available
+        """
+        yoy_changes = {}
+        
+        try:
+            # Calculate revenue YoY if we have multiple periods
+            if len(metrics.revenue) >= 2:
+                current_rev = metrics.revenue[0]['value']
+                prior_rev = metrics.revenue[1]['value']
+                if prior_rev > 0:
+                    yoy_changes['revenue_yoy'] = ((current_rev - prior_rev) / prior_rev) * 100
+            
+            # Calculate earnings YoY if we have multiple periods
+            if len(metrics.earnings) >= 2:
+                current_earn = metrics.earnings[0]['value']
+                prior_earn = metrics.earnings[1]['value']
+                if prior_earn != 0:
+                    yoy_changes['earnings_yoy'] = ((current_earn - prior_earn) / abs(prior_earn)) * 100
+            
+            # Calculate assets YoY if we have multiple periods
+            if len(metrics.assets) >= 2:
+                current_assets = metrics.assets[0]['value']
+                prior_assets = metrics.assets[1]['value']
+                if prior_assets > 0:
+                    yoy_changes['assets_yoy'] = ((current_assets - prior_assets) / prior_assets) * 100
+            
+            # Calculate cash flow YoY if we have multiple periods
+            if len(metrics.cash_flow) >= 2:
+                current_cf = metrics.cash_flow[0]['value']
+                prior_cf = metrics.cash_flow[1]['value']
+                if prior_cf != 0:
+                    yoy_changes['cash_flow_yoy'] = ((current_cf - prior_cf) / abs(prior_cf)) * 100
+                    
+        except (IndexError, ZeroDivisionError, KeyError, TypeError) as e:
+            logger.debug(f"YoY calculation error: {e}")
+        
+        return yoy_changes
+
     def _detect_anomalies(self, metrics: FinancialMetrics) -> List[Dict[str, Any]]:
         """Detect anomalies in financial data
         
