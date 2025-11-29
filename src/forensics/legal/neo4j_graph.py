@@ -300,19 +300,33 @@ class Neo4jKnowledgeGraph:
             ]
         }
     
+    def _escape_cypher_string(self, value: Any) -> str:
+        """Escape a string value for Cypher queries"""
+        if value is None:
+            return 'null'
+        str_val = str(value)
+        # Escape backslashes and quotes
+        str_val = str_val.replace('\\', '\\\\').replace('"', '\\"').replace("'", "\\'")
+        return str_val
+    
     def export_cypher(self) -> str:
         """Export graph as Cypher statements for Neo4j"""
         statements = []
         
-        # Create nodes
+        # Create nodes with node_id property for matching
         for node in self._nodes.values():
-            props = ', '.join(f'{k}: "{v}"' for k, v in node.properties.items() if v)
+            props_list = [f'node_id: "{self._escape_cypher_string(node.node_id)}"']
+            for k, v in node.properties.items():
+                if v is not None:
+                    props_list.append(f'{k}: "{self._escape_cypher_string(v)}"')
+            props = ', '.join(props_list)
             statements.append(f"CREATE (n:{node.node_type} {{{props}}})")
         
-        # Create relationships
+        # Create relationships matching on node_id
         for rel in self._relationships.values():
             statements.append(
-                f"MATCH (a), (b) WHERE a.id = '{rel.source_id}' AND b.id = '{rel.target_id}' "
+                f"MATCH (a), (b) WHERE a.node_id = '{self._escape_cypher_string(rel.source_id)}' "
+                f"AND b.node_id = '{self._escape_cypher_string(rel.target_id)}' "
                 f"CREATE (a)-[:{rel.relationship_type}]->(b)"
             )
         

@@ -183,7 +183,8 @@ async def validate_dependencies():
     logger.info("DEPENDENCY VALIDATION")
     logger.info("=" * 80)
     
-    dependencies = [
+    # Core dependencies (required)
+    core_dependencies = [
         'requests',
         'pandas',
         'numpy',
@@ -193,10 +194,17 @@ async def validate_dependencies():
         'beautifulsoup4'
     ]
     
+    # Optional dependencies (enhance functionality)
+    optional_dependencies = [
+        'spacy'  # For advanced NLP in EnhancedForensicSystem
+    ]
+    
     available = []
     missing = []
     
-    for dep in dependencies:
+    # Check core dependencies
+    logger.info("\nCore Dependencies:")
+    for dep in core_dependencies:
         try:
             if dep == 'beautifulsoup4':
                 __import__('bs4')
@@ -206,9 +214,21 @@ async def validate_dependencies():
             logger.info(f"✓ {dep}: installed")
         except ImportError:
             missing.append(dep)
+            logger.info(f"❌ {dep}: not installed (required)")
+    
+    # Check optional dependencies
+    logger.info("\nOptional Dependencies:")
+    for dep in optional_dependencies:
+        try:
+            __import__(dep)
+            available.append(dep)
+            logger.info(f"✓ {dep}: installed")
+        except ImportError:
             logger.info(f"ℹ️  {dep}: not installed (optional)")
     
-    logger.info(f"\n✓ Dependencies: {len(available)}/{len(dependencies)} available")
+    total = len(core_dependencies) + len(optional_dependencies)
+    logger.info(f"\n✓ Dependencies: {len(available)}/{total} available")
+    logger.info(f"✓ Core dependencies: {len(core_dependencies) - len([m for m in missing if m in core_dependencies])}/{len(core_dependencies)}")
     return True
 
 

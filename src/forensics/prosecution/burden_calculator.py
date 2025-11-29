@@ -113,7 +113,7 @@ class BurdenOfProofCalculator:
                 'supporting_evidence': len(element.supporting_evidence)
             })
         
-        # All elements must be proven beyond reasonable doubt
+        # All elements must meet the configured burden threshold
         overall_score = min(element_scores) if element_scores else 0.0
         burden_met = all(e.element_met for e in elements)
         

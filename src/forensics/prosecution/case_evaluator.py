@@ -19,13 +19,24 @@ logger = logging.getLogger(__name__)
 
 @dataclass
 class CaseEvaluation:
-    """Case strength evaluation result"""
+    """
+    Case strength evaluation result.
+    
+    Attributes:
+        overall_strength: Case strength category ('strong', 'moderate', 'weak')
+        probability_of_conviction: Estimated probability of conviction (0.0-1.0)
+        evidence_score: Average evidence reliability score (0.0-1.0)
+        witness_score: Average witness credibility score (0.0-1.0)
+        burden_score: Burden of proof score (1.0 if met, 0.5 if partial)
+        timeline_score: Timeline confidence score (0.0-1.0)
+        recommendations: List of case improvement recommendations
+    """
     overall_strength: str  # 'strong', 'moderate', 'weak'
-    probability_of_conviction: float
-    evidence_score: float
-    witness_score: float
-    burden_score: float
-    timeline_score: float
+    probability_of_conviction: float  # 0.0 to 1.0
+    evidence_score: float  # 0.0 to 1.0
+    witness_score: float  # 0.0 to 1.0
+    burden_score: float  # 0.0 to 1.0
+    timeline_score: float  # 0.0 to 1.0
     recommendations: List[str]
 
 
