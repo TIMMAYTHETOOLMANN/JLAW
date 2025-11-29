@@ -1,0 +1,19 @@
+{
+  "case_id": "CASE_NikeInc_20251129_081218",
+  "company": "Nike Inc.",
+  "cik": "0000320187",
+  "period": "2019-01-01 to 2019-12-31",
+  "filings_analyzed": 100,
+  "violations": {
+    "total": 24,
+    "by_type": {
+      "late_form4": 17,
+      "zero_dollar": 0,
+      "material_misstatements": 7,
+      "sox_violations": 0,
+      "other": 0
+    }
+  },
+  "total_damages": 105425000.0,
+  "timestamp": "2025-11-29T02:12:18.651846"
+}

@@ -1,0 +1,10 @@
+{
+  "case_id": "CASE_TestCorp_20251128_184139",
+  "target": "Test Corp",
+  "case_type": "validation",
+  "created_at": "2025-11-28T18:41:39.382679",
+  "documents": [],
+  "findings": [],
+  "risk_score": 0.0,
+  "metadata": {}
+}

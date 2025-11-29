@@ -1,0 +1,60 @@
+{
+  "timestamp": "2025-11-27T00:21:29.244433",
+  "target": "Nike Inc (CIK: 0000320187)",
+  "period": "2019",
+  "filings_found": 89,
+  "filings_analyzed": 10,
+  "violations_found": 10,
+  "violations": [
+    {
+      "type": "zero_dollar_transaction",
+      "description": "Zero-dollar transaction (potential gift/RSU vesting)",
+      "severity": "HIGH"
+    },
+    {
+      "type": "zero_dollar_transaction",
+      "description": "Zero-dollar transaction (potential gift/RSU vesting)",
+      "severity": "HIGH"
+    },
+    {
+      "type": "late_form4",
+      "description": "Late Form 4 filing by 3 business days",
+      "severity": "HIGH"
+    },
+    {
+      "type": "late_form4",
+      "description": "Late Form 4 filing by 3 business days",
+      "severity": "HIGH"
+    },
+    {
+      "type": "late_form4",
+      "description": "Late Form 4 filing by 3 business days",
+      "severity": "HIGH"
+    },
+    {
+      "type": "zero_dollar_transaction",
+      "description": "Zero-dollar transaction (potential gift/RSU vesting)",
+      "severity": "HIGH"
+    },
+    {
+      "type": "zero_dollar_transaction",
+      "description": "Zero-dollar transaction (potential gift/RSU vesting)",
+      "severity": "HIGH"
+    },
+    {
+      "type": "zero_dollar_transaction",
+      "description": "Zero-dollar transaction (potential gift/RSU vesting)",
+      "severity": "HIGH"
+    },
+    {
+      "type": "zero_dollar_transaction",
+      "description": "Zero-dollar transaction (potential gift/RSU vesting)",
+      "severity": "HIGH"
+    },
+    {
+      "type": "zero_dollar_transaction",
+      "description": "Zero-dollar transaction (potential gift/RSU vesting)",
+      "severity": "HIGH"
+    }
+  ]
+}

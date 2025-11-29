@@ -1,0 +1,86 @@
+# JLAW Full Dependency Set (CPU-friendly, Windows-ready)
+# Install with:  pip install -r requirements_full.txt
+# Notes:
+# - PyTorch installs CPU wheels by default on Windows when no CUDA is specified.
+# - For WeasyPrint PDF on Windows, you may need the GTK runtime (see docs/scripts/JLAW_monolithic_deploy.ps1).
+
+# Core async & utils
+aiohttp>=3.9.0
+aiofiles>=23.2.1
+numpy>=1.24.0
+pandas>=2.0.0
+scikit-learn>=1.3.0
+python-dateutil>=2.8.2
+pytz>=2023.3
+python-dotenv>=1.0.0
+joblib>=1.3.0
+scipy>=1.10.0
+
+# Security
+cryptography>=41.0.0
+
+# AI Agent SDKs (optional providers)
+anthropic>=0.40.0
+
+# Cloud SDKs (optional)
+boto3>=1.28.0
+botocore>=1.31.0
+azure-storage-blob>=12.19.0
+
+# Document Parsing
+beautifulsoup4>=4.12.0
+lxml>=5.1.0
+html2text>=2020.1.16
+pdfplumber>=0.11.0
+pymupdf>=1.24.0
+pypdfium2>=4.26.0
+pytesseract>=0.3.10
+Pillow>=10.0.0
+python-magic>=0.4.27
+chardet>=5.2.0
+python-docx>=1.1.0
+openpyxl>=3.1.5
+
+# OCR Engines (optional; cascade uses any available)
+paddlepaddle>=2.6.0
+paddleocr>=2.7.0
+python-doctr[torch]>=0.9.0
+easyocr>=1.7.0
+layoutparser[ocr]>=0.3.4
+camelot-py[cv]>=0.11.0
+tabula-py>=2.9.0
+
+# NLP / Transformers
+spacy>=3.7.0
+transformers>=4.36.0
+sentence-transformers>=2.2.0
+
+# ML / Graph
+torch>=2.1.0,<3.0.0
+torch-geometric>=2.4.0
+networkx>=3.2.0
+
+# Financial/Legal APIs
+sec-api>=1.0.0
+edgartools>=0.0.1
+eyecite>=2.6.0
+
+# Data backends (optional clients)
+neo4j>=5.0.0
+elasticsearch>=8.11.0
+asyncpg>=0.29.0
+aioredis>=2.0.0
+
+# Orchestration / Messaging / Metrics
+pika>=1.3.0
+structlog>=23.2.0
+prometheus-client>=0.19.0
+dagster>=1.5.0
+dagster-webserver>=1.5.0
+
+# Reporting & Visualization
+reportlab>=4.0.0
+weasyprint>=60.0
+fpdf2>=2.7.0
+jinja2>=3.1.0
+plotly>=5.18.0

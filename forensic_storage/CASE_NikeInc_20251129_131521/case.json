@@ -1,0 +1,15 @@
+{
+  "case_id": "CASE_NikeInc_20251129_131521",
+  "target": "Nike Inc.",
+  "case_type": "sec_benchmark",
+  "created_at": "2025-11-29T13:15:21.710804",
+  "documents": [],
+  "findings": [],
+  "risk_score": 0.0,
+  "metadata": {
+    "cik": "0000320187",
+    "year": 2019,
+    "benchmark": "gold_standard",
+    "target_violations": 54
+  }
+}
