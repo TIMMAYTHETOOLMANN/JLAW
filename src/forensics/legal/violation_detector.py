@@ -8,7 +8,7 @@ and statutory correlation.
 import logging
 import re
 from dataclasses import dataclass, field
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Dict, List, Optional, Any, Pattern
 
 logger = logging.getLogger(__name__)
@@ -24,7 +24,7 @@ class DetectedViolation:
     confidence: float
     evidence_text: str
     evidence_source: str
-    detected_at: datetime = field(default_factory=datetime.now)
+    detected_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
     position: int = 0
     context: Optional[Dict[str, Any]] = None
     

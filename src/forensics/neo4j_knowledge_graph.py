@@ -17,12 +17,13 @@ When Neo4j is available, this enables:
 - Temporal relationship evolution
 """
 
-from typing import Dict, List, Optional, Any, Tuple
+from typing import Dict, List, Optional, Any, Tuple, Union
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from enum import Enum
 import json
 import logging
+import hashlib
 
 logger = logging.getLogger(__name__)
 
@@ -208,13 +209,61 @@ class Neo4jKnowledgeGraph:
     
     def create_relationship(
         self,
-        relationship: GraphRelationship
+        from_or_rel: Union[GraphRelationship, str] = None,
+        to_node_id: Optional[str] = None,
+        relationship_type: Optional[str] = None,
+        properties: Optional[Dict[str, Any]] = None,
+        # Also accept keyword argument style
+        from_node_id: Optional[str] = None,
+        relationship: Optional[GraphRelationship] = None
     ) -> str:
-        """Create relationship in graph."""
-        if self.using_neo4j:
-            return self._create_relationship_neo4j(relationship)
+        """Create relationship in graph.
+        
+        Can be called with either:
+        1. A GraphRelationship object: create_relationship(rel) or create_relationship(relationship=rel)
+        2. Individual parameters: create_relationship(from_id, to_id, rel_type, properties)
+           or create_relationship(from_node_id=..., to_node_id=..., relationship_type=..., properties=...)
+        """
+        # Handle relationship keyword argument
+        if relationship is not None:
+            from_or_rel = relationship
+        
+        # Handle from_node_id keyword argument
+        if from_node_id is not None:
+            from_or_rel = from_node_id
+        
+        # Handle GraphRelationship object
+        if isinstance(from_or_rel, GraphRelationship):
+            rel = from_or_rel
         else:
-            return self._create_relationship_memory(relationship)
+            # Handle individual parameters
+            if to_node_id is None or relationship_type is None:
+                raise ValueError("to_node_id and relationship_type required when using string parameters")
+            
+            rel_id = f"rel:{hashlib.md5(f'{from_or_rel}:{to_node_id}:{relationship_type}'.encode()).hexdigest()[:12]}"
+            
+            # Map string to enum
+            rel_type_map = {
+                'IMPLEMENTS': RelationshipType.RELATED_TO,
+                'INTERPRETS': RelationshipType.RELATED_TO,
+                'VIOLATES': RelationshipType.VIOLATES,
+                'CONTRADICTS': RelationshipType.CONTRADICTS,
+                'SUPPORTS': RelationshipType.SUPPORTS,
+            }
+            rel_type_enum = rel_type_map.get(relationship_type, RelationshipType.RELATED_TO)
+            
+            rel = GraphRelationship(
+                id=rel_id,
+                type=rel_type_enum,
+                from_node=from_or_rel,
+                to_node=to_node_id,
+                properties=properties or {'type': relationship_type}
+            )
+        
+        if self.using_neo4j:
+            return self._create_relationship_neo4j(rel)
+        else:
+            return self._create_relationship_memory(rel)
     
     def _create_relationship_neo4j(self, rel: GraphRelationship) -> str:
         """Create relationship in Neo4j."""
@@ -569,40 +618,6 @@ class Neo4jKnowledgeGraph:
         )
         self.create_node(node)
         return node_id
-    
-    def create_relationship(
-        self,
-        from_node_id: str,
-        to_node_id: str,
-        relationship_type: str,
-        properties: Optional[Dict[str, Any]] = None
-    ) -> str:
-        """Create a relationship between two nodes."""
-        import hashlib
-        rel_id = f"rel:{hashlib.md5(f'{from_node_id}:{to_node_id}:{relationship_type}'.encode()).hexdigest()[:12]}"
-        
-        # Map string to enum
-        rel_type_map = {
-            'IMPLEMENTS': RelationshipType.RELATED_TO,
-            'INTERPRETS': RelationshipType.RELATED_TO,
-            'VIOLATES': RelationshipType.VIOLATES,
-            'CONTRADICTS': RelationshipType.CONTRADICTS,
-            'SUPPORTS': RelationshipType.SUPPORTS,
-        }
-        rel_type = rel_type_map.get(relationship_type, RelationshipType.RELATED_TO)
-        
-        rel = GraphRelationship(
-            id=rel_id,
-            type=rel_type,
-            from_node=from_node_id,
-            to_node=to_node_id,
-            properties=properties or {'type': relationship_type}
-        )
-        
-        if self.using_neo4j:
-            return self._create_relationship_neo4j(rel)
-        else:
-            return self._create_relationship_memory(rel)
     
     def query_statutes_by_title(self, title_number: int) -> List[GraphNode]:
         """Query statutes by title number."""
