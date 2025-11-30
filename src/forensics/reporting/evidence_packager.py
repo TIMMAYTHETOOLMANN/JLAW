@@ -370,8 +370,12 @@ class EvidencePackager:
                     expected_hash = file_info["file_hash"]
                     
                     try:
-                        file_data = zf.read(package_path_str)
-                        actual_hash = hashlib.sha256(file_data).hexdigest()
+                        # Use chunked reading for large files
+                        sha256 = hashlib.sha256()
+                        with zf.open(package_path_str) as zfile:
+                            for chunk in iter(lambda: zfile.read(8192), b''):
+                                sha256.update(chunk)
+                        actual_hash = sha256.hexdigest()
                         
                         if actual_hash == expected_hash:
                             result["files_verified"] += 1

@@ -121,14 +121,18 @@ class Case:
             prosecution_probability=data.get("prosecution_probability", 0.0)
         )
         
-        if data.get("created_at"):
-            case.created_at = datetime.fromisoformat(data["created_at"])
-        if data.get("updated_at"):
-            case.updated_at = datetime.fromisoformat(data["updated_at"])
-        if data.get("started_at"):
-            case.started_at = datetime.fromisoformat(data["started_at"])
-        if data.get("completed_at"):
-            case.completed_at = datetime.fromisoformat(data["completed_at"])
+        # Parse timestamps with error handling
+        try:
+            if data.get("created_at"):
+                case.created_at = datetime.fromisoformat(data["created_at"])
+            if data.get("updated_at"):
+                case.updated_at = datetime.fromisoformat(data["updated_at"])
+            if data.get("started_at"):
+                case.started_at = datetime.fromisoformat(data["started_at"])
+            if data.get("completed_at"):
+                case.completed_at = datetime.fromisoformat(data["completed_at"])
+        except ValueError as e:
+            logger.warning(f"Failed to parse timestamp: {e}")
         
         return case
 
