@@ -164,6 +164,13 @@ dump.rdb
 forensic_reports/
 forensic_storage/
 dossiers/
+reports/
+dashboards/
+evidence_packages/
+forensic_cases/
+forensic_output/
+temp_packaging/
+custody_records/
 FORENSIC_REPORT_*.txt
 jlaw_forensics_*.log
 benchmark_compliance_report_*.txt

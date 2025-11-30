@@ -9,27 +9,31 @@ Components:
 - PDFReportGenerator: Professional PDF reports with templates
 - InteractiveDashboard: Web-based interactive dashboards
 - EvidencePackager: Evidence compilation and export
-- ChainOfCustodyReporter: Chain of custody documentation
+- CustodyReporter: Chain of custody documentation
 - ExecutiveSummaryGenerator: High-level executive summaries
 """
 
 try:
-    from .reporting_engine import (
-        ReportingEngine,
-        ExecutiveSummary,
-        EvidencePackager,
-        CustodyReporter
-    )
+    from .reporting_engine import ReportingEngine
     from .pdf_generator import PDFReportGenerator
+    from .custody_reporter import CustodyReporter
+    from .dashboard import InteractiveDashboard
+    from .evidence_packager import EvidencePackager
+    from .executive_summary import ExecutiveSummaryGenerator, ExecutiveSummary
     
     # Aliases for backward compatibility
-    ExecutiveSummaryGenerator = ExecutiveSummary
     ChainOfCustodyReporter = CustodyReporter
-    InteractiveDashboard = ReportingEngine
+    
 except ImportError as e:
     # Fallback imports
     ReportingEngine = None
     PDFReportGenerator = None
+    CustodyReporter = None
+    InteractiveDashboard = None
+    EvidencePackager = None
+    ExecutiveSummaryGenerator = None
+    ExecutiveSummary = None
+    ChainOfCustodyReporter = None
 
 __all__ = [
     'ReportingEngine',

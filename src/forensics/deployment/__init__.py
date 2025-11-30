@@ -6,25 +6,34 @@ Production deployment infrastructure and monitoring.
 
 Components:
 - HealthChecker: System health monitoring
+- DeploymentManager: Deployment management
+- SystemOptimizer: Performance optimization
 - ConfigManager: Environment configuration management
 - MetricsCollector: Performance metrics collection
-- DeploymentValidator: Pre-deployment validation
 """
 
 try:
     from .health_checker import HealthChecker
-    from .deployment_manager import DeploymentManager, OptimizationEngine
+    from .deployment_manager import DeploymentManager
+    from .optimization import SystemOptimizer
     
+    # Aliases for backward compatibility
     ConfigManager = DeploymentManager
-    MetricsCollector = OptimizationEngine
+    OptimizationEngine = SystemOptimizer
+    MetricsCollector = SystemOptimizer
+    
 except ImportError:
     HealthChecker = None
     DeploymentManager = None
+    SystemOptimizer = None
+    ConfigManager = None
     OptimizationEngine = None
+    MetricsCollector = None
 
 __all__ = [
     'HealthChecker',
     'DeploymentManager',
+    'SystemOptimizer',
     'OptimizationEngine',
     'ConfigManager',
     'MetricsCollector',
