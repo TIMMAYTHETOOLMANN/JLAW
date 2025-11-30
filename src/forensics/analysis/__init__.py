@@ -1,26 +1,15 @@
 """
-Analysis - Advanced Text and Narrative Analysis for Forensic Investigations
-
-This module provides narrative analysis and sentiment detection capabilities
-for identifying fraud patterns in management disclosures and earnings calls.
-"""
-
-from src.forensics.analysis.narrative_analyzer import (
-    NarrativeAnalyzer,
-    NarrativeShift,
-    NarrativeAnalysisResult,
-    SentimentScore,
-    HedgingPattern,
-    ToneShiftType,
-    FraudIndicator,
+JLAW Analysis Module
 )
 
 __all__ = [
     "NarrativeAnalyzer",
+    "NarrativeSegment",
     "NarrativeShift",
     "NarrativeAnalysisResult",
-    "SentimentScore",
-    "HedgingPattern",
-    "ToneShiftType",
-    "FraudIndicator",
+    "LinguisticMetrics",
+    "ShiftSeverity",
+    "NarrativeCategory",
 ]
+
+__version__ = "1.0.0"

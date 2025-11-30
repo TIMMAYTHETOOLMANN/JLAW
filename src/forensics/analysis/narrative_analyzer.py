@@ -1,742 +1,692 @@
 """
-Narrative Analyzer - Management Disclosure and Tone Shift Detection
-====================================================================
-
-Advanced narrative analysis system for detecting sentiment changes, hedging language,
-and potential fraud indicators in management communications including SEC filings,
-earnings calls, and press releases.
-
-Features:
-- Sentiment analysis with financial domain awareness
-- Hedging language detection (modal verbs, uncertainty markers)
-- Quarter-over-quarter tone shift detection
-- Fraud pattern identification based on linguistic markers
-- Deception indicators (cognitive complexity, distancing)
-
-Usage:
-    analyzer = NarrativeAnalyzer()
-    
-    documents = [
-        NarrativeDocument(id="Q1", content="We are confident in our growth...", quarter="Q1 2024"),
-        NarrativeDocument(id="Q2", content="Challenging market conditions...", quarter="Q2 2024"),
-    ]
-    
-    result = analyzer.analyze_narrative_shifts(documents)
-    if result.has_significant_shifts:
-        print(f"Warning: Detected {len(result.shifts)} significant tone shifts")
+Narrative Analyzer Module - Management Communication Shift Detection
 """
 
 import logging
 import re
+from collections import defaultdict
 from dataclasses import dataclass, field
+from datetime import datetime
 from enum import Enum
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional
 
 logger = logging.getLogger(__name__)
 
 
-class ToneShiftType(Enum):
-    """Type of tone shift detected."""
-    POSITIVE_TO_NEGATIVE = "positive_to_negative"
-    NEGATIVE_TO_POSITIVE = "negative_to_positive"
-    CONFIDENT_TO_UNCERTAIN = "confident_to_uncertain"
-    UNCERTAIN_TO_CONFIDENT = "uncertain_to_confident"
-    SPECIFIC_TO_VAGUE = "specific_to_vague"
-    FORWARD_TO_BACKWARD = "forward_to_backward"
-    NONE = "none"
+class ShiftSeverity(Enum):
+    """Severity levels for narrative shifts."""
+
+    CRITICAL = "CRITICAL"  # Major tone reversal, potential fraud indicator
+    HIGH = "HIGH"  # Significant unexplained shift
+    MEDIUM = "MEDIUM"  # Notable change worth investigating
+    LOW = "LOW"  # Minor shift, likely normal variation
+    NONE = "NONE"  # No significant shift detected
 
 
-class FraudIndicatorType(Enum):
-    """Type of fraud indicator."""
-    EXCESSIVE_HEDGING = "excessive_hedging"
-    INCONSISTENT_NARRATIVE = "inconsistent_narrative"
-    DISTANCING_LANGUAGE = "distancing_language"
-    TOPIC_AVOIDANCE = "topic_avoidance"
-    COGNITIVE_OVERLOAD = "cognitive_overload"
-    TEMPORAL_CONFUSION = "temporal_confusion"
-    BLAME_SHIFTING = "blame_shifting"
-    OVEREMPHASIS = "overemphasis"
+class NarrativeCategory(Enum):
+    """Categories of narrative elements analyzed."""
 
-
-@dataclass
-class SentimentScore:
-    """Sentiment analysis score for a document."""
-    positive_score: float
-    negative_score: float
-    neutral_score: float
-    compound_score: float
-    confidence: float
-    
-    @property
-    def sentiment_label(self) -> str:
-        """Get the dominant sentiment label."""
-        if self.compound_score >= 0.05:
-            return "positive"
-        elif self.compound_score <= -0.05:
-            return "negative"
-        return "neutral"
-    
-    @property
-    def is_positive(self) -> bool:
-        return self.compound_score >= 0.05
-    
-    @property
-    def is_negative(self) -> bool:
-        return self.compound_score <= -0.05
+    FORWARD_LOOKING = "FORWARD_LOOKING"
+    HEDGING_LANGUAGE = "HEDGING_LANGUAGE"
+    CERTAINTY_MARKERS = "CERTAINTY_MARKERS"
+    RISK_DISCLOSURE = "RISK_DISCLOSURE"
+    PERFORMANCE_ATTRIBUTION = "PERFORMANCE_ATTRIBUTION"
+    TEMPORAL_REFERENCES = "TEMPORAL_REFERENCES"
+    EXECUTIVE_SENTIMENT = "EXECUTIVE_SENTIMENT"
 
 
 @dataclass
-class HedgingPattern:
-    """Detected hedging language pattern."""
-    pattern_type: str
+class NarrativeSegment:
+    """A segment of narrative text for analysis."""
+
     text: str
-    position: int
-    severity: float  # 0.0-1.0
-    context: str
+    source: str  # e.g., "10-K Filing", "Q3 Earnings Call"
+    date: datetime
+    speaker: Optional[str] = None  # For earnings calls
+    section: Optional[str] = None  # e.g., "MD&A", "Risk Factors"
+    metadata: Dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass
-class FraudIndicator:
-    """Potential fraud indicator from narrative analysis."""
-    indicator_type: FraudIndicatorType
-    description: str
-    severity: float  # 0.0-1.0
-    evidence: List[str]
-    confidence: float
-    recommendation: str
+class LinguisticMetrics:
+    """Linguistic metrics extracted from narrative."""
+
+    word_count: int
+    sentence_count: int
+    avg_sentence_length: float
+    hedging_ratio: float
+    certainty_ratio: float
+    forward_looking_ratio: float
+    passive_voice_ratio: float
+    first_person_ratio: float
+    complexity_score: float
+    sentiment_score: float
 
 
 @dataclass
 class NarrativeShift:
-    """Detected shift in narrative tone or content."""
-    shift_type: ToneShiftType
-    from_document: str
-    to_document: str
-    magnitude: float  # 0.0-1.0
+    """Detected shift in narrative patterns."""
+
+    category: NarrativeCategory
+    severity: ShiftSeverity
     description: str
-    sentiment_before: SentimentScore
-    sentiment_after: SentimentScore
-    hedging_change: float  # Change in hedging frequency
-    topics_dropped: List[str]
-    topics_added: List[str]
-
-
-@dataclass
-class NarrativeDocument:
-    """Document for narrative analysis."""
-    id: str
-    content: str
-    quarter: Optional[str] = None
-    document_type: str = "unknown"
-    date: Optional[str] = None
+    baseline_value: float
+    current_value: float
+    change_percentage: float
+    baseline_period: str
+    current_period: str
+    supporting_evidence: List[str] = field(default_factory=list)
     metadata: Dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass
 class NarrativeAnalysisResult:
-    """Result of narrative analysis."""
-    documents_analyzed: int
-    shifts: List[NarrativeShift]
-    fraud_indicators: List[FraudIndicator]
-    sentiment_trend: List[SentimentScore]
-    hedging_trend: List[float]
-    overall_risk_score: float
-    has_significant_shifts: bool
-    key_findings: List[str]
+    """Complete narrative analysis results."""
+
+    segments_analyzed: int
+    time_span_days: int
+    shifts_detected: List[NarrativeShift]
+    overall_severity: ShiftSeverity
+    temporal_metrics: Dict[str, List[float]]
+    linguistic_summary: Dict[str, LinguisticMetrics]
+    risk_score: float
+    recommendations: List[str]
     metadata: Dict[str, Any] = field(default_factory=dict)
 
 
 class NarrativeAnalyzer:
     """
-    Narrative analysis system for detecting management communication patterns.
-    
-    Analyzes SEC filings, earnings calls, and other disclosures for signs of
-    deception, inconsistency, and fraud through linguistic analysis.
-    
-    Example:
-        analyzer = NarrativeAnalyzer()
-        
-        result = analyzer.analyze_narrative_shifts([
-            NarrativeDocument("Q1", "Strong quarter with record revenue..."),
-            NarrativeDocument("Q2", "Challenging conditions impacted results..."),
-        ])
-        
-        if result.overall_risk_score > 0.7:
-            print("High fraud risk detected")
+    Analyzes management narratives for significant shifts that may indicate
+    potential issues, misdirection, or fraud.
+
+    Uses linguistic analysis to detect:
+    - Tone shifts in communications
+    - Increases in hedging language
+    - Changes in certainty markers
+    - Modifications to forward-looking statements
     """
-    
-    # Positive financial sentiment words
-    POSITIVE_WORDS = {
-        'growth', 'profit', 'increase', 'improvement', 'strong', 'successful',
-        'record', 'exceed', 'outperform', 'confident', 'optimistic', 'momentum',
-        'robust', 'healthy', 'solid', 'favorable', 'positive', 'gain', 'advance',
-        'accelerate', 'expand', 'enhanced', 'achieved', 'delivered', 'excellence',
-        'opportunity', 'innovation', 'strategic', 'synergy', 'milestone', 'progress',
-    }
-    
-    # Negative financial sentiment words
-    NEGATIVE_WORDS = {
-        'decline', 'loss', 'decrease', 'challenging', 'weak', 'difficult',
-        'downturn', 'headwind', 'pressure', 'concern', 'uncertain', 'volatile',
-        'adverse', 'negative', 'deteriorate', 'impair', 'risk', 'exposure',
-        'shortfall', 'miss', 'underperform', 'restructure', 'layoff', 'deficit',
-        'liability', 'contingency', 'litigation', 'investigation', 'restate',
-        'material weakness', 'going concern', 'default', 'covenant', 'impairment',
-    }
-    
-    # Hedging modal verbs and uncertainty markers
+
+    # Hedging phrases that indicate uncertainty or qualification
     HEDGING_PATTERNS = [
-        (r'\bmay\b', 'modal_may', 0.3),
-        (r'\bmight\b', 'modal_might', 0.4),
-        (r'\bcould\b', 'modal_could', 0.3),
-        (r'\bshould\b', 'modal_should', 0.2),
-        (r'\bpotentially\b', 'adverb_potentially', 0.4),
-        (r'\bpossibly\b', 'adverb_possibly', 0.5),
-        (r'\bperhaps\b', 'adverb_perhaps', 0.5),
-        (r'\bapproximately\b', 'adverb_approximately', 0.2),
-        (r'\bgenerally\b', 'adverb_generally', 0.2),
-        (r'\btypically\b', 'adverb_typically', 0.2),
-        (r'\bbelieve\s+that\b', 'belief_statement', 0.4),
-        (r'\bwe\s+believe\b', 'belief_statement', 0.4),
-        (r'\bmanagement\s+believes\b', 'belief_statement', 0.4),
-        (r'\bestimate\s+that\b', 'estimate_statement', 0.3),
-        (r'\bexpect\s+that\b', 'expectation_statement', 0.3),
-        (r'\banticipate\s+that\b', 'anticipation_statement', 0.3),
-        (r'\bit\s+is\s+possible\b', 'possibility_statement', 0.5),
-        (r'\buncertain\w*\b', 'uncertainty', 0.6),
-        (r'\bsubject\s+to\b', 'conditional', 0.4),
-        (r'\bdepending\s+on\b', 'conditional', 0.4),
-        (r'\bto\s+the\s+extent\b', 'conditional', 0.4),
-        (r'\bif\s+and\s+when\b', 'conditional', 0.5),
-        (r'\bno\s+assurance\b', 'disclaimer', 0.7),
-        (r'\bcannot\s+guarantee\b', 'disclaimer', 0.6),
-        (r'\bcannot\s+predict\b', 'disclaimer', 0.6),
+        r"\b(may|might|could|would|should)\b",
+        r"\b(possibly|potentially|perhaps|probably)\b",
+        r"\b(appears?\sto|seems?\sto|tends?\sto)\b",
+        r"\b(in\sour\sopinion|we\sbelieve|we\sthink)\b",
+        r"\b(subject\sto|depending\son|contingent)\b",
+        r"\b(approximately|about|around|roughly)\b",
+        r"\b(certain|some|various|substantial)\b",
+        r"\b(generally|typically|usually|often)\b",
     ]
-    
-    # Distancing language patterns (third person, passive voice)
-    DISTANCING_PATTERNS = [
-        (r'\bthe\s+company\b', 'third_person_company', 0.3),
-        (r'\bmanagement\b(?!\s+believes)', 'third_person_management', 0.3),
-        (r'\bit\s+was\s+determined\b', 'passive_voice', 0.5),
-        (r'\bwas\s+identified\b', 'passive_voice', 0.4),
-        (r'\bwere\s+discovered\b', 'passive_voice', 0.5),
-        (r'\bhas\s+been\s+noted\b', 'passive_voice', 0.4),
-        (r'\bwere\s+made\b', 'passive_voice', 0.3),
-        (r'\bwas\s+recognized\b', 'passive_voice', 0.3),
+
+    # Certainty markers that indicate confidence
+    CERTAINTY_PATTERNS = [
+        r"\b(will|shall|must)\b",
+        r"\b(definitely|certainly|absolutely|clearly)\b",
+        r"\b(is|are|was|were)\s(committed|dedicated|confident)\b",
+        r"\b(guarantee[ds]?|ensure[ds]?|confirm[eds]?)\b",
+        r"\b(always|never|every|all)\b",
+        r"\b(proven|demonstrated|established)\b",
     ]
-    
-    # Blame shifting patterns
-    BLAME_SHIFT_PATTERNS = [
-        (r'\bdue\s+to\s+market\s+conditions\b', 'external_blame', 0.5),
-        (r'\bdue\s+to\s+economic\b', 'external_blame', 0.5),
-        (r'\bimpacted\s+by\s+external\b', 'external_blame', 0.6),
-        (r'\bforces\s+beyond\s+our\s+control\b', 'external_blame', 0.7),
-        (r'\bunforeseen\s+circumstances\b', 'external_blame', 0.6),
-        (r'\blegacy\s+issues\b', 'historical_blame', 0.5),
-        (r'\binherited\s+challenges\b', 'historical_blame', 0.5),
-        (r'\bpredecessor\b', 'historical_blame', 0.4),
+
+    # Forward-looking statement indicators
+    FORWARD_LOOKING_PATTERNS = [
+        r"\b(expects?|anticipates?|projects?|forecasts?)\b",
+        r"\b(guidance|outlook|target[s]?|goal[s]?)\b",
+        r"\b(future|upcoming|next\s(year|quarter|fiscal))\b",
+        r"\b(plan[s]?|intend[s]?|aim[s]?|seek[s]?)\b",
+        r"\b(will\sbe|going\sto|expected\sto)\b",
+        r"\b(estimates?|believes?|assumes?)\b",
     ]
-    
+
+    # Risk disclosure patterns
+    RISK_PATTERNS = [
+        r"\b(risk[s]?|uncertainty|uncertainties)\b",
+        r"\b(adverse|negatively?\s?impact|material\seffect)\b",
+        r"\b(volatility|fluctuation[s]?|instability)\b",
+        r"\b(litigation|regulatory|compliance)\b",
+        r"\b(may\snot|cannot|unable\sto)\b",
+        r"\b(challenge[s]?|difficulty|difficulties)\b",
+    ]
+
+    # Performance attribution patterns
+    ATTRIBUTION_PATTERNS = {
+        "internal": [
+            r"\b(our\steam|management|employees|strategy)\b",
+            r"\b(innovation|execution|efficiency|leadership)\b",
+            r"\b(investment[s]?|initiative[s]?|improvement[s]?)\b",
+        ],
+        "external": [
+            r"\b(market\sconditions?|economy|industry)\b",
+            r"\b(weather|pandemic|macroeconomic)\b",
+            r"\b(competition|regulatory|government)\b",
+            r"\b(supply\schain|inflation|currency)\b",
+        ],
+    }
+
     def __init__(
         self,
-        hedging_threshold: float = 0.02,
-        sentiment_shift_threshold: float = 0.3,
-        fraud_risk_threshold: float = 0.6,
-        min_document_length: int = 100,
+        shift_threshold: float = 0.20,
+        min_segments: int = 2,
+        critical_threshold: float = 0.50,
+        high_threshold: float = 0.35,
     ):
         """
         Initialize the narrative analyzer.
-        
+
         Args:
-            hedging_threshold: Hedging frequency threshold for alerts
-            sentiment_shift_threshold: Minimum shift to flag
-            fraud_risk_threshold: Overall risk threshold for alerts
-            min_document_length: Minimum words for valid analysis
+            shift_threshold: Minimum change percentage to flag a shift
+            min_segments: Minimum segments required for comparison
+            critical_threshold: Threshold for CRITICAL severity
+            high_threshold: Threshold for HIGH severity
         """
-        self.hedging_threshold = hedging_threshold
-        self.sentiment_shift_threshold = sentiment_shift_threshold
-        self.fraud_risk_threshold = fraud_risk_threshold
-        self.min_document_length = min_document_length
-        
-        # Compile regex patterns for efficiency
-        self._hedging_compiled = [
-            (re.compile(pattern, re.IGNORECASE), name, severity)
-            for pattern, name, severity in self.HEDGING_PATTERNS
-        ]
-        self._distancing_compiled = [
-            (re.compile(pattern, re.IGNORECASE), name, severity)
-            for pattern, name, severity in self.DISTANCING_PATTERNS
-        ]
-        self._blame_compiled = [
-            (re.compile(pattern, re.IGNORECASE), name, severity)
-            for pattern, name, severity in self.BLAME_SHIFT_PATTERNS
-        ]
-        
-        logger.info("NarrativeAnalyzer initialized")
-    
-    def analyze_narrative_shifts(
-        self, 
-        documents: List[NarrativeDocument]
-    ) -> NarrativeAnalysisResult:
+        self.shift_threshold = shift_threshold
+        self.min_segments = min_segments
+        self.critical_threshold = critical_threshold
+        self.high_threshold = high_threshold
+        self.logger = logging.getLogger(__name__)
+
+        # Compile regex patterns
+        self._hedging_re = [re.compile(p, re.IGNORECASE) for p in self.HEDGING_PATTERNS]
+        self._certainty_re = [re.compile(p, re.IGNORECASE) for p in self.CERTAINTY_PATTERNS]
+        self._forward_re = [re.compile(p, re.IGNORECASE) for p in self.FORWARD_LOOKING_PATTERNS]
+        self._risk_re = [re.compile(p, re.IGNORECASE) for p in self.RISK_PATTERNS]
+
+    def analyze(self, segments: List[NarrativeSegment]) -> NarrativeAnalysisResult:
         """
-        Analyze narrative shifts across multiple documents.
-        
+        Analyze narrative segments for shifts and patterns.
+
         Args:
-            documents: List of documents to analyze (in chronological order)
-            
+            segments: List of narrative segments to analyze
+
         Returns:
-            NarrativeAnalysisResult with detected shifts and indicators
+            NarrativeAnalysisResult with detected shifts and metrics
         """
-        if not documents:
+        self.logger.info(f"Analyzing {len(segments)} narrative segments")
+
+        if len(segments) < self.min_segments:
+            self.logger.warning(f"Insufficient segments for analysis (min: {self.min_segments})")
             return NarrativeAnalysisResult(
-                documents_analyzed=0,
-                shifts=[],
-                fraud_indicators=[],
-                sentiment_trend=[],
-                hedging_trend=[],
-                overall_risk_score=0.0,
-                has_significant_shifts=False,
-                key_findings=[],
+                segments_analyzed=len(segments),
+                time_span_days=0,
+                shifts_detected=[],
+                overall_severity=ShiftSeverity.NONE,
+                temporal_metrics={},
+                linguistic_summary={},
+                risk_score=0.0,
+                recommendations=["Need more narrative segments for meaningful analysis"],
             )
-        
-        logger.info(f"Analyzing narrative shifts across {len(documents)} documents")
-        
-        # Analyze each document
-        sentiments = []
-        hedging_scores = []
-        
-        for doc in documents:
-            sentiment = self._analyze_sentiment(doc.content)
-            sentiments.append(sentiment)
-            
-            hedging = self._calculate_hedging_score(doc.content)
-            hedging_scores.append(hedging)
-        
-        # Detect shifts between consecutive documents
-        shifts = []
-        for i in range(1, len(documents)):
-            shift = self._detect_shift(
-                documents[i - 1],
-                documents[i],
-                sentiments[i - 1],
-                sentiments[i],
-                hedging_scores[i - 1],
-                hedging_scores[i],
-            )
-            if shift.shift_type != ToneShiftType.NONE:
-                shifts.append(shift)
-        
-        # Identify fraud indicators
-        fraud_indicators = self._identify_fraud_indicators(
-            documents, sentiments, hedging_scores, shifts
-        )
-        
-        # Calculate overall risk score
-        risk_score = self._calculate_risk_score(
-            sentiments, hedging_scores, shifts, fraud_indicators
-        )
-        
-        # Generate key findings
-        key_findings = self._generate_findings(
-            shifts, fraud_indicators, risk_score
-        )
-        
+
+        # Sort segments by date
+        segments = sorted(segments, key=lambda s: s.date)
+
+        # Calculate time span
+        time_span = (segments[-1].date - segments[0].date).days
+
+        # Extract metrics for each segment
+        metrics_by_period: Dict[str, LinguisticMetrics] = {}
+        temporal_metrics: Dict[str, List[float]] = defaultdict(list)
+
+        for segment in segments:
+            metrics = self._extract_metrics(segment.text)
+            period_key = segment.date.strftime("%Y-%m")
+            metrics_by_period[period_key] = metrics
+
+            # Track temporal evolution
+            temporal_metrics["hedging"].append(metrics.hedging_ratio)
+            temporal_metrics["certainty"].append(metrics.certainty_ratio)
+            temporal_metrics["forward_looking"].append(metrics.forward_looking_ratio)
+            temporal_metrics["complexity"].append(metrics.complexity_score)
+            temporal_metrics["sentiment"].append(metrics.sentiment_score)
+
+        # Detect shifts
+        shifts = self._detect_shifts(segments, temporal_metrics)
+
+        # Calculate overall severity
+        overall_severity = self._calculate_overall_severity(shifts)
+
+        # Calculate risk score
+        risk_score = self._calculate_risk_score(shifts, temporal_metrics)
+
+        # Generate recommendations
+        recommendations = self._generate_recommendations(shifts, overall_severity)
+
         return NarrativeAnalysisResult(
-            documents_analyzed=len(documents),
-            shifts=shifts,
-            fraud_indicators=fraud_indicators,
-            sentiment_trend=sentiments,
-            hedging_trend=hedging_scores,
-            overall_risk_score=risk_score,
-            has_significant_shifts=len(shifts) > 0,
-            key_findings=key_findings,
+            segments_analyzed=len(segments),
+            time_span_days=time_span,
+            shifts_detected=shifts,
+            overall_severity=overall_severity,
+            temporal_metrics=dict(temporal_metrics),
+            linguistic_summary=metrics_by_period,
+            risk_score=risk_score,
+            recommendations=recommendations,
         )
-    
-    def analyze_single_document(
-        self, 
-        document: NarrativeDocument
-    ) -> Dict[str, Any]:
-        """
-        Analyze a single document for narrative patterns.
-        
-        Args:
-            document: Document to analyze
-            
-        Returns:
-            Analysis results dictionary
-        """
-        sentiment = self._analyze_sentiment(document.content)
-        hedging = self._calculate_hedging_score(document.content)
-        hedging_patterns = self._extract_hedging_patterns(document.content)
-        distancing = self._calculate_distancing_score(document.content)
-        blame_shifting = self._detect_blame_shifting(document.content)
-        
-        # Word count and complexity
-        words = document.content.split()
+
+    def _extract_metrics(self, text: str) -> LinguisticMetrics:
+        """Extract linguistic metrics from text."""
+        if not text:
+            return LinguisticMetrics(
+                word_count=0,
+                sentence_count=0,
+                avg_sentence_length=0.0,
+                hedging_ratio=0.0,
+                certainty_ratio=0.0,
+                forward_looking_ratio=0.0,
+                passive_voice_ratio=0.0,
+                first_person_ratio=0.0,
+                complexity_score=0.0,
+                sentiment_score=0.0,
+            )
+
+        # Basic counts
+        words = text.split()
         word_count = len(words)
-        avg_word_length = sum(len(w) for w in words) / max(word_count, 1)
-        sentence_count = len(re.split(r'[.!?]+', document.content))
-        avg_sentence_length = word_count / max(sentence_count, 1)
-        
-        return {
-            'document_id': document.id,
-            'sentiment': sentiment,
-            'hedging_score': hedging,
-            'hedging_patterns': hedging_patterns,
-            'distancing_score': distancing,
-            'blame_shifting_detected': blame_shifting,
-            'word_count': word_count,
-            'avg_word_length': avg_word_length,
-            'avg_sentence_length': avg_sentence_length,
-            'complexity_score': avg_sentence_length * avg_word_length / 100,
+        sentences = re.split(r"[.!?]+", text)
+        sentences = [s.strip() for s in sentences if s.strip()]
+        sentence_count = len(sentences) if sentences else 1
+        avg_sentence_length = word_count / sentence_count
+
+        # Pattern matching
+        hedging_matches = sum(len(p.findall(text)) for p in self._hedging_re)
+        certainty_matches = sum(len(p.findall(text)) for p in self._certainty_re)
+        forward_matches = sum(len(p.findall(text)) for p in self._forward_re)
+
+        # Calculate ratios (per 1000 words for normalization)
+        hedging_ratio = (hedging_matches / word_count * 1000) if word_count > 0 else 0
+        certainty_ratio = (certainty_matches / word_count * 1000) if word_count > 0 else 0
+        forward_ratio = (forward_matches / word_count * 1000) if word_count > 0 else 0
+
+        # Passive voice detection (simple heuristic)
+        passive_pattern = re.compile(r"\b(was|were|been|being|is|are)\s+\w+ed\b", re.IGNORECASE)
+        passive_matches = len(passive_pattern.findall(text))
+        passive_ratio = (passive_matches / sentence_count * 100) if sentence_count > 0 else 0
+
+        # First person ratio
+        first_person = re.compile(r"\b(we|our|us|I|my|me)\b", re.IGNORECASE)
+        first_person_matches = len(first_person.findall(text))
+        first_person_ratio = (first_person_matches / word_count * 100) if word_count > 0 else 0
+
+        # Complexity score (based on sentence length and vocabulary)
+        complexity = min(avg_sentence_length / 20, 1.0)  # Normalize to 0-1
+
+        # Simple sentiment (positive vs negative word ratio)
+        sentiment = self._calculate_simple_sentiment(text)
+
+        return LinguisticMetrics(
+            word_count=word_count,
+            sentence_count=sentence_count,
+            avg_sentence_length=avg_sentence_length,
+            hedging_ratio=hedging_ratio,
+            certainty_ratio=certainty_ratio,
+            forward_looking_ratio=forward_ratio,
+            passive_voice_ratio=passive_ratio,
+            first_person_ratio=first_person_ratio,
+            complexity_score=complexity,
+            sentiment_score=sentiment,
+        )
+
+    def _calculate_simple_sentiment(self, text: str) -> float:
+        """Calculate simple sentiment score (-1 to 1)."""
+        positive_words = {
+            "strong",
+            "growth",
+            "improve",
+            "success",
+            "excellent",
+            "great",
+            "positive",
+            "increase",
+            "gain",
+            "profit",
+            "opportunity",
+            "achieve",
+            "exceed",
+            "record",
+            "momentum",
+            "confident",
+            "robust",
+            "healthy",
         }
-    
-    def _analyze_sentiment(self, text: str) -> SentimentScore:
-        """Analyze sentiment of text using domain-specific lexicon."""
-        if not text:
-            return SentimentScore(0.0, 0.0, 1.0, 0.0, 0.0)
-        
-        words = text.lower().split()
-        word_count = len(words)
-        
-        if word_count == 0:
-            return SentimentScore(0.0, 0.0, 1.0, 0.0, 0.0)
-        
-        positive_count = sum(1 for w in words if w in self.POSITIVE_WORDS)
-        negative_count = sum(1 for w in words if w in self.NEGATIVE_WORDS)
-        
-        positive_score = positive_count / word_count
-        negative_score = negative_count / word_count
-        neutral_score = 1.0 - positive_score - negative_score
-        
-        # Compound score (-1 to 1)
-        if positive_count + negative_count > 0:
-            compound = (positive_count - negative_count) / (positive_count + negative_count)
-        else:
-            compound = 0.0
-        
-        # Confidence based on evidence
-        confidence = min((positive_count + negative_count) / 50.0, 1.0)
-        
-        return SentimentScore(
-            positive_score=positive_score,
-            negative_score=negative_score,
-            neutral_score=max(0, neutral_score),
-            compound_score=compound,
-            confidence=confidence,
-        )
-    
-    def _calculate_hedging_score(self, text: str) -> float:
-        """Calculate hedging language frequency score."""
-        if not text:
+        negative_words = {
+            "weak",
+            "decline",
+            "loss",
+            "challenge",
+            "difficult",
+            "risk",
+            "negative",
+            "decrease",
+            "uncertain",
+            "concern",
+            "adversely",
+            "impact",
+            "pressure",
+            "headwind",
+            "volatile",
+            "disappointing",
+        }
+
+        words = set(text.lower().split())
+        positive_count = len(words & positive_words)
+        negative_count = len(words & negative_words)
+
+        total = positive_count + negative_count
+        if total == 0:
             return 0.0
-        
-        word_count = len(text.split())
-        if word_count < self.min_document_length:
-            return 0.0
-        
-        total_hedging = 0.0
-        
-        for pattern, name, severity in self._hedging_compiled:
-            matches = pattern.findall(text)
-            total_hedging += len(matches) * severity
-        
-        # Normalize by word count
-        return total_hedging / word_count
-    
-    def _extract_hedging_patterns(self, text: str) -> List[HedgingPattern]:
-        """Extract all hedging patterns from text."""
-        patterns = []
-        
-        for regex, name, severity in self._hedging_compiled:
-            for match in regex.finditer(text):
-                # Get surrounding context
-                start = max(0, match.start() - 50)
-                end = min(len(text), match.end() + 50)
-                context = text[start:end]
-                
-                patterns.append(HedgingPattern(
-                    pattern_type=name,
-                    text=match.group(),
-                    position=match.start(),
-                    severity=severity,
-                    context=context,
-                ))
-        
-        return patterns
-    
-    def _calculate_distancing_score(self, text: str) -> float:
-        """Calculate linguistic distancing score."""
-        if not text:
-            return 0.0
-        
-        word_count = len(text.split())
-        if word_count < self.min_document_length:
-            return 0.0
-        
-        total_distancing = 0.0
-        
-        for pattern, name, severity in self._distancing_compiled:
-            matches = pattern.findall(text)
-            total_distancing += len(matches) * severity
-        
-        return total_distancing / word_count
-    
-    def _detect_blame_shifting(self, text: str) -> List[Dict[str, Any]]:
-        """Detect blame shifting language patterns."""
-        blame_instances = []
-        
-        for pattern, name, severity in self._blame_compiled:
-            for match in pattern.finditer(text):
-                start = max(0, match.start() - 100)
-                end = min(len(text), match.end() + 100)
-                
-                blame_instances.append({
-                    'type': name,
-                    'text': match.group(),
-                    'context': text[start:end],
-                    'severity': severity,
-                })
-        
-        return blame_instances
-    
-    def _detect_shift(
-        self,
-        doc1: NarrativeDocument,
-        doc2: NarrativeDocument,
-        sentiment1: SentimentScore,
-        sentiment2: SentimentScore,
-        hedging1: float,
-        hedging2: float,
-    ) -> NarrativeShift:
-        """Detect narrative shift between two documents."""
-        # Calculate sentiment change
-        sentiment_change = sentiment2.compound_score - sentiment1.compound_score
-        hedging_change = hedging2 - hedging1
-        
-        # Determine shift type
-        shift_type = ToneShiftType.NONE
-        magnitude = abs(sentiment_change)
-        
-        if abs(sentiment_change) >= self.sentiment_shift_threshold:
-            if sentiment_change < 0:
-                shift_type = ToneShiftType.POSITIVE_TO_NEGATIVE
+
+        return (positive_count - negative_count) / total
+
+    def _detect_shifts(
+        self, segments: List[NarrativeSegment], temporal_metrics: Dict[str, List[float]]
+    ) -> List[NarrativeShift]:
+        """Detect significant shifts in narrative patterns."""
+        shifts = []
+
+        for metric_name, values in temporal_metrics.items():
+            if len(values) < 2:
+                continue
+
+            # Compare first half vs second half (baseline vs current)
+            mid = len(values) // 2
+            baseline_values = values[:mid]
+            current_values = values[mid:]
+
+            baseline_avg = sum(baseline_values) / len(baseline_values)
+            current_avg = sum(current_values) / len(current_values)
+
+            # Calculate change
+            if baseline_avg != 0:
+                change_pct = (current_avg - baseline_avg) / baseline_avg
             else:
-                shift_type = ToneShiftType.NEGATIVE_TO_POSITIVE
-        elif hedging_change > 0.01:
-            shift_type = ToneShiftType.CONFIDENT_TO_UNCERTAIN
-            magnitude = hedging_change * 10  # Scale hedging change
-        elif hedging_change < -0.01:
-            shift_type = ToneShiftType.UNCERTAIN_TO_CONFIDENT
-            magnitude = abs(hedging_change) * 10
-        
-        # Detect topic changes (simplified keyword analysis)
-        topics1 = self._extract_key_topics(doc1.content)
-        topics2 = self._extract_key_topics(doc2.content)
-        
-        topics_dropped = list(topics1 - topics2)
-        topics_added = list(topics2 - topics1)
-        
-        description = self._generate_shift_description(
-            shift_type, sentiment_change, hedging_change, 
-            topics_dropped, topics_added
-        )
-        
-        return NarrativeShift(
-            shift_type=shift_type,
-            from_document=doc1.id,
-            to_document=doc2.id,
-            magnitude=min(magnitude, 1.0),
-            description=description,
-            sentiment_before=sentiment1,
-            sentiment_after=sentiment2,
-            hedging_change=hedging_change,
-            topics_dropped=topics_dropped[:5],  # Top 5
-            topics_added=topics_added[:5],
-        )
-    
-    def _extract_key_topics(self, text: str) -> set:
-        """Extract key topics from text (simplified)."""
-        # Common financial topics
-        topics = {
-            'revenue', 'earnings', 'margin', 'growth', 'cash flow',
-            'guidance', 'outlook', 'forecast', 'acquisition', 'expansion',
-            'cost', 'expense', 'investment', 'strategy', 'product',
-            'customer', 'market', 'competition', 'innovation', 'technology',
-        }
-        
-        text_lower = text.lower()
-        found_topics = set()
-        
-        for topic in topics:
-            if topic in text_lower:
-                found_topics.add(topic)
-        
-        return found_topics
-    
-    def _generate_shift_description(
-        self,
-        shift_type: ToneShiftType,
-        sentiment_change: float,
-        hedging_change: float,
-        topics_dropped: List[str],
-        topics_added: List[str],
-    ) -> str:
-        """Generate human-readable shift description."""
-        if shift_type == ToneShiftType.NONE:
-            return "No significant narrative shift detected"
-        
-        parts = []
-        
-        if shift_type == ToneShiftType.POSITIVE_TO_NEGATIVE:
-            parts.append(f"Sentiment shifted from positive to negative (change: {sentiment_change:.2f})")
-        elif shift_type == ToneShiftType.NEGATIVE_TO_POSITIVE:
-            parts.append(f"Sentiment shifted from negative to positive (change: {sentiment_change:.2f})")
-        elif shift_type == ToneShiftType.CONFIDENT_TO_UNCERTAIN:
-            parts.append(f"Increased hedging/uncertainty language (change: {hedging_change:.4f})")
-        elif shift_type == ToneShiftType.UNCERTAIN_TO_CONFIDENT:
-            parts.append(f"Decreased hedging language (change: {hedging_change:.4f})")
-        
-        if topics_dropped:
-            parts.append(f"Topics no longer mentioned: {', '.join(topics_dropped[:3])}")
-        if topics_added:
-            parts.append(f"New topics introduced: {', '.join(topics_added[:3])}")
-        
-        return "; ".join(parts)
-    
-    def _identify_fraud_indicators(
-        self,
-        documents: List[NarrativeDocument],
-        sentiments: List[SentimentScore],
-        hedging_scores: List[float],
-        shifts: List[NarrativeShift],
-    ) -> List[FraudIndicator]:
-        """Identify potential fraud indicators from analysis."""
-        indicators = []
-        
-        # Check for excessive hedging
-        for i, (doc, hedge_score) in enumerate(zip(documents, hedging_scores)):
-            if hedge_score > self.hedging_threshold:
-                indicators.append(FraudIndicator(
-                    indicator_type=FraudIndicatorType.EXCESSIVE_HEDGING,
-                    description=f"Document {doc.id} contains unusually high hedging language",
-                    severity=min(hedge_score / self.hedging_threshold * 0.5, 1.0),
-                    evidence=[f"Hedging score: {hedge_score:.4f} (threshold: {self.hedging_threshold})"],
-                    confidence=0.7,
-                    recommendation="Review for intentional vagueness or liability avoidance",
-                ))
-        
-        # Check for inconsistent narrative (large sentiment swings)
-        if len(sentiments) >= 2:
-            max_swing = 0.0
-            for i in range(1, len(sentiments)):
-                swing = abs(sentiments[i].compound_score - sentiments[i-1].compound_score)
-                max_swing = max(max_swing, swing)
-            
-            if max_swing > 0.5:
-                indicators.append(FraudIndicator(
-                    indicator_type=FraudIndicatorType.INCONSISTENT_NARRATIVE,
-                    description="Significant inconsistency in narrative tone across documents",
-                    severity=min(max_swing, 1.0),
-                    evidence=[f"Maximum sentiment swing: {max_swing:.2f}"],
-                    confidence=0.6,
-                    recommendation="Compare factual claims across periods for contradictions",
-                ))
-        
-        # Check for distancing language in all documents
-        for doc in documents:
-            distancing = self._calculate_distancing_score(doc.content)
-            if distancing > 0.01:
-                indicators.append(FraudIndicator(
-                    indicator_type=FraudIndicatorType.DISTANCING_LANGUAGE,
-                    description=f"Elevated distancing language in {doc.id}",
-                    severity=min(distancing * 50, 1.0),
-                    evidence=[f"Distancing score: {distancing:.4f}"],
-                    confidence=0.5,
-                    recommendation="Check for accountability avoidance patterns",
-                ))
-        
-        # Check for blame shifting
-        for doc in documents:
-            blame = self._detect_blame_shifting(doc.content)
-            if blame:
-                indicators.append(FraudIndicator(
-                    indicator_type=FraudIndicatorType.BLAME_SHIFTING,
-                    description=f"Blame shifting language detected in {doc.id}",
-                    severity=sum(b['severity'] for b in blame) / len(blame),
-                    evidence=[b['text'] for b in blame[:3]],
-                    confidence=0.6,
-                    recommendation="Verify external factors cited against independent sources",
-                ))
-        
-        return indicators
-    
-    def _calculate_risk_score(
-        self,
-        sentiments: List[SentimentScore],
-        hedging_scores: List[float],
-        shifts: List[NarrativeShift],
-        indicators: List[FraudIndicator],
-    ) -> float:
-        """Calculate overall fraud risk score."""
-        if not sentiments:
-            return 0.0
-        
-        scores = []
-        
-        # Factor 1: Sentiment trend (declining sentiment is higher risk)
-        if len(sentiments) >= 2:
-            trend = sentiments[-1].compound_score - sentiments[0].compound_score
-            if trend < 0:
-                scores.append(abs(trend) * 0.3)
-        
-        # Factor 2: Hedging level (higher hedging = higher risk)
-        avg_hedging = sum(hedging_scores) / len(hedging_scores)
-        if avg_hedging > self.hedging_threshold:
-            scores.append(min(avg_hedging / self.hedging_threshold * 0.3, 0.3))
-        
-        # Factor 3: Significant shifts
-        if shifts:
-            avg_magnitude = sum(s.magnitude for s in shifts) / len(shifts)
-            scores.append(avg_magnitude * 0.2)
-        
-        # Factor 4: Fraud indicators
-        if indicators:
-            avg_severity = sum(i.severity for i in indicators) / len(indicators)
-            scores.append(avg_severity * 0.3)
-        
-        return min(sum(scores), 1.0)
-    
-    def _generate_findings(
-        self,
-        shifts: List[NarrativeShift],
-        indicators: List[FraudIndicator],
-        risk_score: float,
-    ) -> List[str]:
-        """Generate key findings from analysis."""
-        findings = []
-        
-        if risk_score > self.fraud_risk_threshold:
-            findings.append(f"HIGH RISK: Overall fraud risk score ({risk_score:.2f}) exceeds threshold")
-        elif risk_score > self.fraud_risk_threshold * 0.7:
-            findings.append(f"MODERATE RISK: Elevated fraud risk score ({risk_score:.2f})")
-        
-        for shift in shifts:
-            if shift.magnitude > 0.5:
-                findings.append(
-                    f"Significant {shift.shift_type.value} shift detected "
-                    f"from {shift.from_document} to {shift.to_document}"
+                change_pct = current_avg  # Handle zero baseline
+
+            # Check if significant shift
+            if abs(change_pct) >= self.shift_threshold:
+                severity = self._classify_severity(abs(change_pct), metric_name)
+                category = self._metric_to_category(metric_name)
+
+                # Generate description
+                direction = "increased" if change_pct > 0 else "decreased"
+                description = self._generate_shift_description(
+                    metric_name, direction, abs(change_pct)
                 )
-        
-        # Group and count indicators by type
-        indicator_counts: Dict[FraudIndicatorType, int] = {}
-        for ind in indicators:
-            indicator_counts[ind.indicator_type] = indicator_counts.get(ind.indicator_type, 0) + 1
-        
-        for ind_type, count in sorted(indicator_counts.items(), key=lambda x: -x[1]):
-            if count > 1:
-                findings.append(f"Multiple instances of {ind_type.value} detected ({count} occurrences)")
-            else:
-                findings.append(f"{ind_type.value} pattern detected")
-        
-        return findings
+
+                # Get supporting evidence
+                evidence = self._extract_evidence(segments, metric_name, change_pct)
+
+                shifts.append(
+                    NarrativeShift(
+                        category=category,
+                        severity=severity,
+                        description=description,
+                        baseline_value=baseline_avg,
+                        current_value=current_avg,
+                        change_percentage=change_pct * 100,
+                        baseline_period=segments[0].date.strftime("%Y-%m"),
+                        current_period=segments[-1].date.strftime("%Y-%m"),
+                        supporting_evidence=evidence,
+                    )
+                )
+
+        # Sort by severity
+        severity_order = {
+            ShiftSeverity.CRITICAL: 0,
+            ShiftSeverity.HIGH: 1,
+            ShiftSeverity.MEDIUM: 2,
+            ShiftSeverity.LOW: 3,
+            ShiftSeverity.NONE: 4,
+        }
+        shifts.sort(key=lambda s: severity_order[s.severity])
+
+        return shifts
+
+    def _classify_severity(self, change_pct: float, metric_name: str) -> ShiftSeverity:
+        """Classify the severity of a shift."""
+        # Hedging increases are more concerning
+        if metric_name == "hedging":
+            if change_pct >= self.critical_threshold:
+                return ShiftSeverity.CRITICAL
+            elif change_pct >= self.high_threshold:
+                return ShiftSeverity.HIGH
+            elif change_pct >= self.shift_threshold:
+                return ShiftSeverity.MEDIUM
+
+        # Certainty decreases are concerning
+        elif metric_name == "certainty":
+            if change_pct >= self.critical_threshold:
+                return ShiftSeverity.HIGH
+            elif change_pct >= self.shift_threshold:
+                return ShiftSeverity.MEDIUM
+
+        # Sentiment drops are concerning
+        elif metric_name == "sentiment":
+            if change_pct >= self.critical_threshold:
+                return ShiftSeverity.HIGH
+            elif change_pct >= self.high_threshold:
+                return ShiftSeverity.MEDIUM
+
+        # General threshold
+        if change_pct >= self.critical_threshold:
+            return ShiftSeverity.HIGH
+        elif change_pct >= self.high_threshold:
+            return ShiftSeverity.MEDIUM
+        elif change_pct >= self.shift_threshold:
+            return ShiftSeverity.LOW
+
+        return ShiftSeverity.NONE
+
+    def _metric_to_category(self, metric_name: str) -> NarrativeCategory:
+        """Map metric name to narrative category."""
+        mapping = {
+            "hedging": NarrativeCategory.HEDGING_LANGUAGE,
+            "certainty": NarrativeCategory.CERTAINTY_MARKERS,
+            "forward_looking": NarrativeCategory.FORWARD_LOOKING,
+            "sentiment": NarrativeCategory.EXECUTIVE_SENTIMENT,
+            "complexity": NarrativeCategory.RISK_DISCLOSURE,
+        }
+        return mapping.get(metric_name, NarrativeCategory.EXECUTIVE_SENTIMENT)
+
+    def _generate_shift_description(
+        self, metric_name: str, direction: str, change_pct: float
+    ) -> str:
+        """Generate human-readable description of shift."""
+        # Determine confidence modifier for certainty description
+        confidence_modifier = "more" if direction == "increased" else "less"
+        # Determine complexity modifier
+        complexity_modifier = "more" if direction == "increased" else "less"
+
+        descriptions = {
+            "hedging": (
+                f"Hedging language {direction} by {change_pct:.1%}. "
+                "This may indicate increased uncertainty or defensive positioning."
+            ),
+            "certainty": (
+                f"Certainty markers {direction} by {change_pct:.1%}. "
+                f"Management appears {confidence_modifier} confident."
+            ),
+            "forward_looking": (
+                f"Forward-looking statements {direction} by {change_pct:.1%}. "
+                "Guidance language has changed significantly."
+            ),
+            "sentiment": (
+                f"Overall sentiment {direction} by {change_pct:.1%}. "
+                "Tone of management communications has shifted."
+            ),
+            "complexity": (
+                f"Language complexity {direction} by {change_pct:.1%}. "
+                f"Communications have become {complexity_modifier} complex."
+            ),
+        }
+        return descriptions.get(
+            metric_name,
+            f"{metric_name.replace('_', ' ').title()} {direction} by {change_pct:.1%}.",
+        )
+
+    def _extract_evidence(
+        self, segments: List[NarrativeSegment], metric_name: str, change_pct: float
+    ) -> List[str]:
+        """Extract supporting evidence for detected shift."""
+        evidence = []
+
+        # Compare first and last segments
+        if len(segments) >= 2:
+            first = segments[0]
+            last = segments[-1]
+
+            evidence.append(f"Baseline period: {first.source} ({first.date.strftime('%Y-%m-%d')})")
+            evidence.append(f"Current period: {last.source} ({last.date.strftime('%Y-%m-%d')})")
+
+            # Add sample phrases if hedging increased
+            if metric_name == "hedging" and change_pct > 0:
+                hedging_phrases = []
+                for pattern in self._hedging_re:
+                    matches = pattern.findall(last.text)
+                    hedging_phrases.extend(matches[:3])  # Limit to 3 per pattern
+                if hedging_phrases:
+                    evidence.append(f"Sample hedging language: {', '.join(hedging_phrases[:5])}")
+
+        return evidence
+
+    def _calculate_overall_severity(self, shifts: List[NarrativeShift]) -> ShiftSeverity:
+        """Calculate overall severity from individual shifts."""
+        if not shifts:
+            return ShiftSeverity.NONE
+
+        severity_scores = {
+            ShiftSeverity.CRITICAL: 4,
+            ShiftSeverity.HIGH: 3,
+            ShiftSeverity.MEDIUM: 2,
+            ShiftSeverity.LOW: 1,
+            ShiftSeverity.NONE: 0,
+        }
+
+        max_score = max(severity_scores[s.severity] for s in shifts)
+
+        # Multiple high/medium shifts compound to higher severity
+        high_count = sum(
+            1 for s in shifts if s.severity in [ShiftSeverity.HIGH, ShiftSeverity.CRITICAL]
+        )
+        if high_count >= 2:
+            max_score = min(max_score + 1, 4)
+
+        # Reverse lookup
+        for severity, score in severity_scores.items():
+            if score == max_score:
+                return severity
+
+        return ShiftSeverity.NONE
+
+    def _calculate_risk_score(
+        self, shifts: List[NarrativeShift], temporal_metrics: Dict[str, List[float]]
+    ) -> float:
+        """Calculate overall risk score (0-100)."""
+        base_score = 0.0
+
+        # Add points for each shift
+        for shift in shifts:
+            if shift.severity == ShiftSeverity.CRITICAL:
+                base_score += 25
+            elif shift.severity == ShiftSeverity.HIGH:
+                base_score += 15
+            elif shift.severity == ShiftSeverity.MEDIUM:
+                base_score += 8
+            elif shift.severity == ShiftSeverity.LOW:
+                base_score += 3
+
+        # Check for concerning patterns
+        hedging_values = temporal_metrics.get("hedging", [])
+        if hedging_values and len(hedging_values) >= 2:
+            # Monotonically increasing hedging is very concerning
+            if all(
+                hedging_values[i] <= hedging_values[i + 1] for i in range(len(hedging_values) - 1)
+            ):
+                base_score += 10
+
+        # Cap at 100
+        return min(base_score, 100.0)
+
+    def _generate_recommendations(
+        self, shifts: List[NarrativeShift], overall_severity: ShiftSeverity
+    ) -> List[str]:
+        """Generate investigation recommendations."""
+        recommendations = []
+
+        if overall_severity == ShiftSeverity.CRITICAL:
+            recommendations.append(
+                "URGENT: Critical narrative shifts detected. "
+                "Recommend immediate deep-dive investigation."
+            )
+            recommendations.append(
+                "Cross-reference with financial performance and material events."
+            )
+            recommendations.append("Compare management statements with actual outcomes.")
+
+        elif overall_severity == ShiftSeverity.HIGH:
+            recommendations.append("Significant narrative shifts warrant investigation.")
+            recommendations.append(
+                "Review contemporaneous market conditions for potential explanations."
+            )
+
+        elif overall_severity == ShiftSeverity.MEDIUM:
+            recommendations.append("Notable narrative changes detected. Consider monitoring.")
+
+        # Specific recommendations based on shifts
+        for shift in shifts:
+            if (
+                shift.category == NarrativeCategory.HEDGING_LANGUAGE
+                and shift.change_percentage > 30
+            ):
+                recommendations.append(
+                    "Increased hedging language may indicate management uncertainty. "
+                    "Review for undisclosed risks."
+                )
+
+            if (
+                shift.category == NarrativeCategory.FORWARD_LOOKING
+                and shift.change_percentage < -30
+            ):
+                recommendations.append(
+                    "Reduced forward-looking statements may indicate reluctance to commit. "
+                    "Compare with guidance history."
+                )
+
+        if not recommendations:
+            recommendations.append("No significant narrative concerns identified at this time.")
+
+        return recommendations
+
+    def generate_report(self, result: NarrativeAnalysisResult) -> str:
+        """Generate a human-readable analysis report."""
+        report = []
+        report.append("=" * 60)
+        report.append("NARRATIVE ANALYSIS REPORT")
+        report.append("=" * 60)
+        report.append("")
+
+        report.append(f"Segments Analyzed: {result.segments_analyzed}")
+        report.append(f"Time Span: {result.time_span_days} days")
+        report.append(f"Overall Severity: {result.overall_severity.value}")
+        report.append(f"Risk Score: {result.risk_score:.1f}/100")
+        report.append("")
+
+        if result.shifts_detected:
+            report.append("DETECTED SHIFTS:")
+            report.append("-" * 40)
+            for shift in result.shifts_detected:
+                report.append(f"  [{shift.severity.value}] {shift.category.value}")
+                report.append(f"    {shift.description}")
+                report.append(f"    Change: {shift.change_percentage:+.1f}%")
+                report.append(f"    Period: {shift.baseline_period} → {shift.current_period}")
+                report.append("")
+        else:
+            report.append("No significant narrative shifts detected.")
+            report.append("")
+
+        report.append("RECOMMENDATIONS:")
+        report.append("-" * 40)
+        for rec in result.recommendations:
+            report.append(f"  • {rec}")
+
+        report.append("")
+        report.append("=" * 60)
+
+        return "\n".join(report)

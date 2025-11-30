@@ -1,24 +1,14 @@
 """
-Triangulation - Cross-Source Entity Resolution and Evidence Correlation
-
-This module provides entity resolution and cross-source triangulation capabilities
-for correlating entities across SEC filings, news sources, and social media.
-"""
-
-from src.forensics.triangulation.entity_resolver import (
-    EntityResolver,
-    Entity,
-    EntitySource,
-    EntityCluster,
-    EntityMatch,
-    EntityResolutionResult,
+JLAW Triangulation Module
 )
 
 __all__ = [
     "EntityResolver",
-    "Entity",
-    "EntitySource",
-    "EntityCluster",
-    "EntityMatch",
-    "EntityResolutionResult",
+    "EntityMention",
+    "ResolvedEntity",
+    "ResolutionResult",
+    "EntityType",
+    "SourceType",
 ]
+
+__version__ = "1.0.0"
