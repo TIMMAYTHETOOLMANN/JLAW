@@ -13,6 +13,7 @@ Features:
 - Confidence scoring
 """
 
+import hashlib
 import logging
 import re
 from collections import defaultdict
@@ -460,10 +461,10 @@ class EntityResolver:
         # Higher score for more sources and higher individual confidence
         cross_source_score = min(avg_confidence * (1 + 0.2 * (source_count - 1)), 1.0)
 
-        # Generate entity ID
-        import hashlib
-
-        entity_id = hashlib.md5(f"{entity_type.value}:{canonical}".encode()).hexdigest()[:12]
+        # Generate entity ID using SHA-256 for security
+        entity_id = hashlib.sha256(
+            f"{entity_type.value}:{canonical}".encode()
+        ).hexdigest()[:12]
 
         return ResolvedEntity(
             canonical_name=canonical.title(),  # Title case for display

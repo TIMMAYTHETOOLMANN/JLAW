@@ -503,20 +503,36 @@ class NarrativeAnalyzer:
         self, metric_name: str, direction: str, change_pct: float
     ) -> str:
         """Generate human-readable description of shift."""
+        # Determine confidence modifier for certainty description
+        confidence_modifier = "more" if direction == "increased" else "less"
+        # Determine complexity modifier
+        complexity_modifier = "more" if direction == "increased" else "less"
+
         descriptions = {
-            "hedging": f"Hedging language {direction} by {change_pct:.1%}. "
-            "This may indicate increased uncertainty or defensive positioning.",
-            "certainty": f"Certainty markers {direction} by {change_pct:.1%}. "
-            "Management appears {'more' if direction == 'increased' else 'less'} confident.",
-            "forward_looking": f"Forward-looking statements {direction} by {change_pct:.1%}. "
-            "Guidance language has changed significantly.",
-            "sentiment": f"Overall sentiment {direction} by {change_pct:.1%}. "
-            "Tone of management communications has shifted.",
-            "complexity": f"Language complexity {direction} by {change_pct:.1%}. "
-            "Communications have become {'more' if direction == 'increased' else 'less'} complex.",
+            "hedging": (
+                f"Hedging language {direction} by {change_pct:.1%}. "
+                "This may indicate increased uncertainty or defensive positioning."
+            ),
+            "certainty": (
+                f"Certainty markers {direction} by {change_pct:.1%}. "
+                f"Management appears {confidence_modifier} confident."
+            ),
+            "forward_looking": (
+                f"Forward-looking statements {direction} by {change_pct:.1%}. "
+                "Guidance language has changed significantly."
+            ),
+            "sentiment": (
+                f"Overall sentiment {direction} by {change_pct:.1%}. "
+                "Tone of management communications has shifted."
+            ),
+            "complexity": (
+                f"Language complexity {direction} by {change_pct:.1%}. "
+                f"Communications have become {complexity_modifier} complex."
+            ),
         }
         return descriptions.get(
-            metric_name, f"{metric_name.replace('_', ' ').title()} {direction} by {change_pct:.1%}."
+            metric_name,
+            f"{metric_name.replace('_', ' ').title()} {direction} by {change_pct:.1%}.",
         )
 
     def _extract_evidence(
