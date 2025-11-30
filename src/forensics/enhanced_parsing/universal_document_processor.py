@@ -16,7 +16,7 @@ from pathlib import Path
 from .ocr_cascade import OCRCascade
 from .table_extractor import ForensicTableExtractor
 from .document_processor import EnhancedDocumentProcessor
-from ..universal_document_extractor import (
+from ..sec_forensic_extraction_system import (
     UniversalDocumentExtractor,
     ExtractionResult,
 )
@@ -107,11 +107,19 @@ class UniversalDocumentProcessor:
         if mime:
             provenance['mime'] = mime
 
+        # Convert bytes to string for the base extractor (which expects string content)
+        try:
+            raw_content = raw_bytes.decode('utf-8', errors='replace')
+        except Exception:
+            raw_content = raw_bytes.decode('latin-1', errors='replace')
+
         # Delegate to existing base extractor for robust format handling
-        base: ExtractionResult = await self.base_extractor.extract_document(raw_bytes)
+        base: ExtractionResult = await self.base_extractor.extract_document(raw_content)
         text_engine = getattr(base, 'extraction_method', 'unknown') if base else 'unknown'
-        text: str = base.raw_text if base and base.success else ""
-        text_confidence = 0.90 if base and base.success and (text or '').strip() else 0.0
+        # ExtractionResult uses 'content' field; 'success' is inferred from whether content exists
+        has_content = base and base.content
+        text: str = base.content if has_content else ""
+        text_confidence = 0.90 if has_content and text.strip() else 0.0
 
         # If no text extracted and input appears to be an image, try OCR cascade
         ocr_used = False

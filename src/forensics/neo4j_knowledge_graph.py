@@ -17,12 +17,13 @@ When Neo4j is available, this enables:
 - Temporal relationship evolution
 """
 
-from typing import Dict, List, Optional, Any, Tuple
+from typing import Dict, List, Optional, Any, Tuple, Union
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from enum import Enum
 import json
 import logging
+import hashlib
 
 logger = logging.getLogger(__name__)
 
@@ -153,8 +154,29 @@ class Neo4jKnowledgeGraph:
         # Fallback to in-memory graph
         if not self.using_neo4j:
             self.logger.info("ℹ️ Using in-memory graph (Neo4j unavailable)")
-            self.nodes = {}
-            self.relationships = []
+            self._nodes: Dict[str, GraphNode] = {}
+            self._relationships: List[GraphRelationship] = []
+        else:
+            self._nodes = {}
+            self._relationships = []
+    
+    @property
+    def nodes(self) -> Dict[str, GraphNode]:
+        """Get all nodes."""
+        return self._nodes
+    
+    @nodes.setter
+    def nodes(self, value: Dict[str, GraphNode]):
+        self._nodes = value
+    
+    @property
+    def relationships(self) -> List[GraphRelationship]:
+        """Get all relationships."""
+        return self._relationships
+    
+    @relationships.setter
+    def relationships(self, value: List[GraphRelationship]):
+        self._relationships = value
     
     def create_node(self, node: GraphNode) -> str:
         """Create node in graph."""
@@ -187,13 +209,61 @@ class Neo4jKnowledgeGraph:
     
     def create_relationship(
         self,
-        relationship: GraphRelationship
+        from_or_rel: Union[GraphRelationship, str] = None,
+        to_node_id: Optional[str] = None,
+        relationship_type: Optional[str] = None,
+        properties: Optional[Dict[str, Any]] = None,
+        # Also accept keyword argument style
+        from_node_id: Optional[str] = None,
+        relationship: Optional[GraphRelationship] = None
     ) -> str:
-        """Create relationship in graph."""
-        if self.using_neo4j:
-            return self._create_relationship_neo4j(relationship)
+        """Create relationship in graph.
+        
+        Can be called with either:
+        1. A GraphRelationship object: create_relationship(rel) or create_relationship(relationship=rel)
+        2. Individual parameters: create_relationship(from_id, to_id, rel_type, properties)
+           or create_relationship(from_node_id=..., to_node_id=..., relationship_type=..., properties=...)
+        """
+        # Handle relationship keyword argument
+        if relationship is not None:
+            from_or_rel = relationship
+        
+        # Handle from_node_id keyword argument
+        if from_node_id is not None:
+            from_or_rel = from_node_id
+        
+        # Handle GraphRelationship object
+        if isinstance(from_or_rel, GraphRelationship):
+            rel = from_or_rel
         else:
-            return self._create_relationship_memory(relationship)
+            # Handle individual parameters
+            if to_node_id is None or relationship_type is None:
+                raise ValueError("to_node_id and relationship_type required when using string parameters")
+            
+            rel_id = f"rel:{hashlib.md5(f'{from_or_rel}:{to_node_id}:{relationship_type}'.encode()).hexdigest()[:12]}"
+            
+            # Map string to enum
+            rel_type_map = {
+                'IMPLEMENTS': RelationshipType.RELATED_TO,
+                'INTERPRETS': RelationshipType.RELATED_TO,
+                'VIOLATES': RelationshipType.VIOLATES,
+                'CONTRADICTS': RelationshipType.CONTRADICTS,
+                'SUPPORTS': RelationshipType.SUPPORTS,
+            }
+            rel_type_enum = rel_type_map.get(relationship_type, RelationshipType.RELATED_TO)
+            
+            rel = GraphRelationship(
+                id=rel_id,
+                type=rel_type_enum,
+                from_node=from_or_rel,
+                to_node=to_node_id,
+                properties=properties or {'type': relationship_type}
+            )
+        
+        if self.using_neo4j:
+            return self._create_relationship_neo4j(rel)
+        else:
+            return self._create_relationship_memory(rel)
     
     def _create_relationship_neo4j(self, rel: GraphRelationship) -> str:
         """Create relationship in Neo4j."""
@@ -443,6 +513,192 @@ class Neo4jKnowledgeGraph:
         
         self.logger.info(f"✅ Graph populated: {stats['nodes']} nodes, {stats['relationships']} relationships")
         return stats
+    
+    # =========================================================================
+    # Phase 3 Enhanced Methods - Legal Statute Correlation
+    # =========================================================================
+    
+    def create_statute_node(
+        self,
+        citation: str,
+        title: int,
+        section: str,
+        text: str,
+        effective_date: Optional[datetime] = None
+    ) -> str:
+        """Create a statute node in the graph."""
+        node_id = f"statute:{citation}"
+        node = GraphNode(
+            id=node_id,
+            type=NodeType.DOCUMENT,
+            properties={
+                'citation': citation,
+                'title_number': title,
+                'section': section,
+                'text': text,
+                'effective_date': effective_date.isoformat() if effective_date else None,
+                'document_type': 'statute'
+            },
+            labels=['Statute', 'Document']
+        )
+        self.create_node(node)
+        return node_id
+    
+    def create_regulation_node(
+        self,
+        cfr_citation: str,
+        cfr_title: int,
+        part: str,
+        section: str,
+        text: str
+    ) -> str:
+        """Create a regulation node in the graph."""
+        node_id = f"regulation:{cfr_citation}"
+        node = GraphNode(
+            id=node_id,
+            type=NodeType.DOCUMENT,
+            properties={
+                'citation': cfr_citation,
+                'cfr_title': cfr_title,
+                'part': part,
+                'section': section,
+                'text': text,
+                'document_type': 'regulation'
+            },
+            labels=['Regulation', 'Document']
+        )
+        self.create_node(node)
+        return node_id
+    
+    def create_case_node(
+        self,
+        citation: str,
+        court: str,
+        decision_date: Optional[datetime] = None,
+        outcome: Optional[str] = None
+    ) -> str:
+        """Create a case law node in the graph."""
+        node_id = f"case:{citation}"
+        node = GraphNode(
+            id=node_id,
+            type=NodeType.DOCUMENT,
+            properties={
+                'citation': citation,
+                'court': court,
+                'decision_date': decision_date.isoformat() if decision_date else None,
+                'outcome': outcome,
+                'document_type': 'case'
+            },
+            labels=['Case', 'Document']
+        )
+        self.create_node(node)
+        return node_id
+    
+    def create_violation_node(
+        self,
+        violation_type: str,
+        description: str,
+        severity: str,
+        evidence: Optional[Dict[str, Any]] = None
+    ) -> str:
+        """Create a violation node in the graph."""
+        import hashlib
+        node_id = f"violation:{hashlib.md5(f'{violation_type}:{description[:50]}'.encode()).hexdigest()[:12]}"
+        node = GraphNode(
+            id=node_id,
+            type=NodeType.VIOLATION,
+            properties={
+                'violation_type': violation_type,
+                'description': description,
+                'severity': severity,
+                'evidence': evidence or {},
+                'detected_at': datetime.now(timezone.utc).isoformat()
+            },
+            labels=['Violation']
+        )
+        self.create_node(node)
+        return node_id
+    
+    def query_statutes_by_title(self, title_number: int) -> List[GraphNode]:
+        """Query statutes by title number."""
+        results = []
+        for node in self._nodes.values():
+            if (node.properties.get('document_type') == 'statute' and 
+                node.properties.get('title_number') == title_number):
+                results.append(node)
+        return results
+    
+    def query_violations_by_severity(self, severity: str) -> List[GraphNode]:
+        """Query violations by severity level."""
+        results = []
+        for node in self._nodes.values():
+            if (node.type == NodeType.VIOLATION and 
+                node.properties.get('severity') == severity):
+                results.append(node)
+        return results
+    
+    def get_statute_network(
+        self,
+        statute_id: str,
+        depth: int = 2
+    ) -> Dict[str, Any]:
+        """Get network of relationships around a statute."""
+        related_nodes = set()
+        related_rels = []
+        
+        # BFS to find connected nodes
+        to_visit = {statute_id}
+        visited = set()
+        
+        for _ in range(depth):
+            next_visit = set()
+            for node_id in to_visit:
+                if node_id in visited:
+                    continue
+                visited.add(node_id)
+                related_nodes.add(node_id)
+                
+                # Find relationships involving this node
+                for rel in self._relationships:
+                    if rel.from_node == node_id:
+                        related_rels.append(rel)
+                        next_visit.add(rel.to_node)
+                    elif rel.to_node == node_id:
+                        related_rels.append(rel)
+                        next_visit.add(rel.from_node)
+            
+            to_visit = next_visit - visited
+        
+        return {
+            'center_node': statute_id,
+            'node_count': len(related_nodes),
+            'relationship_count': len(related_rels),
+            'nodes': list(related_nodes),
+            'relationships': [
+                {'from': r.from_node, 'to': r.to_node, 'type': r.type.value}
+                for r in related_rels
+            ]
+        }
+    
+    def get_statistics(self) -> Dict[str, Any]:
+        """Get graph statistics."""
+        node_types = {}
+        for node in self._nodes.values():
+            type_name = node.type.value
+            node_types[type_name] = node_types.get(type_name, 0) + 1
+        
+        rel_types = {}
+        for rel in self._relationships:
+            type_name = rel.type.value
+            rel_types[type_name] = rel_types.get(type_name, 0) + 1
+        
+        return {
+            'total_nodes': len(self._nodes),
+            'total_relationships': len(self._relationships),
+            'using_neo4j': self.using_neo4j,
+            'node_types': node_types,
+            'relationship_types': rel_types
+        }
     
     def close(self):
         """Close Neo4j connection."""

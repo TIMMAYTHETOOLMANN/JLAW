@@ -121,7 +121,9 @@ class EnhancedForensicReportGenerator:
         ))
         
         # Executive summary
-        report_lines.append(self._generate_executive_summary(filing_analyses))
+        report_lines.append(self._generate_executive_summary(
+            filing_analyses, target_company, analysis_period
+        ))
         
         # Per-filing detailed analysis
         report_lines.append(self._generate_per_filing_analysis(filing_analyses))
@@ -152,7 +154,10 @@ class EnhancedForensicReportGenerator:
             if v.severity == 'CRITICAL'
         )
         
-        header = f"""NIKE INC. (NKE) - 2019 SEC FILINGS FORENSIC ANALYSIS
+        # Extract ticker from company name if present, or use CIK
+        ticker = self._extract_ticker(target_company, cik)
+        
+        header = f"""{target_company.upper()} ({ticker}) - {analysis_period.split()[0][:4] if ' ' in analysis_period else analysis_period[:4]} SEC FILINGS FORENSIC ANALYSIS
 DOJ-LEVEL INVESTIGATION REPORT
 {'='*80}
 
@@ -168,7 +173,39 @@ Estimated Total Damages: ${total_damages:,.2f}
         
         return header
     
-    def _generate_executive_summary(self, filing_analyses: List[FilingAnalysis]) -> str:
+    def _extract_ticker(self, company_name: str, cik: str) -> str:
+        """Extract or generate ticker symbol"""
+        # Common company to ticker mappings
+        known_tickers = {
+            'nike': 'NKE',
+            'apple': 'AAPL',
+            'microsoft': 'MSFT',
+            'amazon': 'AMZN',
+            'alphabet': 'GOOG',
+            'google': 'GOOGL',
+            'tesla': 'TSLA',
+            'meta': 'META',
+            'facebook': 'META',
+            'netflix': 'NFLX',
+        }
+        
+        company_lower = company_name.lower()
+        for key, ticker in known_tickers.items():
+            if key in company_lower:
+                return ticker
+        
+        # Fallback: use first letters or CIK
+        words = company_name.replace('Inc.', '').replace('Corp.', '').replace('LLC', '').split()
+        if words:
+            return ''.join(w[0].upper() for w in words[:3])
+        return cik[:6]
+    
+    def _generate_executive_summary(
+        self, 
+        filing_analyses: List[FilingAnalysis],
+        target_company: str = "Target Company",
+        analysis_period: str = "Analysis Period"
+    ) -> str:
         """Generate executive summary"""
         # Count violations by type
         violation_counts = {}
@@ -180,9 +217,12 @@ Estimated Total Damages: ${total_damages:,.2f}
                     violation_counts.get(violation.violation_type, 0) + 1
                 severity_counts[violation.severity] += 1
         
+        # Extract year from analysis period
+        year = analysis_period.split()[0][:4] if ' ' in analysis_period else analysis_period[:4]
+        
         summary = f"""EXECUTIVE SUMMARY
 
-This forensic analysis examined all Nike Inc. SEC filings from calendar year 2019, 
+This forensic analysis examined all {target_company} SEC filings from {analysis_period}, 
 applying DOJ-level prosecutorial standards to identify securities law violations. 
 The analysis employed sophisticated surgical examination of each filing type with 
 zero tolerance for false positives.

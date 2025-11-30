@@ -158,3 +158,14 @@ cython_debug/
 
 # Redis database files
 dump.rdb
+
+# JLAW Forensics - Generated Output (DO NOT COMMIT)
+# These files are generated during analysis runs
+forensic_reports/
+forensic_storage/
+dossiers/
+FORENSIC_REPORT_*.txt
+jlaw_forensics_*.log
+benchmark_compliance_report_*.txt
+sample_analysis_config.yaml
+sample_analysis_config.json

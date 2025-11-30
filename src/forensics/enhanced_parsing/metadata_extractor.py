@@ -1,4 +1,4 @@
-﻿"""
+"""
 Metadata Enhancer - Phase 1
 ===========================
 Enhanced metadata extraction and document provenance tracking

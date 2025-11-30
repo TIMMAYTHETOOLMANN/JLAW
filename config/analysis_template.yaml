@@ -1,0 +1,111 @@
+# JLAW Forensics Analysis Configuration Template
+# ===============================================
+# 
+# This file defines the parameters for a forensic SEC filing analysis.
+# Copy this template and customize for your specific investigation.
+#
+# Usage:
+#   python jlaw_forensics.py --config config/my_analysis.yaml
+#
+
+# =============================================================================
+# TARGET COMPANY INFORMATION
+# =============================================================================
+
+company_name: "COMPANY_NAME"     # Full legal company name (e.g., "Nike Inc.")
+cik: "0000000000"               # SEC CIK number (10 digits, zero-padded)
+ticker: null                    # Optional: Stock ticker symbol (e.g., "NKE")
+
+# =============================================================================
+# ANALYSIS DATE RANGE
+# =============================================================================
+
+start_date: "2019-01-01"        # Analysis start date (YYYY-MM-DD)
+end_date: "2019-12-31"          # Analysis end date (YYYY-MM-DD)
+fiscal_year: null               # Optional: Fiscal year (auto-sets date range)
+
+# =============================================================================
+# FILING TYPES TO ANALYZE
+# =============================================================================
+# 
+# Available filing types:
+#   Annual/Quarterly: 10-K, 10-Q, 10-K/A, 10-Q/A
+#   Current Reports:  8-K, 8-K/A
+#   Insider Trading:  3, 4, 5 (Section 16 filings)
+#   Beneficial Owner: SC 13D, SC 13G, 13F-HR
+#   Proxy Statements: DEF 14A, PRE 14A
+#
+# Use 'all' for comprehensive analysis of all filing types.
+
+filing_types:
+  - "10-K"
+  - "10-Q"
+  - "8-K"
+  - "4"
+  - "SC 13G"
+  - "SC 13G/A"
+
+# Set to null or remove to analyze all filings (no limit)
+max_filings: null
+
+# =============================================================================
+# ANALYSIS OPTIONS
+# =============================================================================
+
+# Statistical analysis modules
+enable_benfords: true           # Benford's Law fraud detection
+enable_contradiction: true      # Cross-document contradiction detection
+enable_temporal: true           # Temporal pattern analysis
+enable_legal_correlation: true  # Legal statute correlation
+
+# =============================================================================
+# OUTPUT CONFIGURATION
+# =============================================================================
+
+# Output format: "doj_level", "json", "pdf", or "all"
+output_format: "doj_level"
+
+# Output directory for reports
+output_directory: "forensic_reports"
+
+# Generate evidence packages for prosecution
+generate_evidence_packages: true
+
+# Generate summary only (faster, less detail)
+generate_summary_only: false
+
+# =============================================================================
+# DETECTION THRESHOLDS
+# =============================================================================
+# 
+# These values match the production-locked defaults.
+# Modify only if you understand the implications.
+
+# Form 4 late filing threshold (SEC requires 2 business days)
+late_filing_tolerance_days: 2
+
+# Zero-dollar transaction detection threshold
+zero_dollar_threshold: 0.01
+
+# Keywords indicating material misstatement
+misstatement_keywords:
+  - "restated"
+  - "restate"
+  - "restating"
+  - "modified retrospective"
+  - "restatement"
+  - "revised"
+  - "corrected"
+
+# =============================================================================
+# ADVANCED OPTIONS
+# =============================================================================
+
+# Parallel processing (faster on multi-core systems)
+parallel_processing: true
+
+# Maximum parallel workers
+max_workers: 5
+
+# Save intermediate results (useful for debugging)
+save_intermediate_results: true
