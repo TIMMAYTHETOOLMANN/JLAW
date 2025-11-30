@@ -238,21 +238,30 @@ class InputValidator:
             if normalized_type in cls.SUPPORTED_FILING_TYPES:
                 normalized.append(normalized_type)
             else:
-                # Try common variations
-                cleaned = normalized_type.replace('-', ' ').replace('/', '')
+                # Try exact match with common variations (whitespace normalization)
+                cleaned = normalized_type.replace('  ', ' ').strip()
                 
-                # Check for partial matches
-                partial_match = None
-                for supported in cls.SUPPORTED_FILING_TYPES:
-                    if cleaned in supported or supported in cleaned:
-                        partial_match = supported
+                # Try matching with variations
+                match_found = None
+                
+                # Direct variations to try
+                variations = [
+                    cleaned,
+                    cleaned.replace(' ', '-'),  # "10 K" -> "10-K"
+                    cleaned.replace('-', ' '),  # Already normalized
+                ]
+                
+                for variation in variations:
+                    if variation in cls.SUPPORTED_FILING_TYPES:
+                        match_found = variation
                         break
                 
-                if partial_match:
-                    normalized.append(partial_match)
-                    warnings.append(
-                        f"Filing type '{filing_type}' normalized to '{partial_match}'"
-                    )
+                if match_found:
+                    normalized.append(match_found)
+                    if match_found != normalized_type:
+                        warnings.append(
+                            f"Filing type '{filing_type}' normalized to '{match_found}'"
+                        )
                 else:
                     errors.append(f"Unsupported filing type: '{filing_type}'")
         
