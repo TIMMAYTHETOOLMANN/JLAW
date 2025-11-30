@@ -144,6 +144,38 @@ except ImportError:
     MultiPassAnalysisStrategy = None
     MultiPassResult = None
 
+# Enhancement Modules: Entity Resolution & Narrative Analysis
+try:
+    from src.forensics.triangulation import (
+        EntityResolver, EntityMention, ResolvedEntity, ResolutionResult,
+        EntityType, SourceType
+    )
+    _triangulation_available = True
+except ImportError:
+    EntityResolver = None
+    EntityMention = None
+    ResolvedEntity = None
+    ResolutionResult = None
+    EntityType = None
+    SourceType = None
+    _triangulation_available = False
+
+try:
+    from src.forensics.analysis import (
+        NarrativeAnalyzer, NarrativeSegment, NarrativeShift,
+        NarrativeAnalysisResult, LinguisticMetrics, ShiftSeverity, NarrativeCategory
+    )
+    _analysis_available = True
+except ImportError:
+    NarrativeAnalyzer = None
+    NarrativeSegment = None
+    NarrativeShift = None
+    NarrativeAnalysisResult = None
+    LinguisticMetrics = None
+    ShiftSeverity = None
+    NarrativeCategory = None
+    _analysis_available = False
+
 __all__ = [
     "__version__",
     # Core analyzers
@@ -264,5 +296,19 @@ __all__ = [
     "AgentSECForensicAnalyzer",
     "AnthropicAgentAnalyzer",
     "MultiPassAnalysisStrategy",
-    "MultiPassResult"
+    "MultiPassResult",
+    # Enhancement modules
+    "EntityResolver",
+    "EntityMention",
+    "ResolvedEntity",
+    "ResolutionResult",
+    "EntityType",
+    "SourceType",
+    "NarrativeAnalyzer",
+    "NarrativeSegment",
+    "NarrativeShift",
+    "NarrativeAnalysisResult",
+    "LinguisticMetrics",
+    "ShiftSeverity",
+    "NarrativeCategory"
 ]
