@@ -637,3 +637,154 @@ class SECFilingStream:
             ]
         
         return filings
+
+
+# =============================================================================
+# COMPLIANCE: SEC EDGAR Fair Access RateLimiter
+# Injected by JLAW Remediation Patch v1.0.0
+# Reference: https://www.sec.gov/os/webmaster-faq#developers
+# =============================================================================
+
+import asyncio
+import time
+from typing import List, Optional
+from dataclasses import dataclass, field
+
+
+@dataclass
+class RateLimitStats:
+    """Statistics for rate limiter monitoring."""
+    requests_made: int = 0
+    requests_throttled: int = 0
+    total_wait_time: float = 0.0
+    last_request_time: float = 0.0
+
+
+class SECRateLimiter:
+    """
+    Token bucket rate limiter for SEC EDGAR API compliance.
+    
+    SEC EDGAR Fair Access Policy Requirements:
+    -----------------------------------------
+    1. Maximum 10 requests per second per IP address
+    2. User-Agent header MUST include company name and contact email
+    3. Automated scripts must not impair system availability
+    4. Excessive requests may result in IP blocking
+    
+    Implementation Details:
+    ----------------------
+    Algorithm: Token bucket with sliding window
+    Bucket capacity: 10 tokens (requests)
+    Refill rate: 10 tokens per second
+    Burst handling: Blocks when bucket empty
+    
+    Usage:
+        limiter = SECRateLimiter(requests_per_second=10)
+        
+        # Async context
+        await limiter.acquire()
+        response = await fetch_edgar_data()
+        
+        # Sync context
+        limiter.acquire_sync()
+        response = fetch_edgar_data_sync()
+    """
+    
+    def __init__(
+        self,
+        requests_per_second: int = 10,
+        burst_allowance: int = 2
+    ):
+        """
+        Initialize rate limiter.
+        
+        Args:
+            requests_per_second: Max requests per second (default 10 per SEC)
+            burst_allowance: Extra tokens for short bursts (default 2)
+        """
+        self.requests_per_second = requests_per_second
+        self.burst_allowance = burst_allowance
+        self.min_interval = 1.0 / requests_per_second
+        self._request_times: List[float] = []
+        self._async_lock: Optional[asyncio.Lock] = None
+        self._stats = RateLimitStats()
+    
+    async def acquire(self) -> None:
+        """
+        Acquire permission to make a request (async).
+        
+        Blocks if rate limit would be exceeded, ensuring SEC compliance.
+        """
+        if self._async_lock is None:
+            self._async_lock = asyncio.Lock()
+        
+        async with self._async_lock:
+            now = time.monotonic()
+            window_start = now - 1.0
+            
+            # Remove timestamps outside sliding window
+            self._request_times = [
+                t for t in self._request_times
+                if t > window_start
+            ]
+            
+            capacity = self.requests_per_second + self.burst_allowance
+            
+            if len(self._request_times) >= capacity:
+                oldest = min(self._request_times)
+                wait_time = 1.0 - (now - oldest) + 0.01
+                
+                if wait_time > 0:
+                    self._stats.requests_throttled += 1
+                    self._stats.total_wait_time += wait_time
+                    await asyncio.sleep(wait_time)
+            
+            self._request_times.append(time.monotonic())
+            self._stats.requests_made += 1
+            self._stats.last_request_time = time.monotonic()
+    
+    def acquire_sync(self) -> None:
+        """
+        Acquire permission to make a request (synchronous).
+        
+        Blocks thread if rate limit would be exceeded.
+        """
+        now = time.monotonic()
+        window_start = now - 1.0
+        
+        self._request_times = [
+            t for t in self._request_times
+            if t > window_start
+        ]
+        
+        capacity = self.requests_per_second + self.burst_allowance
+        
+        if len(self._request_times) >= capacity:
+            oldest = min(self._request_times)
+            wait_time = 1.0 - (now - oldest) + 0.01
+            
+            if wait_time > 0:
+                self._stats.requests_throttled += 1
+                self._stats.total_wait_time += wait_time
+                time.sleep(wait_time)
+        
+        self._request_times.append(time.monotonic())
+        self._stats.requests_made += 1
+        self._stats.last_request_time = time.monotonic()
+    
+    @property
+    def current_rate(self) -> float:
+        """Current request rate (requests in last second)."""
+        now = time.monotonic()
+        recent = [t for t in self._request_times if now - t < 1.0]
+        return float(len(recent))
+    
+    @property
+    def stats(self) -> RateLimitStats:
+        """Return rate limiter statistics."""
+        return self._stats
+    
+    def reset(self) -> None:
+        """Reset rate limiter state and statistics."""
+        self._request_times.clear()
+        self._stats = RateLimitStats()

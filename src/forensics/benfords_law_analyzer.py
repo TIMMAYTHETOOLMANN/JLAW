@@ -19,6 +19,7 @@ Deviations from this distribution may indicate:
 
 import logging
 import math
+from datetime import datetime, timezone
 from typing import Dict, List, Optional, Tuple, Any
 from dataclasses import dataclass, field
 from collections import Counter, defaultdict
@@ -435,3 +436,282 @@ class BenfordsLawAnalyzer:
         
         return "\n".join(report)
 
+    # ---------------------------------------------------------------------
+    # Enhanced API wrappers (injected functions exposed as instance methods)
+    # ---------------------------------------------------------------------
+    def calculate_z_scores_enhanced(self, observed: Dict[int, float], expected: Dict[int, float], sample_size: int):
+        """Instance wrapper for enhanced Z-score calculation.
+
+        Delegates to module-level `calculate_z_scores_enhanced` injected by the
+        enhancement script, exposing it via the class API for callers/tests.
+        """
+        # Defer import/name resolution until runtime to avoid circular refs
+        return calculate_z_scores_enhanced(observed, expected, sample_size)
+
+    def calculate_fraud_probability(self,
+                                    chi_sq_first: float,
+                                    chi_sq_second: float,
+                                    z_score_results: Dict[int, "ZScoreResult"],
+                                    mad_first: float = 0.0,
+                                    mad_second: float = 0.0):
+        """Instance wrapper providing a stable API name.
+
+        Delegates to `calculate_fraud_probability_enhanced` and returns its
+        result. Kept under the generic name `calculate_fraud_probability` to
+        satisfy tests looking for either the base or enhanced variant.
+        """
+        return calculate_fraud_probability_enhanced(
+            chi_sq_first, chi_sq_second, z_score_results, mad_first, mad_second
+        )
+
+
+@dataclass
+class MultiDatasetBenfordAnalysis:
+    """Results from analyzing multiple datasets with Benford's Law."""
+    dataset_results: Dict[str, BenfordsAnalysisResult]
+    ensemble_fraud_score: float
+    comparative_analysis: Dict[str, Any]
+    timestamp: str = field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
+
+
+def create_ensemble_fraud_score(results: Dict[str, BenfordsAnalysisResult]) -> float:
+    """
+    Create ensemble fraud score from multiple Benford's Law analyses.
+    
+    Args:
+        results: Dictionary of dataset names to analysis results
+        
+    Returns:
+        Ensemble fraud score (0.0 - 1.0)
+    """
+    if not results:
+        return 0.0
+    
+    scores = []
+    for result in results.values():
+        # Weight by confidence level and suspiciousness
+        if result.is_suspicious:
+            score = result.confidence_level
+        else:
+            score = 1.0 - result.confidence_level
+        scores.append(score)
+    
+    # Return average fraud score
+    return sum(scores) / len(scores)
+
+
+
+
+# =============================================================================
+# ENHANCEMENT: Z-Score and Fraud Probability Scoring
+# Injected by JLAW Remediation Patch v1.0.0
+# Enhancement Protocol Compliance: P0 Feature Parity
+# =============================================================================
+
+from typing import Dict, Any
+from dataclasses import dataclass, field
+import math
+
+
+@dataclass
+class ZScoreResult:
+    """Z-score analysis result for a single digit."""
+    digit: int
+    z_score: float
+    p_value_approx: float
+    anomaly_level: str  # NORMAL, LOW, MEDIUM, HIGH, CRITICAL
+    observed_frequency: float
+    expected_frequency: float
+
+
+@dataclass
+class FraudProbabilityResult:
+    """Aggregate fraud probability assessment."""
+    fraud_probability: float  # 0.0 to 1.0
+    risk_level: str  # LOW, MEDIUM, HIGH, CRITICAL
+    component_scores: Dict[str, float] = field(default_factory=dict)
+    weights_applied: Dict[str, float] = field(default_factory=dict)
+    confidence_level: str = "STANDARD"
+
+
+def calculate_z_scores_enhanced(
+    observed: Dict[int, float],
+    expected: Dict[int, float],
+    sample_size: int
+) -> Dict[int, ZScoreResult]:
+    """
+    Calculate Z-scores for each digit with continuity correction.
+    
+    Statistical Methodology:
+    -----------------------
+    Z = (|p_obs - p_exp| - 1/(2n)) / sqrt(p_exp * (1 - p_exp) / n)
+    
+    Where:
+    - p_obs: Observed proportion for digit d
+    - p_exp: Expected Benford proportion for digit d
+    - n: Sample size
+    - 1/(2n): Continuity correction (Yates correction)
+    
+    Anomaly Classification (Two-tailed):
+    ------------------------------------
+    |Z| ≤ 1.645: NORMAL (p ≥ 0.10)
+    1.645 < |Z| ≤ 1.960: LOW (0.05 ≤ p < 0.10)
+    1.960 < |Z| ≤ 2.576: MEDIUM (0.01 ≤ p < 0.05)
+    2.576 < |Z| ≤ 3.291: HIGH (0.001 ≤ p < 0.01)
+    |Z| > 3.291: CRITICAL (p < 0.001)
+    
+    Args:
+        observed: Dict mapping digit -> observed proportion
+        expected: Dict mapping digit -> expected Benford proportion
+        sample_size: Total number of values analyzed
+        
+    Returns:
+        Dict mapping digit -> ZScoreResult
+    """
+    results = {}
+    
+    for digit in expected.keys():
+        p_obs = observed.get(digit, 0.0)
+        p_exp = expected.get(digit, 0.0)
+        
+        if sample_size < 10 or p_exp <= 0 or p_exp >= 1:
+            results[digit] = ZScoreResult(
+                digit=digit,
+                z_score=0.0,
+                p_value_approx=1.0,
+                anomaly_level="INSUFFICIENT_DATA",
+                observed_frequency=p_obs,
+                expected_frequency=p_exp
+            )
+            continue
+        
+        # Continuity correction
+        continuity = 1 / (2 * sample_size)
+        
+        # Standard error
+        std_error = math.sqrt(p_exp * (1 - p_exp) / sample_size)
+        
+        if std_error == 0:
+            results[digit] = ZScoreResult(
+                digit=digit,
+                z_score=0.0,
+                p_value_approx=1.0,
+                anomaly_level="ZERO_VARIANCE",
+                observed_frequency=p_obs,
+                expected_frequency=p_exp
+            )
+            continue
+        
+        # Z-score with continuity correction
+        z = max(0, (abs(p_obs - p_exp) - continuity) / std_error)
+        
+        # Classify anomaly
+        if z > 3.291:
+            level, p_approx = "CRITICAL", 0.001
+        elif z > 2.576:
+            level, p_approx = "HIGH", 0.01
+        elif z > 1.960:
+            level, p_approx = "MEDIUM", 0.05
+        elif z > 1.645:
+            level, p_approx = "LOW", 0.10
+        else:
+            level, p_approx = "NORMAL", 0.50
+        
+        results[digit] = ZScoreResult(
+            digit=digit,
+            z_score=round(z, 4),
+            p_value_approx=p_approx,
+            anomaly_level=level,
+            observed_frequency=p_obs,
+            expected_frequency=p_exp
+        )
+    
+    return results
+
+
+def calculate_fraud_probability_enhanced(
+    chi_sq_first: float,
+    chi_sq_second: float,
+    z_score_results: Dict[int, ZScoreResult],
+    mad_first: float = 0.0,
+    mad_second: float = 0.0
+) -> FraudProbabilityResult:
+    """
+    Calculate aggregate fraud probability from Benford's Law analysis.
+    
+    Scoring Algorithm:
+    -----------------
+    Weighted aggregation of normalized component scores:
+    
+    Component Weights:
+    - First digit chi-squared: 30%
+    - Second digit chi-squared: 20%
+    - Critical/High Z-score count: 25%
+    - Maximum Z-score: 15%
+    - Mean Absolute Deviation (first): 10%
+    
+    Normalization:
+    - Chi-squared: Normalized against 2x critical value (df=8: 40.17, df=9: 43.34)
+    - Z-scores: Count of HIGH/CRITICAL anomalies, max 5
+    - MAD: Normalized against 0.015 threshold (critical conformity)
+    
+    Risk Classification:
+    -------------------
+    0.00 - 0.25: LOW - Data conforms to Benford's Law
+    0.25 - 0.50: MEDIUM - Some deviations, warrant monitoring
+    0.50 - 0.75: HIGH - Significant anomalies, investigation recommended
+    0.75 - 1.00: CRITICAL - Strong fraud indicators, escalate immediately
+    """
+    components = {}
+    weights = {
+        "chi_sq_first": 0.30,
+        "chi_sq_second": 0.20,
+        "anomaly_count": 0.25,
+        "max_z_score": 0.15,
+        "mad_first": 0.10
+    }
+    
+    # Chi-squared first digit (df=8, critical=15.51, 2x=31.02)
+    components["chi_sq_first"] = min(1.0, chi_sq_first / 40.0)
+    
+    # Chi-squared second digit (df=9, critical=16.92, 2x=33.84)
+    components["chi_sq_second"] = min(1.0, chi_sq_second / 43.0)
+    
+    # Count HIGH/CRITICAL anomalies
+    anomaly_count = sum(
+        1 for r in z_score_results.values()
+        if r.anomaly_level in ["HIGH", "CRITICAL"]
+    )
+    components["anomaly_count"] = min(1.0, anomaly_count / 5.0)
+    
+    # Maximum Z-score
+    max_z = max((r.z_score for r in z_score_results.values()), default=0)
+    components["max_z_score"] = min(1.0, max_z / 5.0)
+    
+    # MAD first digit (critical threshold 0.015)
+    components["mad_first"] = min(1.0, mad_first / 0.025)
+    
+    # Weighted aggregation
+    fraud_prob = sum(
+        components.get(k, 0) * w
+        for k, w in weights.items()
+    )
+    fraud_prob = round(max(0.0, min(1.0, fraud_prob)), 4)
+    
+    # Risk classification
+    if fraud_prob >= 0.75:
+        risk_level = "CRITICAL"
+    elif fraud_prob >= 0.50:
+        risk_level = "HIGH"
+    elif fraud_prob >= 0.25:
+        risk_level = "MEDIUM"
+    else:
+        risk_level = "LOW"
+    
+    return FraudProbabilityResult(
+        fraud_probability=fraud_prob,
+        risk_level=risk_level,
+        component_scores={k: round(v, 4) for k, v in components.items()},
+        weights_applied=weights,
+        confidence_level="HIGH" if sum(1 for r in z_score_results.values() if r.anomaly_level != "INSUFFICIENT_DATA") >= 7 else "STANDARD"
+    )

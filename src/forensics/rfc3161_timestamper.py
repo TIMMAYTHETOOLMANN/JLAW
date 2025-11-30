@@ -15,6 +15,7 @@ Critical for:
 
 import hashlib
 import logging
+from enum import Enum
 from typing import Optional, Dict, Any, List
 from dataclasses import dataclass, field
 from datetime import datetime
@@ -54,6 +55,23 @@ class TimestampVerification:
     signature_valid: bool
     issues: List[str] = field(default_factory=list)
     metadata: Dict[str, Any] = field(default_factory=dict)
+
+
+class TSAProvider(Enum):
+    """Time Stamp Authority providers."""
+    FREETSA = "freetsa"
+    DIGICERT = "digicert"
+    SECTIGO = "sectigo"
+    DEFAULT = "freetsa"
+
+
+@dataclass
+class ForensicTimestamp:
+    """Forensic timestamp with full audit trail."""
+    timestamp_token: TimestampToken
+    verification: TimestampVerification
+    provider: TSAProvider
+    audit_trail: List[str] = field(default_factory=list)
 
 
 class RFC3161Timestamper:

@@ -67,6 +67,10 @@ class BurdenAnalysis:
     recommendations: List[str] = field(default_factory=list)
 
 
+# Alias for compatibility
+ProofBurden = BurdenAnalysis
+
+
 class BurdenCalculator:
     """
     Burden of Proof Calculator
@@ -156,7 +160,7 @@ class BurdenCalculator:
             if element_id in self._elements:
                 self._elements[element_id].evidence_items.append(evidence.evidence_id)
     
-    def calculate_burden(
+    def calculate_burden_analysis(
         self,
         case_id: str,
         standard: BurdenStandard
@@ -309,3 +313,49 @@ class BurdenCalculator:
             }
             for element_id, element in self._elements.items()
         }
+    
+    async def calculate_burden(
+        self,
+        violations: List[Any],
+        evidence_catalog: List[Any]
+    ) -> ProofBurden:
+        """
+        Calculate burden of proof from violations and evidence.
+        
+        Args:
+            violations: List of violations detected
+            evidence_catalog: List of evidence items
+            
+        Returns:
+            ProofBurden analysis
+        """
+        # Reset state
+        self.reset()
+        
+        # Define criminal elements for securities fraud
+        self.add_element("materiality", "Material misstatement or omission", required=True)
+        self.add_element("scienter", "Intent to deceive or knowledge of falsity", required=True)
+        self.add_element("reliance", "Investor reliance on misstatements", required=True)
+        self.add_element("damages", "Quantifiable investor damages", required=True)
+        
+        # Add evidence from catalog
+        for i, evidence_item in enumerate(evidence_catalog):
+            evidence = EvidenceItem(
+                evidence_id=f"EV-{i:03d}",
+                category=EvidenceCategory.DOCUMENTARY,
+                description=str(evidence_item),
+                strength=0.8,
+                reliability=0.85,
+                relevance=0.9
+            )
+            
+            # Link to elements
+            self.add_evidence(evidence, ["materiality", "damages"])
+        
+        # Calculate burden analysis (call synchronous method)
+        analysis = self.calculate_burden_analysis(
+            case_id="DOJ-CASE",
+            standard=BurdenStandard.BEYOND_REASONABLE_DOUBT
+        )
+        
+        return analysis

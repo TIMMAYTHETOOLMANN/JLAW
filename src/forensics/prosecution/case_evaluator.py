@@ -14,6 +14,15 @@ from enum import Enum
 logger = logging.getLogger(__name__)
 
 
+class ProsecutionDecision(Enum):
+    """Prosecution decision types."""
+    PROSECUTE = "prosecute"
+    DECLINE = "decline"
+    DEFER = "defer"
+    REFER = "refer"
+    SETTLEMENT = "settlement"
+
+
 class CaseStrength(Enum):
     """Case strength classifications."""
     VERY_STRONG = "very_strong"
@@ -96,6 +105,16 @@ class CaseEvaluation:
     # Recommendations
     proceed_recommendation: bool = True
     recommendations: List[str] = field(default_factory=list)
+
+
+@dataclass
+class ProsecutionRecommendation:
+    """Prosecution recommendation with supporting analysis."""
+    recommendation: ProsecutionDecision
+    confidence_score: float  # 0.0 - 1.0
+    reasoning: str
+    case_evaluation: Optional[CaseEvaluation] = None
+    alternative_strategies: List[str] = field(default_factory=list)
 
 
 class CaseEvaluator:
@@ -403,3 +422,57 @@ class CaseEvaluator:
     def get_factor_summary(self) -> Dict[str, float]:
         """Get summary of factor scores."""
         return {f.factor_id: f.score for f in self._factors.values()}
+    
+    async def evaluate_prosecution_viability(self, forensic_case: Any) -> ProsecutionRecommendation:
+        """
+        Evaluate prosecution viability from forensic case.
+        
+        Args:
+            forensic_case: ForensicCase object with investigation results
+            
+        Returns:
+            ProsecutionRecommendation with decision and analysis
+        """
+        # Reset state
+        self.reset()
+        
+        # Analyze evidence strength
+        violations_count = len(forensic_case.violations_detected) if hasattr(forensic_case, 'violations_detected') else 0
+        evidence_score = min(1.0, violations_count / 20.0)  # Scale to 0-1
+        
+        self.add_factor("evidence_quality", evidence_score, f"{violations_count} violations documented")
+        
+        # Analyze risk score
+        risk_factor = forensic_case.risk_score if hasattr(forensic_case, 'risk_score') else 0.5
+        self.add_factor("defendant_culpability", risk_factor, f"Risk score: {risk_factor}")
+        
+        # Legal theory strength
+        self.add_factor("legal_theory", 0.8, "Securities fraud theory well-established")
+        
+        # Evaluate
+        evaluation = self.evaluate(
+            case_id=forensic_case.case_id if hasattr(forensic_case, 'case_id') else "UNKNOWN",
+            target=forensic_case.target_company if hasattr(forensic_case, 'target_company') else "Unknown",
+            category=CaseCategory.SECURITIES_FRAUD
+        )
+        
+        # Generate recommendation
+        if evaluation.overall_strength in [CaseStrength.VERY_STRONG, CaseStrength.STRONG]:
+            decision = ProsecutionDecision.PROSECUTE
+            confidence = 0.85
+            reasoning = "Strong evidence of securities violations warrants prosecution"
+        elif evaluation.overall_strength == CaseStrength.MODERATE:
+            decision = ProsecutionDecision.SETTLEMENT
+            confidence = 0.65
+            reasoning = "Moderate case strength suggests settlement negotiations"
+        else:
+            decision = ProsecutionDecision.DEFER
+            confidence = 0.40
+            reasoning = "Insufficient evidence strength for immediate prosecution"
+        
+        return ProsecutionRecommendation(
+            recommendation=decision,
+            confidence_score=confidence,
+            reasoning=reasoning,
+            case_evaluation=evaluation
+        )

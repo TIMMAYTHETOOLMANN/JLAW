@@ -619,3 +619,44 @@ class EntityResolver:
     ) -> List[EntityCluster]:
         """Get only clusters with entities from multiple sources."""
         return [c for c in clusters if len(c.sources) > 1]
+
+
+# =============================================================================
+# SECURITY ENHANCEMENT: SHA-256 Entity ID Generation
+# Injected by JLAW Remediation Patch v1.0.0
+# =============================================================================
+
+def generate_entity_id_sha256(entity_name: str, source: str, attributes: dict = None) -> str:
+    """
+    Generate cryptographically secure entity ID using SHA-256.
+    
+    Security Properties:
+    -------------------
+    - 256-bit hash truncated to 64-bit (16 hex chars) for practical use
+    - Collision probability: ~1 in 2^64 (18 quintillion)
+    - Pre-image resistance: Computationally infeasible to reverse
+    - Forensic integrity: Suitable for evidence chain verification
+    
+    Args:
+        entity_name: Canonical entity name
+        source: Data source identifier
+        attributes: Optional additional attributes for uniqueness
+        
+    Returns:
+        16-character hexadecimal entity ID
+    """
+    import hashlib
+    import json
+    
+    # Normalize inputs
+    normalized_name = entity_name.strip().upper()
+    normalized_source = source.strip().lower()
+    
+    # Build hash input
+    hash_input = f"{normalized_name}|{normalized_source}"
+    if attributes:
+        hash_input += f"|{json.dumps(attributes, sort_keys=True)}"
+    
+    # Generate SHA-256 hash, truncate to 16 chars
+    hash_obj = hashlib.sha256(hash_input.encode('utf-8'))
+    return hash_obj.hexdigest()[:16]

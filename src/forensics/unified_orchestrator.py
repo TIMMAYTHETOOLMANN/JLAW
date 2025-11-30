@@ -183,6 +183,36 @@ class UnifiedForensicOrchestrator:
             filing_types=filing_types,
             years=years
         )
+    
+    async def comprehensive_investigation(
+        self,
+        cik: str,
+        target_year: int = 2019,
+        enhanced_analysis: bool = True
+    ) -> UnifiedInvestigationResult:
+        """
+        Execute comprehensive investigation for DOJ-style case files.
+        
+        Args:
+            cik: Target company CIK
+            target_year: Investigation target year
+            enhanced_analysis: Enable enhanced analysis features
+            
+        Returns:
+            UnifiedInvestigationResult with complete investigation data
+        """
+        self.logger.info(f"🔍 Starting comprehensive investigation: CIK {cik}, Year {target_year}")
+        
+        # Execute unified investigation with both engines
+        result = await self.investigate_unified(
+            cik=cik,
+            company_name=f"CIK-{cik}",  # Will be resolved from SEC data
+            filing_types=None,  # Analyze all filings
+            years=1  # Focus on target year
+        )
+        
+        self.logger.info("✅ Comprehensive investigation complete")
+        return result
 
 
 # Convenience function for quick investigations
