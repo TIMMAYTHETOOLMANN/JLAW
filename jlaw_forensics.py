@@ -40,6 +40,10 @@ from src.forensics.reporting.evidence_extractors import (
     LegacyViolationAdapter
 )
 
+# Import core validation and locking modules
+from src.forensics.core.input_validator import InputValidator, ValidationResult
+from src.forensics.core.system_lock import SystemLock, SystemState, SystemConfiguration
+
 # Setup logging
 logging.basicConfig(
     level=logging.INFO,
@@ -50,6 +54,38 @@ logging.basicConfig(
     ]
 )
 logger = logging.getLogger(__name__)
+
+# System lock instance (verifies on startup)
+_system_lock = SystemLock()
+
+
+def verify_system_lock(require_locked: bool = False) -> bool:
+    """
+    Verify system lock status on startup.
+    
+    Args:
+        require_locked: If True, fail if system is not locked
+        
+    Returns:
+        True if verification passed
+    """
+    state = _system_lock.verify()
+    
+    if state == SystemState.LOCKED:
+        logger.info("✅ System lock verified - running in production-locked mode")
+        return True
+    elif state == SystemState.VERIFICATION_FAILED:
+        logger.warning("⚠️ System lock verification failed - configuration may have drifted")
+        if require_locked:
+            logger.error("❌ System must be locked to run. Use --lock-system first.")
+            return False
+        return True
+    else:  # UNLOCKED
+        logger.info("ℹ️ System unlocked - first run or development mode")
+        if require_locked:
+            logger.error("❌ System must be locked to run. Use --lock-system first.")
+            return False
+        return True
 
 
 class ForensicAnalysisConfig:
@@ -638,34 +674,99 @@ Examples:
   python jlaw_forensics.py --company "Nike Inc." --cik 0000320187 --year 2019
   
   # Run with configuration file
-  python jlaw_forensics.py --config my_analysis.yaml
+  python jlaw_forensics.py --config config/nike_2019.yaml
   
   # Interactive mode
   python jlaw_forensics.py --interactive
   
   # Create sample configuration
   python jlaw_forensics.py --create-sample-config
+
+System Lock Commands:
+  # Lock system configuration (production hardening)
+  python jlaw_forensics.py --lock-system
+  
+  # Check system status
+  python jlaw_forensics.py --status
+  
+  # Unlock system (development mode)
+  python jlaw_forensics.py --unlock-system
         """
     )
     
+    # Standard analysis arguments
     parser.add_argument('--company', help='Company name')
     parser.add_argument('--cik', help='CIK number')
     parser.add_argument('--ticker', help='Stock ticker symbol')
     parser.add_argument('--year', type=int, help='Fiscal year to analyze')
     parser.add_argument('--start-date', help='Start date (YYYY-MM-DD)')
     parser.add_argument('--end-date', help='End date (YYYY-MM-DD)')
+    parser.add_argument('--filing-types', help='Comma-separated list of filing types (e.g., "10-K,10-Q,8-K,4")')
     parser.add_argument('--config', help='Path to configuration file (YAML or JSON)')
     parser.add_argument('--interactive', '-i', action='store_true', help='Interactive configuration mode')
     parser.add_argument('--create-sample-config', action='store_true', help='Create sample configuration files')
     parser.add_argument('--output-format', choices=['doj_level', 'json', 'all'], default='doj_level', help='Output format')
     parser.add_argument('--output-dir', default='forensic_reports', help='Output directory')
     
+    # System lock arguments
+    parser.add_argument('--lock-system', action='store_true', help='Lock system configuration for production')
+    parser.add_argument('--unlock-system', action='store_true', help='Unlock system for development')
+    parser.add_argument('--status', action='store_true', help='Show system status')
+    parser.add_argument('--require-lock', action='store_true', help='Require system to be locked before running')
+    parser.add_argument('--validate-only', action='store_true', help='Only validate inputs, do not run analysis')
+    
     args = parser.parse_args()
     
-    # Handle special commands
+    # Handle system lock commands
+    if args.lock_system:
+        logger.info("Locking system configuration...")
+        if _system_lock.lock():
+            logger.info("✅ System locked successfully")
+            status = _system_lock.get_status_report()
+            print(f"\nSystem Status: {status['state']}")
+            print(f"Signature: {status['signature'][:16]}...")
+            print(f"Lock file: {status['lock_file']}")
+        else:
+            logger.error("❌ Failed to lock system")
+            sys.exit(1)
+        return
+    
+    if args.unlock_system:
+        logger.info("Unlocking system...")
+        if _system_lock.unlock():
+            logger.info("✅ System unlocked")
+        else:
+            logger.error("❌ Failed to unlock system")
+            sys.exit(1)
+        return
+    
+    if args.status:
+        status = _system_lock.get_status_report()
+        print("\n" + "="*80)
+        print("JLAW FORENSICS SYSTEM STATUS")
+        print("="*80)
+        print(f"State: {status['state'].upper()}")
+        print(f"Lock File: {status['lock_file']}")
+        print(f"Lock File Exists: {status['lock_file_exists']}")
+        if status.get('signature'):
+            print(f"Signature: {status['signature'][:32]}...")
+        if status.get('config'):
+            print("\nLocked Configuration:")
+            for key, value in status['config'].items():
+                print(f"  {key}: {value}")
+        print("="*80)
+        return
+    
     if args.create_sample_config:
         create_sample_config()
         return
+    
+    # Verify system lock if required
+    if args.require_lock:
+        if not verify_system_lock(require_locked=True):
+            sys.exit(1)
+    else:
+        verify_system_lock(require_locked=False)
     
     # Load or create configuration
     if args.config:
@@ -702,10 +803,53 @@ Examples:
         if args.end_date:
             config.end_date = args.end_date
         
+        if args.filing_types:
+            config.filing_types = [ft.strip() for ft in args.filing_types.split(',')]
+        
         if args.output_format:
             config.output_format = args.output_format
         if args.output_dir:
             config.output_directory = args.output_dir
+    
+    # Validate inputs
+    logger.info("Validating analysis inputs...")
+    is_valid, errors, warnings, normalized = InputValidator.validate_analysis_config(
+        company_name=config.company_name,
+        cik=config.cik,
+        start_date=config.start_date,
+        end_date=config.end_date,
+        filing_types=config.filing_types
+    )
+    
+    # Report warnings
+    for warning in warnings:
+        logger.warning(f"⚠️ {warning}")
+    
+    # Report errors and exit if invalid
+    if not is_valid:
+        for error in errors:
+            logger.error(f"❌ {error}")
+        logger.error("Input validation failed. Please fix the errors above.")
+        sys.exit(1)
+    
+    # Apply normalized values
+    if normalized.get('cik'):
+        config.cik = normalized['cik']
+    if normalized.get('company_name'):
+        config.company_name = normalized['company_name']
+    if normalized.get('filing_types'):
+        config.filing_types = normalized['filing_types']
+    
+    logger.info("✅ Input validation passed")
+    
+    # Validate-only mode
+    if args.validate_only:
+        print("\n✅ Configuration validated successfully:")
+        print(f"  Company: {config.company_name}")
+        print(f"  CIK: {config.cik}")
+        print(f"  Period: {config.start_date} to {config.end_date}")
+        print(f"  Filing Types: {', '.join(config.filing_types)}")
+        return
     
     # Execute analysis
     logger.info("Starting forensic analysis...")
@@ -717,6 +861,8 @@ Examples:
     print("ANALYSIS COMPLETE")
     print("="*80)
     print(f"Company: {config.company_name}")
+    print(f"CIK: {config.cik}")
+    print(f"Period: {config.start_date} to {config.end_date}")
     print(f"Filings Analyzed: {results['filings_analyzed']}")
     print(f"Total Violations: {results['violations']['total']}")
     print(f"Total Damages: ${results['total_damages']:,.2f}")
