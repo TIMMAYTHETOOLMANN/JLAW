@@ -1,0 +1,167 @@
+{
+  "case_id": "CASE-51A2C17A",
+  "target": "Test Corporation",
+  "status": "in_progress",
+  "summary": {
+    "overall": {
+      "phases_completed": 7,
+      "phases_failed": 0,
+      "total_duration_seconds": 0.0,
+      "case_strength": "strong",
+      "conviction_probability": 0.72
+    },
+    "phases": {
+      "phase_1_document_parsing": {
+        "status": "completed",
+        "duration_seconds": 1.1e-05,
+        "results": {
+          "documents_processed": 2,
+          "entities_extracted": 20,
+          "tables_extracted": 4,
+          "processing_time_ms": 200
+        }
+      },
+      "phase_2_intelligence_gathering": {
+        "status": "completed",
+        "duration_seconds": 6e-06,
+        "results": {
+          "sec_filings_retrieved": 5,
+          "news_articles_collected": 20,
+          "social_media_posts_analyzed": 100,
+          "financial_data_points": 500
+        }
+      },
+      "phase_3_legal_correlation": {
+        "status": "completed",
+        "duration_seconds": 5e-06,
+        "results": {
+          "statutes_analyzed": 15,
+          "potential_violations": 3,
+          "usc_citations": [
+            "15 USC 78j",
+            "18 USC 1348"
+          ],
+          "cfr_citations": [
+            "17 CFR 240.10b-5"
+          ]
+        }
+      },
+      "phase_4_temporal_analysis": {
+        "status": "completed",
+        "duration_seconds": 3e-06,
+        "results": {
+          "events_extracted": 50,
+          "timeline_entries": 45,
+          "temporal_contradictions": 2,
+          "causal_chains_identified": 3
+        }
+      },
+      "phase_5_prosecution_path": {
+        "status": "completed",
+        "duration_seconds": 4e-06,
+        "results": {
+          "prosecution_paths_generated": 3,
+          "recommended_path": "DOJ Criminal Referral",
+          "success_probability": 0.72,
+          "estimated_timeline_months": 18
+        }
+      },
+      "phase_6_contradiction_detection": {
+        "status": "completed",
+        "duration_seconds": 3e-06,
+        "results": {
+          "statements_analyzed": 200,
+          "contradictions_detected": 5,
+          "high_severity_contradictions": 2,
+          "contradiction_networks": 1
+        }
+      },
+      "phase_7_reporting": {
+        "status": "completed",
+        "duration_seconds": 4e-06,
+        "results": {
+          "reports_generated": 3,
+          "report_types": [
+            "pdf",
+            "html",
+            "json"
+          ],
+          "visualizations_created": 5
+        }
+      }
+    }
+  },
+  "phases": {
+    "phase_1_document_parsing": {
+      "status": "completed",
+      "results": {
+        "documents_processed": 2,
+        "entities_extracted": 20,
+        "tables_extracted": 4,
+        "processing_time_ms": 200
+      }
+    },
+    "phase_2_intelligence_gathering": {
+      "status": "completed",
+      "results": {
+        "sec_filings_retrieved": 5,
+        "news_articles_collected": 20,
+        "social_media_posts_analyzed": 100,
+        "financial_data_points": 500
+      }
+    },
+    "phase_3_legal_correlation": {
+      "status": "completed",
+      "results": {
+        "statutes_analyzed": 15,
+        "potential_violations": 3,
+        "usc_citations": [
+          "15 USC 78j",
+          "18 USC 1348"
+        ],
+        "cfr_citations": [
+          "17 CFR 240.10b-5"
+        ]
+      }
+    },
+    "phase_4_temporal_analysis": {
+      "status": "completed",
+      "results": {
+        "events_extracted": 50,
+        "timeline_entries": 45,
+        "temporal_contradictions": 2,
+        "causal_chains_identified": 3
+      }
+    },
+    "phase_5_prosecution_path": {
+      "status": "completed",
+      "results": {
+        "prosecution_paths_generated": 3,
+        "recommended_path": "DOJ Criminal Referral",
+        "success_probability": 0.72,
+        "estimated_timeline_months": 18
+      }
+    },
+    "phase_6_contradiction_detection": {
+      "status": "completed",
+      "results": {
+        "statements_analyzed": 200,
+        "contradictions_detected": 5,
+        "high_severity_contradictions": 2,
+        "contradiction_networks": 1
+      }
+    },
+    "phase_7_reporting": {
+      "status": "completed",
+      "results": {
+        "reports_generated": 3,
+        "report_types": [
+          "pdf",
+          "html",
+          "json"
+        ],
+        "visualizations_created": 5
+      }
+    }
+  }
+}
