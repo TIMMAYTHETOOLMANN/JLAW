@@ -1,21 +1,5 @@
 """
 JLAW Analysis Module
-====================
-
-Advanced forensic analysis components for narrative and text analysis.
-
-Components:
-- NarrativeAnalyzer: Management communication shift detection
-"""
-
-from .narrative_analyzer import (
-    LinguisticMetrics,
-    NarrativeAnalysisResult,
-    NarrativeAnalyzer,
-    NarrativeCategory,
-    NarrativeSegment,
-    NarrativeShift,
-    ShiftSeverity,
 )
 
 __all__ = [

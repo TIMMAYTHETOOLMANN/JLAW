@@ -1,19 +1,5 @@
 """
 Narrative Analyzer Module - Management Communication Shift Detection
-====================================================================
-
-LLM-ready management narrative shift detection for forensic analysis.
-Analyzes temporal changes in management communications to detect:
-- Tone shifts in earnings calls
-- Linguistic pattern changes
-- Hedging language increases
-- Forward-looking statement modifications
-
-Features:
-- Temporal tone analysis
-- Linguistic pattern detection
-- Severity classification
-- Earnings call integration
 """
 
 import logging

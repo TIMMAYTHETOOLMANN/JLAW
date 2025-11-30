@@ -1,22 +1,5 @@
 """
 Entity Resolution Module for Cross-Source Triangulation
-========================================================
-
-Advanced entity resolution for cross-source identity triangulation.
-Enables matching entities across SEC filings, news sources, social media,
-and corporate registries.
-
-Features:
-- Jaro-Winkler string similarity
-- Soundex phonetic matching
-- Transitive clustering
-- Confidence scoring
-"""
-
-import hashlib
-import logging
-import re
-from collections import defaultdict
 from dataclasses import dataclass, field
 from enum import Enum
 from typing import Any, Dict, List, Optional, Set, Tuple
