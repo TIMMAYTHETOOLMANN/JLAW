@@ -24,7 +24,7 @@ class TestBenfordAnalysis:
         result = analyzer.analyze(natural_data)
         
         assert result is not None
-        assert result.sample_size == len(natural_data)
+        assert result.total_numbers == len(natural_data)
     
     def test_z_score_calculation(self):
         from src.forensics.benfords_law_analyzer import BenfordsLawAnalyzer

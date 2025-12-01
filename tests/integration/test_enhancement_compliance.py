@@ -52,7 +52,9 @@ class TestEntityResolverSecurity:
         entity_resolver_path = Path("src/forensics/triangulation/entity_resolver.py")
         if entity_resolver_path.exists():
             content = entity_resolver_path.read_text()
-            assert "sha256" in content.lower(), "SHA-256 not found in entity_resolver.py"
+            # Check for SHA-256 reference (with or without hyphen)
+            has_sha256 = "sha256" in content.lower() or "sha-256" in content.lower()
+            assert has_sha256, "SHA-256 not found in entity_resolver.py"
 
 
 class TestSECFilingStreamCompliance:

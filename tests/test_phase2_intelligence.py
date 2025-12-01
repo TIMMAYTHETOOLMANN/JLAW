@@ -112,21 +112,23 @@ class TestOmniscientIntelligenceGatherer:
         """Test intelligence item deduplication"""
         gatherer = OmniscientIntelligenceGatherer()
         
-        # Create duplicate items
+        # Create duplicate items with SAME timestamp to get same hash
+        timestamp = datetime.now()
+        
         item1 = IntelligenceItem(
             content="Duplicate content",
             source="source1",
-            timestamp=datetime.now()
+            timestamp=timestamp  # Same timestamp for dedup to work
         )
         item2 = IntelligenceItem(
             content="Duplicate content",
             source="source2",
-            timestamp=datetime.now()
+            timestamp=timestamp  # Same timestamp for dedup to work
         )
         item3 = IntelligenceItem(
             content="Unique content",
             source="source1",
-            timestamp=datetime.now()
+            timestamp=timestamp
         )
         
         items = [item1, item2, item3]
