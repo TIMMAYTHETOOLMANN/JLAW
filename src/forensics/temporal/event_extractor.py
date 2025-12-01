@@ -1,30 +1,23 @@
-"""Event Extractor - Temporal Event Detection"""
+"""
+Event Extractor - Legacy Stub (DEPRECATED)
+==========================================
 
-import re
-from typing import List, Dict, Any
-from datetime import datetime
+⚠️ This is a legacy stub file maintained for backward compatibility.
+   The actual implementation is in src.forensics.temporal_analysis.temporal_parser
 
+For new code, import from:
+    from src.forensics.temporal_analysis import TemporalParser
+"""
 
-class EventExtractor:
-    """Extracts temporal events from text"""
-    
-    def extract_events(self, text: str) -> List[Dict[str, Any]]:
-        """Extract events with temporal markers"""
-        events = []
-        
-        # Extract dates and associated text
-        date_pattern = r'(Q[1-4]\s+\d{4}|\d{4}|(?:January|February|March|April|May|June|July|August|September|October|November|December)\s+\d{1,2},?\s+\d{4})'
-        
-        for match in re.finditer(date_pattern, text, re.IGNORECASE):
-            context_start = max(0, match.start() - 100)
-            context_end = min(len(text), match.end() + 100)
-            context = text[context_start:context_end]
-            
-            events.append({
-                'date': match.group(0),
-                'context': context,
-                'position': match.start()
-            })
-        
-        return events
+# Forward to actual implementation
+from ..temporal_analysis.temporal_parser import (
+    TemporalParser,
+    TemporalExtractor,
+    DateExtractionResult
+)
+
+# Legacy alias
+EventExtractor = TemporalParser
+
+__all__ = ['EventExtractor', 'TemporalParser', 'TemporalExtractor', 'DateExtractionResult']
 

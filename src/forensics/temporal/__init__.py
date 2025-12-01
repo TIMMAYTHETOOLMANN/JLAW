@@ -1,37 +1,54 @@
 """
-JLAW Phase 4: Temporal Analysis and Timeline Reconstruction
-===========================================================
+JLAW Phase 4: Temporal Analysis and Timeline Reconstruction (Legacy Stub)
+=========================================================================
 
-Advanced temporal intelligence for forensic investigations.
+⚠️ DEPRECATION NOTICE: This module is a legacy stub.
+   All implementations have been moved to src.forensics.temporal_analysis
+   This module forwards imports to the new location for backward compatibility.
 
-Components:
-- ForensicTimelineReconstructor: Multi-document event ordering and correlation
-- TemporalEventExtractor: Date/time extraction from unstructured text
-- TemporalContradictionDetector: Cross-document timeline validation
-- EventCorrelator: Cross-timeline entity correlation
-- CausalChainIdentifier: DAG-based causal inference
-- TemporalAnomalyDetector: Gap/clustering/pattern detection
+For new code, import directly from:
+    from src.forensics.temporal_analysis import (
+        ForensicTimelineReconstructor,
+        TemporalParser,
+        EventCorrelator,
+        AnomalyDetector
+    )
 """
 
+# Forward all imports to temporal_analysis for backward compatibility
 try:
-    from .timeline_reconstructor import TimelineReconstructor
-    from .event_extractor import EventExtractor
+    from ..temporal_analysis import (
+        ForensicTimelineReconstructor,
+        TemporalParser,
+        EventCorrelator,
+        AnomalyDetector as TemporalAnomalyDetector,
+        TemporalEvent,
+        ForensicTimeline,
+        TemporalContradiction,
+    )
     
-    # Aliases for backward compatibility
-    ForensicTimelineReconstructor = TimelineReconstructor
-    TemporalEventExtractor = EventExtractor
-    TemporalContradictionDetector = None
+    # Legacy aliases
+    TimelineReconstructor = ForensicTimelineReconstructor
+    TemporalEventExtractor = TemporalParser
+    EventExtractor = TemporalParser
+    TemporalContradictionDetector = TemporalContradiction  # This is a dataclass
+    
+except ImportError as e:
+    import warnings
+    warnings.warn(f"Failed to import from temporal_analysis: {e}", ImportWarning)
+    ForensicTimelineReconstructor = None
+    TimelineReconstructor = None
+    TemporalParser = None
     EventCorrelator = None
     TemporalAnomalyDetector = None
-except ImportError:
-    TimelineReconstructor = None
-    ForensicTimelineReconstructor = None
 
 __all__ = [
-    'TimelineReconstructor',
     'ForensicTimelineReconstructor',
-    'EventExtractor',
+    'TimelineReconstructor',
+    'TemporalParser',
     'TemporalEventExtractor',
+    'EventExtractor',
+    'TemporalContradiction',
     'TemporalContradictionDetector',
     'EventCorrelator',
     'TemporalAnomalyDetector',

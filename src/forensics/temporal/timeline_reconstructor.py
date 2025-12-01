@@ -1,20 +1,44 @@
-"""Timeline Reconstructor - Temporal Event Ordering"""
+"""
+Timeline Reconstructor - Legacy Stub (DEPRECATED)
+=================================================
 
-from typing import List, Dict, Any
-from datetime import datetime
+⚠️ This is a legacy stub file maintained for backward compatibility.
+   The actual implementation (791 lines) is in src.forensics.temporal_analysis.timeline_reconstructor
 
+For new code, import from:
+    from src.forensics.temporal_analysis import ForensicTimelineReconstructor
+"""
 
-class TimelineReconstructor:
-    """Reconstructs timelines from events"""
-    
-    def reconstruct(self, events: List[Dict[str, Any]]) -> Dict[str, Any]:
-        """Reconstruct timeline from events"""
-        sorted_events = sorted(events, key=lambda e: e.get('timestamp', datetime.min))
-        
-        return {
-            'events': sorted_events,
-            'start_date': sorted_events[0]['timestamp'] if sorted_events else None,
-            'end_date': sorted_events[-1]['timestamp'] if sorted_events else None,
-            'event_count': len(sorted_events)
-        }
+# Forward to actual implementation
+from ..temporal_analysis.timeline_reconstructor import (
+    ForensicTimelineReconstructor,
+    TemporalEvent,
+    ForensicTimeline,
+    TemporalContradiction,
+    TemporalAnomaly,
+    NarrativeSequence,
+    CriticalPeriod,
+    EventType,
+    ContradictionType,
+    SeverityLevel,
+    TimelineResolution
+)
+
+# Legacy alias
+TimelineReconstructor = ForensicTimelineReconstructor
+
+__all__ = [
+    'ForensicTimelineReconstructor',
+    'TimelineReconstructor',
+    'TemporalEvent',
+    'ForensicTimeline',
+    'TemporalContradiction',
+    'TemporalAnomaly',
+    'NarrativeSequence',
+    'CriticalPeriod',
+    'EventType',
+    'ContradictionType',
+    'SeverityLevel',
+    'TimelineResolution'
+]
 
