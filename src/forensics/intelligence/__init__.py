@@ -22,6 +22,9 @@ from .financial_collector import FinancialDataCollector
 from .earnings_analyzer import EarningsCallAnalyzer
 from .proxy_manager import ProxyRotationManager
 
+# Aliases for blueprint compatibility
+SocialIntelligence = SocialMediaIntelligence
+
 # Optional - requires aiohttp
 try:
     from .sec_filing_stream import (
@@ -49,6 +52,7 @@ __all__ = [
     'OmniscientIntelligenceGatherer',
     'SECEdgarIntegrator',
     'SocialMediaIntelligence',
+    'SocialIntelligence',
     'FinancialDataCollector',
     'EarningsCallAnalyzer',
     'ProxyRotationManager',

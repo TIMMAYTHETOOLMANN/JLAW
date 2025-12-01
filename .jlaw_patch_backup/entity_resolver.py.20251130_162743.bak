@@ -27,15 +27,9 @@ Usage:
 
 import logging
 import re
-import hashlib
 from dataclasses import dataclass, field
 from enum import Enum
 from typing import Any, Dict, List, Optional, Set, Tuple
-
-# Security Note: Entity IDs use SHA-256 truncated to 16 characters
-# This provides 64 bits of entropy, sufficient for entity deduplication
-# while maintaining collision resistance for forensic evidence integrity.
-
 
 # Security Note: Entity IDs use SHA-256 truncated to 16 characters
 # This provides 64 bits of entropy, sufficient for entity deduplication

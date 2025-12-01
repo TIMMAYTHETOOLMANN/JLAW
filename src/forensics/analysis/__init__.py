@@ -1,6 +1,6 @@
 """
 JLAW Analysis Module
-)
+"""
 
 __all__ = [
     "NarrativeAnalyzer",

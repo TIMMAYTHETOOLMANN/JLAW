@@ -1,6 +1,6 @@
 """
 JLAW Triangulation Module
-)
+"""
 
 __all__ = [
     "EntityResolver",

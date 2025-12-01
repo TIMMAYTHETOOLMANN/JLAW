@@ -11,10 +11,16 @@ from .metadata_extractor import MetadataEnhancer
 from .ocr_cascade import OCRCascade
 from .universal_document_processor import UniversalDocumentProcessor, ProcessingResult
 
+# Aliases for blueprint compatibility
+DocumentProcessor = EnhancedDocumentProcessor
+FinancialParser = FinancialDataParser
+
 __all__ = [
     'EnhancedDocumentProcessor',
+    'DocumentProcessor',
     'ForensicTableExtractor',
     'FinancialDataParser',
+    'FinancialParser',
     'MetadataEnhancer',
     'OCRCascade',
     'UniversalDocumentProcessor',

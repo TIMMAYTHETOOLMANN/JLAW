@@ -34,6 +34,10 @@ from .cross_referencer import (
     ReferenceChain
 )
 
+# Aliases for blueprint compatibility
+SemanticAnalyzer = SemanticContradictionAnalyzer
+LogicalAnalyzer = LogicalContradictionAnalyzer
+
 __all__ = [
     'OmniscientContradictionDetector',
     'ContradictionReport',
@@ -45,9 +49,11 @@ __all__ = [
     'Claim',
     'SpecificContradiction',
     'SemanticContradictionAnalyzer',
+    'SemanticAnalyzer',
     'SemanticContradiction',
     'SimilarityScore',
     'LogicalContradictionAnalyzer',
+    'LogicalAnalyzer',
     'LogicalContradiction',
     'TemporalImpossibility',
     'MathematicalInconsistency',

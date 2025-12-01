@@ -37,6 +37,9 @@ from .anomaly_detector import (
     AnomalyType
 )
 
+# Aliases for blueprint compatibility
+AnomalyDetector = TemporalAnomalyDetector
+
 __all__ = [
     'ForensicTimelineReconstructor',
     'TemporalEvent',
@@ -56,6 +59,7 @@ __all__ = [
     'TemporalExtractor',
     'DateExtractionResult',
     'TemporalAnomalyDetector',
+    'AnomalyDetector',
     'GapAnomaly',
     'ClusterAnomaly',
     'PatternBreak',
