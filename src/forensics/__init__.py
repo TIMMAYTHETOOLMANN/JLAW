@@ -2,86 +2,86 @@
 
 __version__ = "1.0.0"
 
-from src.forensics.sec_edgar_analyzer import SECForensicAnalyzer, FilingAnalysis
-from src.forensics.statute_mapper import StatuteMapper, StatuteViolation, StatuteTitle
-from src.forensics.api_resilience import (
+from .sec_edgar_analyzer import SECForensicAnalyzer, FilingAnalysis
+from .statute_mapper import StatuteMapper, StatuteViolation, StatuteTitle
+from .api_resilience import (
     CircuitBreaker, CircuitBreakerConfig, CircuitState,
     ResilientAPIClient, RetryConfig, FailureType,
     ExponentialBackoff, QueueManager,
     CircuitBreakerOpenError, MaxRetriesExceededError
 )
-from src.forensics.immutable_storage import (
+from .immutable_storage import (
     ImmutableStorage, StorageConfig, AppendOnlyLog
 )
-from src.forensics.forensic_orchestrator import (
+from .forensic_orchestrator import (
     ForensicOrchestrator, ForensicCase, InvestigationStatus
 )
-from src.forensics.ml_fraud_detector import (
+from .ml_fraud_detector import (
     AdvancedFraudDetector, FraudPrediction,
     FinancialFeatureExtractor, TextFeatureExtractor, TemporalFeatureExtractor
 )
-from src.forensics.sec_forensic_extraction_system import (
+from .sec_forensic_extraction_system import (
     UniversalDocumentExtractor, ForensicSECDocumentAnalyzer,
     ExtractionResult, DocumentFormat,
     ForensicSECAnalyzer, EnhancedDocumentFormat,
     ComprehensiveExtractionResult, SECPatternMatch
 )
-from src.forensics.multi_pass_compliance_analyzer import (
+from .multi_pass_compliance_analyzer import (
     MultiPassComplianceAnalyzer, ComplianceViolation,
     ComplianceAnalysisResult, ComplianceSeverity, RiskLevel
 )
-from src.forensics.nist_integrated_compliance_analyzer import (
+from .nist_integrated_compliance_analyzer import (
     NISTIntegratedComplianceAnalyzer, XBRLParser, TransformerNLP,
     XGBoostAnomalyDetector, SECBulkDataFeed, CachedEDGARPipeline,
     IndustryPeerComparator, WhistleblowerEvidenceMatcher, ForensicAnalysisReport,
     XBRLFinancialData, PeerComparisonResult, WhistleblowerMatch,
     TemporalConsistencyResult
 )
-from src.forensics.forensic_statutory_mapper import (
+from .forensic_statutory_mapper import (
     ForensicStatutoryMapper, StatuteJurisdiction, ViolationSeverity,
     StatuteReference, ForensicIndicatorResult, StatuteViolationMatch,
     ComprehensiveStatutoryAnalysis
 )
-from src.forensics.linguistic_deception_analyzer import (
+from .linguistic_deception_analyzer import (
     LinguisticDeceptionAnalyzer, DeceptionType, LinguisticCategory,
     CognitiveComplexityMetrics, PsychologicalDistancingMetrics,
     TemporalIndicators, ObfuscationMetrics, EmotionalToneMetrics,
     NarrativeStructureMetrics, DeceptionAnalysisResult
 )
-from src.forensics.temporal_forensic_reconciliation import (
+from .temporal_forensic_reconciliation import (
     TemporalForensicReconciliation, ReconciliationSeverity, RestatementType,
     RatioAnomalyType, ReconciliationTest, RestatementEvent,
     RatioAnomaly, TemporalForensicAnalysis
 )
-from src.forensics.forensic_evidence_authenticator import (
+from .forensic_evidence_authenticator import (
     ForensicEvidenceAuthenticator, EvidenceType, AuthenticationMethod,
     HearsayException, ChainOfCustody, AuthenticationResult
 )
-from src.forensics.quantitative_forensic_analyzer import (
+from .quantitative_forensic_analyzer import (
     QuantitativeForensicAnalyzer, FraudClassification, FinancialHealthStatus,
     BenfordAnalysis, AltmanZScore, PiotroskiFScore, ComprehensiveForensicScore
 )
-from src.forensics.whistleblower_evidence_correlator import (
+from .whistleblower_evidence_correlator import (
     WhistleblowerEvidenceCorrelator, WhistleblowerProtection, ContradictionType,
     EvidenceStrength, WhistleblowerClaim, ContradictionMatch, CorrelationMatrix
 )
-from src.forensics.forensic_dossier_generator import (
+from .forensic_dossier_generator import (
     ForensicDossierGenerator, ForensicDossier, ExecutiveSummary,
     DetailedFindings, EvidentExhibits, LegalFramework,
     MaterialityLevel, ScienterStrength
 )
-from src.forensics.advanced_forensic_analytics import (
+from .advanced_forensic_analytics import (
     SemanticContradictionGraph, EnhancedFinancialForensics,
     AdvancedForensicAnalyzer, ContradictionDetection,
     BeneishMScore, AdvancedForensicResult
 )
-from src.forensics.config_manager import (
+from .config_manager import (
     ConfigurationManager, SECConfig, GovInfoConfig, SystemConfig,
     get_config, reload_config
 )
 
 # Phase 4: Temporal Analysis & Timeline Reconstruction
-from src.forensics.temporal_analysis import (
+from .temporal_analysis import (
     ForensicTimelineReconstructor, TemporalEvent, ForensicTimeline,
     TemporalContradiction, TemporalAnomaly, NarrativeSequence,
     EventCorrelator, EventCorrelation, CausalChain,
@@ -90,7 +90,7 @@ from src.forensics.temporal_analysis import (
 )
 
 # Phase 5: Decision Engine & Prosecution Path Builder
-from src.forensics.decision_engine import (
+from .decision_engine import (
     ProsecutionPathBuilder, ProsecutionPath, DecisionPath, ProsecutionStrategy,
     ForensicEvidenceEvaluator, EvaluatedEvidence, Admissibility, EvidenceStrength,
     DecisionTree, DecisionNode, DecisionBranch, PathScore,
@@ -98,14 +98,14 @@ from src.forensics.decision_engine import (
 )
 
 # Phase 6: Advanced Contradiction Detection
-from src.forensics.contradiction_detection import (
+from .contradiction_detection import (
     OmniscientContradictionDetector, ContradictionReport, Contradiction,
     ContradictionNetwork, ContradictionType, Severity
 )
 
 # Phase 7: Comprehensive Reporting & Visualization
 # NOTE: Reporting module being refactored - temporarily disabled
-# from src.forensics.reporting import (
+# from .reporting import (
 #     ProsecutionReportGenerator, ProsecutionPackage, ExecutiveSummary,
 #     VisualizationEngine, Visualizations,
 #     RegulatoryFormGenerator, SECFormTCR, DOJReferral,
@@ -114,14 +114,14 @@ from src.forensics.contradiction_detection import (
 
 # Phase 8: Master Forensic Controller & Integration
 # NOTE: Orchestrator module imports temporarily disabled
-# from src.forensics.orchestrator import (
+# from .orchestrator import (
 #     MasterForensicController, InvestigationConfig, InvestigationResult,
 #     SystemConfiguration, IntegrationTestSuite, SystemHealth
 # )
 
 # Phase 9: Deployment & Optimization
 # NOTE: Deployment module imports temporarily disabled
-# from src.forensics.deployment import (
+# from .deployment import (
 #     DeploymentManager, DeploymentConfig, DeploymentStatus,
 #     SystemHealthCheck, HealthStatus, ComponentHealth,
 #     SystemOptimizer, OptimizationProfile, PerformanceMetrics
@@ -129,24 +129,24 @@ from src.forensics.contradiction_detection import (
 
 # Multi-Agent AI Components (Optional - require additional SDKs)
 try:
-    from src.forensics.agent_sec_analyzer import AgentSECForensicAnalyzer
+    from .agent_sec_analyzer import AgentSECForensicAnalyzer
 except ImportError:
     AgentSECForensicAnalyzer = None
 
 try:
-    from src.forensics.anthropic_agent_analyzer import AnthropicAgentAnalyzer
+    from .anthropic_agent_analyzer import AnthropicAgentAnalyzer
 except ImportError:
     AnthropicAgentAnalyzer = None
 
 try:
-    from src.forensics.multipass_strategy import MultiPassAnalysisStrategy, MultiPassResult
+    from .multipass_strategy import MultiPassAnalysisStrategy, MultiPassResult
 except ImportError:
     MultiPassAnalysisStrategy = None
     MultiPassResult = None
 
 # Enhancement Modules: Entity Resolution & Narrative Analysis
 try:
-    from src.forensics.triangulation import (
+    from .triangulation import (
         EntityResolver, EntityMention, ResolvedEntity, ResolutionResult,
         EntityType, SourceType
     )
@@ -161,7 +161,7 @@ except ImportError:
     _triangulation_available = False
 
 try:
-    from src.forensics.analysis import (
+    from .analysis import (
         NarrativeAnalyzer, NarrativeSegment, NarrativeShift,
         NarrativeAnalysisResult, LinguisticMetrics, ShiftSeverity, NarrativeCategory
     )

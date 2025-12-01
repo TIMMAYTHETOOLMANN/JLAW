@@ -45,6 +45,17 @@ class EvidenceItem:
 
 
 @dataclass
+class ChargeElement:
+    """An element of a criminal charge that must be proven."""
+    element_id: str
+    charge_id: str
+    description: str
+    supporting_evidence: List[str] = field(default_factory=list)
+    proven: bool = False
+    proof_strength: float = 0.0
+
+
+@dataclass
 class BurdenElement:
     """An element that must be proven."""
     element_id: str
@@ -100,10 +111,15 @@ class BurdenCalculator:
         )
     """
     
-    def __init__(self):
-        """Initialize the burden calculator."""
+    def __init__(self, default_standard: Optional[BurdenStandard] = None):
+        """Initialize the burden calculator.
+        
+        Args:
+            default_standard: Default burden of proof standard to use
+        """
         self._evidence: Dict[str, EvidenceItem] = {}
         self._elements: Dict[str, BurdenElement] = {}
+        self._default_standard = default_standard or BurdenStandard.BEYOND_REASONABLE_DOUBT
         
         # Threshold requirements for each standard
         self._thresholds = {
@@ -359,3 +375,63 @@ class BurdenCalculator:
         )
         
         return analysis
+
+    def calculate_charge_burden(
+        self,
+        elements: List[ChargeElement],
+        evidence_scores: Dict[str, float]
+    ) -> tuple:
+        """
+        Calculate burden of proof for a specific charge.
+        
+        Args:
+            elements: List of ChargeElement objects for the charge
+            evidence_scores: Dictionary mapping evidence IDs to reliability scores
+            
+        Returns:
+            Tuple of (burden_met: bool, score: float, details: dict)
+        """
+        if not elements:
+            return False, 0.0, {"error": "No elements to evaluate"}
+        
+        threshold = self._thresholds.get(self._default_standard, 0.95)
+        element_scores = []
+        element_details = []
+        
+        for element in elements:
+            # Calculate element strength based on supporting evidence
+            if element.supporting_evidence:
+                supporting_scores = [
+                    evidence_scores.get(eid, 0.0) 
+                    for eid in element.supporting_evidence
+                ]
+                if supporting_scores:
+                    element_score = sum(supporting_scores) / len(supporting_scores)
+                else:
+                    element_score = 0.0
+            else:
+                element_score = 0.0
+            
+            element_scores.append(element_score)
+            element_details.append({
+                "element_id": element.element_id,
+                "description": element.description,
+                "score": element_score,
+                "meets_threshold": element_score >= threshold
+            })
+        
+        # Overall score is the minimum (weakest link)
+        overall_score = min(element_scores) if element_scores else 0.0
+        burden_met = overall_score >= threshold
+        
+        details = {
+            "threshold": threshold,
+            "elements": element_details,
+            "overall_score": overall_score
+        }
+        
+        return burden_met, overall_score, details
+
+
+# Alias for backward compatibility
+BurdenOfProofCalculator = BurdenCalculator
