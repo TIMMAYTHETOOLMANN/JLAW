@@ -148,8 +148,13 @@ class CaseEvaluator:
         )
     """
     
-    def __init__(self):
-        """Initialize the case evaluator."""
+    def __init__(self, config: Optional[Dict[str, Any]] = None):
+        """Initialize the case evaluator.
+        
+        Args:
+            config: Optional configuration dictionary
+        """
+        self.config = config or {}
         self._factors: Dict[str, CaseFactor] = {}
         self._risks: List[CaseRiskItem] = []
         
@@ -476,3 +481,79 @@ class CaseEvaluator:
             reasoning=reasoning,
             case_evaluation=evaluation
         )
+
+    def evaluate_case_strength(
+        self,
+        evidence_scores: List[float],
+        witness_credibilities: List[float],
+        burden_met: bool,
+        timeline_confidence: float,
+        legal_violations: int
+    ) -> Dict[str, Any]:
+        """
+        Evaluate case strength based on multiple factors.
+        
+        Args:
+            evidence_scores: List of evidence reliability scores (0.0-1.0)
+            witness_credibilities: List of witness credibility scores (0.0-1.0)
+            burden_met: Whether burden of proof is met
+            timeline_confidence: Confidence in timeline reconstruction (0.0-1.0)
+            legal_violations: Number of legal violations identified
+            
+        Returns:
+            Dictionary with overall_strength, probability_of_conviction, and recommendations
+        """
+        self.reset()
+        
+        # Calculate average scores
+        avg_evidence = sum(evidence_scores) / len(evidence_scores) if evidence_scores else 0.5
+        avg_witness = sum(witness_credibilities) / len(witness_credibilities) if witness_credibilities else 0.5
+        
+        # Add factors based on inputs
+        self.add_factor("evidence_quality", avg_evidence, f"Avg evidence score: {avg_evidence:.2f}")
+        self.add_factor("witness_strength", avg_witness, f"Avg witness credibility: {avg_witness:.2f}")
+        self.add_factor("legal_theory", min(1.0, legal_violations / 10), f"{legal_violations} violations")
+        self.add_factor("procedural_compliance", timeline_confidence, f"Timeline confidence: {timeline_confidence:.2f}")
+        
+        # Burden met gives a significant boost
+        burden_score = 0.9 if burden_met else 0.3
+        self.add_factor("defendant_culpability", burden_score, "Burden of proof met" if burden_met else "Burden not met")
+        
+        # Calculate strength
+        strength_score = self._calculate_strength_score()
+        strength = self._classify_strength(strength_score)
+        
+        # Calculate conviction probability
+        base_prob = strength_score * 0.9
+        if burden_met:
+            base_prob = min(1.0, base_prob * 1.15)
+        
+        # Generate recommendations
+        recommendations = []
+        if strength == CaseStrength.VERY_STRONG:
+            recommendations.append("Case strength is exceptional. Proceed with confidence.")
+        elif strength == CaseStrength.STRONG:
+            recommendations.append("Case is strong. Recommended to proceed with prosecution.")
+        elif strength == CaseStrength.MODERATE:
+            recommendations.append("Case is moderate. Consider settlement or additional evidence.")
+        elif strength == CaseStrength.WEAK:
+            recommendations.append("Case is weak. Significant additional evidence needed.")
+        else:
+            recommendations.append("Case is insufficient. Do not proceed without major developments.")
+        
+        if avg_evidence < 0.6:
+            recommendations.append("Consider strengthening documentary evidence.")
+        if avg_witness < 0.6:
+            recommendations.append("Witness credibility could be improved.")
+        if not burden_met:
+            recommendations.append("Work to establish elements that meet burden of proof.")
+        
+        return {
+            "overall_strength": strength.value,
+            "probability_of_conviction": min(0.99, base_prob),
+            "recommendations": recommendations
+        }
+
+
+# Alias for backward compatibility
+CaseStrengthEvaluator = CaseEvaluator

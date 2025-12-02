@@ -14,12 +14,12 @@ class TestJaroWinklerSimilarity:
     def test_identical_strings(self):
         from src.forensics.triangulation.entity_resolver import EntityResolver
         resolver = EntityResolver()
-        assert resolver._jaro_winkler_similarity("Apple", "Apple") == 1.0
+        assert resolver.jaro_winkler_similarity("Apple", "Apple") == 1.0
     
     def test_similar_strings(self):
         from src.forensics.triangulation.entity_resolver import EntityResolver
         resolver = EntityResolver()
-        score = resolver._jaro_winkler_similarity("Apple Inc.", "Apple Inc")
+        score = resolver.jaro_winkler_similarity("Apple Inc.", "Apple Inc")
         assert score > 0.95
 
 
@@ -37,10 +37,12 @@ class TestEntityResolution:
         ]
         
         resolver = EntityResolver()
-        result = resolver.resolve_entities({"sec": entities_sec, "news": entities_news})
+        # Combine all entities into a single list as expected by the resolver
+        all_entities = entities_sec + entities_news
+        result = resolver.resolve_entities(all_entities)
         
         assert result is not None
-        assert len(result.unified_entities) <= 2
+        assert len(result.clusters) <= 2
 
 
 if __name__ == "__main__":
