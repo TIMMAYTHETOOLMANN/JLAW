@@ -51,6 +51,9 @@ encrypt = ["cryptography>=45.0, <46"]
 redis = ["redis>=7"]
 dapr = ["dapr>=1.16.0", "grpcio>=1.60.0"]
 
+[project.scripts]
+jlaw = "production_deployment:main"
+
 [dependency-groups]
 dev = [
     "mypy",
