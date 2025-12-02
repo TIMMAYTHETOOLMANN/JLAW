@@ -3,9 +3,15 @@
 JLAW Production Deployment Entry Point
 ======================================
 Main entry point for containerized JLAW deployment.
+
+This script serves as the Docker container entry point and provides:
+- System health checks on startup
+- Prometheus metrics endpoint on METRICS_PORT (default: 8000)
+- Graceful shutdown handling via SIGINT/SIGTERM
 """
 
 import os
+import signal
 import sys
 import asyncio
 import logging
@@ -14,9 +20,13 @@ from pathlib import Path
 # Ensure src is in path
 sys.path.insert(0, str(Path(__file__).parent / "src"))
 
-from forensics import ForensicOrchestrator
-from forensics.deployment.health_checker import HealthChecker, HealthStatus
-from forensics.deployment.metrics_collector import start_metrics_server, get_metrics
+try:
+    from forensics.deployment.health_checker import HealthChecker, HealthStatus
+    from forensics.deployment.metrics_collector import start_metrics_server, get_metrics
+except ImportError as e:
+    print(f"ERROR: Failed to import required modules: {e}", file=sys.stderr)
+    print("Ensure the forensics package is properly installed.", file=sys.stderr)
+    sys.exit(1)
 
 # Configure logging
 logging.basicConfig(
@@ -69,20 +79,28 @@ async def main():
     # Log that system is ready
     logger.info("JLAW Production service ready - awaiting analysis requests")
     
-    # Increment start counter
+    # Increment start counter (metrics may fail if prometheus_client not available)
     try:
         get_metrics().app_starts.inc()
-    except Exception:
-        pass
+    except ImportError:
+        logger.debug("Prometheus client not available, skipping metrics increment")
+
+    # Set up shutdown event for graceful termination
+    shutdown_event = asyncio.Event()
+
+    def signal_handler(sig, frame):
+        logger.info(f"Received signal {sig}, initiating graceful shutdown")
+        shutdown_event.set()
+
+    signal.signal(signal.SIGINT, signal_handler)
+    signal.signal(signal.SIGTERM, signal_handler)
 
     try:
-        # In production, this would listen for incoming analysis requests
-        # For now, keep alive and serve metrics
-        while True:
+        # Main service loop - keeps container alive and serves metrics
+        # Production deployments should configure orchestration via API or job scheduler
+        while not shutdown_event.is_set():
             await asyncio.sleep(60)
             logger.debug("Service heartbeat - system operational")
-    except KeyboardInterrupt:
-        logger.info("Shutdown signal received")
     except Exception as e:
         logger.error(f"Production error: {e}")
         raise
