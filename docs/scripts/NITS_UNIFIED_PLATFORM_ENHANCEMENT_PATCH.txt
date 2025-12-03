@@ -1,0 +1,293 @@
+╔═══════════════════════════════════════════════════════════════════════════════════════════════════╗
+║                        NITS UNIFIED PLATFORM ENHANCEMENT PATCH                                     ║
+║                              COMPLETE FORENSIC INTEGRATION GUIDE                                   ║
+╚═══════════════════════════════════════════════════════════════════════════════════════════════════╝
+
+=====================================================================================================
+SYSTEM OVERVIEW
+=====================================================================================================
+
+The NITS (NEXUS Intelligence & Tactical System) Unified Platform Enhancement Patch provides a 
+comprehensive integration framework that unifies all JLAW forensic analysis modules into a 
+cohesive, orchestrated system.
+
+MISSION: Systematically leverage ALL forensic capabilities in a unified framework ensuring 
+no module, script, or analysis protocol goes unused.
+
+GRADE: CIA / DOD / DOJ / Supreme Court Level Sophistication
+
+=====================================================================================================
+9-PHASE ENHANCEMENT PROTOCOL
+=====================================================================================================
+
+PHASE 1: ADVANCED DOCUMENT PARSING
+----------------------------------
+Capabilities:
+  • Multi-format parsing (HTML, XML, XBRL, PDF, DOCX)
+  • OCR cascade with fallback engines (PaddleOCR, EasyOCR, Tesseract)
+  • Financial table extraction (Camelot, Tabula)
+  • Metadata extraction with RFC3161 timestamping
+
+Modules:
+  • UniversalDocumentProcessor
+  • ForensicTableExtractor
+  • FinancialDataParser
+  • OCRCascade
+
+PHASE 2: OMNISCIENT INTELLIGENCE GATHERING
+------------------------------------------
+Capabilities:
+  • 8-source intelligence aggregation
+  • Real-time SEC EDGAR integration (10 req/sec compliance)
+  • Form 4 insider trading analysis with late filing detection
+  • FinBERT financial entity extraction
+  • Benford's Law statistical fraud detection
+
+Modules:
+  • OmniscientGatherer
+  • SECEdgarIntegrator
+  • InsiderForm4Analyzer
+  • SECForensicAnalyzer
+  • FinancialEntityExtractor
+  • BenfordsLawAnalyzer
+
+PHASE 3: LEGAL STATUTE CORRELATION
+----------------------------------
+Capabilities:
+  • GovInfo API real-time statute retrieval
+  • USC/CFR comprehensive mapping
+  • Violation-to-statute linkage
+  • Jurisdiction detection
+  • Penalty lookup and calculation
+
+Modules:
+  • LegalStatuteCorrelationEngine
+  • StatuteMapper
+  • AdvancedStatuteIntegrator
+  • GovInfoAPIClient
+  • ForensicStatutoryMapper
+
+PHASE 4: TEMPORAL ANALYSIS & TIMELINE RECONSTRUCTION
+----------------------------------------------------
+Capabilities:
+  • Allen's Temporal Algebra implementation
+  • Event correlation and causal chain detection
+  • Temporal anomaly detection (gaps, clusters, pattern breaks)
+  • Financial statement restatement detection
+  • Multi-year behavioral pattern analysis
+
+Modules:
+  • ForensicTimelineReconstructor
+  • EventCorrelator
+  • TemporalAnomalyDetector
+  • TemporalForensicReconciliation
+
+PHASE 5: DECISION ENGINE & PROSECUTION PATH BUILDER
+---------------------------------------------------
+Capabilities:
+  • FRE-compliant evidence evaluation
+  • Prosecution strategy generation
+  • Evidence admissibility scoring
+  • Decision tree pathfinding
+  • DOJ-grade dossier generation
+
+Modules:
+  • ProsecutionPathBuilder
+  • ForensicEvidenceEvaluator
+  • DecisionTree
+  • ForensicDossierGenerator
+
+PHASE 6: ADVANCED CONTRADICTION DETECTION
+-----------------------------------------
+Capabilities:
+  • DeBERTa-v3 Natural Language Inference
+  • FinBERT sentiment analysis
+  • Multi-modal contradiction detection
+  • Linguistic deception analysis
+  • Whistleblower evidence correlation
+
+Modules:
+  • OmniscientContradictionDetector
+  • EnhancedContradictionDetector
+  • LinguisticDeceptionAnalyzer
+  • WhistleblowerEvidenceCorrelator
+
+PHASE 7: COMPREHENSIVE REPORTING ENGINE
+---------------------------------------
+Capabilities:
+  • PDF professional report generation
+  • HTML interactive dashboards
+  • ZIP evidence packages
+  • Court-admissible documentation
+
+Modules:
+  • ReportingEngine
+  • PDFReportGenerator
+  • InteractiveDashboard
+  • EvidencePackager
+
+PHASE 8: MASTER ORCHESTRATION
+-----------------------------
+Capabilities:
+  • 16+ module coordination
+  • Dual-agent analysis (OpenAI + Anthropic)
+  • Autonomous investigation workflows
+  • Multi-pass analysis strategy
+  • Zero-drift configuration locking
+
+Modules:
+  • ForensicOrchestrator
+  • UnifiedForensicOrchestrator
+  • AutonomousInvestigationEngine
+  • DualAgentCoordinator
+  • MasterForensicController
+
+PHASE 9: DEPLOYMENT & HEALTH CHECK
+----------------------------------
+Capabilities:
+  • RFC 3161 trusted timestamping
+  • DFXML evidence packaging (NIST SP 800-86)
+  • Prometheus metrics exposition
+  • System health monitoring
+  • Immutable SHA-256 evidence chains
+
+Modules:
+  • HealthChecker
+  • DeploymentManager
+  • MetricsCollector
+  • RFC3161Timestamper
+  • DFXMLPackager
+  • ImmutableStorage
+
+=====================================================================================================
+USAGE INSTRUCTIONS
+=====================================================================================================
+
+DISCOVERY MODE (List Available Modules)
+---------------------------------------
+    python nits_unified_platform_enhancement.py --discover-only
+
+FULL UNIFIED ANALYSIS
+---------------------
+    python nits_unified_platform_enhancement.py \
+        --company "Nike Inc." \
+        --cik 0000320187 \
+        --start-date 2019-01-01 \
+        --end-date 2019-12-31 \
+        --mode unified_nexus
+
+ANALYSIS MODES
+--------------
+    • standard       - Basic forensic analysis
+    • enhanced       - Enhanced with ML/NLP capabilities
+    • maximum        - Maximum sophistication (all modules)
+    • doj_grade      - DOJ-grade prosecution-ready output
+    • unified_nexus  - Full unified platform deployment
+
+GPU ACCELERATION
+----------------
+    python nits_unified_platform_enhancement.py \
+        --company "Tesla Inc." \
+        --cik 0001318605 \
+        --start-date 2020-01-01 \
+        --end-date 2020-12-31 \
+        --mode unified_nexus \
+        --gpu
+
+STRICT MODE (Fail on Any Missing Module)
+----------------------------------------
+    python nits_unified_platform_enhancement.py \
+        --company "Target Corp" \
+        --cik 0000027419 \
+        --start-date 2019-01-01 \
+        --end-date 2019-12-31 \
+        --strict
+
+=====================================================================================================
+COMPLIANCE STANDARDS
+=====================================================================================================
+
+The NITS Unified Platform adheres to the following standards:
+
+EVIDENCE HANDLING:
+  • FRE 902(13) - Electronic Records Self-Authentication
+  • FRE 902(14) - Data Integrity Self-Authentication
+  • NIST IR 8387 - Forensic Hash Verification
+  • NIST SP 800-86 - Digital Forensics Integration
+  • RFC 3161 - Trusted Timestamping
+
+API COMPLIANCE:
+  • SEC EDGAR - 10 requests/second rate limiting
+  • GovInfo API - 36,000 requests/hour compliance
+  • Fair use user-agent identification
+
+CRYPTOGRAPHIC INTEGRITY:
+  • SHA-256 hash chains for evidence
+  • HMAC signing for audit trails
+  • RSA-2048+ for digital signatures
+
+=====================================================================================================
+OUTPUT STRUCTURE
+=====================================================================================================
+
+forensic_reports/
+├── NITS_UNIFIED_RESULTS_{case_id}_{timestamp}.json    # Complete JSON results
+├── NITS_UNIFIED_REPORT_{case_id}_{timestamp}.txt      # Human-readable report
+├── logs/
+│   └── forensic_analysis_{case_id}_{timestamp}.log    # Detailed execution log
+└── evidence/
+    ├── filings/                                       # Collected SEC filings
+    ├── analysis/                                      # Phase analysis outputs
+    └── chain_of_custody/                              # Evidence integrity proofs
+
+=====================================================================================================
+CERTIFICATION
+=====================================================================================================
+
+Each analysis execution generates a forensic certification including:
+
+  • Certification ID
+  • System version and methodology
+  • Standards compliance attestation
+  • Module utilization summary
+  • Cryptographic signature
+
+=====================================================================================================
+INTEGRATION WITH EXISTING SYSTEMS
+=====================================================================================================
+
+The enhancement patch integrates with:
+
+1. JLAW Forensics Core (jlaw_forensics.py)
+   - Provides input parameter handling
+   - Executes 9-phase analysis pipeline
+
+2. Production Deployment (production_deployment.py)
+   - CLI entry point via 'jlaw' command
+   - Docker/Kubernetes deployment support
+
+3. Unified Orchestrator (unified_orchestrator.py)
+   - Autonomous investigation engine
+   - Traditional + enhanced method combination
+
+=====================================================================================================
+FINAL STATUS
+=====================================================================================================
+
+╔════════════════════════════════════════════════════════════════════════════════════════════════════╗
+║  NITS UNIFIED PLATFORM ENHANCEMENT PATCH                                                           ║
+║  ✅ 42 FORENSIC MODULES DEFINED                                                                    ║
+║  ✅ 9 ENHANCEMENT PHASES INTEGRATED                                                                ║
+║  ✅ DUAL AI AGENT ARCHITECTURE (OpenAI + Anthropic)                                                ║
+║  ✅ GOVINFO + SEC API LIVE INTEGRATION                                                             ║
+║  ✅ EVIDENCE CHAIN CRYPTOGRAPHICALLY SECURED                                                       ║
+║  ✅ DOJ-GRADE PROSECUTION DOSSIERS                                                                 ║
+║  🚀 CLEARED FOR OPERATIONAL DEPLOYMENT                                                             ║
+╚════════════════════════════════════════════════════════════════════════════════════════════════════╝
+
+Date: December 2025
+Version: 2.0.0 - UNIFIED NEXUS CORE
+
+=====================================================================================================
+END OF ENHANCEMENT PATCH DOCUMENTATION
+=====================================================================================================
