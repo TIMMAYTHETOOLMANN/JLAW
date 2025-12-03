@@ -676,55 +676,56 @@ class TokenBucket:
     async def take(self, tokens: int = 1) -> bool:
         """
         Attempt to take tokens from bucket, waiting if necessary.
-        
+
         This method will wait if insufficient tokens are available,
         blocking until the required tokens can be obtained.
-        
+
         Args:
             tokens: Number of tokens to take (default: 1)
-            
+
         Returns:
             True when tokens are successfully obtained
         """
-        async with self._lock:
-            self._refill()
+        while True:
+            wait_time = None
 
-            if self.tokens >= tokens:
-                # Tokens available immediately
-                self.tokens -= tokens
-                self.metrics["requests_allowed"] += 1
-                return True
+            async with self._lock:
+                self._refill()
 
-            # Calculate wait time for tokens to become available
-            tokens_needed = tokens - self.tokens
-            wait_time = tokens_needed / self.refill_rate
+                if self.tokens >= tokens:
+                    # Tokens available immediately
+                    self.tokens -= tokens
+                    self.metrics["requests_allowed"] += 1
+                    return True
 
-            # Update metrics
-            self.metrics["requests_throttled"] += 1
-            self.metrics["total_wait_time"] += wait_time
-            self.metrics["peak_wait_time"] = max(
-                self.metrics["peak_wait_time"],
-                wait_time
-            )
+                # Calculate wait time for tokens to become available
+                tokens_needed = tokens - self.tokens
+                wait_time = tokens_needed / self.refill_rate
 
-            logging.debug(
-                f"TokenBucket '{self.name}': throttling for {wait_time:.3f}s "
-                f"(need {tokens_needed:.2f} tokens)"
-            )
+                # Update metrics (only on first throttle attempt per call)
+                self.metrics["requests_throttled"] += 1
+                self.metrics["total_wait_time"] += wait_time
+                self.metrics["peak_wait_time"] = max(
+                    self.metrics["peak_wait_time"],
+                    wait_time
+                )
 
-        # Wait outside the lock to allow other operations
-        await asyncio.sleep(wait_time)
+                logging.debug(
+                    f"TokenBucket '{self.name}': throttling for {wait_time:.3f}s "
+                    f"(need {tokens_needed:.2f} tokens)"
+                )
 
-        # Recursively try again after waiting
-        return await self.take(tokens)
+            # Wait outside the lock to allow other operations
+            await asyncio.sleep(wait_time)
+            # Loop continues to retry token acquisition
 
     async def try_take(self, tokens: int = 1) -> bool:
         """
         Attempt to take tokens without waiting.
-        
+
         Args:
             tokens: Number of tokens to take
-            
+
         Returns:
             True if tokens were available, False otherwise
         """
