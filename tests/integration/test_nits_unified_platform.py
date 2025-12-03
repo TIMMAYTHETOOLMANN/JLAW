@@ -5,12 +5,8 @@ Validates the unified platform enhancement patch integration.
 """
 
 import pytest
-import asyncio
-import sys
+import tempfile
 from pathlib import Path
-
-# Add project root to path
-sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
 
 class TestNITSUnifiedPlatformEnhancement:
@@ -134,15 +130,16 @@ class TestNITSUnifiedPlatformEnhancement:
 class TestNITSDocumentation:
     """Tests for NITS documentation files."""
     
+    # Documentation file path as class constant
+    DOC_PATH = Path("docs/scripts/NITS_UNIFIED_PLATFORM_ENHANCEMENT_PATCH.txt")
+    
     def test_enhancement_patch_doc_exists(self):
         """Verify NITS_UNIFIED_PLATFORM_ENHANCEMENT_PATCH.txt exists."""
-        doc_path = Path("docs/scripts/NITS_UNIFIED_PLATFORM_ENHANCEMENT_PATCH.txt")
-        assert doc_path.exists(), "NITS enhancement patch documentation not found"
+        assert self.DOC_PATH.exists(), "NITS enhancement patch documentation not found"
     
     def test_enhancement_patch_doc_content(self):
         """Verify enhancement patch doc contains key sections."""
-        doc_path = Path("docs/scripts/NITS_UNIFIED_PLATFORM_ENHANCEMENT_PATCH.txt")
-        content = doc_path.read_text()
+        content = self.DOC_PATH.read_text()
         
         # Check for key sections
         assert "NITS UNIFIED PLATFORM ENHANCEMENT PATCH" in content
@@ -157,7 +154,7 @@ class TestPlatformIntegration:
     """Integration tests for the unified platform."""
     
     @pytest.mark.asyncio
-    async def test_unified_analysis_execution(self):
+    async def test_unified_analysis_execution(self, tmp_path):
         """Test that unified analysis can execute (discovery only)."""
         from nits_unified_platform_enhancement import UnifiedPlatformEngine, UnifiedPlatformConfig
         
@@ -166,7 +163,7 @@ class TestPlatformIntegration:
             cik="0000111111",
             start_date="2022-01-01",
             end_date="2022-12-31",
-            output_directory="/tmp/test_forensic_reports"
+            output_directory=str(tmp_path / "forensic_reports")
         )
         
         engine = UnifiedPlatformEngine(config)
