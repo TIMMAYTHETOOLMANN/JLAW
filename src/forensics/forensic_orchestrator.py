@@ -13,6 +13,8 @@ from datetime import datetime, timezone
 from enum import Enum
 import uuid
 
+import aiohttp
+
 from src.forensics.sec_edgar_analyzer import SECForensicAnalyzer, FilingAnalysis
 from src.forensics.statute_mapper import StatuteMapper, StatuteViolation
 from src.forensics.immutable_storage import ImmutableStorage, StorageConfig, AppendOnlyLog
@@ -23,6 +25,9 @@ from src.forensics.core.integrity_manager import (
 from src.forensics.forensic_dossier_generator import ForensicDossierGenerator
 from src.forensics.insider_form4_analyzer import InsiderForm4Analyzer
 from src.forensics.supplementary_collector import SupplementaryDocumentCollector
+
+# SEC rate limiting delay in seconds (10 requests per second = 0.1s minimum, use 0.35s for safety)
+SEC_RATE_LIMIT_DELAY = 0.35
 
 class InvestigationStatus(Enum):
     """Investigation status states."""
@@ -411,7 +416,6 @@ class ForensicOrchestrator:
             all_statutes: List[Dict[str, Any]] = []
             all_regulations: List[Dict[str, Any]] = []
             
-            import aiohttp
             async with aiohttp.ClientSession() as session:
                 for filing in filings:
                     # Fetch filing content
@@ -421,7 +425,7 @@ class ForensicOrchestrator:
                     
                     try:
                         headers = {'User-Agent': self.user_agent}
-                        await asyncio.sleep(0.35)  # SEC rate limiting
+                        await asyncio.sleep(SEC_RATE_LIMIT_DELAY)  # SEC rate limiting
                         
                         async with session.get(document_url, headers=headers, timeout=aiohttp.ClientTimeout(total=30)) as response:
                             if response.status != 200:

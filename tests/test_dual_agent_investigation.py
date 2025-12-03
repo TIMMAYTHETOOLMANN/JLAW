@@ -14,18 +14,27 @@ from unittest.mock import AsyncMock, MagicMock, patch
 from typing import Dict, Any, List
 
 
+# Create a mock config for testing
+def create_mock_config():
+    """Create a mock configuration for testing."""
+    mock_cfg = MagicMock()
+    mock_cfg.config.openai.api_key = None
+    mock_cfg.config.anthropic.api_key = None
+    mock_cfg.config.govinfo = None
+    return mock_cfg
+
+
+@pytest.fixture
+def mock_coordinator():
+    """Create a coordinator instance with mocked dependencies."""
+    with patch('src.forensics.dual_agent.get_config', return_value=create_mock_config()):
+        from src.forensics.dual_agent import DualAgentCoordinator
+        coordinator = DualAgentCoordinator()
+    return coordinator
+
+
 class TestDualAgentCoordinator:
     """Test suite for DualAgentCoordinator."""
-
-    @pytest.fixture
-    def mock_config(self):
-        """Mock configuration with API keys."""
-        config = MagicMock()
-        config.config.openai.api_key = "test-openai-key"
-        config.config.anthropic.api_key = "test-anthropic-key"
-        config.config.govinfo = MagicMock()
-        config.config.govinfo.api_key = "test-govinfo-key"
-        return config
 
     @pytest.fixture
     def sample_violations_openai(self) -> List[Dict[str, Any]]:
@@ -75,22 +84,11 @@ class TestDualAgentCoordinator:
             },
         ]
 
-    def test_merge_violations_deduplication(self, sample_violations_openai, sample_violations_anthropic):
+    def test_merge_violations_deduplication(
+        self, mock_coordinator, sample_violations_openai, sample_violations_anthropic
+    ):
         """Test that violations are properly merged and deduplicated."""
-        # Import the coordinator class directly for testing merge logic
-        from src.forensics.dual_agent import DualAgentCoordinator
-        
-        # Create coordinator without actual API connections for unit test
-        with patch('src.forensics.dual_agent.get_config') as mock_get_config:
-            mock_cfg = MagicMock()
-            mock_cfg.config.openai.api_key = None
-            mock_cfg.config.anthropic.api_key = None
-            mock_get_config.return_value = mock_cfg
-            
-            coordinator = DualAgentCoordinator()
-        
-        # Test merge function
-        merged = coordinator._merge_violations(
+        merged = mock_coordinator._merge_violations(
             sample_violations_openai,
             sample_violations_anthropic
         )
@@ -105,19 +103,11 @@ class TestDualAgentCoordinator:
         assert late_form4_violations[0].get("_source") == "openai"
         assert "anthropic" in late_form4_violations[0].get("_confirmed_by", [])
 
-    def test_compute_overlap(self, sample_violations_openai, sample_violations_anthropic):
+    def test_compute_overlap(
+        self, mock_coordinator, sample_violations_openai, sample_violations_anthropic
+    ):
         """Test overlap computation between agents."""
-        from src.forensics.dual_agent import DualAgentCoordinator
-        
-        with patch('src.forensics.dual_agent.get_config') as mock_get_config:
-            mock_cfg = MagicMock()
-            mock_cfg.config.openai.api_key = None
-            mock_cfg.config.anthropic.api_key = None
-            mock_get_config.return_value = mock_cfg
-            
-            coordinator = DualAgentCoordinator()
-        
-        overlap = coordinator._compute_overlap(
+        overlap = mock_coordinator._compute_overlap(
             sample_violations_openai,
             sample_violations_anthropic
         )
@@ -126,46 +116,25 @@ class TestDualAgentCoordinator:
         assert len(overlap) == 1
         assert overlap[0].get("type") == "late_form4"
 
-    def test_calculate_confidence_high_agreement(self):
+    def test_calculate_confidence_high_agreement(self, mock_coordinator):
         """Test confidence calculation with high agreement."""
-        from src.forensics.dual_agent import DualAgentCoordinator
-        
-        with patch('src.forensics.dual_agent.get_config') as mock_get_config:
-            mock_cfg = MagicMock()
-            mock_cfg.config.openai.api_key = None
-            mock_cfg.config.anthropic.api_key = None
-            mock_get_config.return_value = mock_cfg
-            
-            coordinator = DualAgentCoordinator()
-        
         # High agreement: both agents found similar number of violations
-        confidence = coordinator._calculate_confidence(5, 5, 5)
+        confidence = mock_coordinator._calculate_confidence(5, 5, 5)
         assert confidence >= 0.9  # High confidence
         
         # Low agreement: one agent found many more
-        confidence = coordinator._calculate_confidence(10, 2, 10)
+        confidence = mock_coordinator._calculate_confidence(10, 2, 10)
         assert confidence < 0.5  # Lower confidence
 
-    def test_availability_status(self, mock_config):
+    def test_availability_status(self, mock_coordinator):
         """Test availability status reporting."""
-        from src.forensics.dual_agent import DualAgentCoordinator
+        # By default, no providers are available (mocked keys are None)
+        availability = mock_coordinator.availability()
         
-        with patch('src.forensics.dual_agent.get_config', return_value=mock_config):
-            with patch.object(DualAgentCoordinator, '__init__', lambda x: None):
-                coordinator = DualAgentCoordinator.__new__(DualAgentCoordinator)
-                coordinator.openai_analyzer = None
-                coordinator.anthropic_analyzer = None
-                coordinator._govinfo_available = False
-        
-        coordinator.openai_analyzer = MagicMock()
-        coordinator.anthropic_analyzer = MagicMock()
-        coordinator._govinfo_available = True
-        
-        availability = coordinator.availability()
-        
-        assert availability["openai"] is True
-        assert availability["anthropic"] is True
-        assert availability["govinfo"] is True
+        # Should report unavailable since mock config has no keys
+        assert availability["openai"] is False
+        assert availability["anthropic"] is False
+        assert availability["govinfo"] is False
 
 
 class TestInvestigateWithCrossReference:
@@ -221,58 +190,46 @@ class TestInvestigateWithCrossReference:
     @pytest.mark.asyncio
     async def test_investigation_workflow_structure(self, sample_filing_content, sample_filing_metadata):
         """Test that investigation returns expected structure."""
-        from src.forensics.dual_agent import DualAgentCoordinator
-        
-        with patch('src.forensics.dual_agent.get_config') as mock_get_config:
-            mock_cfg = MagicMock()
-            mock_cfg.config.openai.api_key = "test-key"
-            mock_cfg.config.anthropic.api_key = "test-key"
-            mock_cfg.config.govinfo = MagicMock()
-            mock_cfg.config.govinfo.api_key = None
-            mock_get_config.return_value = mock_cfg
+        with patch('src.forensics.dual_agent.get_config', return_value=create_mock_config()):
+            from src.forensics.dual_agent import DualAgentCoordinator
             
-            # Create coordinator with mocked analyzers
-            with patch.object(DualAgentCoordinator, '__init__', lambda x: None):
-                coordinator = DualAgentCoordinator.__new__(DualAgentCoordinator)
-                
-                # Setup mock analyzers
-                coordinator.openai_analyzer = MagicMock()
-                coordinator.openai_analyzer._create_parse_violations_tool = MagicMock(return_value=MagicMock(
-                    return_value={"violations": [{"type": "zero_dollar_transaction", "severity": "HIGH"}]}
-                ))
-                coordinator.openai_analyzer.model = "gpt-4o"
-                
-                coordinator.anthropic_analyzer = MagicMock()
-                coordinator.anthropic_analyzer.analyze_text = AsyncMock(return_value={
-                    "status": "success",
-                    "violations": [{"type": "zero_dollar_transaction", "severity": "HIGH"}],
-                    "summary": "Zero-dollar transaction detected",
-                })
-                coordinator.anthropic_analyzer.model = "claude-3-opus"
-                
-                coordinator.statute_integrator = None
-                coordinator._govinfo_available = False
-        
-        # Run investigation
-        result = await coordinator.investigate_with_cross_reference(
-            content=sample_filing_content,
-            filing_metadata=sample_filing_metadata,
-            enable_govinfo_enrichment=False
-        )
-        
-        # Verify structure
-        assert result["status"] == "COMPLETE"
-        assert "openai_findings" in result
-        assert "anthropic_cross_reference" in result
-        assert "merged_violations" in result
-        assert "investigation_summary" in result
-        assert "provenance" in result
-        
-        # Verify summary metrics
-        summary = result["investigation_summary"]
-        assert "total_violations_detected" in summary
-        assert "dual_agent_coverage" in summary
-        assert summary["dual_agent_coverage"] is True
+            coordinator = DualAgentCoordinator()
+            
+            # Manually set up mock analyzers
+            coordinator.openai_analyzer = MagicMock()
+            coordinator.openai_analyzer.parse_violations_from_content = MagicMock(
+                return_value={"violations": [{"type": "zero_dollar_transaction", "severity": "HIGH"}]}
+            )
+            coordinator.openai_analyzer.model = "gpt-4o"
+            
+            coordinator.anthropic_analyzer = MagicMock()
+            coordinator.anthropic_analyzer.analyze_text = AsyncMock(return_value={
+                "status": "success",
+                "violations": [{"type": "zero_dollar_transaction", "severity": "HIGH"}],
+                "summary": "Zero-dollar transaction detected",
+            })
+            coordinator.anthropic_analyzer.model = "claude-3-opus"
+            
+            # Run investigation
+            result = await coordinator.investigate_with_cross_reference(
+                content=sample_filing_content,
+                filing_metadata=sample_filing_metadata,
+                enable_govinfo_enrichment=False
+            )
+            
+            # Verify structure
+            assert result["status"] == "COMPLETE"
+            assert "openai_findings" in result
+            assert "anthropic_cross_reference" in result
+            assert "merged_violations" in result
+            assert "investigation_summary" in result
+            assert "provenance" in result
+            
+            # Verify summary metrics
+            summary = result["investigation_summary"]
+            assert "total_violations_detected" in summary
+            assert "dual_agent_coverage" in summary
+            assert summary["dual_agent_coverage"] is True
 
 
 class TestNothingMissedValidation:

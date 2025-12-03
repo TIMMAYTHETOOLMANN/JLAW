@@ -420,3 +420,27 @@ Maintain forensic chain of custody:
                 viewer_url=viewer_url
             )
 
+    def parse_violations_from_content(
+        self,
+        content: str,
+        form_type: str,
+        url: str,
+        filing_date: Optional[str] = None
+    ) -> Dict[str, Any]:
+        """
+        Public interface for parsing violations from filing content.
+        
+        Used by DualAgentCoordinator for tandem investigation workflow.
+        
+        Args:
+            content: Filing document content
+            form_type: Form type (4, 10-K, 10-Q)
+            url: Document URL
+            filing_date: Filing date string
+            
+        Returns:
+            Dictionary with detected violations and evidence
+        """
+        parse_tool = self._create_parse_violations_tool()
+        return parse_tool(content, form_type, url, filing_date)
+

@@ -19,13 +19,23 @@ ENHANCED INVESTIGATIVE WORKFLOW:
 
 from __future__ import annotations
 
-import asyncio
 import logging
 from typing import Any, Dict, List, Optional, Set
 
 from .config_manager import get_config
 
 logger = logging.getLogger(__name__)
+
+# SEC rate limiting delay in seconds (10 requests per second = 0.1s minimum, use 0.35s for safety)
+SEC_RATE_LIMIT_DELAY = 0.35
+
+
+def _get_govinfo_api_key(cfg: Any) -> Optional[str]:
+    """Helper to extract GovInfo API key from config with consistent pattern."""
+    govinfo = getattr(cfg, 'govinfo', None)
+    if govinfo and hasattr(govinfo, 'api_key') and govinfo.api_key:
+        return govinfo.api_key
+    return None
 
 
 class DualAgentCoordinator:
@@ -37,18 +47,18 @@ class DualAgentCoordinator:
     - Anthropic agent cross-references findings using GovInfo API
     - All statutes and legal frameworks are pulled for comprehensive coverage
     """
-    
+
     def __init__(self) -> None:
         cfg = get_config().config
         self._openai_available = bool(cfg.openai.api_key)
         self._anthropic_available = bool(cfg.anthropic.api_key)
-        self._govinfo_available = bool(cfg.govinfo.api_key if hasattr(cfg, 'govinfo') else None)
+        self._govinfo_available = bool(_get_govinfo_api_key(cfg))
         self._init_errors: Dict[str, str] = {}
 
-        self.openai_analyzer = None
-        self.anthropic_analyzer = None
-        self.govinfo_client = None
-        self.statute_integrator = None
+        self.openai_analyzer: Any = None
+        self.anthropic_analyzer: Any = None
+        self.govinfo_client: Any = None
+        self.statute_integrator: Any = None
 
         # Try initialize OpenAI analyzer
         if self._openai_available:
@@ -71,14 +81,14 @@ class DualAgentCoordinator:
                 self.anthropic_analyzer = None
 
         # Initialize GovInfo API client for statute cross-referencing
-        govinfo_key = getattr(cfg, 'govinfo', None)
-        if govinfo_key and hasattr(govinfo_key, 'api_key') and govinfo_key.api_key:
+        govinfo_key = _get_govinfo_api_key(cfg)
+        if govinfo_key:
             try:
-                from .govinfo_api_client import GovInfoAPIClient
                 from .advanced_statute_integrator import AdvancedStatuteIntegrator
-                self.govinfo_client = GovInfoAPIClient(govinfo_key.api_key)
+                from .govinfo_api_client import GovInfoAPIClient
+                self.govinfo_client = GovInfoAPIClient(govinfo_key)
                 self.statute_integrator = AdvancedStatuteIntegrator(
-                    govinfo_key.api_key,
+                    govinfo_key,
                     strict_api_mode=False,  # Use non-strict for resilience
                     dual_agent=True,
                     govinfo_client=self.govinfo_client
@@ -127,10 +137,14 @@ class DualAgentCoordinator:
                 "availability": avail,
             }
 
-        # Run OpenAI path using internal parse tool on text
+        # Run OpenAI path using public parse method on text
         try:
-            parse_tool = self.openai_analyzer._create_parse_violations_tool()  # type: ignore[attr-defined]
-            parsed = parse_tool(text, context.get("filing_type", "TEXT"), context.get("document_url", "inline://content"), context.get("filing_date"))
+            parsed = self.openai_analyzer.parse_violations_from_content(
+                text,
+                context.get("filing_type", "TEXT"),
+                context.get("document_url", "inline://content"),
+                context.get("filing_date")
+            )
             results["openai"] = {
                 "status": "success",
                 "violations": parsed.get("violations", []),
@@ -215,7 +229,7 @@ class DualAgentCoordinator:
                 "govinfo_enriched": False,
             }
         }
-        
+
         # Check availability
         availability = self.availability()
         if not availability["openai"] or not availability["anthropic"]:
@@ -223,7 +237,7 @@ class DualAgentCoordinator:
             investigation["error"] = "Both OpenAI and Anthropic agents required for investigation"
             investigation["availability"] = availability
             return investigation
-        
+
         context = {
             "filing_type": filing_metadata.get("filing_type", "UNKNOWN"),
             "document_url": filing_metadata.get("document_url", ""),
@@ -231,16 +245,15 @@ class DualAgentCoordinator:
             "cik": filing_metadata.get("cik"),
             "company_name": filing_metadata.get("company_name"),
         }
-        
+
         # =====================================================================
         # PHASE 1: OpenAI Initial Violation Detection
         # =====================================================================
         investigation["phase"] = "openai_analysis"
         logger.info("[Investigation] Phase 1: OpenAI initial violation detection")
-        
+
         try:
-            parse_tool = self.openai_analyzer._create_parse_violations_tool()  # type: ignore[attr-defined]
-            parsed = parse_tool(
+            parsed = self.openai_analyzer.parse_violations_from_content(
                 content,
                 context.get("filing_type", "TEXT"),
                 context.get("document_url", "inline://content"),
@@ -263,13 +276,13 @@ class DualAgentCoordinator:
                 "violations": [],
             }
             openai_violations = []
-        
+
         # =====================================================================
         # PHASE 2: Anthropic Cross-Reference and Deep Analysis
         # =====================================================================
         investigation["phase"] = "anthropic_cross_reference"
         logger.info("[Investigation] Phase 2: Anthropic cross-reference analysis")
-        
+
         # Build enhanced context with OpenAI findings for Anthropic to validate
         cross_ref_context = {
             **context,
@@ -281,7 +294,7 @@ class DualAgentCoordinator:
                 "and ensure comprehensive coverage of all regulatory breaches."
             ),
         }
-        
+
         try:
             anthropic_result = await self.anthropic_analyzer.analyze_text(content, context=cross_ref_context)
             anthropic_violations = anthropic_result.get("violations", [])
@@ -303,34 +316,34 @@ class DualAgentCoordinator:
                 "violations": [],
             }
             anthropic_violations = []
-        
+
         # =====================================================================
         # PHASE 3: Merge and Deduplicate Violations
         # =====================================================================
         investigation["phase"] = "merge_violations"
         logger.info("[Investigation] Phase 3: Merging and deduplicating violations")
-        
+
         merged = self._merge_violations(openai_violations, anthropic_violations)
         investigation["merged_violations"] = merged
-        
+
         # =====================================================================
         # PHASE 4: GovInfo Statute Enrichment (Cross-Reference with Legal Framework)
         # =====================================================================
         if enable_govinfo_enrichment and self.statute_integrator:
             investigation["phase"] = "govinfo_enrichment"
             logger.info("[Investigation] Phase 4: GovInfo statute cross-reference")
-            
+
             try:
                 enriched_violations = []
                 statutes_found: List[Dict[str, Any]] = []
                 regulations_found: List[Dict[str, Any]] = []
                 statutes_seen: Set[str] = set()
-                
+
                 for violation in merged:
                     try:
                         enriched = await self.statute_integrator.enrich_violation_with_govinfo(violation)
                         enriched_violations.append(enriched)
-                        
+
                         # Collect unique statutes
                         if "govinfo_statute" in enriched:
                             statute_ref = enriched["govinfo_statute"]
@@ -347,7 +360,7 @@ class DualAgentCoordinator:
                                     "criminal_penalties": getattr(statute_ref, 'criminal_penalties', None),
                                     "civil_penalties": getattr(statute_ref, 'civil_penalties', None),
                                 })
-                        
+
                         # Collect regulations
                         if "govinfo_regulation" in enriched:
                             reg_ref = enriched["govinfo_regulation"]
@@ -363,17 +376,17 @@ class DualAgentCoordinator:
                                     "text_url": getattr(reg_ref, 'text_url', None),
                                     "pdf_url": getattr(reg_ref, 'pdf_url', None),
                                 })
-                        
+
                         # Add related authorities to statutes
                         for auth in enriched.get("related_authorities", []):
                             if auth not in statutes_seen:
                                 statutes_seen.add(auth)
                                 statutes_found.append({"citation": auth, "type": "related_authority"})
-                                
+
                     except Exception as ve:
                         logger.warning(f"[Investigation] Violation enrichment failed: {ve}")
                         enriched_violations.append(violation)
-                
+
                 investigation["merged_violations"] = enriched_violations
                 investigation["govinfo_statutes"] = {
                     "status": "success",
@@ -383,7 +396,7 @@ class DualAgentCoordinator:
                 }
                 investigation["provenance"]["govinfo_enriched"] = True
                 logger.info(f"[Investigation] GovInfo enriched with {len(statutes_found)} statutes, {len(regulations_found)} regulations")
-                
+
             except Exception as e:
                 logger.error(f"[Investigation] GovInfo enrichment failed: {e}")
                 investigation["govinfo_statutes"] = {
@@ -394,20 +407,20 @@ class DualAgentCoordinator:
                 }
         else:
             investigation["govinfo_statutes"]["status"] = "skipped"
-        
+
         # =====================================================================
         # PHASE 5: Generate Investigation Summary
         # =====================================================================
         investigation["phase"] = "summary"
         logger.info("[Investigation] Phase 5: Generating investigation summary")
-        
+
         openai_count = len(openai_violations)
         anthropic_count = len(anthropic_violations)
         merged_count = len(merged)
-        
+
         # Compute overlap and unique findings
         overlap_violations = self._compute_overlap(openai_violations, anthropic_violations)
-        
+
         investigation["investigation_summary"] = {
             "total_violations_detected": merged_count,
             "openai_initial_count": openai_count,
@@ -422,16 +435,16 @@ class DualAgentCoordinator:
             "confidence_level": self._calculate_confidence(openai_count, anthropic_count, merged_count),
             "nothing_missed_validation": merged_count >= max(openai_count, anthropic_count),
         }
-        
+
         investigation["status"] = "COMPLETE"
         investigation["phase"] = "complete"
-        
+
         logger.info(
             f"[Investigation] Complete: {merged_count} violations, "
             f"{investigation['investigation_summary']['statutes_correlated']} statutes, "
             f"confidence={investigation['investigation_summary']['confidence_level']:.2%}"
         )
-        
+
         return investigation
 
     def _merge_violations(
@@ -446,14 +459,14 @@ class DualAgentCoordinator:
         """
         merged: List[Dict[str, Any]] = []
         seen_keys: Set[str] = set()
-        
+
         def violation_key(v: Dict[str, Any]) -> str:
             t = v.get("type") or v.get("violation_type") or "?"
             s = v.get("statute") or ""
             d = (v.get("description") or "")[:50]
             url = v.get("document_url") or v.get("url") or ""
             return f"{t}|{s}|{d}|{url}"
-        
+
         # Add OpenAI violations with provenance
         for v in openai_violations:
             key = violation_key(v)
@@ -463,7 +476,7 @@ class DualAgentCoordinator:
                 v_copy["_source"] = "openai"
                 v_copy["_confirmed_by"] = []
                 merged.append(v_copy)
-        
+
         # Add or confirm Anthropic violations
         for v in anthropic_violations:
             key = violation_key(v)
@@ -479,7 +492,7 @@ class DualAgentCoordinator:
                     if violation_key(m) == key:
                         m["_confirmed_by"].append("anthropic")
                         break
-        
+
         return merged
 
     def _compute_overlap(
@@ -493,11 +506,11 @@ class DualAgentCoordinator:
             s = v.get("statute") or ""
             d = (v.get("description") or "")[:40]
             return f"{t}|{s}|{d}"
-        
+
         o_keys = {key(v) for v in openai_violations}
         a_keys = {key(v) for v in anthropic_violations}
         overlap_keys = o_keys & a_keys
-        
+
         return [v for v in openai_violations if key(v) in overlap_keys]
 
     def _calculate_confidence(
@@ -513,18 +526,18 @@ class DualAgentCoordinator:
         """
         if merged_count == 0:
             return 1.0  # No violations = high confidence in clean finding
-        
+
         if openai_count == 0 or anthropic_count == 0:
             return 0.5  # One agent found nothing = moderate confidence
-        
+
         # Calculate agreement ratio
         min_count = min(openai_count, anthropic_count)
         max_count = max(openai_count, anthropic_count)
         agreement_ratio = min_count / max_count if max_count > 0 else 1.0
-        
+
         # Bonus for overlap
         overlap_bonus = 0.1 if merged_count <= max_count else 0.0
-        
+
         return min(1.0, agreement_ratio + overlap_bonus)
 
     async def close(self) -> None:
