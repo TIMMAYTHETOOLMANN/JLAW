@@ -39,7 +39,6 @@ import asyncio
 import logging
 import sys
 import json
-import os
 import hashlib
 import traceback
 from pathlib import Path
@@ -537,21 +536,43 @@ class UnifiedPlatformEngine:
                     self.logger.info(f"\n  ▶ Executing: {module_status.name}")
                     self.logger.info(f"    Capabilities: {', '.join(module_status.capabilities)}")
                     
-                    # Module execution would happen here
-                    # For now, we mark it as executed
-                    phase_result["modules_executed"].append({
-                        "name": module_status.name,
-                        "status": "EXECUTED",
-                        "capabilities": module_status.capabilities
-                    })
+                    # Import and verify module accessibility
+                    module = importlib.import_module(module_status.module_path)
+                    cls = getattr(module, module_status.name, None)
                     
-                    self.logger.info(f"  ✅ {module_status.name}: Executed successfully")
+                    if cls is not None:
+                        # Module is accessible - record as verified
+                        module_result = {
+                            "name": module_status.name,
+                            "status": "VERIFIED",
+                            "capabilities": module_status.capabilities,
+                            "module_path": module_status.module_path,
+                            "note": f"Module verified accessible - requires runtime configuration for full execution"
+                        }
+                        phase_result["modules_executed"].append(module_result)
+                        
+                        # Add finding that this module is ready for use
+                        phase_result["findings"].append({
+                            "type": "module_verified",
+                            "module": module_status.name,
+                            "capabilities": module_status.capabilities,
+                            "ready_for_execution": True
+                        })
+                        
+                        self.logger.info(f"  ✅ {module_status.name}: Verified and ready")
+                    else:
+                        phase_result["modules_executed"].append({
+                            "name": module_status.name,
+                            "status": "CLASS_NOT_FOUND",
+                            "error": f"Class {module_status.name} not found in {module_status.module_path}"
+                        })
+                        self.logger.warning(f"  ⚠️ {module_status.name}: Class not found")
                     
                 except Exception as e:
-                    self.logger.warning(f"  ⚠️ {module_status.name}: Execution failed - {e}")
+                    self.logger.warning(f"  ⚠️ {module_status.name}: Verification failed - {e}")
                     phase_result["modules_executed"].append({
                         "name": module_status.name,
-                        "status": "FAILED",
+                        "status": "VERIFICATION_FAILED",
                         "error": str(e)
                     })
         
@@ -628,6 +649,13 @@ class UnifiedPlatformEngine:
     
     def _generate_certification(self) -> Dict[str, Any]:
         """Generate forensic certification."""
+        # Calculate module statistics
+        verified_modules = sum(
+            1 for pr in self.phase_results.values()
+            for m in pr.get("modules_executed", [])
+            if m.get("status") == "VERIFIED"
+        )
+        
         return {
             "certification_id": f"CERT_{self.config.case_id}",
             "timestamp": datetime.now(timezone.utc).isoformat(),
@@ -640,11 +668,16 @@ class UnifiedPlatformEngine:
                 "NIST SP 800-86 - Digital Forensics Integration",
                 "RFC 3161 - Trusted Timestamping"
             ],
+            "modules_verified": verified_modules,
+            "modules_discovered": self.registry.total_modules,
+            "modules_available": self.registry.available_modules,
             "attestation": (
-                "This analysis was conducted using the NITS Unified Platform Enhancement "
-                "system which systematically leverages ALL available forensic modules, "
-                "analysis protocols, and sophisticated detection capabilities across "
-                "9 enhancement phases ensuring maximum coverage and no capability unused."
+                f"This analysis inventoried {self.registry.total_modules} forensic modules across "
+                f"9 enhancement phases. {self.registry.available_modules} modules were confirmed available "
+                f"and {verified_modules} were verified accessible for execution. "
+                "The system is designed to systematically leverage all available forensic capabilities "
+                "ensuring comprehensive coverage. Full execution requires runtime configuration "
+                "(API keys, database connections, etc.) per module requirements."
             ),
             "signature": hashlib.sha256(
                 f"{self.config.case_id}:{datetime.now(timezone.utc).isoformat()}".encode()
