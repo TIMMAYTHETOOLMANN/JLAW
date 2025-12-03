@@ -39,7 +39,8 @@ from .api_resilience import (
     CircuitBreaker, CircuitBreakerConfig, CircuitState,
     ResilientAPIClient, RetryConfig, FailureType,
     ExponentialBackoff, QueueManager,
-    CircuitBreakerOpenError, MaxRetriesExceededError
+    CircuitBreakerOpenError, MaxRetriesExceededError,
+    TokenBucket, create_sec_rate_limiter, create_govinfo_rate_limiter
 )
 from .immutable_storage import (
     ImmutableStorage, StorageConfig, AppendOnlyLog
@@ -335,6 +336,9 @@ __all__ = [
     "QueueManager",
     "CircuitBreakerOpenError",
     "MaxRetriesExceededError",
+    "TokenBucket",
+    "create_sec_rate_limiter",
+    "create_govinfo_rate_limiter",
     "ImmutableStorage",
     "StorageConfig",
     "AppendOnlyLog",
