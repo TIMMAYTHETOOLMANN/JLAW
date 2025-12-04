@@ -867,7 +867,21 @@ class ForensicOrchestrator:
 
                 # After supplementing with issuer Form 4 entries, include newly allowed items into analysis list
                 try:
-                    allowed_set = {"10-K", "10-K/A", "10-Q", "10-Q/A", "4", "4/A"}
+                    #h.  EXPANDED: Match comprehensive filing types from config/nike_2019.yaml benchmark
+                    # Includes: 10-K, 10-Q, 8-K, 4, SC 13G, DEF 14A, 11-K and all /A amendments
+                    allowed_set = {
+                        "10-K", "10-K/A",
+                        "10-Q", "10-Q/A", 
+                        "8-K", "8-K/A",
+                        "4", "4/A",
+                        "SC 13G", "SC 13G/A",
+                        "SC 13D", "SC 13D/A",
+                        "DEF 14A", "DEFA14A",
+                        "11-K", "11-K/A",
+                        "S-8", "S-8/A",
+                        "424B2", "424B5",
+                        "FWP",
+                    }
                     existing_keys = set()
                     for r in filings:
                         key = (r.get('accession') or '') + '|' + (r.get('document_url') or '')

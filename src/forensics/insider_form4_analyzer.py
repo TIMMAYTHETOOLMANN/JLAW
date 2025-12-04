@@ -44,6 +44,52 @@ class Form4ViolationRecord:
 class InsiderForm4Analyzer:
     """Analyzer for SEC Form 4 insider trading filings."""
 
+    # Federal holidays observed by SEC for deadline calculations (2019 calendar)
+    FEDERAL_HOLIDAYS_2019 = {
+        datetime(2019, 1, 1),   # New Year's Day
+        datetime(2019, 1, 21),  # MLK Day
+        datetime(2019, 2, 18),  # Presidents' Day
+        datetime(2019, 5, 27),  # Memorial Day
+        datetime(2019, 7, 4),   # Independence Day
+        datetime(2019, 9, 2),   # Labor Day
+        datetime(2019, 10, 14), # Columbus Day
+        datetime(2019, 11, 11), # Veterans Day
+        datetime(2019, 11, 28), # Thanksgiving
+        datetime(2019, 12, 25), # Christmas
+    }
+    
+    # Extended holiday set for multi-year analysis
+    FEDERAL_HOLIDAYS = {
+        # 2018
+        datetime(2018, 1, 1), datetime(2018, 1, 15), datetime(2018, 2, 19),
+        datetime(2018, 5, 28), datetime(2018, 7, 4), datetime(2018, 9, 3),
+        datetime(2018, 10, 8), datetime(2018, 11, 12), datetime(2018, 11, 22), datetime(2018, 12, 25),
+        # 2019
+        datetime(2019, 1, 1), datetime(2019, 1, 21), datetime(2019, 2, 18),
+        datetime(2019, 5, 27), datetime(2019, 7, 4), datetime(2019, 9, 2),
+        datetime(2019, 10, 14), datetime(2019, 11, 11), datetime(2019, 11, 28), datetime(2019, 12, 25),
+        # 2020
+        datetime(2020, 1, 1), datetime(2020, 1, 20), datetime(2020, 2, 17),
+        datetime(2020, 5, 25), datetime(2020, 7, 3), datetime(2020, 9, 7),
+        datetime(2020, 10, 12), datetime(2020, 11, 11), datetime(2020, 11, 26), datetime(2020, 12, 25),
+        # 2021-2025 (additional years for multi-year analysis)
+        datetime(2021, 1, 1), datetime(2021, 1, 18), datetime(2021, 2, 15),
+        datetime(2021, 5, 31), datetime(2021, 7, 5), datetime(2021, 9, 6),
+        datetime(2021, 10, 11), datetime(2021, 11, 11), datetime(2021, 11, 25), datetime(2021, 12, 24),
+        datetime(2022, 1, 17), datetime(2022, 2, 21), datetime(2022, 5, 30),
+        datetime(2022, 7, 4), datetime(2022, 9, 5), datetime(2022, 10, 10),
+        datetime(2022, 11, 11), datetime(2022, 11, 24), datetime(2022, 12, 26),
+        datetime(2023, 1, 2), datetime(2023, 1, 16), datetime(2023, 2, 20),
+        datetime(2023, 5, 29), datetime(2023, 7, 4), datetime(2023, 9, 4),
+        datetime(2023, 10, 9), datetime(2023, 11, 10), datetime(2023, 11, 23), datetime(2023, 12, 25),
+        datetime(2024, 1, 1), datetime(2024, 1, 15), datetime(2024, 2, 19),
+        datetime(2024, 5, 27), datetime(2024, 7, 4), datetime(2024, 9, 2),
+        datetime(2024, 10, 14), datetime(2024, 11, 11), datetime(2024, 11, 28), datetime(2024, 12, 25),
+        datetime(2025, 1, 1), datetime(2025, 1, 20), datetime(2025, 2, 17),
+        datetime(2025, 5, 26), datetime(2025, 7, 4), datetime(2025, 9, 1),
+        datetime(2025, 10, 13), datetime(2025, 11, 11), datetime(2025, 11, 27), datetime(2025, 12, 25),
+    }
+
     def __init__(self, user_agent: str = "NITS Recon Unit contact@nits-secops.org"):
         # Use SEC-compliant UA across all HTTP requests
         self.user_agent = user_agent
@@ -168,11 +214,38 @@ class InsiderForm4Analyzer:
                 filing_date = datetime.strptime(filing_date_str, "%Y-%m-%d")
             except Exception:
                 filing_date = None
+        # CRITICAL FIX: Do NOT use periodOfReport as fallback - it's the transaction date
         if filing_date is None:
+            # Try filedAt pattern (SEC EDGAR index.json format)
+            filed_at_m = re.search(r'"filedAt"\s*:\s*"(\d{4}-\d{2}-\d{2})', xml_text)
+            if filed_at_m:
+                try:
+                    filing_date = datetime.strptime(filed_at_m.group(1), "%Y-%m-%d")
+                except Exception:
+                    filing_date = None
+        if filing_date is None:
+            # Try dateFiled pattern (SGML header format)
+            date_filed_m = re.search(r'<FILED-DATE>(\d{8})</FILED-DATE>', xml_text)
+            if date_filed_m:
+                try:
+                    filing_date = datetime.strptime(date_filed_m.group(1), "%Y%m%d")
+                except Exception:
+                    filing_date = None
+        if filing_date is None:
+            # Try ACCEPTANCE-DATETIME
+            accept_m = re.search(r'ACCEPTANCE-DATETIME\s*[>:=]\s*(\d{14})', xml_text)
+            if accept_m:
+                try:
+                    filing_date = datetime.strptime(accept_m.group(1)[:8], "%Y%m%d")
+                except Exception:
+                    filing_date = None
+        if filing_date is None:
+            # Last resort: periodOfReport (WARNING: may be inaccurate)
             filing_date_m = re.search(r"<periodOfReport>(.*?)</periodOfReport>", xml_text)
             if filing_date_m:
                 try:
                     filing_date = datetime.strptime(filing_date_m.group(1), "%Y-%m-%d")
+                    logger.warning(f"[Form4] Using periodOfReport as fallback - may be inaccurate")
                 except Exception:
                     filing_date = None
 
@@ -519,14 +592,21 @@ class InsiderForm4Analyzer:
         logger.error("[Form4 URL Resolver] All attempts failed:\n  " + "\n  ".join(attempts))
         raise RuntimeError(f"Failed to resolve Form 4 XML URL starting from {xml_url}")
 
+    def _is_federal_holiday(self, dt: datetime) -> bool:
+        """Check if date is a federal holiday (SEC market closure)."""
+        dt_date = datetime(dt.year, dt.month, dt.day)
+        return dt_date in self.FEDERAL_HOLIDAYS
+
     def _business_days_between(self, start: datetime, end: datetime) -> int:
+        """Calculate business days between dates excluding weekends AND federal holidays."""
         if end < start:
             return 0
         day_count = 0
         cur = start
         while cur < end:
             cur += timedelta(days=1)
-            if cur.weekday() < 5:  # Mon-Fri
+            # Mon-Fri (weekday < 5) AND not a federal holiday
+            if cur.weekday() < 5 and not self._is_federal_holiday(cur):
                 day_count += 1
         return day_count
 

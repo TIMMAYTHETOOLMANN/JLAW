@@ -19,6 +19,7 @@ ENHANCED INVESTIGATIVE WORKFLOW:
 
 from __future__ import annotations
 
+import os
 import logging
 from typing import Any, Dict, List, Optional, Set
 
@@ -70,7 +71,7 @@ class DualAgentCoordinator:
                 logger.debug("OpenAI analyzer init failed: %s", e)
                 self.openai_analyzer = None
 
-        # Try initialize Anthropic analyzer
+        # Try initialize Anthropic analyzer (or fallback to secondary OpenAI)
         if self._anthropic_available:
             try:
                 from .anthropic_agent_analyzer import AnthropicAgentAnalyzer
@@ -79,25 +80,42 @@ class DualAgentCoordinator:
                 self._init_errors["anthropic"] = str(e)
                 logger.debug("Anthropic analyzer init failed: %s", e)
                 self.anthropic_analyzer = None
+        
+        # If Anthropic not available, try secondary OpenAI agent
+        if not self.anthropic_analyzer:
+            secondary_key = os.getenv('OPENAI_SECONDARY_API_KEY')
+            if secondary_key:
+                try:
+                    logger.info("🔄 Anthropic unavailable, using secondary OpenAI agent for dual-agent mode")
+                    from .openai_secondary_agent import OpenAISecondaryAgent
+                    self.anthropic_analyzer = OpenAISecondaryAgent(api_key=secondary_key)
+                    logger.info("✅ Dual-OpenAI mode activated (temporary configuration)")
+                except Exception as e:
+                    self._init_errors["openai_secondary"] = str(e)
+                    logger.debug("Secondary OpenAI agent init failed: %s", e)
+                    self.anthropic_analyzer = None
 
         # Initialize GovInfo API client for statute cross-referencing
         govinfo_key = _get_govinfo_api_key(cfg)
         if govinfo_key:
             try:
-                from .advanced_statute_integrator import AdvancedStatuteIntegrator
-                from .govinfo_api_client import GovInfoAPIClient
-                self.govinfo_client = GovInfoAPIClient(govinfo_key)
+                from src.forensics.advanced_statute_integrator import AdvancedStatuteIntegrator
+                from src.forensics.govinfo_api_client import GovInfoAPIClient
+                self.govinfo_client = GovInfoAPIClient(api_key=govinfo_key)
                 self.statute_integrator = AdvancedStatuteIntegrator(
-                    govinfo_key,
+                    govinfo_api_key=govinfo_key,
                     strict_api_mode=False,  # Use non-strict for resilience
                     dual_agent=True,
                     govinfo_client=self.govinfo_client
                 )
                 self._govinfo_available = True
+                logger.info("✅ GovInfo statute integrator initialized")
             except Exception as e:
                 self._init_errors["govinfo"] = str(e)
-                logger.debug("GovInfo client init failed: %s", e)
+                logger.warning(f"⚠️ GovInfo client init failed: {e}")
                 self._govinfo_available = False
+                self.govinfo_client = None
+                self.statute_integrator = None
 
         logger.info(
             "DualAgentCoordinator ready (openai=%s, anthropic=%s, govinfo=%s)",
@@ -334,58 +352,64 @@ class DualAgentCoordinator:
             logger.info("[Investigation] Phase 4: GovInfo statute cross-reference")
 
             try:
-                enriched_violations = []
+                # Use batch cross-reference for efficient API usage
+                enriched_violations = await self.statute_integrator.batch_cross_reference(
+                    violations=merged,
+                    filing_content=content,
+                    max_concurrent=5
+                )
+                
                 statutes_found: List[Dict[str, Any]] = []
                 regulations_found: List[Dict[str, Any]] = []
                 statutes_seen: Set[str] = set()
 
-                for violation in merged:
+                for enriched in enriched_violations:
                     try:
-                        enriched = await self.statute_integrator.enrich_violation_with_govinfo(violation)
-                        enriched_violations.append(enriched)
-
-                        # Collect unique statutes
-                        if "govinfo_statute" in enriched:
-                            statute_ref = enriched["govinfo_statute"]
-                            citation = getattr(statute_ref, 'citation', str(statute_ref))
-                            if citation not in statutes_seen:
+                        # Extract statute references from legal framework
+                        legal_framework = enriched.get("legal_framework", {})
+                        
+                        # Collect primary statute
+                        primary_statute = legal_framework.get("primary_statute", {})
+                        if primary_statute:
+                            citation = primary_statute.get("citation", "")
+                            if citation and citation not in statutes_seen:
                                 statutes_seen.add(citation)
                                 statutes_found.append({
                                     "citation": citation,
-                                    "title": getattr(statute_ref, 'title', None),
-                                    "section": getattr(statute_ref, 'section', None),
-                                    "short_title": getattr(statute_ref, 'short_title', None),
-                                    "text_url": getattr(statute_ref, 'text_url', None),
-                                    "pdf_url": getattr(statute_ref, 'pdf_url', None),
-                                    "criminal_penalties": getattr(statute_ref, 'criminal_penalties', None),
-                                    "civil_penalties": getattr(statute_ref, 'civil_penalties', None),
+                                    "full_text": primary_statute.get("full_text", ""),
+                                    "summary": primary_statute.get("summary", ""),
+                                    "penalties": primary_statute.get("penalties", {}),
+                                    "severity": primary_statute.get("severity", "REGULATORY"),
+                                    "govinfo_url": primary_statute.get("govinfo_url", ""),
+                                    "type": "primary_statute"
                                 })
-
-                        # Collect regulations
-                        if "govinfo_regulation" in enriched:
-                            reg_ref = enriched["govinfo_regulation"]
-                            citation = getattr(reg_ref, 'citation', str(reg_ref))
-                            if citation not in statutes_seen:
+                        
+                        # Collect related statutes
+                        for related in legal_framework.get("related_statutes", []):
+                            citation = related.get("citation", "")
+                            if citation and citation not in statutes_seen:
+                                statutes_seen.add(citation)
+                                statutes_found.append({
+                                    "citation": citation,
+                                    "summary": related.get("summary", ""),
+                                    "govinfo_url": related.get("govinfo_url", ""),
+                                    "type": "related_statute"
+                                })
+                        
+                        # Collect CFR regulations
+                        for cfr in legal_framework.get("cfr_regulations", []):
+                            citation = cfr.get("citation", "")
+                            if citation and citation not in statutes_seen:
                                 statutes_seen.add(citation)
                                 regulations_found.append({
                                     "citation": citation,
-                                    "title": getattr(reg_ref, 'title', None),
-                                    "part": getattr(reg_ref, 'part', None),
-                                    "section": getattr(reg_ref, 'section', None),
-                                    "authority": getattr(reg_ref, 'authority', None),
-                                    "text_url": getattr(reg_ref, 'text_url', None),
-                                    "pdf_url": getattr(reg_ref, 'pdf_url', None),
+                                    "full_text": cfr.get("full_text", ""),
+                                    "govinfo_url": cfr.get("govinfo_url", ""),
+                                    "type": "cfr_regulation"
                                 })
 
-                        # Add related authorities to statutes
-                        for auth in enriched.get("related_authorities", []):
-                            if auth not in statutes_seen:
-                                statutes_seen.add(auth)
-                                statutes_found.append({"citation": auth, "type": "related_authority"})
-
                     except Exception as ve:
-                        logger.warning(f"[Investigation] Violation enrichment failed: {ve}")
-                        enriched_violations.append(violation)
+                        logger.warning(f"[Investigation] Statute extraction failed: {ve}")
 
                 investigation["merged_violations"] = enriched_violations
                 investigation["govinfo_statutes"] = {

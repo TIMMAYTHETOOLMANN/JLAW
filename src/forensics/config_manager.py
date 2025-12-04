@@ -3,12 +3,13 @@ Secure Configuration Manager for JLAW Forensic System
 Handles API keys, credentials, and system configuration with security best practices.
 """
 
-import os
-from pathlib import Path
-from typing import Dict, Any, Optional
 import json
 import logging
+import os
 from dataclasses import dataclass
+from pathlib import Path
+from typing import Dict, Optional
+
 from dotenv import load_dotenv
 
 logger = logging.getLogger(__name__)
@@ -33,6 +34,7 @@ class GovInfoConfig:
 class OpenAIConfig:
     """OpenAI Agent SDK configuration."""
     api_key: Optional[str]
+    secondary_api_key: Optional[str] = None  # For dual-OpenAI mode
     model: str = "gpt-5"
     max_tokens: int = 8192
 
@@ -80,7 +82,7 @@ class ConfigurationManager:
     2. Configuration files
     3. Secure key storage
     """
-    
+
     def __init__(self, config_path: Optional[str] = None):
         """
         Initialize configuration manager.
@@ -91,30 +93,30 @@ class ConfigurationManager:
         self.config_path = config_path or self._find_config_file()
         self._load_environment()
         self.config = self._build_configuration()
-        
+
         logger.info("Configuration loaded successfully")
-    
+
     def _find_config_file(self) -> str:
         """Find .env configuration file."""
         # Check current directory
         if Path('.env').exists():
             return '.env'
-        
+
         # Check project root
         project_root = Path(__file__).parent.parent
         env_file = project_root / '.env'
         if env_file.exists():
             return str(env_file)
-        
+
         # Check config directory
         config_dir = project_root / 'config'
         env_file = config_dir / '.env'
         if env_file.exists():
             return str(env_file)
-        
+
         logger.warning("No .env file found, using environment variables only")
         return ''
-    
+
     def _load_environment(self):
         """Load environment variables from .env file."""
         if self.config_path and Path(self.config_path).exists():
@@ -122,10 +124,10 @@ class ConfigurationManager:
             logger.info(f"Loaded configuration from {self.config_path}")
         else:
             logger.info("Using system environment variables")
-    
+
     def _build_configuration(self) -> SystemConfig:
         """Build complete system configuration."""
-        
+
         # SEC EDGAR Configuration (no API key required - only User-Agent)
         sec_email = self._get_env('SEC_EMAIL', 'research@forensicanalysis.edu')
         sec = SECConfig(
@@ -137,21 +139,27 @@ class ConfigurationManager:
             requests_per_second=int(self._get_env('SEC_REQUESTS_PER_SECOND', '10')),
             max_retries=int(self._get_env('SEC_MAX_RETRIES', '3'))
         )
-        
+
         # GovInfo API Configuration (API key required - optional for SEC-only use)
         govinfo = GovInfoConfig(
             api_key=self._get_env('GOVINFO_API_KEY', '')
         )
-        
+
         # OpenAI Agent SDK Configuration (for intelligent web scraping)
         openai_api_key = self._get_env('OPENAI_API_KEY', '')
+        openai_secondary_key = self._get_env('OPENAI_SECONDARY_API_KEY', '')
+        
         if not openai_api_key:
             logger.warning("OPENAI_API_KEY not set - OpenAI Agent features disabled")
         else:
             logger.info("OpenAI Agent SDK enabled - intelligent document extraction available")
         
+        if openai_secondary_key:
+            logger.info("Secondary OpenAI API key detected - Dual-OpenAI mode available")
+
         openai = OpenAIConfig(
             api_key=openai_api_key,
+            secondary_api_key=openai_secondary_key,
             model=self._get_env('OPENAI_MODEL', 'gpt-5'),
             max_tokens=int(self._get_env('OPENAI_MAX_TOKENS', '8192'))
         )
@@ -164,33 +172,41 @@ class ConfigurationManager:
         except Exception:
             # Non-fatal if environment mutation is restricted
             pass
-        
+
         # Anthropic Claude Configuration (for multi-pass deep analysis)
+        # Prioritize direct ANTHROPIC_API_KEY, then fall back to OpenRouter
         anthropic_api_key = self._get_env('ANTHROPIC_API_KEY', '')
-        if not anthropic_api_key:
-            logger.info("ANTHROPIC_API_KEY not set - Anthropic features disabled")
-        else:
-            logger.info("Anthropic Claude enabled - multi-pass deep analysis available")
+        openrouter_api_key = self._get_env('OPENROUTER_API_KEY', '')
         
+        if anthropic_api_key:
+            # Use direct Anthropic API (preferred)
+            logger.info("Anthropic Claude enabled - multi-pass deep analysis available ($15 credits)")
+        elif openrouter_api_key:
+            # Use OpenRouter key as fallback
+            anthropic_api_key = openrouter_api_key
+            logger.info("OpenRouter API key detected as Anthropic fallback")
+        else:
+            logger.info("ANTHROPIC_API_KEY not set - Anthropic features disabled")
+
         anthropic = AnthropicConfig(
             api_key=anthropic_api_key,
             model=self._get_env('ANTHROPIC_MODEL', 'claude-3-5-sonnet-20241022'),
             max_tokens=int(self._get_env('ANTHROPIC_MAX_TOKENS', '8192'))
         )
-        
+
         # AI Provider Selection Configuration
         ai_provider = AIProviderConfig(
             provider=self._get_env('AI_PROVIDER', 'AUTO').upper(),
             enable_multipass=self._get_env('ENABLE_MULTIPASS_ANALYSIS', 'true').lower() == 'true',
             max_passes=int(self._get_env('MAX_ANALYSIS_PASSES', '6'))
         )
-        
+
         # Validate AI provider selection
         valid_providers = {'AUTO', 'OPENAI', 'ANTHROPIC', 'NONE'}
         if ai_provider.provider not in valid_providers:
             logger.warning(f"Invalid AI_PROVIDER '{ai_provider.provider}', defaulting to AUTO")
             ai_provider.provider = 'AUTO'
-        
+
         # Log selected provider
         if ai_provider.provider == 'AUTO':
             if anthropic_api_key and openai_api_key:
@@ -203,7 +219,7 @@ class ConfigurationManager:
                 logger.info("AI Provider: AUTO (No AI providers available, using manual)")
         else:
             logger.info(f"AI Provider: {ai_provider.provider} (Explicit override)")
-        
+
         # System Configuration
         config = SystemConfig(
             sec=sec,
@@ -220,46 +236,46 @@ class ConfigurationManager:
             similarity_threshold=float(self._get_env('SIMILARITY_THRESHOLD', '0.85')),
             dossier_output_path=self._get_env('DOSSIER_OUTPUT_PATH', './dossiers')
         )
-        
+
         # Validate configuration
         self._validate_configuration(config)
-        
+
         return config
-    
+
     def _get_env(self, key: str, default: str = '') -> str:
         """Get environment variable with default."""
         return os.getenv(key, default)
-    
+
     def _get_required_env(self, key: str) -> str:
         """Get required environment variable, raise if missing."""
         value = os.getenv(key)
         if not value:
             raise ValueError(f"Required environment variable {key} not set")
         return value
-    
+
     def _validate_configuration(self, config: SystemConfig):
         """Validate configuration values."""
         # Validate SEC email format (required for User-Agent)
         if '@' not in config.sec.user_email:
             raise ValueError("Invalid email format in SEC_EMAIL")
-        
+
         # Validate GovInfo API key if provided
         if config.govinfo.api_key and len(config.govinfo.api_key) < 20:
             logger.warning("GovInfo API key appears to be invalid (too short)")
-        
+
         # Validate thresholds
         if not 0 < config.materiality_threshold <= 1:
             raise ValueError("Materiality threshold must be between 0 and 1")
-        
+
         if not 0 < config.similarity_threshold <= 1:
             raise ValueError("Similarity threshold must be between 0 and 1")
-        
+
         # Create output directories
         Path(config.storage_path).mkdir(parents=True, exist_ok=True)
         Path(config.dossier_output_path).mkdir(parents=True, exist_ok=True)
-        
+
         logger.info("Configuration validation passed")
-    
+
     def get_sec_headers(self) -> Dict[str, str]:
         """
         Get SEC EDGAR request headers.
@@ -275,7 +291,7 @@ class ConfigurationManager:
             'Accept': 'application/json',
             'Host': 'data.sec.gov'
         }
-    
+
     def get_govinfo_params(self) -> Dict[str, str]:
         """
         Get GovInfo API parameters.
@@ -286,11 +302,11 @@ class ConfigurationManager:
         if not self.config.govinfo.api_key:
             logger.warning("GovInfo API key not configured - using DEMO_KEY (limited access)")
             return {'api_key': 'DEMO_KEY'}
-        
+
         return {
             'api_key': self.config.govinfo.api_key
         }
-    
+
     def export_config(self, output_path: str, include_secrets: bool = False):
         """
         Export configuration to file.
@@ -322,12 +338,12 @@ class ConfigurationManager:
                 'dossier_output_path': self.config.dossier_output_path
             }
         }
-        
+
         with open(output_path, 'w') as f:
             json.dump(config_dict, f, indent=2)
-        
+
         logger.info(f"Configuration exported to {output_path}")
-    
+
     def __repr__(self) -> str:
         """String representation (safe - no secrets)."""
         govinfo_status = "Configured" if self.config.govinfo.api_key else "Not configured"

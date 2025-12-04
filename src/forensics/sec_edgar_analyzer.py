@@ -187,9 +187,10 @@ class SECForensicAnalyzer:
                         accession_number,
                     )
                     text = extraction.raw_text or ""
-                    # 1) Restatement detection with exact quotes (expanded keywords, wider context)
+                    # 1) Restatement detection with exact quotes (ENHANCED: comprehensive keywords and context)
                     restat_hits = []
-                    kw_pattern = r"(restat\w*|reissu\w*|revision|modified\s+retrospective|material\s+weakness\s+restatement)"
+                    # ENHANCED: Comprehensive misstatement/restatement keyword patterns
+                    kw_pattern = r"(restat\w*|reissu\w*|revision|modified\s+retrospective|material\s+weakness\s+restatement|restating|corrected?\s+(?:financial|prior|error)|adjustment\s+to\s+prior|prior\s+period\s+(?:error|adjustment)|material\s+error|material\s+misstat\w*|significant\s+(?:error|correction)|accounting\s+error|subsequently\s+(?:discovered|identified)\s+error|revised\s+(?:consolidated|financial)|reclassifi(?:ed|cation)|recast\w*)"
                     for m in re.finditer(kw_pattern, text, flags=re.IGNORECASE):
                         start = max(0, m.start() - 250)
                         end = min(len(text), m.end() + 250)
@@ -247,19 +248,40 @@ class SECForensicAnalyzer:
                                         except Exception:
                                             pass
                             if idx is not None:
-                                    files = (idx or {}).get('directory', {}).get('item', []) or idx.get('files', []) or []
-                                    names = []
-                                    for fobj in files:
-                                        name = fobj.get('name') if isinstance(fobj, dict) else None
-                                        if name:
-                                            names.append(name)
-                                            low = name.lower()
-                                            # Heuristics for exhibit filenames
-                                            if any(tok in low for tok in ["31.1", "ex31_1", "ex311"]):
-                                                has_311 = True
-                                            if any(tok in low for tok in ["31.2", "ex31_2", "ex312"]):
-                                                has_312 = True
-                                    exhibits_snapshot = ", ".join(names[:20])
+                                files = (idx or {}).get('directory', {}).get('item', []) or idx.get('files', []) or []
+                                names = []
+                                for fobj in files:
+                                    name = fobj.get('name') if isinstance(fobj, dict) else None
+                                    if name:
+                                        names.append(name)
+                                        low = name.lower()
+                                        # EXPANDED: Comprehensive exhibit filename patterns for SOX 302
+                                        # Pattern variations: 31.1, 31-1, 31_1, ex31, exhibit31, etc.
+                                        ex311_patterns = [
+                                            "31.1", "31-1", "31_1", "311",
+                                            "ex31.1", "ex31-1", "ex31_1", "ex311",
+                                            "exhibit31.1", "exhibit31-1", "exhibit31_1", "exhibit311",
+                                            "ex-31.1", "ex_31.1", "ex-31-1", "ex_31_1",
+                                            "nke-ex311", "nke_ex311", "nkeex311",  # Company-prefixed
+                                            "certceo", "ceocert", "302ceo"  # Alternate naming
+                                        ]
+                                        ex312_patterns = [
+                                            "31.2", "31-2", "31_2", "312",
+                                            "ex31.2", "ex31-2", "ex31_2", "ex312",
+                                            "exhibit31.2", "exhibit31-2", "exhibit31_2", "exhibit312",
+                                            "ex-31.2", "ex_31.2", "ex-31-2", "ex_31_2",
+                                            "nke-ex312", "nke_ex312", "nkeex312",  # Company-prefixed
+                                            "certcfo", "cfocert", "302cfo"  # Alternate naming
+                                        ]
+                                        if any(tok in low for tok in ex311_patterns):
+                                            has_311 = True
+                                        if any(tok in low for tok in ex312_patterns):
+                                            has_312 = True
+                                exhibits_snapshot = ", ".join(names[:20])
+                            # FIXED: Fallback logic should trigger on pattern mismatch, not just exception
+                            if not has_311 or not has_312:
+                                has_311 = has_311 or (re.search(r"Exhibit\s*31\.1", text, re.IGNORECASE) is not None)
+                                has_312 = has_312 or (re.search(r"Exhibit\s*31\.2", text, re.IGNORECASE) is not None)
                         except Exception:
                             # Fallback to text search if index.json not available
                             has_311 = re.search(r"Exhibit\s*31\.1", text, re.IGNORECASE) is not None

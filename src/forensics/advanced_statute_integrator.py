@@ -1,1168 +1,558 @@
 """
-ADVANCED STATUTE INTEGRATOR - GOVINFO API INTELLIGENCE MODULE
-==============================================================
+ADVANCED STATUTE INTEGRATOR - DUAL-AGENT CROSS-REFERENCE SYSTEM
+================================================================
 
-Next-generation legal statute integration system leveraging the full power
-of the GovInfo API to provide real-time, authoritative legal citations with
-direct access to USC, CFR, and Federal Register documents.
+Integrates with GovInfo API to pull every statute and legal framework
+correlated with SEC filings. Used by Anthropic agent for comprehensive
+cross-referencing of violations flagged by OpenAI agent.
 
-This module enhances the forensic analysis platform with:
-1. Intelligent statute retrieval from GovInfo.gov
-2. Cross-referencing between USC statutes and CFR regulations
-3. Historical statute tracking (amendments, repeals)
-4. Federal Register final rules and proposed rules
-5. Congressional reports and committee hearings
-6. SEC enforcement releases and no-action letters
-7. Court opinions and administrative law judge decisions
+API Documentation:
+- GovInfo API: https://api.govinfo.gov/docs/
+- USC Collection: https://api.govinfo.gov/collections/USCODE
+- CFR Collection: https://api.govinfo.gov/collections/CFR
 
-Compliance Standards:
-- NIST SP 800-86: Guide to Integrating Forensic Techniques
-- Federal Rules of Evidence 902(13)/(14): Certified Electronic Evidence
-- SEC Enforcement Manual § 2.3.3: Evidence Compilation Standards
+Integration Pattern:
+1. OpenAI flags violation → Extract statute reference
+2. Anthropic receives violation → Calls statute integrator
+3. Statute integrator → Queries GovInfo API for full text
+4. Returns complete legal framework to Anthropic
+5. Anthropic validates violation against full statute text
 """
 
 import asyncio
 import aiohttp
 import re
-from typing import Dict, List, Optional, Any, Tuple, Set
+from typing import Dict, List, Optional, Any, Set
 from dataclasses import dataclass, field
-from datetime import datetime, timezone, timedelta
-from enum import Enum
-import json
+from datetime import datetime
 import logging
-from urllib.parse import quote, urlencode
+from enum import Enum
+
+from src.forensics.govinfo_api_client import GovInfoAPIClient, SearchRequest, SearchSort
 
 logger = logging.getLogger(__name__)
 
-# Optional import to avoid hard dependency at import time
-try:
-    from .govinfo_api_client import GovInfoAPIClient
-except Exception:
-    GovInfoAPIClient = None  # Will be validated at runtime
 
-
-class DocumentType(Enum):
-    """GovInfo document types."""
-    USC = "USCODE"  # United States Code
-    CFR = "CFR"  # Code of Federal Regulations
-    FR = "FR"  # Federal Register
-    STATUTE = "STATUTE"  # Statutes at Large
-    BILLS = "BILLS"  # Congressional Bills
-    CRPT = "CRPT"  # Congressional Reports
-    CHRG = "CHRG"  # Congressional Hearings
-    USCOURTS = "USCOURTS"  # Court Opinions
-    GOVMAN = "GOVMAN"  # Government Manuals
-
-
-class LegalAuthority(Enum):
-    """Legal authority hierarchy."""
-    CONSTITUTION = 1
-    STATUTE = 2  # USC
-    REGULATION = 3  # CFR
-    CASE_LAW = 4
-    AGENCY_GUIDANCE = 5
-    POLICY = 6
+class StatuteSeverity(Enum):
+    """Statute severity classification for prosecutorial merit."""
+    CRIMINAL = "CRIMINAL"  # Criminal penalties
+    CIVIL = "CIVIL"  # Civil penalties
+    REGULATORY = "REGULATORY"  # Regulatory enforcement
+    ADMINISTRATIVE = "ADMINISTRATIVE"  # Administrative action
 
 
 @dataclass
 class StatuteReference:
-    """Complete statute reference with GovInfo integration."""
-    citation: str
-    title: int
-    section: str
-    subsection: Optional[str] = None
-    paragraph: Optional[str] = None
-    
-    # GovInfo metadata
-    govinfo_package_id: Optional[str] = None
-    govinfo_granule_id: Optional[str] = None
-    text_url: Optional[str] = None
-    pdf_url: Optional[str] = None
-    xml_url: Optional[str] = None
-    
-    # Legal context
-    short_title: Optional[str] = None
-    enacted_date: Optional[str] = None
-    effective_date: Optional[str] = None
-    last_amended: Optional[str] = None
-    related_cfr: List[str] = field(default_factory=list)
-    
-    # Enforcement context
-    criminal_penalties: Optional[Dict[str, Any]] = None
-    civil_penalties: Optional[Dict[str, Any]] = None
-    administrative_penalties: Optional[Dict[str, Any]] = None
+    """Complete statute reference with full legal text."""
+    citation: str  # e.g., "15 USC § 78p(a)"
+    title: int  # e.g., 15 (Securities)
+    section: str  # e.g., "78p"
+    subsection: Optional[str] = None  # e.g., "(a)"
+    full_text: Optional[str] = None
+    summary: Optional[str] = None
+    penalties: Dict[str, Any] = field(default_factory=dict)
+    severity: StatuteSeverity = StatuteSeverity.REGULATORY
+    related_cfr: List[str] = field(default_factory=list)  # Related CFR sections
+    govinfo_url: Optional[str] = None
+    package_id: Optional[str] = None
+    last_updated: Optional[datetime] = None
 
 
 @dataclass
 class CFRReference:
-    """CFR regulation reference."""
-    citation: str
-    title: int
-    chapter: Optional[int] = None
-    part: int = 0
-    section: Optional[str] = None
-    
-    # GovInfo metadata
-    govinfo_package_id: Optional[str] = None
-    text_url: Optional[str] = None
-    pdf_url: Optional[str] = None
-    
-    # Regulatory context
-    authority: Optional[str] = None  # USC authority
-    source: Optional[str] = None  # Federal Register citation
-    effective_date: Optional[str] = None
-    compliance_date: Optional[str] = None
+    """Complete CFR (Code of Federal Regulations) reference."""
+    citation: str  # e.g., "17 CFR § 240.10b-5"
+    title: int  # e.g., 17
+    part: str  # e.g., "240"
+    section: str  # e.g., "10b-5"
+    full_text: Optional[str] = None
+    summary: Optional[str] = None
+    implementing_statute: Optional[str] = None  # USC reference
+    govinfo_url: Optional[str] = None
+    package_id: Optional[str] = None
+    last_updated: Optional[datetime] = None
 
 
 @dataclass
-class EnforcementPrecedent:
-    """SEC enforcement action or court decision."""
-    case_name: str
-    citation: str
-    date: str
-    violation_type: str
-    penalties_imposed: Dict[str, Any]
-    key_findings: List[str]
-    precedential_value: str  # HIGH, MODERATE, LOW
-    govinfo_url: Optional[str] = None
+class LegalFramework:
+    """Complete legal framework for a violation."""
+    primary_statute: StatuteReference
+    related_statutes: List[StatuteReference] = field(default_factory=list)
+    cfr_regulations: List[CFRReference] = field(default_factory=list)
+    case_law: List[Dict[str, Any]] = field(default_factory=list)
+    enforcement_history: Dict[str, Any] = field(default_factory=dict)
+    prosecutorial_guidance: Optional[str] = None
 
 
 class AdvancedStatuteIntegrator:
     """
-    Advanced statute integration with full GovInfo API intelligence.
+    Advanced statute integration system using GovInfo API.
     
-    This system provides comprehensive legal framework mapping by:
-    1. Real-time statute retrieval from authoritative sources
-    2. Cross-referencing between statutes, regulations, and case law
-    3. Historical tracking of amendments and repeals
-    4. Penalty calculation frameworks
-    5. Enforcement precedent analysis
+    Pulls complete legal frameworks for cross-referencing violations.
     """
     
-    def __init__(self, govinfo_api_key: str, strict_api_mode: bool = True, *, dual_agent: bool = False, govinfo_client: Optional[Any] = None):
+    # Statute citation patterns
+    USC_PATTERN = re.compile(r'(\d+)\s+U\.?S\.?C\.?\s*§\s*(\d+[a-z]?)(?:\(([a-z0-9]+)\))?', re.IGNORECASE)
+    CFR_PATTERN = re.compile(r'(\d+)\s+C\.?F\.?R\.?\s*§\s*(\d+)\.(\d+[a-z]?(?:-\d+)?)', re.IGNORECASE)
+    
+    # SEC-specific statute mappings
+    SEC_STATUTE_MAP = {
+        "78p": {
+            "name": "Directors, Officers, and Principal Stockholders",
+            "subsections": {
+                "(a)": "Reporting requirements for beneficial ownership",
+                "(b)": "Profits from short-swing transactions",
+                "(c)": "Conditions for sale of security by beneficial owner",
+            },
+            "penalties": {
+                "civil": "$100,000 to $500,000 per violation",
+                "criminal": "Up to 20 years imprisonment",
+            },
+            "severity": StatuteSeverity.CRIMINAL,
+            "related_cfr": ["17 CFR § 240.16a-1", "17 CFR § 240.16a-3"],
+        },
+        "78m": {
+            "name": "Periodical and Other Reports",
+            "subsections": {
+                "(a)": "Reports by issuers of securities",
+                "(b)": "Form and contents of reports",
+            },
+            "penalties": {
+                "civil": "$100,000 to $500,000 per violation",
+                "criminal": "Up to 20 years imprisonment",
+            },
+            "severity": StatuteSeverity.CRIMINAL,
+            "related_cfr": ["17 CFR § 240.13a-1", "17 CFR § 240.13a-13"],
+        },
+        "78j": {
+            "name": "Manipulative and Deceptive Devices",
+            "subsections": {
+                "(b)": "Prohibition on manipulative and deceptive devices (Rule 10b-5)",
+            },
+            "penalties": {
+                "civil": "$500,000 to $5,000,000 per violation",
+                "criminal": "Up to 25 years imprisonment",
+            },
+            "severity": StatuteSeverity.CRIMINAL,
+            "related_cfr": ["17 CFR § 240.10b-5"],
+        },
+    }
+    
+    def __init__(
+        self,
+        govinfo_api_key: str,
+        strict_api_mode: bool = False,
+        dual_agent: bool = True,
+        govinfo_client: Optional[GovInfoAPIClient] = None
+    ):
         """
         Initialize advanced statute integrator.
         
         Args:
-            govinfo_api_key: GovInfo API key from data.gov
-            strict_api_mode: If True, fail when API unavailable (NO FALLBACK). Default: True
-            dual_agent: Enable dual-agent cooperation with GovInfoAPIClient to cross-check and enrich results.
-            govinfo_client: Optional pre-initialized GovInfoAPIClient instance (advanced use)
+            govinfo_api_key: GovInfo API key
+            strict_api_mode: If True, fail on API errors. If False, use fallback data.
+            dual_agent: Enable dual-agent cross-referencing mode
+            govinfo_client: Optional pre-configured GovInfo client
         """
-        if not govinfo_api_key or govinfo_api_key == "DEMO_KEY":
-            raise ValueError(
-                "GOVINFO_API_KEY is required for statute integration. "
-                "Obtain a key from https://api.data.gov/signup/ and set it in .env file."
-            )
-        
         self.api_key = govinfo_api_key
-        self.base_url = "https://api.govinfo.gov"
-        self.session: Optional[aiohttp.ClientSession] = None
         self.strict_api_mode = strict_api_mode
         self.dual_agent = dual_agent
-        self._own_govinfo_client = False
-        self.govinfo_client: Optional[Any] = govinfo_client
-        # Lazily create GovInfoAPIClient if dual_agent requested and not provided
-        if self.dual_agent and self.govinfo_client is None:
-            if GovInfoAPIClient is None:
-                if self.strict_api_mode:
-                    raise RuntimeError("Dual-agent mode requested but GovInfoAPIClient is unavailable")
-                else:
-                    logger.warning("Dual-agent mode requested but GovInfoAPIClient not importable; proceeding without it")
-            else:
-                try:
-                    self.govinfo_client = GovInfoAPIClient(self.api_key)
-                    self._own_govinfo_client = True
-                    logger.info("Dual-agent integration: GovInfoAPIClient instantiated")
-                except Exception as e:
-                    if self.strict_api_mode:
-                        raise
-                    logger.warning(f"Failed to initialize GovInfoAPIClient: {e}")
         
-        # Caching for performance only
-        self.statute_cache: Dict[str, StatuteReference] = {}
-        self.cfr_cache: Dict[str, CFRReference] = {}
-        self.enforcement_cache: Dict[str, List[EnforcementPrecedent]] = {}
+        # Initialize or use provided GovInfo client
+        self.govinfo_client = govinfo_client or GovInfoAPIClient(api_key=govinfo_api_key)
         
-        # Metadata for cross-referencing ONLY (not used as fallback data source in strict mode)
-        self.securities_statutes = self._initialize_securities_statutes()
-        self.sec_regulations = self._initialize_sec_regulations()
-        self.related_criminal_statutes = self._initialize_criminal_statutes()
+        # Cache for statute lookups
+        self._statute_cache: Dict[str, StatuteReference] = {}
+        self._cfr_cache: Dict[str, CFRReference] = {}
         
-        logger.info(
-            f"AdvancedStatuteIntegrator initialized with GovInfo API "
-            f"(strict_api_mode={'ON - NO FALLBACK' if strict_api_mode else 'OFF - FALLBACK ENABLED'}, dual_agent={'ON' if self.dual_agent and self.govinfo_client else 'OFF'})"
-        )
+        logger.info(f"✅ Advanced Statute Integrator initialized (strict={strict_api_mode}, dual_agent={dual_agent})")
     
-    def _initialize_securities_statutes(self) -> Dict[str, Dict[str, Any]]:
-        """Initialize comprehensive securities law statute database."""
-        return {
-            # Securities Act of 1933
-            "15_USC_77q": {
-                "citation": "15 U.S.C. § 77q",
-                "title": 15,
-                "section": "77q",
-                "short_title": "Securities Act of 1933 - Fraudulent Interstate Transactions",
-                "description": "Prohibits fraudulent activities in the offer or sale of securities",
-                "criminal": {"imprisonment": 5, "fine": 10000},
-                "civil": True,
-                "related_cfr": ["17 CFR 230"],
-                "key_subsections": {
-                    "a": "General fraud prohibition",
-                    "b": "Use of interstate commerce",
-                    "c": "Criminal penalties"
-                }
-            },
-            "15_USC_77x": {
-                "citation": "15 U.S.C. § 77x",
-                "title": 15,
-                "section": "77x",
-                "short_title": "Securities Act of 1933 - Penalties",
-                "description": "Criminal and civil penalties for Securities Act violations",
-                "criminal": {"imprisonment": 5, "fine": 10000},
-                "willful": {"imprisonment": 20, "fine": 5000000}
-            },
-            
-            # Securities Exchange Act of 1934
-            "15_USC_78j": {
-                "citation": "15 U.S.C. § 78j",
-                "title": 15,
-                "section": "78j",
-                "short_title": "Exchange Act Section 10 - Manipulative and Deceptive Devices",
-                "description": "Prohibition on manipulative and deceptive devices (Rule 10b-5)",
-                "subsections": {
-                    "b": "Manipulative and deceptive devices - Rule 10b-5 authority"
-                },
-                "related_cfr": ["17 CFR 240.10b-5"],
-                "criminal": True,
-                "civil": True,
-                "enforcement_priority": "CRITICAL"
-            },
-            "15_USC_78m": {
-                "citation": "15 U.S.C. § 78m",
-                "title": 15,
-                "section": "78m",
-                "short_title": "Exchange Act Section 13 - Periodic and Other Reports",
-                "description": "Mandatory disclosure requirements for registered companies",
-                "subsections": {
-                    "a": "Annual and quarterly reports (10-K, 10-Q)",
-                    "b": "Foreign issuers and extraordinary events (8-K)",
-                    "d": "Quarterly reports"
-                },
-                "related_cfr": ["17 CFR 240.13a-1", "17 CFR 240.13a-13"],
-                "criminal": True,
-                "civil": True
-            },
-            "15_USC_78p": {
-                "citation": "15 U.S.C. § 78p",
-                "title": 15,
-                "section": "78p",
-                "short_title": "Exchange Act Section 16 - Directors, Officers, and Principal Stockholders",
-                "description": "Insider reporting and short-swing profit recovery",
-                "subsections": {
-                    "a": "Insider transaction reporting (Form 4)",
-                    "b": "Short-swing profit recovery",
-                    "c": "Exempted securities"
-                },
-                "related_cfr": ["17 CFR 240.16a-3"],
-                "form": "Form 4",
-                "deadline": "2 business days",
-                "civil": True
-            },
-            "15_USC_78u": {
-                "citation": "15 U.S.C. § 78u",
-                "title": 15,
-                "section": "78u",
-                "short_title": "Exchange Act Section 21 - Investigations and Actions",
-                "description": "SEC enforcement authority and penalties",
-                "civil_penalties": {
-                    "tier1": 10000,  # Per violation
-                    "tier2": 100000,  # Fraud/deceit
-                    "tier3": 1000000  # Substantial losses or gains
-                },
-                "related_cfr": ["17 CFR 240.0-4"]
-            },
-            "15_USC_78ff": {
-                "citation": "15 U.S.C. § 78ff",
-                "title": 15,
-                "section": "78ff",
-                "short_title": "Exchange Act Penalties",
-                "description": "Criminal penalties for Exchange Act violations",
-                "criminal": {
-                    "imprisonment": 5,
-                    "fine": 5000000,
-                    "entity_fine": 25000000
-                },
-                "willful": {
-                    "imprisonment": 20,
-                    "fine": 5000000,
-                    "entity_fine": 25000000
-                }
-            },
-            
-            # Sarbanes-Oxley Act of 2002
-            "15_USC_7241": {
-                "citation": "15 U.S.C. § 7241",
-                "title": 15,
-                "section": "7241",
-                "short_title": "SOX Section 302 - Corporate Responsibility for Financial Reports",
-                "description": "CEO/CFO certification requirements",
-                "certification_required": True,
-                "related_cfr": ["17 CFR 240.13a-14"],
-                "criminal_reference": "18 USC 1350"
-            },
-            "15_USC_7262": {
-                "citation": "15 U.S.C. § 7262",
-                "title": 15,
-                "section": "7262",
-                "short_title": "SOX Section 404 - Management Assessment of Internal Controls",
-                "description": "Internal control assessment and auditor attestation",
-                "related_cfr": ["17 CFR 240.13a-15"]
-            },
-            
-            # Investment Advisers Act
-            "15_USC_80b-6": {
-                "citation": "15 U.S.C. § 80b-6",
-                "title": 15,
-                "section": "80b-6",
-                "short_title": "Investment Advisers Act - Prohibited Transactions",
-                "description": "Prohibitions on fraudulent practices by investment advisers",
-                "related_cfr": ["17 CFR 275"]
-            }
-        }
-    
-    def _initialize_sec_regulations(self) -> Dict[str, Dict[str, Any]]:
-        """Initialize SEC regulations (17 CFR) database."""
-        return {
-            # Rule 10b-5 - The cornerstone anti-fraud rule
-            "17_CFR_240_10b-5": {
-                "citation": "17 CFR § 240.10b-5",
-                "title": 17,
-                "part": 240,
-                "section": "10b-5",
-                "short_title": "Rule 10b-5 - Employment of Manipulative and Deceptive Devices",
-                "description": "Prohibition on fraud in connection with purchase or sale of securities",
-                "authority": "15 USC 78j(b)",
-                "elements": [
-                    "(a) Employ any device, scheme, or artifice to defraud",
-                    "(b) Make any untrue statement of material fact or omit material fact",
-                    "(c) Engage in any act, practice, or course of business which operates as a fraud"
-                ],
-                "enforcement_priority": "CRITICAL",
-                "scienter_required": True
-            },
-            
-            # Regulation S-K - Disclosure Requirements
-            "17_CFR_229_303": {
-                "citation": "17 CFR § 229.303",
-                "title": 17,
-                "part": 229,
-                "section": "303",
-                "short_title": "Item 303 - MD&A",
-                "description": "Management's Discussion and Analysis of Financial Condition and Results",
-                "authority": "15 USC 78m",
-                "requirements": [
-                    "Liquidity analysis",
-                    "Capital resources discussion",
-                    "Results of operations",
-                    "Known trends and uncertainties",
-                    "Critical accounting estimates"
-                ]
-            },
-            "17_CFR_229_503": {
-                "citation": "17 CFR § 229.503",
-                "title": 17,
-                "part": 229,
-                "section": "503",
-                "short_title": "Item 503 - Risk Factors",
-                "description": "Disclosure of material risks facing the company",
-                "authority": "15 USC 77g, 15 USC 78m"
-            },
-            "17_CFR_229_402": {
-                "citation": "17 CFR § 229.402",
-                "title": 17,
-                "part": 229,
-                "section": "402",
-                "short_title": "Item 402 - Executive Compensation",
-                "description": "Comprehensive executive compensation disclosure",
-                "authority": "15 USC 78m"
-            },
-            
-            # Regulation S-X - Financial Statement Requirements
-            "17_CFR_210_5-02": {
-                "citation": "17 CFR § 210.5-02",
-                "title": 17,
-                "part": 210,
-                "section": "5-02",
-                "short_title": "Balance Sheet Requirements",
-                "description": "Required balance sheet line items and disclosures",
-                "authority": "15 USC 77s, 15 USC 78m"
-            },
-            "17_CFR_210_4-08": {
-                "citation": "17 CFR § 210.4-08",
-                "title": 17,
-                "part": 210,
-                "section": "4-08",
-                "short_title": "General Notes to Financial Statements",
-                "description": "Required financial statement note disclosures",
-                "authority": "15 USC 77s, 15 USC 78m"
-            },
-            
-            # Section 16 - Insider Reporting
-            "17_CFR_240_16a-3": {
-                "citation": "17 CFR § 240.16a-3",
-                "title": 17,
-                "part": 240,
-                "section": "16a-3",
-                "short_title": "Form 4 Filing Requirements",
-                "description": "Statement of changes in beneficial ownership (Form 4)",
-                "authority": "15 USC 78p(a)",
-                "deadline": "2 business days after transaction",
-                "form": "Form 4"
-            },
-            
-            # Internal Controls (SOX 404)
-            "17_CFR_240_13a-15": {
-                "citation": "17 CFR § 240.13a-15",
-                "title": 17,
-                "part": 240,
-                "section": "13a-15",
-                "short_title": "Controls and Procedures",
-                "description": "Internal control over financial reporting requirements",
-                "authority": "15 USC 7262 (SOX 404)"
-            },
-            
-            # Regulation FD - Fair Disclosure
-            "17_CFR_243_100": {
-                "citation": "17 CFR § 243.100",
-                "title": 17,
-                "part": 243,
-                "section": "100",
-                "short_title": "Regulation FD",
-                "description": "Prohibition on selective disclosure of material nonpublic information",
-                "authority": "15 USC 78j"
-            }
-        }
-    
-    def _initialize_criminal_statutes(self) -> Dict[str, Dict[str, Any]]:
-        """Initialize related criminal statutes (18 USC)."""
-        return {
-            "18_USC_1001": {
-                "citation": "18 U.S.C. § 1001",
-                "title": 18,
-                "section": "1001",
-                "short_title": "False Statements",
-                "description": "False statements or concealment in matters within federal jurisdiction",
-                "criminal": {"imprisonment": 5, "fine": True},
-                "affecting_immigration": {"imprisonment": 10}
-            },
-            "18_USC_1343": {
-                "citation": "18 U.S.C. § 1343",
-                "title": 18,
-                "section": "1343",
-                "short_title": "Wire Fraud",
-                "description": "Fraud by wire, radio, or television",
-                "criminal": {"imprisonment": 20, "fine": True},
-                "financial_institution": {"imprisonment": 30, "fine": 1000000}
-            },
-            "18_USC_1348": {
-                "citation": "18 U.S.C. § 1348",
-                "title": 18,
-                "section": "1348",
-                "short_title": "Securities and Commodities Fraud",
-                "description": "Sarbanes-Oxley criminal securities fraud provision",
-                "criminal": {"imprisonment": 25, "fine": True},
-                "notes": "No personal benefit required; scheme to defraud is sufficient"
-            },
-            "18_USC_1350": {
-                "citation": "18 U.S.C. § 1350",
-                "title": 18,
-                "section": "1350",
-                "short_title": "SOX Section 906 - Criminal Certification",
-                "description": "Criminal penalties for false SOX certifications",
-                "knowing": {"imprisonment": 10, "fine": 1000000},
-                "willful": {"imprisonment": 20, "fine": 5000000},
-                "applies_to": ["CEO", "CFO"]
-            },
-            "18_USC_1519": {
-                "citation": "18 U.S.C. § 1519",
-                "title": 18,
-                "section": "1519",
-                "short_title": "Destruction of Records (SOX)",
-                "description": "Destruction, alteration, or falsification of records in federal investigations",
-                "criminal": {"imprisonment": 20, "fine": True},
-                "anticipatory_obstruction": True
-            },
-            "18_USC_1520": {
-                "citation": "18 U.S.C. § 1520",
-                "title": 18,
-                "section": "1520",
-                "short_title": "Destruction of Corporate Audit Records",
-                "description": "Destruction of audit workpapers and records",
-                "criminal": {"imprisonment": 10, "fine": True},
-                "retention_period": {"audit_workpapers": 5, "review_workpapers": 7}
-            },
-            "18_USC_371": {
-                "citation": "18 U.S.C. § 371",
-                "title": 18,
-                "section": "371",
-                "short_title": "Conspiracy",
-                "description": "Conspiracy to commit offense or to defraud United States",
-                "criminal": {"imprisonment": 5, "fine": True}
-            },
-            "18_USC_1341": {
-                "citation": "18 U.S.C. § 1341",
-                "title": 18,
-                "section": "1341",
-                "short_title": "Mail Fraud",
-                "description": "Frauds and swindles using mail",
-                "criminal": {"imprisonment": 20, "fine": True},
-                "financial_institution": {"imprisonment": 30, "fine": 1000000}
-            }
-        }
-    
-    async def enrich_violation_with_govinfo(
-        self,
-        violation: Dict[str, Any]
-    ) -> Dict[str, Any]:
+    def parse_statute_citation(self, citation: str) -> Optional[StatuteReference]:
         """
-        Enrich violation with authoritative GovInfo statute text and metadata.
+        Parse a statute citation string into structured reference.
         
         Args:
-            violation: Violation dictionary from forensic analysis
+            citation: Citation string (e.g., "15 USC § 78p(a)")
             
         Returns:
-            Enriched violation with full legal citations
+            StatuteReference object or None if parsing fails
         """
-        if not self.session:
-            self.session = aiohttp.ClientSession()
-        
-        statute_ref = violation.get("statute", "")
-        
-        # Parse statute reference
-        parsed = self._parse_citation(statute_ref)
-        if not parsed:
-            return violation
-        
-        try:
-            # Fetch from GovInfo
-            if parsed["type"] == "USC":
-                statute_data = await self.fetch_usc_statute(
-                    parsed["title"],
-                    parsed["section"]
-                )
-                violation["govinfo_statute"] = statute_data
-            elif parsed["type"] == "CFR":
-                cfr_data = await self.fetch_cfr_regulation(
-                    parsed["title"],
-                    parsed["part"],
-                    parsed.get("section")
-                )
-                violation["govinfo_regulation"] = cfr_data
-            
-            # Add related authorities from heuristic mapping first
-            related_auths = await self._find_related_authorities(parsed)
-            
-            # Dual-agent augmentation using GovInfoAPIClient relationship features
-            if self.dual_agent and self.govinfo_client and "govinfo_statute" in violation:
-                try:
-                    statute_ref: StatuteReference = violation["govinfo_statute"]
-                    if statute_ref.govinfo_package_id:
-                        rel = await self.govinfo_client.find_implementing_regulations(statute_ref.govinfo_package_id)
-                        # Incorporate CFR references
-                        for r in rel or []:
-                            cfr_cite = r.get("citation") or r.get("title")
-                            if cfr_cite and cfr_cite not in related_auths:
-                                related_auths.append(cfr_cite)
-                except Exception as de:
-                    if self.strict_api_mode:
-                        raise
-                    logger.warning(f"Dual-agent related authority augmentation failed: {de}")
-            
-            violation["related_authorities"] = related_auths
-            
-            # Add enforcement precedents
-            violation["enforcement_precedents"] = await self._find_enforcement_precedents(parsed)
-            
-        except (ValueError, ConnectionError, TimeoutError, RuntimeError) as e:
-            if self.strict_api_mode:
-                # Re-raise in strict mode - we want failures to be visible
-                logger.error(f"GovInfo enrichment FAILED in strict API mode for {statute_ref}: {e}")
-                raise RuntimeError(
-                    f"Statute enrichment failed for {statute_ref} (strict API mode enabled). "
-                    f"Original error: {e}"
-                ) from e
-            else:
-                # Log warning in non-strict mode
-                logger.warning(f"GovInfo enrichment failed for {statute_ref}: {e}")
-        except Exception as e:
-            # Unexpected errors always bubble up
-            logger.error(f"Unexpected error during GovInfo enrichment for {statute_ref}: {e}")
-            raise
-        
-        return violation
-    
-    def _parse_citation(self, citation: str) -> Optional[Dict[str, Any]]:
-        """Parse legal citation into components."""
-        # 15 USC 78j(b)
-        usc_pattern = r"(\d+)\s+U\.?S\.?C\.?\s+§?\s*(\d+[a-z]?(?:-\d+)?(?:\([a-z]\))?)"
-        
-        # 17 CFR 240.10b-5
-        cfr_pattern = r"(\d+)\s+C\.?F\.?R\.?\s+§?\s*(\d+)\.(\d+[a-z]?(?:-\d+)?)"
-        
-        usc_match = re.search(usc_pattern, citation, re.IGNORECASE)
+        # Try USC pattern
+        usc_match = self.USC_PATTERN.search(citation)
         if usc_match:
-            return {
-                "type": "USC",
-                "title": int(usc_match.group(1)),
-                "section": usc_match.group(2)
-            }
-        
-        cfr_match = re.search(cfr_pattern, citation, re.IGNORECASE)
-        if cfr_match:
-            return {
-                "type": "CFR",
-                "title": int(cfr_match.group(1)),
-                "part": int(cfr_match.group(2)),
-                "section": cfr_match.group(3)
-            }
+            title = int(usc_match.group(1))
+            section = usc_match.group(2)
+            subsection = f"({usc_match.group(3)})" if usc_match.group(3) else None
+            
+            # Build citation
+            full_citation = f"{title} USC § {section}"
+            if subsection:
+                full_citation += subsection
+            
+            # Get metadata from SEC statute map
+            metadata = self.SEC_STATUTE_MAP.get(section, {})
+            
+            return StatuteReference(
+                citation=full_citation,
+                title=title,
+                section=section,
+                subsection=subsection,
+                summary=metadata.get("name"),
+                penalties=metadata.get("penalties", {}),
+                severity=metadata.get("severity", StatuteSeverity.REGULATORY),
+                related_cfr=metadata.get("related_cfr", []),
+            )
         
         return None
     
-    async def fetch_usc_statute(
-        self,
-        title: int,
-        section: str,
-        year: Optional[int] = None
-    ) -> StatuteReference:
+    def parse_cfr_citation(self, citation: str) -> Optional[CFRReference]:
         """
-        Fetch USC statute from GovInfo with full metadata.
+        Parse a CFR citation string into structured reference.
         
         Args:
-            title: USC title number
-            section: Section number (e.g., "78j" or "78j(b)")
-            year: Optional year (defaults to most recent)
+            citation: Citation string (e.g., "17 CFR § 240.10b-5")
             
         Returns:
-            Complete statute reference with URLs
+            CFRReference object or None if parsing fails
         """
-        cache_key = f"USC_{title}_{section}_{year or 'latest'}"
-        if cache_key in self.statute_cache:
-            return self.statute_cache[cache_key]
-        
-        if not year:
-            year = datetime.now().year - 1
-        
-        # Clean section identifier
-        clean_section = re.sub(r'[()]', '', section)
-        base_section = re.match(r'(\d+[a-z]?)', clean_section).group(1)
-        package_id = f"USCODE-{year}-title{title}"
-        granule_id = f"USCODE-{year}-title{title}-section{base_section}"
-        
-        # Prefer GovInfoAPIClient in dual-agent mode when available
-        if self.govinfo_client is not None:
-            try:
-                data = await self.govinfo_client.fetch_usc_statute_by_collection(title, base_section, year)
-                statute_ref = StatuteReference(
-                    citation=data.get("citation", f"{title} U.S.C. § {section}"),
-                    title=title,
-                    section=section,
-                    govinfo_package_id=data.get("package_id", package_id),
-                    govinfo_granule_id=granule_id,
-                    text_url=(data.get("download_links", {}) or {}).get("text"),
-                    pdf_url=(data.get("download_links", {}) or {}).get("pdf"),
-                    xml_url=(data.get("download_links", {}) or {}).get("xml"),
-                )
-                db_key = f"{title}_USC_{base_section}"
-                if db_key in self.securities_statutes:
-                    db_info = self.securities_statutes[db_key]
-                    statute_ref.short_title = db_info.get("short_title")
-                    statute_ref.related_cfr = db_info.get("related_cfr", [])
-                    statute_ref.criminal_penalties = db_info.get("criminal")
-                    statute_ref.civil_penalties = {"applicable": db_info.get("civil", False)}
-                self.statute_cache[cache_key] = statute_ref
-                return statute_ref
-            except Exception as e:
-                logger.warning(f"GovInfoAPIClient collection fetch failed for {title} USC {section}: {e}")
-                if self.strict_api_mode:
-                    # Fall through to raise via direct call below to preserve strict behavior
-                    pass
-        
-        # Direct HTTP path (legacy) as fallback
-        url = f"{self.base_url}/packages/{package_id}/granules/{granule_id}"
-        try:
-            async with self.session.get(
-                url,
-                params={"api_key": self.api_key},
-                timeout=aiohttp.ClientTimeout(total=30)
-            ) as response:
-                if response.status == 500:
-                    logger.warning(f"Granule endpoint returned 500, trying package summary for {title} USC {section}")
-                    return await self._fetch_usc_via_package_summary(title, section, year, package_id)
-                if response.status == 200:
-                    data = await response.json()
-                    statute_ref = StatuteReference(
-                        citation=f"{title} U.S.C. § {section}",
-                        title=title,
-                        section=section,
-                        govinfo_package_id=package_id,
-                        govinfo_granule_id=granule_id,
-                        text_url=data.get("download", {}).get("txtLink"),
-                        pdf_url=data.get("download", {}).get("pdfLink"),
-                        xml_url=data.get("download", {}).get("xmlLink")
-                    )
-                    db_key = f"{title}_USC_{base_section}"
-                    if db_key in self.securities_statutes:
-                        db_info = self.securities_statutes[db_key]
-                        statute_ref.short_title = db_info.get("short_title")
-                        statute_ref.related_cfr = db_info.get("related_cfr", [])
-                        statute_ref.criminal_penalties = db_info.get("criminal")
-                        statute_ref.civil_penalties = {"applicable": db_info.get("civil", False)}
-                    self.statute_cache[cache_key] = statute_ref
-                    return statute_ref
-                elif response.status == 404:
-                    if self.strict_api_mode:
-                        raise ValueError(
-                            f"GovInfo API returned 404 for {title} USC {section}. Statute not found. Package: {package_id}, Granule: {granule_id}"
-                        )
-                    return await self._fetch_usc_fallback(title, section, year)
-                else:
-                    error_msg = f"GovInfo USC fetch failed with status {response.status} for {title} USC {section}"
-                    logger.error(error_msg)
-                    if self.strict_api_mode:
-                        raise ConnectionError(
-                            f"{error_msg}. GovInfo API may be unavailable. Check https://api.data.gov/docs/ for service status."
-                        )
-                    return self._create_default_statute_ref(title, section)
-        except asyncio.TimeoutError:
-            error_msg = f"GovInfo USC fetch timeout for {title} USC {section}"
-            logger.error(error_msg)
-            if self.strict_api_mode:
-                raise TimeoutError(f"{error_msg}. GovInfo API did not respond within 30 seconds.")
-            return self._create_default_statute_ref(title, section)
-        except (ValueError, ConnectionError, TimeoutError):
-            raise
-        except Exception as e:
-            error_msg = f"GovInfo USC fetch error for {title} USC {section}: {e}"
-            logger.error(error_msg)
-            if self.strict_api_mode:
-                raise RuntimeError(f"{error_msg}. Unexpected error during GovInfo API call.") from e
-            return self._create_default_statute_ref(title, section)
-    
-    async def _fetch_usc_via_package_summary(
-        self,
-        title: int,
-        section: str,
-        year: int,
-        package_id: str
-    ) -> StatuteReference:
-        """
-        Alternative USC fetch using package summary endpoint.
-        Used when granule endpoint returns 500 error.
-        """
-        url = f"{self.base_url}/packages/{package_id}/summary"
-        
-        try:
-            if not self.session:
-                self.session = aiohttp.ClientSession()
+        cfr_match = self.CFR_PATTERN.search(citation)
+        if cfr_match:
+            title = int(cfr_match.group(1))
+            part = cfr_match.group(2)
+            section = cfr_match.group(3)
             
-            async with self.session.get(
-                url,
-                params={"api_key": self.api_key},
-                timeout=aiohttp.ClientTimeout(total=30)
-            ) as response:
-                if response.status == 200:
-                    data = await response.json()
-                    
-                    # Build statute reference from package data
-                    base_section = re.match(r'(\d+[a-z]?)', section).group(1) if re.match(r'(\d+[a-z]?)', section) else section
-                    
-                    statute_ref = StatuteReference(
-                        citation=f"{title} U.S.C. § {section}",
-                        title=title,
-                        section=section,
-                        govinfo_package_id=package_id,
-                        govinfo_granule_id=None,
-                        text_url=f"https://uscode.house.gov/view.xhtml?req=granuleid:USC-prelim-title{title}-section{base_section}",
-                        pdf_url=data.get("download", {}).get("pdfLink"),
-                        xml_url=data.get("download", {}).get("xmlLink")
-                    )
-                    
-                    # Enrich with metadata
-                    db_key = f"{title}_USC_{base_section}"
-                    if db_key in self.securities_statutes:
-                        db_info = self.securities_statutes[db_key]
-                        statute_ref.short_title = db_info.get("short_title")
-                        statute_ref.related_cfr = db_info.get("related_cfr", [])
-                        statute_ref.criminal_penalties = db_info.get("criminal")
-                        statute_ref.civil_penalties = {"applicable": db_info.get("civil", False)}
-                    
-                    logger.info(f"Fetched {title} USC {section} via package summary (granule endpoint unavailable)")
-                    return statute_ref
-                
-                elif response.status == 500:
-                    if self.strict_api_mode:
-                        raise ConnectionError(
-                            f"GovInfo API experiencing service issues (500 error) for {title} USC {section}"
-                        )
-                else:
-                    if self.strict_api_mode:
-                        raise ConnectionError(
-                            f"GovInfo API returned {response.status} for {title} USC {section}"
-                        )
-        except (ConnectionError, TimeoutError):
-            raise
-        except Exception as e:
-            if self.strict_api_mode:
-                raise RuntimeError(
-                    f"Alternative USC fetch failed for {title} USC {section}: {e}"
-                ) from e
-        
-        return self._create_default_statute_ref(title, section)
-    
-    async def _fetch_usc_fallback(
-        self,
-        title: int,
-        section: str,
-        year: int
-    ) -> StatuteReference:
-        """Fallback USC fetch using collection search."""
-        url = f"{self.base_url}/collections/USCODE/{year}/title-{title}"
-        
-        try:
-            async with self.session.get(
-                url,
-                params={"api_key": self.api_key, "offset": 0, "pageSize": 100},
-                timeout=aiohttp.ClientTimeout(total=30)
-            ) as response:
-                if response.status == 200:
-                    data = await response.json()
-                    # Search for matching section in results
-                    # This is a simplified fallback - full implementation would parse results
-                    pass
-        except Exception:
-            pass
-        
-        return self._create_default_statute_ref(title, section)
-    
-    def _create_default_statute_ref(self, title: int, section: str) -> StatuteReference:
-        """Create statute reference from local database."""
-        # Try different section formats
-        base_section = re.match(r'(\d+[a-z]?)', section).group(1) if re.match(r'(\d+[a-z]?)', section) else section
-        
-        db_info = {}
-        for db_key_candidate in [
-            f"{title}_USC_{section}",
-            f"{title}_USC_{base_section}",
-            f"{title}_USC_{re.sub(r'[()]', '', section)}"
-        ]:
-            if db_key_candidate in self.securities_statutes:
-                db_info = self.securities_statutes[db_key_candidate]
-                break
-        
-        return StatuteReference(
-            citation=f"{title} U.S.C. § {section}",
-            title=title,
-            section=section,
-            short_title=db_info.get("short_title", ""),
-            related_cfr=db_info.get("related_cfr", []),
-            criminal_penalties=db_info.get("criminal"),
-            civil_penalties={"applicable": db_info.get("civil", False) if isinstance(db_info.get("civil"), bool) else db_info.get("civil")}
-        )
-    
-    async def fetch_cfr_regulation(
-        self,
-        title: int,
-        part: int,
-        section: Optional[str] = None,
-        year: Optional[int] = None
-    ) -> CFRReference:
-        """
-        Fetch CFR regulation from GovInfo.
-        
-        Uses proper collection-based API per official documentation.
-        
-        Args:
-            title: CFR title (17 for SEC)
-            part: Part number (e.g., 240 for Exchange Act rules)
-            section: Optional section (e.g., "10b-5")
-            year: Optional year
+            full_citation = f"{title} CFR § {part}.{section}"
             
-        Returns:
-            CFR reference with URLs
-        """
-        cache_key = f"CFR_{title}_{part}_{section}_{year or 'latest'}"
-        if cache_key in self.cfr_cache:
-            return self.cfr_cache[cache_key]
-        
-        if not year:
-            # CFR Title 17 updates April 1
-            year = datetime.now().year
-            if datetime.now().month < 4:
-                year -= 1
-        
-        try:
-            if not self.session:
-                self.session = aiohttp.ClientSession()
-            
-            # Initialize or reuse GovInfo client
-            govinfo_client = self.govinfo_client
-            if govinfo_client is None:
-                if GovInfoAPIClient is None:
-                    raise RuntimeError("GovInfoAPIClient not available")
-                govinfo_client = GovInfoAPIClient(self.api_key)
-                self._own_govinfo_client = True
-                self.govinfo_client = govinfo_client
-            # Reuse same aiohttp session for efficiency
-            try:
-                govinfo_client.session = self.session
-            except Exception:
-                pass
-            
-            # Fetch using collection-based API
-            cfr_data = await govinfo_client.fetch_cfr_regulation_by_collection(
-                title, part, section, year
-            )
-            
-            # Get metadata for cross-referencing
-            db_key = f"{title}_CFR_{part}_{section}" if section else f"{title}_CFR_{part}"
-            db_info = self.sec_regulations.get(db_key.replace(".", "_").replace("-", "_"), {})
-            
-            # Build CFRReference
-            cfr_ref = CFRReference(
-                citation=cfr_data["citation"],
+            return CFRReference(
+                citation=full_citation,
                 title=title,
                 part=part,
                 section=section,
-                govinfo_package_id=cfr_data["package_id"],
-                text_url=cfr_data["download_links"]["text"],
-                pdf_url=cfr_data["download_links"]["pdf"],
-                authority=db_info.get("authority"),
-                source=db_info.get("source")
             )
-            
-            self.cfr_cache[cache_key] = cfr_ref
-            logger.info(f"Successfully fetched {title} CFR {part}.{section or ''} via collection API")
-            return cfr_ref
-            
-        except (ValueError, ConnectionError, TimeoutError) as e:
-            if self.strict_api_mode:
-                logger.error(f"GovInfo API error for {title} CFR {part}: {e}")
-                raise
-            # Non-strict fallback would go here
-            raise
+        
+        return None
     
-    def _get_cfr_volume(self, title: int, part: int) -> int:
-        """Get CFR volume number for title and part."""
-        if title == 17:
-            if part <= 40:
-                return 1
-            elif part <= 199:
-                return 2
-            elif part <= 239:
-                return 3
-            else:
-                return 4
-        return 1
-    
-    async def _find_related_authorities(self, parsed: Dict[str, Any]) -> List[str]:
-        """Find related statutes and regulations."""
-        related = []
-        
-        if parsed["type"] == "USC":
-            title = parsed["title"]
-            section = parsed["section"]
-            
-            # Look up in database
-            db_key = f"{title}_USC_{re.sub(r'[()]', '', section)}"
-            if db_key in self.securities_statutes:
-                info = self.securities_statutes[db_key]
-                related.extend(info.get("related_cfr", []))
-        
-        elif parsed["type"] == "CFR":
-            title = parsed["title"]
-            part = parsed["part"]
-            section = parsed.get("section")
-            
-            # Look up in database
-            db_key = f"{title}_CFR_{part}_{section}" if section else f"{title}_CFR_{part}"
-            if db_key.replace(".", "_").replace("-", "_") in self.sec_regulations:
-                info = self.sec_regulations[db_key.replace(".", "_").replace("-", "_")]
-                if info.get("authority"):
-                    related.append(info["authority"])
-        
-        return related
-    
-    async def _find_enforcement_precedents(
-        self,
-        parsed: Dict[str, Any]
-    ) -> List[Dict[str, Any]]:
-        """Find relevant SEC enforcement actions and court decisions."""
-        # This would connect to SEC's enforcement database
-        # For now, return curated precedents based on statute
-        precedents = []
-        
-        if parsed["type"] == "USC" and parsed["title"] == 15:
-            section = parsed["section"]
-            if "78j" in section:
-                precedents.extend([
-                    {
-                        "case": "SEC v. Texas Gulf Sulphur Co.",
-                        "citation": "401 F.2d 833 (2d Cir. 1968)",
-                        "principle": "Materiality standard for Rule 10b-5",
-                        "date": "1968"
-                    },
-                    {
-                        "case": "Basic Inc. v. Levinson",
-                        "citation": "485 U.S. 224 (1988)",
-                        "principle": "Fraud-on-the-market theory",
-                        "date": "1988"
-                    }
-                ])
-        
-        return precedents
-    
-    async def get_comprehensive_legal_framework(
-        self,
-        violations: List[Dict[str, Any]]
-    ) -> Dict[str, Any]:
+    async def fetch_statute_from_govinfo(self, statute_ref: StatuteReference) -> StatuteReference:
         """
-        Generate comprehensive legal framework for dossier.
+        Fetch complete statute text from GovInfo API.
         
         Args:
-            violations: List of detected violations
+            statute_ref: Statute reference to enrich
             
         Returns:
-            Complete legal framework with all applicable authorities
+            Enriched statute reference with full text
         """
-        framework = {
-            "primary_statutes": [],
-            "regulations": [],
-            "criminal_statutes": [],
-            "case_law": [],
-            "enforcement_precedents": [],
-            "penalty_framework": {}
-        }
+        # Check cache first
+        cache_key = statute_ref.citation
+        if cache_key in self._statute_cache:
+            logger.debug(f"[Statute Cache Hit] {cache_key}")
+            return self._statute_cache[cache_key]
         
-        for violation in violations:
-            # Enrich each violation
-            enriched = await self.enrich_violation_with_govinfo(violation)
+        try:
+            # Build search query for USCODE collection
+            query = f"title:{statute_ref.title} AND section:{statute_ref.section}"
             
-            if "govinfo_statute" in enriched:
-                framework["primary_statutes"].append(enriched["govinfo_statute"])
+            search_request = SearchRequest(
+                query=query,
+                pageSize=5,
+                sorts=[SearchSort("relevancy", "DESC")],
+                resultLevel="full"
+            )
             
-            if "govinfo_regulation" in enriched:
-                framework["regulations"].append(enriched["govinfo_regulation"])
+            # Search for statute
+            response = await self.govinfo_client.search_documents(search_request, collection="USCODE")
             
-            if "related_authorities" in enriched:
-                for auth in enriched["related_authorities"]:
-                    if "18 USC" in auth or "18 U.S.C" in auth:
-                        parsed = self._parse_citation(auth)
-                        if parsed:
-                            criminal = await self.fetch_usc_statute(
-                                parsed["title"],
-                                parsed["section"]
-                            )
-                            framework["criminal_statutes"].append(criminal)
-            
-            if "enforcement_precedents" in enriched:
-                framework["enforcement_precedents"].extend(
-                    enriched["enforcement_precedents"]
-                )
+            if response.results:
+                result = response.results[0]
+                
+                # Try to get full text
+                if "txt" in result.download:
+                    txt_url = result.download["txt"]
+                    async with aiohttp.ClientSession() as session:
+                        async with session.get(txt_url) as resp:
+                            if resp.status == 200:
+                                statute_ref.full_text = await resp.text()
+                
+                statute_ref.govinfo_url = result.resultLink
+                statute_ref.package_id = result.packageId
+                statute_ref.last_updated = datetime.utcnow()
+                
+                logger.info(f"✅ Fetched statute from GovInfo: {statute_ref.citation}")
+            else:
+                logger.warning(f"⚠️ No GovInfo results for statute: {statute_ref.citation}")
+                if self.strict_api_mode:
+                    raise ValueError(f"Statute not found in GovInfo: {statute_ref.citation}")
         
-        # Calculate penalty framework
-        framework["penalty_framework"] = self._calculate_penalty_framework(violations)
+        except Exception as e:
+            logger.error(f"❌ GovInfo API error for {statute_ref.citation}: {e}")
+            if self.strict_api_mode:
+                raise
+            # In non-strict mode, continue with partial data
+        
+        # Cache result
+        self._statute_cache[cache_key] = statute_ref
+        return statute_ref
+    
+    async def fetch_cfr_from_govinfo(self, cfr_ref: CFRReference) -> CFRReference:
+        """
+        Fetch complete CFR regulation text from GovInfo API.
+        
+        Args:
+            cfr_ref: CFR reference to enrich
+            
+        Returns:
+            Enriched CFR reference with full text
+        """
+        # Check cache first
+        cache_key = cfr_ref.citation
+        if cache_key in self._cfr_cache:
+            logger.debug(f"[CFR Cache Hit] {cache_key}")
+            return self._cfr_cache[cache_key]
+        
+        try:
+            # Build search query for CFR collection
+            query = f"title:{cfr_ref.title} AND part:{cfr_ref.part} AND section:{cfr_ref.section}"
+            
+            search_request = SearchRequest(
+                query=query,
+                pageSize=5,
+                sorts=[SearchSort("relevancy", "DESC")],
+                resultLevel="full"
+            )
+            
+            # Search for CFR
+            response = await self.govinfo_client.search_documents(search_request, collection="CFR")
+            
+            if response.results:
+                result = response.results[0]
+                
+                # Try to get full text
+                if "txt" in result.download:
+                    txt_url = result.download["txt"]
+                    async with aiohttp.ClientSession() as session:
+                        async with session.get(txt_url) as resp:
+                            if resp.status == 200:
+                                cfr_ref.full_text = await resp.text()
+                
+                cfr_ref.govinfo_url = result.resultLink
+                cfr_ref.package_id = result.packageId
+                cfr_ref.last_updated = datetime.utcnow()
+                
+                logger.info(f"✅ Fetched CFR from GovInfo: {cfr_ref.citation}")
+            else:
+                logger.warning(f"⚠️ No GovInfo results for CFR: {cfr_ref.citation}")
+                if self.strict_api_mode:
+                    raise ValueError(f"CFR not found in GovInfo: {cfr_ref.citation}")
+        
+        except Exception as e:
+            logger.error(f"❌ GovInfo API error for {cfr_ref.citation}: {e}")
+            if self.strict_api_mode:
+                raise
+        
+        # Cache result
+        self._cfr_cache[cache_key] = cfr_ref
+        return cfr_ref
+    
+    async def build_legal_framework(
+        self,
+        primary_citation: str,
+        include_related: bool = True
+    ) -> LegalFramework:
+        """
+        Build complete legal framework for a statute citation.
+        
+        This is called by the Anthropic agent when cross-referencing
+        violations flagged by the OpenAI agent.
+        
+        Args:
+            primary_citation: Primary statute citation (e.g., "15 USC § 78p(a)")
+            include_related: Whether to include related statutes and CFRs
+            
+        Returns:
+            Complete legal framework with all correlated statutes
+        """
+        logger.info(f"[Legal Framework] Building framework for: {primary_citation}")
+        
+        # Parse primary statute
+        primary_statute = self.parse_statute_citation(primary_citation)
+        if not primary_statute:
+            raise ValueError(f"Invalid statute citation: {primary_citation}")
+        
+        # Fetch full text from GovInfo
+        primary_statute = await self.fetch_statute_from_govinfo(primary_statute)
+        
+        # Build framework
+        framework = LegalFramework(primary_statute=primary_statute)
+        
+        if include_related:
+            # Fetch related CFR regulations
+            for cfr_citation in primary_statute.related_cfr:
+                cfr_ref = self.parse_cfr_citation(cfr_citation)
+                if cfr_ref:
+                    cfr_ref = await self.fetch_cfr_from_govinfo(cfr_ref)
+                    framework.cfr_regulations.append(cfr_ref)
+            
+            # Search for related statutes
+            related_citations = await self._find_related_statutes(primary_statute)
+            for citation in related_citations:
+                related_ref = self.parse_statute_citation(citation)
+                if related_ref:
+                    related_ref = await self.fetch_statute_from_govinfo(related_ref)
+                    framework.related_statutes.append(related_ref)
+        
+        logger.info(
+            f"✅ Legal framework built: {len(framework.related_statutes)} related statutes, "
+            f"{len(framework.cfr_regulations)} CFR regulations"
+        )
         
         return framework
     
-    def _calculate_penalty_framework(
-        self,
-        violations: List[Dict[str, Any]]
-    ) -> Dict[str, Any]:
-        """Calculate comprehensive penalty exposure."""
-        penalties = {
-            "criminal_exposure": {
-                "max_imprisonment_years": 0,
-                "max_individual_fine": 0,
-                "max_entity_fine": 0,
-                "statutes": []
-            },
-            "civil_exposure": {
-                "max_per_violation": 0,
-                "estimated_violations": len(violations),
-                "total_estimated": 0,
-                "statutes": []
-            },
-            "disgorgement_exposure": {
-                "estimated": 0,
-                "treble_damages": False
-            }
-        }
+    async def _find_related_statutes(self, statute_ref: StatuteReference) -> List[str]:
+        """
+        Find related statutes in the same title.
         
-        for violation in violations:
-            statute = violation.get("statute", "")
+        Args:
+            statute_ref: Primary statute reference
             
-            # Check against database
-            for key, info in {**self.securities_statutes, **self.related_criminal_statutes}.items():
-                if info["citation"] in statute or key.replace("_", " ") in statute:
-                    # Criminal penalties
-                    if "criminal" in info:
-                        crim = info["criminal"]
-                        penalties["criminal_exposure"]["max_imprisonment_years"] = max(
-                            penalties["criminal_exposure"]["max_imprisonment_years"],
-                            crim.get("imprisonment", 0)
-                        )
-                        if crim.get("fine"):
-                            if isinstance(crim["fine"], int):
-                                penalties["criminal_exposure"]["max_individual_fine"] = max(
-                                    penalties["criminal_exposure"]["max_individual_fine"],
-                                    crim["fine"]
-                                )
-                        penalties["criminal_exposure"]["statutes"].append(info["citation"])
-                    
-                    # Willful enhancement
-                    if "willful" in info:
-                        willful = info["willful"]
-                        penalties["criminal_exposure"]["max_imprisonment_years"] = max(
-                            penalties["criminal_exposure"]["max_imprisonment_years"],
-                            willful.get("imprisonment", 0)
-                        )
-                    
-                    # Civil penalties
-                    if info.get("civil") or "civil_penalties" in info:
-                        civil_info = info.get("civil_penalties", {})
-                        tier3 = civil_info.get("tier3", 1000000)
-                        penalties["civil_exposure"]["max_per_violation"] = max(
-                            penalties["civil_exposure"]["max_per_violation"],
-                            tier3
-                        )
-                        penalties["civil_exposure"]["statutes"].append(info["citation"])
+        Returns:
+            List of related statute citations
+        """
+        related = []
         
-        # Calculate total civil exposure
-        penalties["civil_exposure"]["total_estimated"] = (
-            penalties["civil_exposure"]["max_per_violation"] *
-            penalties["civil_exposure"]["estimated_violations"]
-        )
+        # For SEC statutes (Title 15), find related sections
+        if statute_ref.title == 15 and statute_ref.section.startswith("78"):
+            # Common related SEC statutes
+            base_section = statute_ref.section[:3]  # e.g., "78p" -> "78"
+            
+            related_sections = {
+                "78p": ["78m", "78j"],  # Section 16 related to 13, 10
+                "78m": ["78p", "78j"],  # Section 13 related to 16, 10
+                "78j": ["78m", "78p"],  # Section 10 related to 13, 16
+            }
+            
+            if statute_ref.section in related_sections:
+                for related_sec in related_sections[statute_ref.section]:
+                    related.append(f"{statute_ref.title} USC § {related_sec}")
         
-        return penalties
+        return related
     
-    async def close(self):
-        """Close HTTP session."""
-        if self.session and not self.session.closed:
-            await self.session.close()
-            self.session = None
-        # Also close owned GovInfoAPIClient session if we created it
+    async def cross_reference_violation(
+        self,
+        violation: Dict[str, Any],
+        filing_content: str
+    ) -> Dict[str, Any]:
+        """
+        Cross-reference a flagged violation with complete legal framework.
+        
+        This is the main entry point called by the Anthropic agent during
+        dual-agent investigation workflow.
+        
+        Args:
+            violation: Violation dict from OpenAI agent
+            filing_content: Original filing content for evidence extraction
+            
+        Returns:
+            Enhanced violation with complete legal framework
+        """
+        logger.info(f"[Cross-Reference] Processing violation: {violation.get('type', 'UNKNOWN')}")
+        
+        # Extract statute citation
+        statute_citation = violation.get("statute")
+        if not statute_citation:
+            logger.warning(f"⚠️ No statute citation in violation: {violation}")
+            return violation
+        
+        # Build complete legal framework
         try:
-            if self._own_govinfo_client and self.govinfo_client:
-                await self.govinfo_client.close()
-        except Exception:
-            pass
+            framework = await self.build_legal_framework(statute_citation, include_related=True)
+            
+            # Enhance violation with framework
+            enhanced_violation = {
+                **violation,
+                "legal_framework": {
+                    "primary_statute": {
+                        "citation": framework.primary_statute.citation,
+                        "full_text": framework.primary_statute.full_text,
+                        "summary": framework.primary_statute.summary,
+                        "penalties": framework.primary_statute.penalties,
+                        "severity": framework.primary_statute.severity.value,
+                        "govinfo_url": framework.primary_statute.govinfo_url,
+                    },
+                    "related_statutes": [
+                        {
+                            "citation": s.citation,
+                            "summary": s.summary,
+                            "govinfo_url": s.govinfo_url,
+                        }
+                        for s in framework.related_statutes
+                    ],
+                    "cfr_regulations": [
+                        {
+                            "citation": c.citation,
+                            "full_text": c.full_text,
+                            "govinfo_url": c.govinfo_url,
+                        }
+                        for c in framework.cfr_regulations
+                    ],
+                },
+                "cross_reference_complete": True,
+                "cross_reference_timestamp": datetime.utcnow().isoformat(),
+            }
+            
+            logger.info(f"✅ Cross-reference complete for: {violation.get('type')}")
+            return enhanced_violation
+        
+        except Exception as e:
+            logger.error(f"❌ Cross-reference failed: {e}")
+            if self.strict_api_mode:
+                raise
+            
+            # In non-strict mode, return original violation with error flag
+            return {
+                **violation,
+                "cross_reference_error": str(e),
+                "cross_reference_complete": False,
+            }
     
-    def __del__(self):
-        """Cleanup on deletion."""
-        if self.session and not self.session.closed:
-            try:
-                asyncio.get_event_loop().run_until_complete(self.close())
-            except Exception:
-                pass
+    async def batch_cross_reference(
+        self,
+        violations: List[Dict[str, Any]],
+        filing_content: str,
+        max_concurrent: int = 5
+    ) -> List[Dict[str, Any]]:
+        """
+        Cross-reference multiple violations in batch.
+        
+        Args:
+            violations: List of violations from OpenAI agent
+            filing_content: Original filing content
+            max_concurrent: Maximum concurrent API requests
+            
+        Returns:
+            List of enhanced violations with legal frameworks
+        """
+        logger.info(f"[Batch Cross-Reference] Processing {len(violations)} violations")
+        
+        # Create semaphore for rate limiting
+        semaphore = asyncio.Semaphore(max_concurrent)
+        
+        async def process_one(violation: Dict[str, Any]) -> Dict[str, Any]:
+            async with semaphore:
+                return await self.cross_reference_violation(violation, filing_content)
+        
+        # Process all violations concurrently
+        tasks = [process_one(v) for v in violations]
+        enhanced_violations = await asyncio.gather(*tasks, return_exceptions=True)
+        
+        # Filter out exceptions
+        results = []
+        for i, result in enumerate(enhanced_violations):
+            if isinstance(result, Exception):
+                logger.error(f"❌ Batch cross-reference error for violation {i}: {result}")
+                results.append(violations[i])  # Return original on error
+            else:
+                results.append(result)
+        
+        logger.info(f"✅ Batch cross-reference complete: {len(results)} violations processed")
+        return results
 

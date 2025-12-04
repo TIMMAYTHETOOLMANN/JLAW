@@ -5,11 +5,18 @@ Uses Anthropic's Claude models for multi-pass deep analysis and reasoning.
 """
 
 import asyncio
+import os
 from typing import Dict, List, Optional, Any
 from datetime import datetime, timezone
 import json
 import logging
-import anthropic
+
+try:
+    import anthropic
+    ANTHROPIC_AVAILABLE = True
+except ImportError:
+    ANTHROPIC_AVAILABLE = False
+    anthropic = None
 
 from src.forensics.sec_edgar_analyzer import FilingAnalysis, SECForensicAnalyzer
 from src.forensics.config_manager import get_config
@@ -33,26 +40,37 @@ class AnthropicAgentAnalyzer:
         """
         config = get_config()
         
-        # Load API key
-        self.api_key = api_key or config.config.anthropic.api_key
-        if not self.api_key:
-            raise ValueError(
-                "ANTHROPIC_API_KEY required for Anthropic agent analysis. "
-                "Set in .env file or pass to constructor."
-            )
-        
         # Configuration
         self.user_agent = user_agent or config.config.sec.user_agent
         self.model = config.config.anthropic.model
         self.max_tokens = config.config.anthropic.max_tokens
         
-        # Initialize Anthropic client
-        self.client = anthropic.Anthropic(api_key=self.api_key)
+        # Prioritize direct Anthropic API first, then fall back to OpenRouter
+        anthropic_key = api_key or config.config.anthropic.api_key
+        openrouter_key = os.getenv('OPENROUTER_API_KEY')
+        
+        if anthropic_key and ANTHROPIC_AVAILABLE:
+            # Use direct Anthropic API (preferred)
+            logger.info("🔄 Using direct Anthropic API ($15 credits available)")
+            self.client = anthropic.Anthropic(api_key=anthropic_key)
+            self.using_openrouter = False
+        elif openrouter_key:
+            # Use OpenRouter adapter as fallback
+            logger.info("🔄 Using OpenRouter API (fallback)")
+            from src.forensics.openrouter_adapter import create_anthropic_compatible_client
+            self.client = create_anthropic_compatible_client(openrouter_key)
+            self.using_openrouter = True
+        else:
+            raise ValueError(
+                "Either ANTHROPIC_API_KEY or OPENROUTER_API_KEY required. "
+                "Set in .env file or pass to constructor."
+            )
         
         # Fallback to manual analyzer for compatibility
         self.manual_analyzer = SECForensicAnalyzer(user_agent=self.user_agent)
         
-        logger.info(f"✅ Anthropic agent analyzer initialized with model: {self.model}")
+        provider = "OpenRouter" if self.using_openrouter else "Anthropic"
+        logger.info(f"✅ {provider} agent analyzer initialized with model: {self.model}")
 
     async def analyze_text(self, content: str, context: Optional[Dict] = None) -> Dict[str, Any]:
         """Analyze arbitrary text content using Claude's deep reasoning path.

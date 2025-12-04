@@ -4,18 +4,25 @@ Uses OpenAI Agent SDK for semantic document understanding and self-healing extra
 """
 
 import asyncio
-import aiohttp
-from typing import Dict, List, Optional, Any
-from datetime import datetime, timezone
-import json
 import logging
-from pathlib import Path
+from datetime import datetime, timezone
+from typing import Dict, Optional, Any
 
-from agents import Agent, function_tool
+import aiohttp
+import openai
+
 from src.forensics.sec_edgar_analyzer import FilingAnalysis, SECForensicAnalyzer
 from src.forensics.config_manager import get_config
 
 logger = logging.getLogger(__name__)
+
+try:
+    from agents import Agent, function_tool
+    AGENTS_SDK_AVAILABLE = True
+except ImportError:
+    AGENTS_SDK_AVAILABLE = False
+    logger.warning("OpenAI agents SDK not available, using direct API calls")
+
 
 
 class AgentSECForensicAnalyzer:
@@ -23,7 +30,7 @@ class AgentSECForensicAnalyzer:
     SEC forensic analyzer powered by OpenAI Agent SDK.
     Provides intelligent web scraping, semantic document understanding, and self-healing extraction.
     """
-    
+
     def __init__(self, api_key: Optional[str] = None, user_agent: Optional[str] = None):
         """
         Initialize agent-based SEC analyzer.
@@ -33,7 +40,7 @@ class AgentSECForensicAnalyzer:
             user_agent: SEC-compliant User-Agent string
         """
         config = get_config()
-        
+
         # Load API key
         self.api_key = api_key or config.config.openai.api_key
         if not self.api_key:
@@ -41,29 +48,40 @@ class AgentSECForensicAnalyzer:
                 "OPENAI_API_KEY required for agent-based analysis. "
                 "Set in .env file or pass to constructor."
             )
-        
+
         # Configuration
         self.user_agent = user_agent or config.config.sec.user_agent
         self.model = config.config.openai.model
         self.max_tokens = config.config.openai.max_tokens
-        
+
         # Fallback to manual analyzer for compatibility
         self.manual_analyzer = SECForensicAnalyzer(user_agent=self.user_agent)
         
-        # Create the agent with forensic analysis tools
-        self.agent = Agent(
-            name="SEC Forensic Analyzer",
-            model=self.model,
-            tools=[
-                self._create_fetch_filing_tool(),
-                self._create_parse_violations_tool(),
-                self._create_extract_financial_data_tool()
-            ],
-            instructions=self._get_instructions()
-        )
+        # Initialize OpenAI client
+        self.client = openai.OpenAI(api_key=self.api_key)
         
-        logger.info(f"✅ Agent-based SEC analyzer initialized with model: {self.model}")
-    
+        # Use agent SDK if available, otherwise direct API
+        if AGENTS_SDK_AVAILABLE:
+            try:
+                # Create the agent with forensic analysis tools
+                self.agent = Agent(
+                    name="SEC Forensic Analyzer",
+                    model=self.model,
+                    tools=[
+                        self._create_fetch_filing_tool(),
+                        self._create_parse_violations_tool(),
+                        self._create_extract_financial_data_tool()
+                    ],
+                    instructions=self._get_instructions()
+                )
+                logger.info(f"✅ Agent-based SEC analyzer initialized with model: {self.model}")
+            except Exception as e:
+                logger.warning(f"Agent SDK initialization failed: {e}, using direct API")
+                self.agent = None
+        else:
+            self.agent = None
+            logger.info(f"✅ Direct API SEC analyzer initialized with model: {self.model}")
+
     def _get_instructions(self) -> str:
         """Get agent instructions for forensic SEC analysis."""
         return """
@@ -100,10 +118,10 @@ Maintain forensic chain of custody:
 - Preserve original content hashes
 - Note any extraction difficulties or anomalies
 """
-    
+
     def _create_fetch_filing_tool(self) -> function_tool:
         """Create tool for intelligent filing fetching."""
-        
+
         @function_tool
         async def fetch_sec_filing(url: str, form_type: str, filing_date: Optional[str] = None) -> Dict[str, Any]:
             """
@@ -118,13 +136,13 @@ Maintain forensic chain of custody:
                 Dictionary with filing content, metadata, and extraction status
             """
             logger.info(f"[Agent Tool] Fetching {form_type} from {url}")
-            
+
             # Strategy 1: Try primary URL
             try:
                 async with aiohttp.ClientSession() as session:
                     headers = {'User-Agent': self.user_agent, 'Accept': 'text/xml,application/xml,text/html'}
                     await asyncio.sleep(0.35)  # SEC rate limiting
-                    
+
                     async with session.get(url, headers=headers, timeout=aiohttp.ClientTimeout(total=30)) as response:
                         if response.status == 200:
                             content = await response.text()
@@ -142,11 +160,11 @@ Maintain forensic chain of custody:
                             logger.warning(f"[Agent Tool] Primary URL returned 404: {url}")
             except Exception as e:
                 logger.warning(f"[Agent Tool] Primary URL failed: {e}")
-            
+
             # Strategy 2: Try alternative URLs for Form 4
             if form_type.upper() in ('4', '4/A'):
                 logger.info("[Agent Tool] Trying alternative Form 4 URL patterns")
-                
+
                 # Extract accession directory
                 import re
                 match = re.search(r'(https://www\.sec\.gov/Archives/edgar/data/\d+/\d+)', url)
@@ -158,13 +176,14 @@ Maintain forensic chain of custody:
                         f"{acc_root}/xslF345X03/form4.xml",
                         f"{acc_root}/xslF345X03/edgardoc.xml"
                     ]
-                    
+
                     for alt_url in alternates:
                         try:
                             async with aiohttp.ClientSession() as session:
                                 headers = {'User-Agent': self.user_agent}
                                 await asyncio.sleep(0.35)
-                                async with session.get(alt_url, headers=headers, timeout=aiohttp.ClientTimeout(total=20)) as resp:
+                                async with session.get(alt_url, headers=headers,
+                                                       timeout=aiohttp.ClientTimeout(total=20)) as resp:
                                     if resp.status == 200:
                                         content = await resp.text()
                                         logger.info(f"[Agent Tool] ✓ Found via alternate: {alt_url}")
@@ -179,7 +198,7 @@ Maintain forensic chain of custody:
                                         }
                         except Exception:
                             continue
-            
+
             # Strategy 3: Fall back to manual analyzer
             logger.warning("[Agent Tool] All strategies failed, using manual fallback")
             return {
@@ -189,14 +208,15 @@ Maintain forensic chain of custody:
                 'filing_date': filing_date,
                 'message': 'Agent extraction failed, manual analyzer will be used'
             }
-        
+
         return fetch_sec_filing
-    
+
     def _create_parse_violations_tool(self) -> function_tool:
         """Create tool for parsing violations from filing content."""
-        
+
         @function_tool
-        def parse_sec_violations(content: str, form_type: str, url: str, filing_date: Optional[str] = None) -> Dict[str, Any]:
+        def parse_sec_violations(content: str, form_type: str, url: str, filing_date: Optional[str] = None) -> Dict[
+            str, Any]:
             """
             Parse SEC filing for violations using semantic understanding.
             
@@ -210,20 +230,20 @@ Maintain forensic chain of custody:
                 Dictionary with detected violations and evidence
             """
             logger.info(f"[Agent Tool] Parsing {form_type} for violations (content length: {len(content)})")
-            
+
             violations = []
-            
+
             # Form 4 specific analysis
             if form_type.upper() in ('4', '4/A'):
                 # Extract transaction dates and prices
                 import re
-                
+
                 # Transaction date pattern
                 tx_dates = re.findall(r'<transactionDate>.*?<value>(.*?)</value>', content, re.IGNORECASE)
-                
+
                 # Price patterns (zero-dollar detection)
                 prices = re.findall(r'<transactionPricePerShare>.*?<value>(.*?)</value>', content, re.IGNORECASE)
-                
+
                 # Late filing detection
                 if filing_date and tx_dates:
                     from datetime import datetime, timedelta
@@ -231,7 +251,7 @@ Maintain forensic chain of custody:
                         file_dt = datetime.strptime(filing_date, '%Y-%m-%d')
                         for tx_date_str in tx_dates:
                             tx_dt = datetime.strptime(tx_date_str, '%Y-%m-%d')
-                            
+
                             # Calculate business days
                             days = 0
                             current = tx_dt
@@ -239,7 +259,7 @@ Maintain forensic chain of custody:
                                 current += timedelta(days=1)
                                 if current.weekday() < 5:  # Mon-Fri
                                     days += 1
-                            
+
                             if days > 2:
                                 violations.append({
                                     'type': 'late_form4',
@@ -253,7 +273,7 @@ Maintain forensic chain of custody:
                                 })
                     except Exception as e:
                         logger.warning(f"[Agent Tool] Date parsing error: {e}")
-                
+
                 # Zero-dollar transaction detection
                 for price in prices:
                     try:
@@ -269,7 +289,7 @@ Maintain forensic chain of custody:
                             })
                     except ValueError:
                         continue
-            
+
             logger.info(f"[Agent Tool] ✓ Found {len(violations)} violations")
             return {
                 'violations': violations,
@@ -277,12 +297,12 @@ Maintain forensic chain of custody:
                 'form_type': form_type,
                 'url': url
             }
-        
+
         return parse_sec_violations
-    
+
     def _create_extract_financial_data_tool(self) -> function_tool:
         """Create tool for extracting financial metrics."""
-        
+
         @function_tool
         def extract_financial_metrics(content: str, form_type: str) -> Dict[str, Any]:
             """
@@ -296,41 +316,41 @@ Maintain forensic chain of custody:
                 Extracted financial metrics
             """
             logger.info(f"[Agent Tool] Extracting financial metrics from {form_type}")
-            
+
             # Simple extraction for now (can be enhanced with agent reasoning)
             import re
-            
+
             metrics = {}
-            
+
             # Revenue patterns
             revenue_patterns = [
                 r'revenue[s]?\s*[:$]?\s*([\d,]+)',
                 r'net\s+revenue[s]?\s*[:$]?\s*([\d,]+)',
                 r'total\s+revenue[s]?\s*[:$]?\s*([\d,]+)'
             ]
-            
+
             for pattern in revenue_patterns:
                 matches = re.findall(pattern, content, re.IGNORECASE)
                 if matches:
                     metrics['revenue_mentions'] = len(matches)
                     break
-            
+
             return {
                 'metrics': metrics,
                 'extraction_method': 'regex_patterns',
                 'form_type': form_type
             }
-        
+
         return extract_financial_metrics
-    
+
     async def analyze_filing(
-        self,
-        cik: str,
-        accession_number: str,
-        filing_type: str,
-        document_url: str,
-        viewer_url: Optional[str] = None,
-        filing_date: Optional[str] = None
+            self,
+            cik: str,
+            accession_number: str,
+            filing_type: str,
+            document_url: str,
+            viewer_url: Optional[str] = None,
+            filing_date: Optional[str] = None
     ) -> FilingAnalysis:
         """
         Analyze SEC filing using agent-based intelligence.
@@ -348,28 +368,29 @@ Maintain forensic chain of custody:
             FilingAnalysis with detected violations and fraud indicators
         """
         logger.info(f"[Agent Analyzer] Analyzing {filing_type} for CIK {cik}")
-        
+
         try:
             # Use agent to fetch and analyze
             # Note: In production, would use agent.run() with conversation context
             # For now, using tools directly for faster integration
-            
+
             # Fetch filing
             fetch_tool = self._create_fetch_filing_tool()
             fetch_result = await fetch_tool(document_url, filing_type, filing_date)
-            
+
             if fetch_result.get('status') == 'success':
                 content = fetch_result.get('content', '')
-                
+
                 # Parse violations
                 parse_tool = self._create_parse_violations_tool()
                 parse_result = parse_tool(content, filing_type, document_url, filing_date)
-                
+
                 violations = parse_result.get('violations', [])
-                
+
                 # Build FilingAnalysis
-                filing_dt = datetime.fromisoformat(filing_date + "T00:00:00") if filing_date else datetime.now(timezone.utc)
-                
+                filing_dt = datetime.fromisoformat(filing_date + "T00:00:00") if filing_date else datetime.now(
+                    timezone.utc)
+
                 analysis = FilingAnalysis(
                     cik=cik,
                     filing_type=filing_type,
@@ -396,10 +417,10 @@ Maintain forensic chain of custody:
                     narrative_consistency=0.0,
                     integrity_hash=""
                 )
-                
+
                 logger.info(f"[Agent Analyzer] ✓ Detected {len(violations)} violations using agent intelligence")
                 return analysis
-            
+
             else:
                 logger.warning("[Agent Analyzer] Agent extraction failed, falling back to manual analyzer")
                 return await self.manual_analyzer.analyze_filing(
@@ -409,7 +430,7 @@ Maintain forensic chain of custody:
                     document_url=document_url,
                     viewer_url=viewer_url
                 )
-        
+
         except Exception as e:
             logger.error(f"[Agent Analyzer] Error during agent analysis: {e}, falling back to manual")
             return await self.manual_analyzer.analyze_filing(
@@ -420,12 +441,80 @@ Maintain forensic chain of custody:
                 viewer_url=viewer_url
             )
 
+    def _parse_with_direct_api(self, content: str, form_type: str, url: str, filing_date: Optional[str] = None) -> Dict[str, Any]:
+        """
+        Parse violations using direct OpenAI API calls (fallback when agent SDK fails).
+        """
+        logger.info(f"[Direct API] Parsing {form_type} for violations")
+        
+        system_prompt = """You are an expert SEC forensic analyst. Analyze SEC filings for violations.
+
+Detect these violation types:
+1. Late Form 4 filings (>2 business days from transaction date)
+2. Zero-dollar transactions (potential gifts/RSU vesting without proper disclosure)
+3. SOX certification deficiencies
+4. Material misstatements
+
+Return JSON array of violations with structure:
+{
+  "type": "late_form4" | "zero_dollar_transaction" | "sox_deficiency" | "material_misstatement",
+  "severity": "CRITICAL" | "HIGH" | "MEDIUM" | "LOW",
+  "description": "Brief description",
+  "statute": "15 USC § 78p(a)" (or appropriate statute),
+  "exact_quote": "Relevant quote from document",
+  "evidence": "Supporting evidence"
+}"""
+        
+        user_prompt = f"""Analyze this {form_type} filing for violations:
+
+Filing Date: {filing_date or 'Unknown'}
+Document URL: {url}
+
+Content (first 8000 chars):
+{content[:8000]}
+
+Return JSON array of detected violations."""
+        
+        try:
+            response = self.client.chat.completions.create(
+                model=self.model,
+                messages=[
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user", "content": user_prompt}
+                ],
+                response_format={"type": "json_object"},
+                max_tokens=self.max_tokens
+            )
+            
+            result_text = response.choices[0].message.content
+            result = json.loads(result_text)
+            
+            violations = result.get("violations", [])
+            logger.info(f"[Direct API] Detected {len(violations)} violations")
+            
+            return {
+                "violations": violations,
+                "violation_count": len(violations),
+                "method": "direct_api",
+                "model": self.model
+            }
+        
+        except Exception as e:
+            logger.error(f"[Direct API] Failed: {e}")
+            # Return empty violations on error
+            return {
+                "violations": [],
+                "violation_count": 0,
+                "method": "direct_api_failed",
+                "error": str(e)
+            }
+
     def parse_violations_from_content(
-        self,
-        content: str,
-        form_type: str,
-        url: str,
-        filing_date: Optional[str] = None
+            self,
+            content: str,
+            form_type: str,
+            url: str,
+            filing_date: Optional[str] = None
     ) -> Dict[str, Any]:
         """
         Public interface for parsing violations from filing content.
@@ -441,6 +530,13 @@ Maintain forensic chain of custody:
         Returns:
             Dictionary with detected violations and evidence
         """
-        parse_tool = self._create_parse_violations_tool()
-        return parse_tool(content, form_type, url, filing_date)
-
+        # Try agent SDK if available
+        if self.agent and AGENTS_SDK_AVAILABLE:
+            try:
+                parse_tool = self._create_parse_violations_tool()
+                return parse_tool(content, form_type, url, filing_date)
+            except Exception as e:
+                logger.warning(f"Agent SDK parsing failed: {e}, using direct API")
+        
+        # Fallback to direct API
+        return self._parse_with_direct_api(content, form_type, url, filing_date)
