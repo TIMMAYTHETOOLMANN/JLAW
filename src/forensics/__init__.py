@@ -34,6 +34,7 @@ logger = logging.getLogger(__name__)
 # =============================================================================
 
 from .sec_edgar_analyzer import SECForensicAnalyzer, FilingAnalysis
+from .sec_edgar_api import SECEdgarAPI, FilingMetadata, fetch_nike_2019_filings, get_filings_sync
 from .statute_mapper import StatuteMapper, StatuteViolation, StatuteTitle
 from .api_resilience import (
     CircuitBreaker, CircuitBreakerConfig, CircuitState,
@@ -47,6 +48,9 @@ from .immutable_storage import (
 )
 from .forensic_orchestrator import (
     ForensicOrchestrator, ForensicCase, InvestigationStatus
+)
+from .insider_form4_analyzer import (
+    InsiderForm4Analyzer, Form4ViolationRecord
 )
 from .ml_fraud_detector import (
     AdvancedFraudDetector, FraudPrediction,

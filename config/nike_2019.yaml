@@ -1,0 +1,165 @@
+# Nike Inc. 2019 Investigation Configuration
+# ============================================
+
+investigation:
+  case_id: "NIKE_2019"
+  company: "Nike Inc."
+  cik: "0000320187"
+  ticker: "NKE"
+  fiscal_year: 2019
+  start_date: "2019-01-01"
+  end_date: "2019-12-31"
+  
+  # Investigation scope
+  filing_types:
+    - "10-K"
+    - "10-Q"
+    - "8-K"
+    - "4"
+    - "SC 13G"
+    - "SC 13G/A"
+    - "DEF 14A"
+  
+  # Analysis modules to enable
+  modules:
+    sec_edgar: true
+    form4_insider: true
+    statute_mapper: true
+    fraud_detector: true
+    temporal_reconciliation: true
+    contradiction_detection: true
+    dual_agent: true
+    govinfo_enrichment: true
+
+# SEC EDGAR API Configuration
+sec_edgar:
+  rate_limit_delay: 0.15  # 150ms between requests (6.67 req/sec)
+  cache_enabled: true
+  cache_dir: "forensic_storage/sec_cache"
+  user_agent: "JLAW-Forensics/2.0 (SEC Forensic Analysis; contact@jlaw-forensics.org)"
+  
+# Forensic Analysis Settings
+analysis:
+  fraud_detection:
+    threshold: 0.5
+    ml_models:
+      - beneish_m_score
+      - altman_z_score
+      - piotroski_f_score
+  
+  temporal_analysis:
+    restatement_detection: true
+    ratio_anomaly_detection: true
+    reconciliation_tests: true
+  
+  statute_mapping:
+    jurisdictions:
+      - federal
+      - sec
+    violation_severity_threshold: "MEDIUM"
+  
+  contradiction_detection:
+    semantic_analysis: true
+    cross_filing_comparison: true
+    timeline_reconstruction: true
+
+# Dual Agent Configuration
+dual_agent:
+  enabled: true
+  providers:
+    openai:
+      enabled: true
+      model: "gpt-4"
+    anthropic:
+      enabled: true
+      model: "claude-3-5-sonnet-20241022"
+  
+  # Cross-validation settings
+  agreement_threshold: 0.75
+  merge_strategy: "union"  # union, intersection, weighted
+
+# GovInfo Enrichment
+govinfo:
+  enabled: true
+  max_references_per_statute: 5
+  include_caselaw: true
+  include_regulations: true
+  include_criminal_code: true
+
+# Evidence Storage
+evidence:
+  storage_dir: "forensic_storage/evidence"
+  immutable_storage: true
+  chain_of_custody: true
+  cryptographic_signing: true
+  hash_algorithm: "SHA-256"
+
+# Reporting Configuration
+reporting:
+  output_dir: "forensic_reports/nike_2019"
+  formats:
+    - "json"
+    - "pdf"
+    - "html"
+  include_executive_summary: true
+  include_dossier: true
+  include_prosecution_path: true
+
+# Audit and Logging
+audit:
+  enabled: true
+  audit_log_path: "forensic_storage/audit/nike_2019_audit.log"
+  integrity_verification: true
+  export_for_court: true
+
+# Performance Settings
+performance:
+  parallel_analysis: true
+  max_workers: 4
+  batch_size: 10
+  memory_limit: "4GB"
+
+# Legal Framework
+legal:
+  primary_statutes:
+    - title: 15
+      sections: ["78j(b)", "78m(a)", "78m(b)(2)", "78p(a)", "78ff"]
+  
+  regulations:
+    - "17 CFR 240.10b-5"
+    - "17 CFR 240.13a-1"
+    - "17 CFR 240.13a-13"
+    - "17 CFR 240.16a-3"
+  
+  criminal_statutes:
+    - title: 18
+      sections: ["1343", "1348", "1350", "1519"]
+
+# Nike-Specific Investigation Parameters
+nike_specific:
+  focus_areas:
+    - "Revenue recognition practices"
+    - "Insider trading patterns (Form 4 violations)"
+    - "Inventory accounting"
+    - "Foreign operations disclosure"
+    - "Executive compensation"
+  
+  key_executives:
+    - "Mark Parker (CEO)"
+    - "Andrew Campion (CFO)"
+  
+  # Known issues to investigate
+  red_flags:
+    - "Q3 2019 earnings surprise"
+    - "Digital sales growth discrepancies"
+    - "North America segment weakness"
+    - "Currency impact disclosure inconsistencies"
+  
+  peer_comparison:
+    enabled: true
+    peers:
+      - "Adidas AG"
+      - "Under Armour Inc."
+      - "Puma SE"
+      - "VF Corporation"
+

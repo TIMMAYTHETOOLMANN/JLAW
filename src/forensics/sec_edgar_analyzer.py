@@ -187,7 +187,7 @@ class SECForensicAnalyzer:
                         accession_number,
                     )
                     text = extraction.raw_text or ""
-                    # 1) Restatement detection with exact quotes (ENHANCED: comprehensive keywords and context)
+                    # 1) Restatement detection with exact quotes (EXPANDED keywords and context)
                     restat_hits = []
                     # ENHANCED: Comprehensive misstatement/restatement keyword patterns
                     kw_pattern = r"(restat\w*|reissu\w*|revision|modified\s+retrospective|material\s+weakness\s+restatement|restating|corrected?\s+(?:financial|prior|error)|adjustment\s+to\s+prior|prior\s+period\s+(?:error|adjustment)|material\s+error|material\s+misstat\w*|significant\s+(?:error|correction)|accounting\s+error|subsequently\s+(?:discovered|identified)\s+error|revised\s+(?:consolidated|financial)|reclassifi(?:ed|cation)|recast\w*)"
@@ -278,14 +278,16 @@ class SECForensicAnalyzer:
                                         if any(tok in low for tok in ex312_patterns):
                                             has_312 = True
                                 exhibits_snapshot = ", ".join(names[:20])
-                            # FIXED: Fallback logic should trigger on pattern mismatch, not just exception
-                            if not has_311 or not has_312:
-                                has_311 = has_311 or (re.search(r"Exhibit\s*31\.1", text, re.IGNORECASE) is not None)
-                                has_312 = has_312 or (re.search(r"Exhibit\s*31\.2", text, re.IGNORECASE) is not None)
-                        except Exception:
+                            # FIXED: Fallback to text search if patterns didn't match (not just on exception)
+                            if not has_311:
+                                has_311 = re.search(r"Exhibit\s*31[\.\-_]?1", text, re.IGNORECASE) is not None
+                            if not has_312:
+                                has_312 = re.search(r"Exhibit\s*31[\.\-_]?2", text, re.IGNORECASE) is not None
+                        except Exception as e:
                             # Fallback to text search if index.json not available
-                            has_311 = re.search(r"Exhibit\s*31\.1", text, re.IGNORECASE) is not None
-                            has_312 = re.search(r"Exhibit\s*31\.2", text, re.IGNORECASE) is not None
+                            logger.warning(f"SOX 302 index.json check failed: {e}, falling back to text search")
+                            has_311 = re.search(r"Exhibit\s*31[\.\-_]?1", text, re.IGNORECASE) is not None
+                            has_312 = re.search(r"Exhibit\s*31[\.\-_]?2", text, re.IGNORECASE) is not None
 
                     if filing_type in ("10-K", "10-Q") and (not has_311 or not has_312):
                         acc_clean = accession_number.replace('-', '')

@@ -13,8 +13,6 @@ from datetime import datetime, timezone
 from enum import Enum
 import uuid
 
-import aiohttp
-
 from src.forensics.sec_edgar_analyzer import SECForensicAnalyzer, FilingAnalysis
 from src.forensics.statute_mapper import StatuteMapper, StatuteViolation
 from src.forensics.immutable_storage import ImmutableStorage, StorageConfig, AppendOnlyLog
@@ -25,9 +23,6 @@ from src.forensics.core.integrity_manager import (
 from src.forensics.forensic_dossier_generator import ForensicDossierGenerator
 from src.forensics.insider_form4_analyzer import InsiderForm4Analyzer
 from src.forensics.supplementary_collector import SupplementaryDocumentCollector
-
-# SEC rate limiting delay in seconds (10 requests per second = 0.1s minimum, use 0.35s for safety)
-SEC_RATE_LIMIT_DELAY = 0.35
 
 class InvestigationStatus(Enum):
     """Investigation status states."""
@@ -196,23 +191,6 @@ class ForensicOrchestrator:
         
         # Specialized analyzers
         self.form4_analyzer = InsiderForm4Analyzer()
-        
-        # Dual-Agent Tandem Investigation Coordinator
-        # Enables sophisticated investigative workflow where:
-        # - OpenAI flags violations initially
-        # - Anthropic cross-references using GovInfo API
-        # - All statutes and legal frameworks are correlated
-        self.dual_agent_coordinator = None
-        try:
-            from src.forensics.dual_agent import DualAgentCoordinator
-            self.dual_agent_coordinator = DualAgentCoordinator()
-            dual_avail = self.dual_agent_coordinator.availability()
-            self.logger.info(
-                f"✅ Dual-agent coordinator initialized (OpenAI={dual_avail.get('openai')}, "
-                f"Anthropic={dual_avail.get('anthropic')}, GovInfo={dual_avail.get('govinfo')})"
-            )
-        except Exception as e:
-            self.logger.warning(f"⚠️ Dual-agent coordinator unavailable: {e}")
 
     # ----------------------
     # Helpers / formatters
@@ -352,252 +330,6 @@ class ForensicOrchestrator:
             case.status = InvestigationStatus.FAILED
             await self.audit_log.append(
                 event="INVESTIGATION_FAILED",
-                actor=case.investigator or "SYSTEM",
-                action="FAIL",
-                target=case_id,
-                result="FAILURE",
-                details={"error": str(e)}
-            )
-            raise
-
-    async def run_tandem_investigation(
-        self,
-        case_id: str,
-        filing_types: List[str] = ["10-K", "10-Q", "4"],
-        years: int = 3,
-        enable_govinfo_enrichment: bool = True
-    ) -> Dict[str, Any]:
-        """
-        Run enhanced dual-agent tandem investigation.
-        
-        This is the sophisticated investigative workflow that ensures:
-        1. OpenAI agent performs initial violation detection
-        2. Anthropic agent cross-references ALL findings using GovInfo API
-        3. Every statute and legal framework correlated with filings is retrieved
-        4. Nothing is missed through dual-pass validation
-        
-        Args:
-            case_id: Case identifier
-            filing_types: Types of filings to analyze
-            years: Number of years to analyze
-            enable_govinfo_enrichment: Whether to enrich with GovInfo statutes
-            
-        Returns:
-            Enhanced investigation results with:
-            - Dual-agent validated violations
-            - Complete statutory cross-references
-            - Nothing-missed validation metrics
-        """
-        if case_id not in self.active_cases:
-            raise ValueError(f"Case {case_id} not found")
-        
-        if not self.dual_agent_coordinator:
-            self.logger.warning("Dual-agent coordinator not available, falling back to standard investigation")
-            return await self.run_full_investigation(case_id, filing_types, years)
-        
-        case = self.active_cases[case_id]
-        tandem_results: Dict[str, Any] = {
-            "case_id": case_id,
-            "investigation_type": "TANDEM_DUAL_AGENT",
-            "filing_investigations": [],
-            "aggregated_summary": {},
-            "nothing_missed_validation": {},
-        }
-        
-        try:
-            # Step 1: Collect filings (same as standard investigation)
-            case.status = InvestigationStatus.COLLECTING
-            filings = await self._collect_filings(case, filing_types, years)
-            self.logger.info(f"[Tandem] Collected {len(filings)} filings for dual-agent investigation")
-            
-            # Step 2: Run tandem investigation on each filing
-            case.status = InvestigationStatus.ANALYZING
-            all_merged_violations: List[Dict[str, Any]] = []
-            all_statutes: List[Dict[str, Any]] = []
-            all_regulations: List[Dict[str, Any]] = []
-            
-            async with aiohttp.ClientSession() as session:
-                for filing in filings:
-                    # Fetch filing content
-                    document_url = filing.get("document_url") or filing.get("text_url")
-                    if not document_url:
-                        continue
-                    
-                    try:
-                        headers = {'User-Agent': self.user_agent}
-                        await asyncio.sleep(SEC_RATE_LIMIT_DELAY)  # SEC rate limiting
-                        
-                        async with session.get(document_url, headers=headers, timeout=aiohttp.ClientTimeout(total=30)) as response:
-                            if response.status != 200:
-                                self.logger.warning(f"[Tandem] Failed to fetch {document_url}: {response.status}")
-                                continue
-                            
-                            content = await response.text()
-                        
-                        # Run dual-agent tandem investigation
-                        filing_metadata = {
-                            "filing_type": filing.get("form_type", "UNKNOWN"),
-                            "document_url": document_url,
-                            "filing_date": filing.get("filing_date"),
-                            "cik": case.target_cik,
-                            "company_name": case.target_company,
-                            "accession": filing.get("accession", ""),
-                        }
-                        
-                        investigation_result = await self.dual_agent_coordinator.investigate_with_cross_reference(
-                            content=content,
-                            filing_metadata=filing_metadata,
-                            enable_govinfo_enrichment=enable_govinfo_enrichment
-                        )
-                        
-                        tandem_results["filing_investigations"].append({
-                            "filing": filing_metadata,
-                            "result": investigation_result,
-                        })
-                        
-                        # Aggregate violations and statutes
-                        all_merged_violations.extend(investigation_result.get("merged_violations", []))
-                        govinfo = investigation_result.get("govinfo_statutes", {})
-                        all_statutes.extend(govinfo.get("statutes", []))
-                        all_regulations.extend(govinfo.get("regulations", []))
-                        
-                        self.logger.info(
-                            f"[Tandem] {filing.get('form_type')} {filing.get('filing_date')}: "
-                            f"{len(investigation_result.get('merged_violations', []))} violations, "
-                            f"{investigation_result.get('investigation_summary', {}).get('statutes_correlated', 0)} statutes"
-                        )
-                        
-                    except Exception as fe:
-                        self.logger.error(f"[Tandem] Filing investigation failed for {document_url}: {fe}")
-                        continue
-            
-            # Step 3: Convert merged violations to FilingAnalysis format for case
-            case.status = InvestigationStatus.MAPPING_VIOLATIONS
-            for v in all_merged_violations:
-                # Build FilingAnalysis red flag from violation
-                rf = {
-                    "type": v.get("type") or v.get("violation_type", "unknown"),
-                    "severity": v.get("severity", "MEDIUM"),
-                    "description": v.get("description", ""),
-                    "exact_quote": v.get("exact_quote", ""),
-                    "document_url": v.get("document_url") or v.get("url", ""),
-                    "viewer_url": v.get("viewer_url"),
-                    "section": v.get("section", ""),
-                    "prosecutorial_merit": v.get("prosecutorial_merit", "MODERATE"),
-                    "estimated_damages": v.get("estimated_damages"),
-                    "evidence_refs": v.get("evidence_refs", []),
-                    "statute": v.get("statute", ""),
-                    "_source": v.get("_source", "dual_agent"),
-                    "_confirmed_by": v.get("_confirmed_by", []),
-                }
-                
-                # Map to statute violations
-                violations = await self.statute_mapper.map_violations({
-                    "red_flags": [rf],
-                    "fraud_indicators": {},
-                    "revenue_anomalies": []
-                })
-                case.violations_detected.extend(violations)
-            
-            # Close statute mapper session
-            await self.statute_mapper.close()
-            
-            # Deduplicate violations
-            seen = set()
-            unique_violations = []
-            for v in case.violations_detected:
-                key = f"{v.title}_{v.section}_{v.description[:50]}"
-                if key not in seen:
-                    seen.add(key)
-                    unique_violations.append(v)
-            case.violations_detected = unique_violations
-            
-            # Step 4: Calculate risk score
-            case.risk_score = self._calculate_risk_score(case)
-            
-            # Step 5: Generate aggregated summary
-            total_openai = sum(
-                len(inv.get("result", {}).get("openai_findings", {}).get("violations", []))
-                for inv in tandem_results["filing_investigations"]
-            )
-            total_anthropic = sum(
-                len(inv.get("result", {}).get("anthropic_cross_reference", {}).get("violations", []))
-                for inv in tandem_results["filing_investigations"]
-            )
-            
-            # Deduplicate statutes
-            unique_statutes = []
-            seen_citations = set()
-            for s in all_statutes:
-                citation = s.get("citation", str(s))
-                if citation not in seen_citations:
-                    seen_citations.add(citation)
-                    unique_statutes.append(s)
-            
-            unique_regulations = []
-            for r in all_regulations:
-                citation = r.get("citation", str(r))
-                if citation not in seen_citations:
-                    seen_citations.add(citation)
-                    unique_regulations.append(r)
-            
-            tandem_results["aggregated_summary"] = {
-                "filings_analyzed": len(tandem_results["filing_investigations"]),
-                "total_violations_detected": len(all_merged_violations),
-                "openai_total_findings": total_openai,
-                "anthropic_total_findings": total_anthropic,
-                "statutes_correlated": len(unique_statutes),
-                "regulations_correlated": len(unique_regulations),
-                "case_risk_score": case.risk_score,
-                "statute_details": unique_statutes,
-                "regulation_details": unique_regulations,
-            }
-            
-            # Nothing-missed validation
-            tandem_results["nothing_missed_validation"] = {
-                "dual_agent_coverage": True,
-                "openai_agent_ran": total_openai > 0 or len(tandem_results["filing_investigations"]) > 0,
-                "anthropic_cross_reference_ran": total_anthropic > 0 or len(tandem_results["filing_investigations"]) > 0,
-                "govinfo_enrichment_ran": enable_govinfo_enrichment and len(unique_statutes) > 0,
-                "all_violations_merged": len(all_merged_violations) >= max(total_openai, total_anthropic),
-                "validation_passed": True,
-            }
-            
-            # Step 6: Generate report
-            case.status = InvestigationStatus.GENERATING_REPORT
-            report = await self._generate_case_report(case_id)
-            
-            # Merge tandem results into report
-            report["tandem_investigation"] = tandem_results
-            
-            # Complete
-            case.status = InvestigationStatus.COMPLETE
-            
-            await self.audit_log.append(
-                event="TANDEM_INVESTIGATION_COMPLETE",
-                actor=case.investigator or "SYSTEM",
-                action="COMPLETE",
-                target=case_id,
-                result="SUCCESS",
-                details={
-                    "risk_score": case.risk_score,
-                    "violations": len(case.violations_detected),
-                    "statutes_correlated": len(unique_statutes),
-                    "dual_agent_validated": True
-                }
-            )
-            
-            self.logger.info(
-                f"[Tandem] Investigation complete: {len(case.violations_detected)} violations, "
-                f"{len(unique_statutes)} statutes, risk_score={case.risk_score:.2f}"
-            )
-            
-            return report
-            
-        except Exception as e:
-            case.status = InvestigationStatus.FAILED
-            await self.audit_log.append(
-                event="TANDEM_INVESTIGATION_FAILED",
                 actor=case.investigator or "SYSTEM",
                 action="FAIL",
                 target=case_id,
@@ -867,7 +599,7 @@ class ForensicOrchestrator:
 
                 # After supplementing with issuer Form 4 entries, include newly allowed items into analysis list
                 try:
-                    #h.  EXPANDED: Match comprehensive filing types from config/nike_2019.yaml benchmark
+                    # EXPANDED: Match comprehensive filing types from config/nike_2019.yaml benchmark
                     # Includes: 10-K, 10-Q, 8-K, 4, SC 13G, DEF 14A, 11-K and all /A amendments
                     allowed_set = {
                         "10-K", "10-K/A",
