@@ -13,7 +13,8 @@ import aiohttp
 import asyncio
 from dataclasses import dataclass
 from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Tuple
+import json
 import re
 import xml.etree.ElementTree as ET
 import logging
@@ -54,65 +55,42 @@ class InsiderForm4Analyzer:
         filing_date_str: Optional[str] = None
     ) -> List[Form4ViolationRecord]:
         """Analyze a single Form 4 XML using HOLY GRAIL Universal Extractor."""
-        xml_text = await self._fetch(xml_url)
+        # Resolve and fetch robustly (handles xslF345X03/, edgardoc.xml, form4.xml, wf-form4*.xml)
+        resolved_url, xml_text = await self._resolve_form4_xml_url(xml_url)
+        if resolved_url != xml_url:
+            logger.info(f"[Form4 URL Resolver] Resolved URL: {xml_url} → {resolved_url}")
+        xml_url = resolved_url
         violations: List[Form4ViolationRecord] = []
 
-        # HOLY GRAIL INTEGRATION: Use Universal SEC Extractor for 100% coverage
-        logger.info(f"[Form4 Holy Grail] Extracting: {xml_url}")
-        extractor = UniversalDocumentExtractor()
+        # Parse Form 4 XML using robust lxml parser with fallback
+        logger.info(f"[Form4 Parser] Parsing: {xml_url}")
+        tx_records: List[Dict[str, Optional[str]]] = []
+        root = None
         
         try:
-            extraction_result = await extractor.extract_document(
-                content=xml_text,
-                url=xml_url,
-                force_format=DocumentFormat.XML
-            )
+            from lxml import etree
+            parser = etree.XMLParser(recover=True, remove_blank_text=True, huge_tree=True)
+            root = etree.fromstring(xml_text.encode('utf-8'), parser)
             
-            logger.info(f"[Form4 Holy Grail] Coverage: {extraction_result.byte_coverage:.1%}, Elements: {extraction_result.element_count}")
-            
-            # Extract transactions from structured data
-            tx_records: List[Dict[str, Optional[str]]] = []
-            
-            if 'transactions' in extraction_result.structured_data:
-                transactions = extraction_result.structured_data['transactions']
-                logger.info(f"[Form4 Holy Grail] Found {len(transactions)} transactions")
-                
-                for tx in transactions:
-                    # Normalize field names to match our detection logic
-                    tx_record = {
-                        'date': tx.get('transactionDate'),
-                        'price': tx.get('transactionPricePerShare'),
-                        'shares': tx.get('transactionShares'),
-                        'code': tx.get('transactionCode'),
-                        'acq_disp': tx.get('transactionAcquiredDisposedCode')
-                    }
-                    tx_records.append(tx_record)
-                    logger.info(f"[Form4 Holy Grail] Transaction: {tx_record}")
-            else:
-                logger.warning(f"[Form4 Holy Grail] No transactions found in structured_data")
-                # Fallback to regex extraction
-                tx_records = []
-        
+            if root is not None and hasattr(root, 'xpath'):
+                for tx_type in ['nonDerivativeTransaction', 'derivativeTransaction']:
+                    for tx in root.xpath(f'//*[local-name()="{tx_type}"]'):
+                        tx_data = self._parse_transaction_xml_comprehensive(tx)
+                        tx_records.append(tx_data)
+                logger.info(f"[Form4 Parser] Found {len(tx_records)} transactions via lxml")
         except Exception as e:
-            logger.error(f"[Form4 Holy Grail] Extraction failed: {e}, falling back to legacy parsing")
-            # Fallback to legacy XML parsing
+            logger.warning(f"[Form4 Parser] lxml parsing failed: {e}, trying ElementTree")
+            # Fallback to ElementTree
             try:
-                from lxml import etree
-                parser = etree.XMLParser(recover=True, remove_blank_text=True, huge_tree=True)
-                root = etree.fromstring(xml_text.encode('utf-8'), parser)
-                tx_records = []
-                
-                if root is not None and hasattr(root, 'xpath'):
-                    for tx_type in ['nonDerivativeTransaction', 'derivativeTransaction']:
-                        for tx in root.xpath(f'//*[local-name()="{tx_type}"]'):
-                            tx_data = self._parse_transaction_xml_comprehensive(tx)
-                            tx_records.append(tx_data)
+                import xml.etree.ElementTree as ET
+                root = ET.fromstring(xml_text)
+                # Will be handled by the ElementTree fallback code below
             except Exception as e2:
-                logger.error(f"[Form4] Fallback also failed: {e2}")
-                tx_records = []
-        
+                logger.error(f"[Form4 Parser] ElementTree also failed: {e2}")
+                root = None
+
         # Continue with existing violation detection logic
-        if not tx_records:
+        if not tx_records and root is not None:
             # Fallback for ElementTree (no XPath)
             def _ln(tag: str) -> str:
                 return tag[tag.rfind('}')+1:] if '}' in tag else tag
@@ -352,22 +330,194 @@ class InsiderForm4Analyzer:
         
         return violations
 
-    async def _fetch(self, url: str) -> str:
-        # Rate limit
-        await asyncio.sleep(0.6)
-        
-        for attempt in range(4):
+    async def _fetch(self, url: str, accept: str = "text/xml,application/xml;q=0.9,*/*;q=0.8", return_json: bool = False) -> str:
+        """Fetch a URL with SEC-compliant headers and resilient backoff.
+        If return_json is True, parse and return JSON text (raw str is still returned; JSON parsing used elsewhere).
+        """
+        await asyncio.sleep(0.3)  # gentle rate limit per SEC guidance
+        headers = {
+            "User-Agent": self.user_agent,
+            "Accept": accept,
+            "Connection": "keep-alive",
+        }
+        last_exc: Optional[Exception] = None
+        for attempt in range(6):
             try:
-                async with aiohttp.ClientSession(headers={"User-Agent": self.user_agent}) as session:
+                timeout = aiohttp.ClientTimeout(total=30)
+                async with aiohttp.ClientSession(headers=headers, timeout=timeout) as session:
                     async with session.get(url) as resp:
-                        if resp.status == 200:
+                        status = resp.status
+                        if status == 200:
                             return await resp.text()
-                        # backoff with jitter
-                        await asyncio.sleep(1 + attempt * 0.5 + (0.2 * attempt))
-            except Exception:
-                if attempt == 3:
-                    raise
+                        if status in (301, 302, 303, 307, 308):
+                            # Let aiohttp follow redirects automatically; if not, handle location
+                            loc = resp.headers.get('Location')
+                            if loc:
+                                url = loc
+                                continue
+                        if status in (403, 429):
+                            # Too many requests or forbidden: exponential backoff with jitter
+                            await asyncio.sleep(min(2 ** attempt * 0.5, 8) + 0.1 * attempt)
+                            continue
+                        if status == 404:
+                            raise FileNotFoundError(f"HTTP 404 for {url}")
+                        # Other errors: brief backoff and retry
+                        await asyncio.sleep(0.5 + 0.2 * attempt)
+            except Exception as e:
+                last_exc = e
+                await asyncio.sleep(0.4 + 0.2 * attempt)
+        if last_exc:
+            raise last_exc
         raise RuntimeError(f"Failed to fetch {url}")
+
+    async def _try_get(self, url: str, accept: str = "text/xml,application/xml;q=0.9,*/*;q=0.8") -> Tuple[int, Optional[str]]:
+        """Lightweight GET that returns (status, text or None)."""
+        try:
+            await asyncio.sleep(0.2)
+            headers = {
+                "User-Agent": self.user_agent,
+                "Accept": accept,
+            }
+            timeout = aiohttp.ClientTimeout(total=20)
+            async with aiohttp.ClientSession(headers=headers, timeout=timeout) as session:
+                async with session.get(url) as resp:
+                    status = resp.status
+                    if status == 200:
+                        return status, await resp.text()
+                    return status, None
+        except Exception:
+            return 0, None
+
+    async def _resolve_form4_xml_url(self, xml_url: str) -> Tuple[str, str]:
+        """Resolve a robust Form 4 XML URL and return (resolved_url, content).
+        CRITICAL FIX: Fetch the raw .txt filing file and extract XML from <TEXT><XML>...</XML></TEXT>
+        """
+        attempts: List[str] = []
+        
+        # CRITICAL: The xslF345X03/form4.xml URLs return HTML, not XML!
+        # We need to get the raw .txt file instead
+        
+        # Extract accession number from URL
+        # Example: .../000112760219035995/xslF345X03/form4.xml -> 000112760219035995
+        accession_match = re.search(r'/(\d{18})/', xml_url)
+        if accession_match:
+            accession = accession_match.group(1)
+            # Format as 0001127602-19-035995
+            formatted_accession = f"{accession[:10]}-{accession[10:12]}-{accession[12:]}"
+            
+            # Construct the .txt file URL
+            txt_url = xml_url.split('/xslF345X03')[0] if '/xslF345X03' in xml_url else xml_url.rsplit('/', 1)[0]
+            txt_url = f"{txt_url}/{formatted_accession}.txt"
+            
+            logger.info(f"[Form4 URL Resolver] Fetching raw filing: {txt_url}")
+            status, text = await self._try_get(txt_url)
+            if status == 200 and text:
+                # Extract XML from <TEXT><XML>...</XML></TEXT> section
+                xml_match = re.search(r'<TEXT>\s*<XML>(.*?)</XML>\s*</TEXT>', text, re.DOTALL | re.IGNORECASE)
+                if xml_match:
+                    xml_content = xml_match.group(1).strip()
+                    logger.info(f"[Form4 URL Resolver] Successfully extracted XML ({len(xml_content)} bytes)")
+                    return txt_url, xml_content
+                else:
+                    logger.warning(f"[Form4 URL Resolver] No <XML> section found in {txt_url}")
+                    attempts.append(f"{txt_url} -> XML section not found")
+            else:
+                attempts.append(f"{txt_url} -> {status}")
+        
+        # Fallback: Try the provided URL first
+        status, text = await self._try_get(xml_url)
+        if status == 200 and text and '<ownershipDocument>' in text:
+            return xml_url, text
+        attempts.append(f"{xml_url} -> {status}")
+
+        # 2) Derive accession root path
+        acc_root = None
+        m = re.search(r"(https://www\\.sec\\.gov/Archives/edgar/data/\\d+/\\d+)", xml_url)
+        if m:
+            acc_root = m.group(1)
+        else:
+            # Fallback: strip to parent dir, then parent if last folder is xslF345X03
+            try:
+                base_dir = xml_url.rsplit('/', 1)[0]
+                if base_dir.endswith('/xslF345X03'):
+                    acc_root = base_dir.rsplit('/', 1)[0]
+                else:
+                    acc_root = base_dir
+            except Exception:
+                acc_root = None
+
+        candidates: List[str] = []
+        if acc_root:
+            candidates.extend([
+                f"{acc_root}/edgardoc.xml",
+                f"{acc_root}/form4.xml",
+                f"{acc_root}/xslF345X03/edgardoc.xml",
+                f"{acc_root}/xslF345X03/form4.xml",
+            ])
+
+        # 3) Try common candidate paths
+        for url in candidates:
+            status, text = await self._try_get(url)
+            if status == 200 and text:
+                logger.info(f"[Form4 URL Resolver] Selected candidate: {url}")
+                return url, text
+            attempts.append(f"{url} -> {status}")
+
+        # 4) Directory discovery via index.json (top-level)
+        if acc_root:
+            index_url = f"{acc_root}/index.json"
+            status, idx_text = await self._try_get(index_url, accept="application/json, */*;q=0.8")
+            attempts.append(f"{index_url} -> {status}")
+            if status == 200 and idx_text:
+                try:
+                    idx = json.loads(idx_text)
+                    items = (idx.get('directory') or {}).get('item') or []
+                    # First pass: direct XML files matching preferred names
+                    preferred_xml = None
+                    any_xml = None
+                    for it in items:
+                        name = it.get('name') or ''
+                        itype = it.get('type') or ''
+                        href = it.get('href') or name
+                        if itype == 'file' and name.lower().endswith('.xml'):
+                            any_xml = href
+                            lname = name.lower()
+                            if lname == 'edgardoc.xml' or lname == 'form4.xml' or lname.startswith('wf-form4'):
+                                preferred_xml = href
+                                break
+                    chosen = preferred_xml or any_xml
+                    if chosen:
+                        url = f"{acc_root}/{chosen}"
+                        status, text = await self._try_get(url)
+                        if status == 200 and text:
+                            logger.info(f"[Form4 URL Resolver] Discovered via index.json: {url}")
+                            return url, text
+                        attempts.append(f"{url} -> {status}")
+                    # Second pass: if xslF345X03 dir exists, inspect it
+                    xsl_dir = next((it for it in items if (it.get('type') == 'dir' and (it.get('name') or '').lower() == 'xslf345x03')), None)
+                    if xsl_dir:
+                        xsl_index = f"{acc_root}/xslF345X03/index.json"
+                        s2, idx2_text = await self._try_get(xsl_index, accept="application/json, */*;q=0.8")
+                        attempts.append(f"{xsl_index} -> {s2}")
+                        if s2 == 200 and idx2_text:
+                            idx2 = json.loads(idx2_text)
+                            items2 = (idx2.get('directory') or {}).get('item') or []
+                            # Look for form4.xml or edgardoc.xml inside xsl folder
+                            for it2 in items2:
+                                name2 = (it2.get('name') or '').lower()
+                                if name2 in ('form4.xml', 'edgardoc.xml') or name2.startswith('wf-form4'):
+                                    url = f"{acc_root}/xslF345X03/{it2.get('name')}"
+                                    s3, text3 = await self._try_get(url)
+                                    if s3 == 200 and text3:
+                                        logger.info(f"[Form4 URL Resolver] Discovered via xsl index: {url}")
+                                        return url, text3
+                                    attempts.append(f"{url} -> {s3}")
+                except Exception as e:
+                    logger.warning(f"[Form4 URL Resolver] Failed to parse index.json at {index_url}: {e}")
+
+        # 5) If everything fails, raise with diagnostics
+        logger.error("[Form4 URL Resolver] All attempts failed:\n  " + "\n  ".join(attempts))
+        raise RuntimeError(f"Failed to resolve Form 4 XML URL starting from {xml_url}")
 
     def _business_days_between(self, start: datetime, end: datetime) -> int:
         if end < start:
@@ -394,6 +544,7 @@ class InsiderForm4Analyzer:
         """
         HOLY GRAIL: Parse transaction element with comprehensive field extraction.
         Handles nested <value> elements and multiple field name variations.
+        Supports both lxml (xpath) and ElementTree (iteration) elements.
         """
         tx_data = {}
         
@@ -408,14 +559,41 @@ class InsiderForm4Analyzer:
             'ownership': ['directOrIndirectOwnership', 'ownershipNature']
         }
         
+        # Check if this is lxml element (supports xpath) or ElementTree
+        has_xpath = hasattr(tx_elem, 'xpath')
+        
+        # Helper to strip namespace from tag
+        def _local_name(tag: str) -> str:
+            return tag[tag.rfind('}')+1:] if '}' in tag else tag
+        
         # Extract each field type
         for key, field_names in field_mappings.items():
             for field_name in field_names:
-                # Use XPath with local-name() for namespace handling
-                elem = tx_elem.find(f'.//*[local-name()="{field_name}"]')
+                elem = None
+                
+                if has_xpath:
+                    # lxml: Use XPath with local-name() for namespace handling
+                    matches = tx_elem.xpath(f'.//*[local-name()="{field_name}"]')
+                    elem = matches[0] if matches else None
+                else:
+                    # ElementTree: Iterate and match by local name
+                    for child in tx_elem.iter():
+                        if _local_name(child.tag).lower() == field_name.lower():
+                            elem = child
+                            break
+                
                 if elem is not None:
                     # Check for nested <value> element (common in Form 4 XML)
-                    value_elem = elem.find('.//*[local-name()="value"]')
+                    value_elem = None
+                    if has_xpath:
+                        value_matches = elem.xpath('.//*[local-name()="value"]')
+                        value_elem = value_matches[0] if value_matches else None
+                    else:
+                        for child in elem.iter():
+                            if _local_name(child.tag).lower() == 'value':
+                                value_elem = child
+                                break
+                    
                     if value_elem is not None and hasattr(value_elem, 'text') and value_elem.text:
                         tx_data[key] = value_elem.text.strip()
                         break
