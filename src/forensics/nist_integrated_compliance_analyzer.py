@@ -30,6 +30,11 @@ try:
 except ImportError:
     TORCH_AVAILABLE = False
     torch = None
+    
+    # Create mock for type checking
+    from typing import TYPE_CHECKING
+    if TYPE_CHECKING:
+        import torch
 
 try:
     from transformers import AutoTokenizer, AutoModelForSequenceClassification
@@ -1100,7 +1105,7 @@ class CUDAPatternMatcher:
             f"Memory: {torch.cuda.get_device_properties(0).total_memory / 1e9:.2f} GB"
         )
     
-    def compile_patterns_to_cuda(self) -> torch.Tensor:
+    def compile_patterns_to_cuda(self) -> Any:
         """
         Compile common fraud patterns to GPU tensors.
         
@@ -1137,7 +1142,7 @@ class CUDAPatternMatcher:
         logger.info(f"Compiled {len(fraud_patterns)} fraud patterns to GPU")
         return pattern_tensor
     
-    def vectorize_documents(self, documents: List[str]) -> torch.Tensor:
+    def vectorize_documents(self, documents: List[str]) -> Any:
         """
         Vectorize documents for GPU processing.
         
@@ -1167,7 +1172,7 @@ class CUDAPatternMatcher:
         doc_tensor = torch.tensor(vectors, dtype=torch.float32).to(self.device)
         return doc_tensor
     
-    def vectorize_patterns(self, patterns: List[str]) -> torch.Tensor:
+    def vectorize_patterns(self, patterns: List[str]) -> Any:
         """
         Vectorize patterns for GPU processing.
         
@@ -1264,8 +1269,8 @@ class CUDAPatternMatcher:
     
     def extract_matches(
         self,
-        match_indices: Tuple[torch.Tensor, torch.Tensor],
-        similarity_matrix: torch.Tensor,
+        match_indices: Tuple[Any, Any],
+        similarity_matrix: Any,
         offset: int = 0
     ) -> List[Dict[str, Any]]:
         """

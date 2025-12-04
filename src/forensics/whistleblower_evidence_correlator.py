@@ -14,6 +14,8 @@ import logging
 import re
 from collections import defaultdict
 
+logger = logging.getLogger(__name__)
+
 try:
     from sentence_transformers import SentenceTransformer
     from sklearn.metrics.pairwise import cosine_similarity
@@ -25,8 +27,6 @@ except ImportError:
 from src.forensics.core.integrity_manager import (
     ForensicHashChain, IntegrityLevel
 )
-
-logger = logging.getLogger(__name__)
 
 
 class WhistleblowerProtection(Enum):

@@ -105,9 +105,56 @@ async def run_nike_2019_production():
                 
                 analyzed_count += 1
                 
+            elif form_type in ('10-K', '10-K/A', '10-Q', '10-Q/A'):
+                # 10-K/10-Q analysis using SEC EDGAR Analyzer
+                from src.forensics.sec_edgar_analyzer import SECForensicAnalyzer
+                
+                analyzer = SECForensicAnalyzer(user_agent="NITS Recon Unit contact@nits-secops.org")
+                
+                # Extract accession number from the filing
+                accession = filing.get('accession', '')
+                
+                analysis = await analyzer.analyze_filing(
+                    cik=case.target_cik,
+                    accession_number=accession,
+                    filing_type=form_type,
+                    document_url=filing.get('document_url'),
+                    viewer_url=filing.get('viewer_url')
+                )
+                
+                # Convert red_flags to violation format
+                for flag in analysis.red_flags:
+                    # Create a violation record
+                    from src.forensics.insider_form4_analyzer import Form4ViolationRecord
+                    
+                    violation = Form4ViolationRecord(
+                        type=flag.get('type', 'unknown'),
+                        severity=flag.get('severity', 'MEDIUM'),
+                        statute_title=15,
+                        statute_section='78m',  # Section 13 - Periodic Reports
+                        description=flag.get('description', ''),
+                        exact_quote=flag.get('exact_quote'),
+                        document_url=flag.get('document_url', filing.get('document_url', '')),
+                        viewer_url=flag.get('viewer_url', filing.get('viewer_url')),
+                        document_section=flag.get('section'),
+                        prosecutorial_merit='STRONG' if flag.get('severity') == 'CRITICAL' else 'MODERATE',
+                        estimated_damages=flag.get('estimated_damages', 1000000),
+                        evidence_refs=flag.get('evidence_refs', [])
+                    )
+                    all_violations.append(violation)
+                
+                if analysis.red_flags:
+                    print(f"        ✓ Found {len(analysis.red_flags)} violations")
+                    for flag in analysis.red_flags:
+                        print(f"          - {flag.get('type')}: {flag.get('description', 'No description')[:60]}")
+                else:
+                    print(f"        • No violations")
+                
+                analyzed_count += 1
+                
             else:
-                # 10-K/10-Q analysis
-                print(f"        • Skipping (not implemented for {form_type} yet)")
+                # Unknown form type
+                print(f"        • Skipping (unsupported form type: {form_type})")
         
         except Exception as e:
             print(f"        [ERROR] {str(e)[:100]}")

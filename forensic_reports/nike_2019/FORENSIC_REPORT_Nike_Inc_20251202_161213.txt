@@ -1,0 +1,540 @@
+════════════════════════════════════════════════════════════════════════════════════════════════════
+DOJ-GRADE FORENSIC ANALYSIS REPORT
+════════════════════════════════════════════════════════════════════════════════════════════════════
+
+CASE INFORMATION
+────────────────────────────────────────────────────────────────────────────────────────────────────
+Target Entity       : Nike Inc.
+CIK Number          : 0000320187
+Ticker Symbol       : NKE
+Analysis Period     : 2019-01-01 to 2019-12-31
+Report Generated    : 2025-12-02 16:12:13
+Total Filings       : 61
+
+EXECUTIVE SUMMARY
+────────────────────────────────────────────────────────────────────────────────────────────────────
+Total Violations Detected : 62
+Total Estimated Damages   : $1,275,000.00
+Prosecution Recommendation: VIABLE
+
+FILING ANALYSIS
+────────────────────────────────────────────────────────────────────────────────────────────────────
+  10-K            :   1 filings
+  10-Q            :   1 filings
+  3               :   1 filings
+  4               :  51 filings
+  8-K             :   6 filings
+  DEF 14A         :   1 filings
+
+VIOLATION DETAILS
+════════════════════════════════════════════════════════════════════════════════════════════════════
+
+1. LATE FORM 4 VIOLATIONS (15 U.S.C. § 78p(a)(2)(C))
+────────────────────────────────────────────────────────────────────────────────────────────────────
+Count: 51
+
+Violation 1:
+  Accession Number    : 0001127602-19-035995
+  Filing Date         : 2019-12-31
+  Transaction Date    : 2019-12-28
+  Days Late           : 1
+  Penalty (USD)       : $25,000.00
+  Statute Violated    : 15 U.S.C. § 78p(a)(2)(C)
+  CFR Citation        : 17 CFR § 240.16a-3(a)
+
+Violation 2:
+  Accession Number    : 0001127602-19-035842
+  Filing Date         : 2019-12-26
+  Transaction Date    : 2019-12-23
+  Days Late           : 1
+  Penalty (USD)       : $25,000.00
+  Statute Violated    : 15 U.S.C. § 78p(a)(2)(C)
+  CFR Citation        : 17 CFR § 240.16a-3(a)
+
+Violation 3:
+  Accession Number    : 0001127602-19-035840
+  Filing Date         : 2019-12-26
+  Transaction Date    : 2019-12-23
+  Days Late           : 1
+  Penalty (USD)       : $25,000.00
+  Statute Violated    : 15 U.S.C. § 78p(a)(2)(C)
+  CFR Citation        : 17 CFR § 240.16a-3(a)
+
+Violation 4:
+  Accession Number    : 0001127602-19-034173
+  Filing Date         : 2019-12-03
+  Transaction Date    : 2019-11-30
+  Days Late           : 1
+  Penalty (USD)       : $25,000.00
+  Statute Violated    : 15 U.S.C. § 78p(a)(2)(C)
+  CFR Citation        : 17 CFR § 240.16a-3(a)
+
+Violation 5:
+  Accession Number    : 0001127602-19-032863
+  Filing Date         : 2019-11-15
+  Transaction Date    : 2019-11-12
+  Days Late           : 1
+  Penalty (USD)       : $25,000.00
+  Statute Violated    : 15 U.S.C. § 78p(a)(2)(C)
+  CFR Citation        : 17 CFR § 240.16a-3(a)
+
+Violation 6:
+  Accession Number    : 0001127602-19-031375
+  Filing Date         : 2019-10-31
+  Transaction Date    : 2019-10-28
+  Days Late           : 1
+  Penalty (USD)       : $25,000.00
+  Statute Violated    : 15 U.S.C. § 78p(a)(2)(C)
+  CFR Citation        : 17 CFR § 240.16a-3(a)
+
+Violation 7:
+  Accession Number    : 0001127602-19-031373
+  Filing Date         : 2019-10-31
+  Transaction Date    : 2019-10-28
+  Days Late           : 1
+  Penalty (USD)       : $25,000.00
+  Statute Violated    : 15 U.S.C. § 78p(a)(2)(C)
+  CFR Citation        : 17 CFR § 240.16a-3(a)
+
+Violation 8:
+  Accession Number    : 0001127602-19-031371
+  Filing Date         : 2019-10-31
+  Transaction Date    : 2019-10-28
+  Days Late           : 1
+  Penalty (USD)       : $25,000.00
+  Statute Violated    : 15 U.S.C. § 78p(a)(2)(C)
+  CFR Citation        : 17 CFR § 240.16a-3(a)
+
+Violation 9:
+  Accession Number    : 0001127602-19-031367
+  Filing Date         : 2019-10-31
+  Transaction Date    : 2019-10-28
+  Days Late           : 1
+  Penalty (USD)       : $25,000.00
+  Statute Violated    : 15 U.S.C. § 78p(a)(2)(C)
+  CFR Citation        : 17 CFR § 240.16a-3(a)
+
+Violation 10:
+  Accession Number    : 0000320187-19-000077
+  Filing Date         : 2019-10-31
+  Transaction Date    : 2019-10-28
+  Days Late           : 1
+  Penalty (USD)       : $25,000.00
+  Statute Violated    : 15 U.S.C. § 78p(a)(2)(C)
+  CFR Citation        : 17 CFR § 240.16a-3(a)
+
+Violation 11:
+  Accession Number    : 0001127602-19-031360
+  Filing Date         : 2019-10-31
+  Transaction Date    : 2019-10-28
+  Days Late           : 1
+  Penalty (USD)       : $25,000.00
+  Statute Violated    : 15 U.S.C. § 78p(a)(2)(C)
+  CFR Citation        : 17 CFR § 240.16a-3(a)
+
+Violation 12:
+  Accession Number    : 0001127602-19-030151
+  Filing Date         : 2019-10-04
+  Transaction Date    : 2019-10-01
+  Days Late           : 1
+  Penalty (USD)       : $25,000.00
+  Statute Violated    : 15 U.S.C. § 78p(a)(2)(C)
+  CFR Citation        : 17 CFR § 240.16a-3(a)
+
+Violation 13:
+  Accession Number    : 0001127602-19-029694
+  Filing Date         : 2019-10-02
+  Transaction Date    : 2019-09-29
+  Days Late           : 1
+  Penalty (USD)       : $25,000.00
+  Statute Violated    : 15 U.S.C. § 78p(a)(2)(C)
+  CFR Citation        : 17 CFR § 240.16a-3(a)
+
+Violation 14:
+  Accession Number    : 0001127602-19-029186
+  Filing Date         : 2019-09-27
+  Transaction Date    : 2019-09-24
+  Days Late           : 1
+  Penalty (USD)       : $25,000.00
+  Statute Violated    : 15 U.S.C. § 78p(a)(2)(C)
+  CFR Citation        : 17 CFR § 240.16a-3(a)
+
+Violation 15:
+  Accession Number    : 0001127602-19-029185
+  Filing Date         : 2019-09-27
+  Transaction Date    : 2019-09-24
+  Days Late           : 1
+  Penalty (USD)       : $25,000.00
+  Statute Violated    : 15 U.S.C. § 78p(a)(2)(C)
+  CFR Citation        : 17 CFR § 240.16a-3(a)
+
+Violation 16:
+  Accession Number    : 0001127602-19-028946
+  Filing Date         : 2019-09-23
+  Transaction Date    : 2019-09-20
+  Days Late           : 1
+  Penalty (USD)       : $25,000.00
+  Statute Violated    : 15 U.S.C. § 78p(a)(2)(C)
+  CFR Citation        : 17 CFR § 240.16a-3(a)
+
+Violation 17:
+  Accession Number    : 0001127602-19-028945
+  Filing Date         : 2019-09-23
+  Transaction Date    : 2019-09-20
+  Days Late           : 1
+  Penalty (USD)       : $25,000.00
+  Statute Violated    : 15 U.S.C. § 78p(a)(2)(C)
+  CFR Citation        : 17 CFR § 240.16a-3(a)
+
+Violation 18:
+  Accession Number    : 0001127602-19-028944
+  Filing Date         : 2019-09-23
+  Transaction Date    : 2019-09-20
+  Days Late           : 1
+  Penalty (USD)       : $25,000.00
+  Statute Violated    : 15 U.S.C. § 78p(a)(2)(C)
+  CFR Citation        : 17 CFR § 240.16a-3(a)
+
+Violation 19:
+  Accession Number    : 0001127602-19-028943
+  Filing Date         : 2019-09-23
+  Transaction Date    : 2019-09-20
+  Days Late           : 1
+  Penalty (USD)       : $25,000.00
+  Statute Violated    : 15 U.S.C. § 78p(a)(2)(C)
+  CFR Citation        : 17 CFR § 240.16a-3(a)
+
+Violation 20:
+  Accession Number    : 0001127602-19-028942
+  Filing Date         : 2019-09-23
+  Transaction Date    : 2019-09-20
+  Days Late           : 1
+  Penalty (USD)       : $25,000.00
+  Statute Violated    : 15 U.S.C. § 78p(a)(2)(C)
+  CFR Citation        : 17 CFR § 240.16a-3(a)
+
+Violation 21:
+  Accession Number    : 0001127602-19-028941
+  Filing Date         : 2019-09-23
+  Transaction Date    : 2019-09-20
+  Days Late           : 1
+  Penalty (USD)       : $25,000.00
+  Statute Violated    : 15 U.S.C. § 78p(a)(2)(C)
+  CFR Citation        : 17 CFR § 240.16a-3(a)
+
+Violation 22:
+  Accession Number    : 0001127602-19-028938
+  Filing Date         : 2019-09-23
+  Transaction Date    : 2019-09-20
+  Days Late           : 1
+  Penalty (USD)       : $25,000.00
+  Statute Violated    : 15 U.S.C. § 78p(a)(2)(C)
+  CFR Citation        : 17 CFR § 240.16a-3(a)
+
+Violation 23:
+  Accession Number    : 0001127602-19-028937
+  Filing Date         : 2019-09-23
+  Transaction Date    : 2019-09-20
+  Days Late           : 1
+  Penalty (USD)       : $25,000.00
+  Statute Violated    : 15 U.S.C. § 78p(a)(2)(C)
+  CFR Citation        : 17 CFR § 240.16a-3(a)
+
+Violation 24:
+  Accession Number    : 0001127602-19-028936
+  Filing Date         : 2019-09-23
+  Transaction Date    : 2019-09-20
+  Days Late           : 1
+  Penalty (USD)       : $25,000.00
+  Statute Violated    : 15 U.S.C. § 78p(a)(2)(C)
+  CFR Citation        : 17 CFR § 240.16a-3(a)
+
+Violation 25:
+  Accession Number    : 0001127602-19-028935
+  Filing Date         : 2019-09-23
+  Transaction Date    : 2019-09-20
+  Days Late           : 1
+  Penalty (USD)       : $25,000.00
+  Statute Violated    : 15 U.S.C. § 78p(a)(2)(C)
+  CFR Citation        : 17 CFR § 240.16a-3(a)
+
+Violation 26:
+  Accession Number    : 0001127602-19-028934
+  Filing Date         : 2019-09-23
+  Transaction Date    : 2019-09-20
+  Days Late           : 1
+  Penalty (USD)       : $25,000.00
+  Statute Violated    : 15 U.S.C. § 78p(a)(2)(C)
+  CFR Citation        : 17 CFR § 240.16a-3(a)
+
+Violation 27:
+  Accession Number    : 0001127602-19-028344
+  Filing Date         : 2019-09-13
+  Transaction Date    : 2019-09-10
+  Days Late           : 1
+  Penalty (USD)       : $25,000.00
+  Statute Violated    : 15 U.S.C. § 78p(a)(2)(C)
+  CFR Citation        : 17 CFR § 240.16a-3(a)
+
+Violation 28:
+  Accession Number    : 0001127602-19-028341
+  Filing Date         : 2019-09-13
+  Transaction Date    : 2019-09-10
+  Days Late           : 1
+  Penalty (USD)       : $25,000.00
+  Statute Violated    : 15 U.S.C. § 78p(a)(2)(C)
+  CFR Citation        : 17 CFR § 240.16a-3(a)
+
+Violation 29:
+  Accession Number    : 0001127602-19-027760
+  Filing Date         : 2019-09-03
+  Transaction Date    : 2019-08-31
+  Days Late           : 1
+  Penalty (USD)       : $25,000.00
+  Statute Violated    : 15 U.S.C. § 78p(a)(2)(C)
+  CFR Citation        : 17 CFR § 240.16a-3(a)
+
+Violation 30:
+  Accession Number    : 0001127602-19-026077
+  Filing Date         : 2019-08-05
+  Transaction Date    : 2019-08-02
+  Days Late           : 1
+  Penalty (USD)       : $25,000.00
+  Statute Violated    : 15 U.S.C. § 78p(a)(2)(C)
+  CFR Citation        : 17 CFR § 240.16a-3(a)
+
+Violation 31:
+  Accession Number    : 0001127602-19-026072
+  Filing Date         : 2019-08-05
+  Transaction Date    : 2019-08-02
+  Days Late           : 1
+  Penalty (USD)       : $25,000.00
+  Statute Violated    : 15 U.S.C. § 78p(a)(2)(C)
+  CFR Citation        : 17 CFR § 240.16a-3(a)
+
+Violation 32:
+  Accession Number    : 0001127602-19-026069
+  Filing Date         : 2019-08-05
+  Transaction Date    : 2019-08-02
+  Days Late           : 1
+  Penalty (USD)       : $25,000.00
+  Statute Violated    : 15 U.S.C. § 78p(a)(2)(C)
+  CFR Citation        : 17 CFR § 240.16a-3(a)
+
+Violation 33:
+  Accession Number    : 0001127602-19-026067
+  Filing Date         : 2019-08-05
+  Transaction Date    : 2019-08-02
+  Days Late           : 1
+  Penalty (USD)       : $25,000.00
+  Statute Violated    : 15 U.S.C. § 78p(a)(2)(C)
+  CFR Citation        : 17 CFR § 240.16a-3(a)
+
+Violation 34:
+  Accession Number    : 0001127602-19-026064
+  Filing Date         : 2019-08-05
+  Transaction Date    : 2019-08-02
+  Days Late           : 1
+  Penalty (USD)       : $25,000.00
+  Statute Violated    : 15 U.S.C. § 78p(a)(2)(C)
+  CFR Citation        : 17 CFR § 240.16a-3(a)
+
+Violation 35:
+  Accession Number    : 0001127602-19-026062
+  Filing Date         : 2019-08-05
+  Transaction Date    : 2019-08-02
+  Days Late           : 1
+  Penalty (USD)       : $25,000.00
+  Statute Violated    : 15 U.S.C. § 78p(a)(2)(C)
+  CFR Citation        : 17 CFR § 240.16a-3(a)
+
+Violation 36:
+  Accession Number    : 0001127602-19-026060
+  Filing Date         : 2019-08-05
+  Transaction Date    : 2019-08-02
+  Days Late           : 1
+  Penalty (USD)       : $25,000.00
+  Statute Violated    : 15 U.S.C. § 78p(a)(2)(C)
+  CFR Citation        : 17 CFR § 240.16a-3(a)
+
+Violation 37:
+  Accession Number    : 0001127602-19-025344
+  Filing Date         : 2019-07-29
+  Transaction Date    : 2019-07-26
+  Days Late           : 1
+  Penalty (USD)       : $25,000.00
+  Statute Violated    : 15 U.S.C. § 78p(a)(2)(C)
+  CFR Citation        : 17 CFR § 240.16a-3(a)
+
+Violation 38:
+  Accession Number    : 0001127602-19-025343
+  Filing Date         : 2019-07-29
+  Transaction Date    : 2019-07-26
+  Days Late           : 1
+  Penalty (USD)       : $25,000.00
+  Statute Violated    : 15 U.S.C. § 78p(a)(2)(C)
+  CFR Citation        : 17 CFR § 240.16a-3(a)
+
+Violation 39:
+  Accession Number    : 0001127602-19-025158
+  Filing Date         : 2019-07-24
+  Transaction Date    : 2019-07-21
+  Days Late           : 1
+  Penalty (USD)       : $25,000.00
+  Statute Violated    : 15 U.S.C. § 78p(a)(2)(C)
+  CFR Citation        : 17 CFR § 240.16a-3(a)
+
+Violation 40:
+  Accession Number    : 0001127602-19-025157
+  Filing Date         : 2019-07-24
+  Transaction Date    : 2019-07-21
+  Days Late           : 1
+  Penalty (USD)       : $25,000.00
+  Statute Violated    : 15 U.S.C. § 78p(a)(2)(C)
+  CFR Citation        : 17 CFR § 240.16a-3(a)
+
+Violation 41:
+  Accession Number    : 0001127602-19-025156
+  Filing Date         : 2019-07-24
+  Transaction Date    : 2019-07-21
+  Days Late           : 1
+  Penalty (USD)       : $25,000.00
+  Statute Violated    : 15 U.S.C. § 78p(a)(2)(C)
+  CFR Citation        : 17 CFR § 240.16a-3(a)
+
+Violation 42:
+  Accession Number    : 0001127602-19-025155
+  Filing Date         : 2019-07-24
+  Transaction Date    : 2019-07-21
+  Days Late           : 1
+  Penalty (USD)       : $25,000.00
+  Statute Violated    : 15 U.S.C. § 78p(a)(2)(C)
+  CFR Citation        : 17 CFR § 240.16a-3(a)
+
+Violation 43:
+  Accession Number    : 0001127602-19-025154
+  Filing Date         : 2019-07-24
+  Transaction Date    : 2019-07-21
+  Days Late           : 1
+  Penalty (USD)       : $25,000.00
+  Statute Violated    : 15 U.S.C. § 78p(a)(2)(C)
+  CFR Citation        : 17 CFR § 240.16a-3(a)
+
+Violation 44:
+  Accession Number    : 0001127602-19-025153
+  Filing Date         : 2019-07-24
+  Transaction Date    : 2019-07-21
+  Days Late           : 1
+  Penalty (USD)       : $25,000.00
+  Statute Violated    : 15 U.S.C. § 78p(a)(2)(C)
+  CFR Citation        : 17 CFR § 240.16a-3(a)
+
+Violation 45:
+  Accession Number    : 0001127602-19-025152
+  Filing Date         : 2019-07-24
+  Transaction Date    : 2019-07-21
+  Days Late           : 1
+  Penalty (USD)       : $25,000.00
+  Statute Violated    : 15 U.S.C. § 78p(a)(2)(C)
+  CFR Citation        : 17 CFR § 240.16a-3(a)
+
+Violation 46:
+  Accession Number    : 0001127602-19-024776
+  Filing Date         : 2019-07-17
+  Transaction Date    : 2019-07-14
+  Days Late           : 1
+  Penalty (USD)       : $25,000.00
+  Statute Violated    : 15 U.S.C. § 78p(a)(2)(C)
+  CFR Citation        : 17 CFR § 240.16a-3(a)
+
+Violation 47:
+  Accession Number    : 0001127602-19-024775
+  Filing Date         : 2019-07-17
+  Transaction Date    : 2019-07-14
+  Days Late           : 1
+  Penalty (USD)       : $25,000.00
+  Statute Violated    : 15 U.S.C. § 78p(a)(2)(C)
+  CFR Citation        : 17 CFR § 240.16a-3(a)
+
+Violation 48:
+  Accession Number    : 0001127602-19-024774
+  Filing Date         : 2019-07-17
+  Transaction Date    : 2019-07-14
+  Days Late           : 1
+  Penalty (USD)       : $25,000.00
+  Statute Violated    : 15 U.S.C. § 78p(a)(2)(C)
+  CFR Citation        : 17 CFR § 240.16a-3(a)
+
+Violation 49:
+  Accession Number    : 0001127602-19-024773
+  Filing Date         : 2019-07-17
+  Transaction Date    : 2019-07-14
+  Days Late           : 1
+  Penalty (USD)       : $25,000.00
+  Statute Violated    : 15 U.S.C. § 78p(a)(2)(C)
+  CFR Citation        : 17 CFR § 240.16a-3(a)
+
+Violation 50:
+  Accession Number    : 0001127602-19-024772
+  Filing Date         : 2019-07-17
+  Transaction Date    : 2019-07-14
+  Days Late           : 1
+  Penalty (USD)       : $25,000.00
+  Statute Violated    : 15 U.S.C. § 78p(a)(2)(C)
+  CFR Citation        : 17 CFR § 240.16a-3(a)
+
+Violation 51:
+  Accession Number    : 0001127602-19-024771
+  Filing Date         : 2019-07-17
+  Transaction Date    : 2019-07-14
+  Days Late           : 1
+  Penalty (USD)       : $25,000.00
+  Statute Violated    : 15 U.S.C. § 78p(a)(2)(C)
+  CFR Citation        : 17 CFR § 240.16a-3(a)
+
+3. MATERIAL EVENT DISCLOSURES (17 CFR § 229.1)
+────────────────────────────────────────────────────────────────────────────────────────────────────
+Count: 6 (all compliant)
+
+4. INSIDER TRADING PATTERNS (INFORMATIONAL)
+────────────────────────────────────────────────────────────────────────────────────────────────────
+Count: 5
+
+Pattern 1:
+  Date                : 2019-10-31
+  Filing Count        : 6
+  Description         : Unusual clustering: 6 insider filings on same day
+
+Pattern 2:
+  Date                : 2019-09-23
+  Filing Count        : 11
+  Description         : Unusual clustering: 11 insider filings on same day
+
+Pattern 3:
+  Date                : 2019-08-05
+  Filing Count        : 7
+  Description         : Unusual clustering: 7 insider filings on same day
+
+Pattern 4:
+  Date                : 2019-07-24
+  Filing Count        : 7
+  Description         : Unusual clustering: 7 insider filings on same day
+
+Pattern 5:
+  Date                : 2019-07-17
+  Filing Count        : 6
+  Description         : Unusual clustering: 6 insider filings on same day
+
+CONCLUSION
+════════════════════════════════════════════════════════════════════════════════════════════════════
+This forensic analysis examined 61 SEC filings for Nike Inc.
+during the period 2019-01-01 to 2019-12-31.
+
+Total violations detected: 62
+Total estimated damages: $1,275,000.00
+
+RECOMMENDATION: Further investigation warranted.
+
+════════════════════════════════════════════════════════════════════════════════════════════════════
+END OF REPORT
+════════════════════════════════════════════════════════════════════════════════════════════════════
