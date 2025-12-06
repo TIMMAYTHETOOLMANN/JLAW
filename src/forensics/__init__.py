@@ -359,12 +359,37 @@ def get_system_status() -> dict:
 
 
 # =============================================================================
+# Unified Forensic Pipeline Components
+# =============================================================================
+
+try:
+    from .forensic_context import (
+        ForensicContext, SECFiling, ParsedDocument, DocumentChunk,
+        BenfordAnalysis, RevenueAnalysisResult, FlowAnalysisResult,
+        TimelineAnomaly, Contradiction, Violation, StatuteMapping, CriminalReferral
+    )
+    from .unified_forensic_pipeline import UnifiedForensicPipeline
+    from .unified_report_generator import UnifiedReportGenerator
+    _unified_pipeline_available = True
+    logger.info("Unified Forensic Pipeline loaded successfully")
+except ImportError as e:
+    logger.warning(f"Unified Forensic Pipeline unavailable: {e}")
+    ForensicContext = None
+    UnifiedForensicPipeline = None
+    UnifiedReportGenerator = None
+    _unified_pipeline_available = False
+
+# =============================================================================
 # Exports
 # =============================================================================
 
 __all__ = [
     "__version__",
     "get_system_status",
+    # Unified Pipeline
+    "ForensicContext",
+    "UnifiedForensicPipeline",
+    "UnifiedReportGenerator",
     # Core analyzers
     "SECForensicAnalyzer",
     "FilingAnalysis",
