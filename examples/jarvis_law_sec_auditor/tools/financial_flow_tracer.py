@@ -532,14 +532,11 @@ class FinancialFlowTracer:
 
         # Calculate average flow value.
         values = [f.value for f in self.flows if f.value > 0]
-        if not values:
-            return patterns
-
-        avg_value = sum(values) / len(values)
+        avg_value = sum(values) / len(values) if values else 0.0
 
         for flow in self.flows:
             # High value anomaly.
-            if flow.value > high_value_threshold and flow.value > avg_value * 3:
+            if avg_value > 0 and flow.value > high_value_threshold and flow.value > avg_value * 3:
                 patterns.append(
                     FlowPattern(
                         pattern_type="ANOMALOUS_HIGH_VALUE",
