@@ -64,14 +64,17 @@ class AgentSECForensicAnalyzer:
         if AGENTS_SDK_AVAILABLE:
             try:
                 # Create the agent with forensic analysis tools
-                self.agent = Agent(
-                    name="SEC Forensic Analyzer",
-                    model=self.model,
-                    tools=[
+                tools = [
+                    tool for tool in [
                         self._create_fetch_filing_tool(),
                         self._create_parse_violations_tool(),
                         self._create_extract_financial_data_tool()
-                    ],
+                    ] if tool is not None
+                ]
+                self.agent = Agent(
+                    name="SEC Forensic Analyzer",
+                    model=self.model,
+                    tools=tools,
                     instructions=self._get_instructions()
                 )
                 logger.info(f"✅ Agent-based SEC analyzer initialized with model: {self.model}")
@@ -119,8 +122,11 @@ Maintain forensic chain of custody:
 - Note any extraction difficulties or anomalies
 """
 
-    def _create_fetch_filing_tool(self) -> function_tool:
+    def _create_fetch_filing_tool(self):
         """Create tool for intelligent filing fetching."""
+        
+        if not AGENTS_SDK_AVAILABLE:
+            return None
 
         @function_tool
         async def fetch_sec_filing(url: str, form_type: str, filing_date: Optional[str] = None) -> Dict[str, Any]:
@@ -211,8 +217,11 @@ Maintain forensic chain of custody:
 
         return fetch_sec_filing
 
-    def _create_parse_violations_tool(self) -> function_tool:
+    def _create_parse_violations_tool(self):
         """Create tool for parsing violations from filing content."""
+        
+        if not AGENTS_SDK_AVAILABLE:
+            return None
 
         @function_tool
         def parse_sec_violations(content: str, form_type: str, url: str, filing_date: Optional[str] = None) -> Dict[
@@ -300,8 +309,11 @@ Maintain forensic chain of custody:
 
         return parse_sec_violations
 
-    def _create_extract_financial_data_tool(self) -> function_tool:
+    def _create_extract_financial_data_tool(self):
         """Create tool for extracting financial metrics."""
+        
+        if not AGENTS_SDK_AVAILABLE:
+            return None
 
         @function_tool
         def extract_financial_metrics(content: str, form_type: str) -> Dict[str, Any]:
