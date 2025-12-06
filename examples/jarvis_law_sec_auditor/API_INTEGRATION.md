@@ -30,11 +30,11 @@ Location: `./.../.env`
 
 ```bash
 # OpenAI Configuration
-OPENAI_API_KEY=sk-svcacct-Qq3YZ...mJNUA
+OPENAI_API_KEY=<YOUR_OPENAI_API_KEY>
 
 # GovInfo/SEC EDGAR Configuration
-GOVINFO_API_KEY=QLSbdMWeb3Qa...istqD
-SEC_EDGAR_API_KEY=QLSbdMWeb3Qa...istqD
+GOVINFO_API_KEY=<YOUR_GOVINFO_API_KEY>
+SEC_EDGAR_API_KEY=<YOUR_SEC_EDGAR_API_KEY>
 
 # SEC.gov Configuration
 SEC_USER_AGENT=JarvisLAW/1.0 (forensics@domain.com)

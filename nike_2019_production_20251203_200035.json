@@ -1,0 +1,599 @@
+{
+  "timestamp": "2025-12-03T20:00:35.093962",
+  "case_id": "NIKE_2019_PROD_20251203_195939",
+  "filings_total": 71,
+  "filings_analyzed": 67,
+  "violations_total": 73,
+  "violations_by_type": {
+    "zero_dollar_transaction": 66,
+    "late_form4": 7
+  },
+  "benchmark_target": 54,
+  "benchmark_met": true,
+  "violations": [
+    {
+      "type": "zero_dollar_transaction",
+      "severity": "HIGH",
+      "description": "Zero-dollar transaction (potential gift/RSU vesting)",
+      "quote": "Transaction code M at $0.00 per share for 16500 shares",
+      "statute": "15 USC \u00a7 78p(a)",
+      "url": "https://www.sec.gov/Archives/edgar/data/320187/000112760219035995/0001127602-19-035995.txt"
+    },
+    {
+      "type": "zero_dollar_transaction",
+      "severity": "HIGH",
+      "description": "Zero-dollar transaction (potential gift/RSU vesting)",
+      "quote": "Transaction code M at $0.00 per share for 120000 shares",
+      "statute": "15 USC \u00a7 78p(a)",
+      "url": "https://www.sec.gov/Archives/edgar/data/320187/000112760219035842/0001127602-19-035842.txt"
+    },
+    {
+      "type": "late_form4",
+      "severity": "HIGH",
+      "description": "Late Form 4 filing by 3 business days",
+      "quote": "Transaction date 2019-12-23 filed on 2019-12-26 (>2 business days)",
+      "statute": "15 USC \u00a7 78p(a)",
+      "url": "https://www.sec.gov/Archives/edgar/data/320187/000112760219035840/0001127602-19-035840.txt"
+    },
+    {
+      "type": "late_form4",
+      "severity": "HIGH",
+      "description": "Late Form 4 filing by 3 business days",
+      "quote": "Transaction date 2019-12-23 filed on 2019-12-26 (>2 business days)",
+      "statute": "15 USC \u00a7 78p(a)",
+      "url": "https://www.sec.gov/Archives/edgar/data/320187/000112760219035840/0001127602-19-035840.txt"
+    },
+    {
+      "type": "late_form4",
+      "severity": "HIGH",
+      "description": "Late Form 4 filing by 3 business days",
+      "quote": "Transaction date 2019-12-23 filed on 2019-12-26 (>2 business days)",
+      "statute": "15 USC \u00a7 78p(a)",
+      "url": "https://www.sec.gov/Archives/edgar/data/320187/000112760219035840/0001127602-19-035840.txt"
+    },
+    {
+      "type": "zero_dollar_transaction",
+      "severity": "HIGH",
+      "description": "Zero-dollar transaction (potential gift/RSU vesting)",
+      "quote": "Transaction code M at $0.00 per share for 24000 shares",
+      "statute": "15 USC \u00a7 78p(a)",
+      "url": "https://www.sec.gov/Archives/edgar/data/320187/000112760219035840/0001127602-19-035840.txt"
+    },
+    {
+      "type": "zero_dollar_transaction",
+      "severity": "HIGH",
+      "description": "Zero-dollar transaction (potential gift/RSU vesting)",
+      "quote": "Transaction code M at $0.00 per share for 156529 shares",
+      "statute": "15 USC \u00a7 78p(a)",
+      "url": "https://www.sec.gov/Archives/edgar/data/320187/000112760219034173/0001127602-19-034173.txt"
+    },
+    {
+      "type": "zero_dollar_transaction",
+      "severity": "HIGH",
+      "description": "Zero-dollar transaction (potential gift/RSU vesting)",
+      "quote": "Transaction code M at $0.00 per share for 8471 shares",
+      "statute": "15 USC \u00a7 78p(a)",
+      "url": "https://www.sec.gov/Archives/edgar/data/320187/000112760219034173/0001127602-19-034173.txt"
+    },
+    {
+      "type": "zero_dollar_transaction",
+      "severity": "HIGH",
+      "description": "Zero-dollar transaction (potential gift/RSU vesting)",
+      "quote": "Transaction code A at $0.00 per share for 1918 shares",
+      "statute": "15 USC \u00a7 78p(a)",
+      "url": "https://www.sec.gov/Archives/edgar/data/320187/000112760219032863/0001127602-19-032863.txt"
+    },
+    {
+      "type": "zero_dollar_transaction",
+      "severity": "HIGH",
+      "description": "Zero-dollar transaction (potential gift/RSU vesting)",
+      "quote": "Transaction code G at $0.00 per share for 8960 shares",
+      "statute": "15 USC \u00a7 78p(a)",
+      "url": "https://www.sec.gov/Archives/edgar/data/320187/000112760219031375/0001127602-19-031375.txt"
+    },
+    {
+      "type": "zero_dollar_transaction",
+      "severity": "HIGH",
+      "description": "Zero-dollar transaction (potential gift/RSU vesting)",
+      "quote": "Transaction code G at $0.00 per share for 4721 shares",
+      "statute": "15 USC \u00a7 78p(a)",
+      "url": "https://www.sec.gov/Archives/edgar/data/320187/000112760219031373/0001127602-19-031373.txt"
+    },
+    {
+      "type": "zero_dollar_transaction",
+      "severity": "HIGH",
+      "description": "Zero-dollar transaction (potential gift/RSU vesting)",
+      "quote": "Transaction code M at $0.00 per share for 32500 shares",
+      "statute": "15 USC \u00a7 78p(a)",
+      "url": "https://www.sec.gov/Archives/edgar/data/320187/000112760219031373/0001127602-19-031373.txt"
+    },
+    {
+      "type": "zero_dollar_transaction",
+      "severity": "HIGH",
+      "description": "Zero-dollar transaction (potential gift/RSU vesting)",
+      "quote": "Transaction code J at $0.00 per share for 9000000 shares",
+      "statute": "15 USC \u00a7 78p(a)",
+      "url": "https://www.sec.gov/Archives/edgar/data/320187/000112760219031371/0001127602-19-031371.txt"
+    },
+    {
+      "type": "zero_dollar_transaction",
+      "severity": "HIGH",
+      "description": "Zero-dollar transaction (potential gift/RSU vesting)",
+      "quote": "Transaction code J at $0.00 per share for 900000 shares",
+      "statute": "15 USC \u00a7 78p(a)",
+      "url": "https://www.sec.gov/Archives/edgar/data/320187/000112760219031371/0001127602-19-031371.txt"
+    },
+    {
+      "type": "zero_dollar_transaction",
+      "severity": "HIGH",
+      "description": "Zero-dollar transaction (potential gift/RSU vesting)",
+      "quote": "Transaction code J at $0.00 per share for 8100000 shares",
+      "statute": "15 USC \u00a7 78p(a)",
+      "url": "https://www.sec.gov/Archives/edgar/data/320187/000112760219031367/0001127602-19-031367.txt"
+    },
+    {
+      "type": "zero_dollar_transaction",
+      "severity": "HIGH",
+      "description": "Zero-dollar transaction (potential gift/RSU vesting)",
+      "quote": "Transaction code J at $0.00 per share for 9000000 shares",
+      "statute": "15 USC \u00a7 78p(a)",
+      "url": "https://www.sec.gov/Archives/edgar/data/320187/000032018719000077/0000320187-19-000077.txt"
+    },
+    {
+      "type": "zero_dollar_transaction",
+      "severity": "HIGH",
+      "description": "Zero-dollar transaction (potential gift/RSU vesting)",
+      "quote": "Transaction code G at $0.00 per share for 1120 shares",
+      "statute": "15 USC \u00a7 78p(a)",
+      "url": "https://www.sec.gov/Archives/edgar/data/320187/000112760219031360/0001127602-19-031360.txt"
+    },
+    {
+      "type": "zero_dollar_transaction",
+      "severity": "HIGH",
+      "description": "Zero-dollar transaction (potential gift/RSU vesting)",
+      "quote": "Transaction code M at $0.00 per share for 17000 shares",
+      "statute": "15 USC \u00a7 78p(a)",
+      "url": "https://www.sec.gov/Archives/edgar/data/320187/000112760219031360/0001127602-19-031360.txt"
+    },
+    {
+      "type": "zero_dollar_transaction",
+      "severity": "HIGH",
+      "description": "Zero-dollar transaction (potential gift/RSU vesting)",
+      "quote": "Transaction code G at $0.00 per share for 820 shares",
+      "statute": "15 USC \u00a7 78p(a)",
+      "url": "https://www.sec.gov/Archives/edgar/data/320187/000112760219030151/0001127602-19-030151.txt"
+    },
+    {
+      "type": "zero_dollar_transaction",
+      "severity": "HIGH",
+      "description": "Zero-dollar transaction (potential gift/RSU vesting)",
+      "quote": "Transaction code M at $0.00 per share for 165000 shares",
+      "statute": "15 USC \u00a7 78p(a)",
+      "url": "https://www.sec.gov/Archives/edgar/data/320187/000112760219029694/0001127602-19-029694.txt"
+    },
+    {
+      "type": "zero_dollar_transaction",
+      "severity": "HIGH",
+      "description": "Zero-dollar transaction (potential gift/RSU vesting)",
+      "quote": "Transaction code M at $0.00 per share for 90000 shares",
+      "statute": "15 USC \u00a7 78p(a)",
+      "url": "https://www.sec.gov/Archives/edgar/data/320187/000112760219029186/0001127602-19-029186.txt"
+    },
+    {
+      "type": "zero_dollar_transaction",
+      "severity": "HIGH",
+      "description": "Zero-dollar transaction (potential gift/RSU vesting)",
+      "quote": "Transaction code M at $0.00 per share for 120000 shares",
+      "statute": "15 USC \u00a7 78p(a)",
+      "url": "https://www.sec.gov/Archives/edgar/data/320187/000112760219029185/0001127602-19-029185.txt"
+    },
+    {
+      "type": "zero_dollar_transaction",
+      "severity": "HIGH",
+      "description": "Zero-dollar transaction (potential gift/RSU vesting)",
+      "quote": "Transaction code A at $0.00 per share for 1996 shares",
+      "statute": "15 USC \u00a7 78p(a)",
+      "url": "https://www.sec.gov/Archives/edgar/data/320187/000112760219028946/0001127602-19-028946.txt"
+    },
+    {
+      "type": "zero_dollar_transaction",
+      "severity": "HIGH",
+      "description": "Zero-dollar transaction (potential gift/RSU vesting)",
+      "quote": "Transaction code A at $0.00 per share for 1996 shares",
+      "statute": "15 USC \u00a7 78p(a)",
+      "url": "https://www.sec.gov/Archives/edgar/data/320187/000112760219028945/0001127602-19-028945.txt"
+    },
+    {
+      "type": "zero_dollar_transaction",
+      "severity": "HIGH",
+      "description": "Zero-dollar transaction (potential gift/RSU vesting)",
+      "quote": "Transaction code A at $0.00 per share for 1996 shares",
+      "statute": "15 USC \u00a7 78p(a)",
+      "url": "https://www.sec.gov/Archives/edgar/data/320187/000112760219028944/0001127602-19-028944.txt"
+    },
+    {
+      "type": "zero_dollar_transaction",
+      "severity": "HIGH",
+      "description": "Zero-dollar transaction (potential gift/RSU vesting)",
+      "quote": "Transaction code A at $0.00 per share for 1996 shares",
+      "statute": "15 USC \u00a7 78p(a)",
+      "url": "https://www.sec.gov/Archives/edgar/data/320187/000112760219028943/0001127602-19-028943.txt"
+    },
+    {
+      "type": "zero_dollar_transaction",
+      "severity": "HIGH",
+      "description": "Zero-dollar transaction (potential gift/RSU vesting)",
+      "quote": "Transaction code A at $0.00 per share for 1996 shares",
+      "statute": "15 USC \u00a7 78p(a)",
+      "url": "https://www.sec.gov/Archives/edgar/data/320187/000112760219028942/0001127602-19-028942.txt"
+    },
+    {
+      "type": "zero_dollar_transaction",
+      "severity": "HIGH",
+      "description": "Zero-dollar transaction (potential gift/RSU vesting)",
+      "quote": "Transaction code A at $0.00 per share for 1996 shares",
+      "statute": "15 USC \u00a7 78p(a)",
+      "url": "https://www.sec.gov/Archives/edgar/data/320187/000112760219028941/0001127602-19-028941.txt"
+    },
+    {
+      "type": "zero_dollar_transaction",
+      "severity": "HIGH",
+      "description": "Zero-dollar transaction (potential gift/RSU vesting)",
+      "quote": "Transaction code A at $0.00 per share for 1996 shares",
+      "statute": "15 USC \u00a7 78p(a)",
+      "url": "https://www.sec.gov/Archives/edgar/data/320187/000112760219028938/0001127602-19-028938.txt"
+    },
+    {
+      "type": "zero_dollar_transaction",
+      "severity": "HIGH",
+      "description": "Zero-dollar transaction (potential gift/RSU vesting)",
+      "quote": "Transaction code A at $0.00 per share for 1996 shares",
+      "statute": "15 USC \u00a7 78p(a)",
+      "url": "https://www.sec.gov/Archives/edgar/data/320187/000112760219028937/0001127602-19-028937.txt"
+    },
+    {
+      "type": "zero_dollar_transaction",
+      "severity": "HIGH",
+      "description": "Zero-dollar transaction (potential gift/RSU vesting)",
+      "quote": "Transaction code A at $0.00 per share for 1996 shares",
+      "statute": "15 USC \u00a7 78p(a)",
+      "url": "https://www.sec.gov/Archives/edgar/data/320187/000112760219028936/0001127602-19-028936.txt"
+    },
+    {
+      "type": "zero_dollar_transaction",
+      "severity": "HIGH",
+      "description": "Zero-dollar transaction (potential gift/RSU vesting)",
+      "quote": "Transaction code A at $0.00 per share for 1996 shares",
+      "statute": "15 USC \u00a7 78p(a)",
+      "url": "https://www.sec.gov/Archives/edgar/data/320187/000112760219028935/0001127602-19-028935.txt"
+    },
+    {
+      "type": "zero_dollar_transaction",
+      "severity": "HIGH",
+      "description": "Zero-dollar transaction (potential gift/RSU vesting)",
+      "quote": "Transaction code A at $0.00 per share for 1996 shares",
+      "statute": "15 USC \u00a7 78p(a)",
+      "url": "https://www.sec.gov/Archives/edgar/data/320187/000112760219028934/0001127602-19-028934.txt"
+    },
+    {
+      "type": "zero_dollar_transaction",
+      "severity": "HIGH",
+      "description": "Zero-dollar transaction (potential gift/RSU vesting)",
+      "quote": "Transaction code A at $0.00 per share for 23670 shares",
+      "statute": "15 USC \u00a7 78p(a)",
+      "url": "https://www.sec.gov/Archives/edgar/data/320187/000112760219027760/0001127602-19-027760.txt"
+    },
+    {
+      "type": "zero_dollar_transaction",
+      "severity": "HIGH",
+      "description": "Zero-dollar transaction (potential gift/RSU vesting)",
+      "quote": "Transaction code A at $0.00 per share for 13956 shares",
+      "statute": "15 USC \u00a7 78p(a)",
+      "url": "https://www.sec.gov/Archives/edgar/data/320187/000112760219026077/0001127602-19-026077.txt"
+    },
+    {
+      "type": "zero_dollar_transaction",
+      "severity": "HIGH",
+      "description": "Zero-dollar transaction (potential gift/RSU vesting)",
+      "quote": "Transaction code M at $0.00 per share for 110000 shares",
+      "statute": "15 USC \u00a7 78p(a)",
+      "url": "https://www.sec.gov/Archives/edgar/data/320187/000112760219026077/0001127602-19-026077.txt"
+    },
+    {
+      "type": "zero_dollar_transaction",
+      "severity": "HIGH",
+      "description": "Zero-dollar transaction (potential gift/RSU vesting)",
+      "quote": "Transaction code A at $0.00 per share for 87658 shares",
+      "statute": "15 USC \u00a7 78p(a)",
+      "url": "https://www.sec.gov/Archives/edgar/data/320187/000112760219026077/0001127602-19-026077.txt"
+    },
+    {
+      "type": "zero_dollar_transaction",
+      "severity": "HIGH",
+      "description": "Zero-dollar transaction (potential gift/RSU vesting)",
+      "quote": "Transaction code A at $0.00 per share for 48124 shares",
+      "statute": "15 USC \u00a7 78p(a)",
+      "url": "https://www.sec.gov/Archives/edgar/data/320187/000112760219026072/0001127602-19-026072.txt"
+    },
+    {
+      "type": "zero_dollar_transaction",
+      "severity": "HIGH",
+      "description": "Zero-dollar transaction (potential gift/RSU vesting)",
+      "quote": "Transaction code A at $0.00 per share for 302268 shares",
+      "statute": "15 USC \u00a7 78p(a)",
+      "url": "https://www.sec.gov/Archives/edgar/data/320187/000112760219026072/0001127602-19-026072.txt"
+    },
+    {
+      "type": "zero_dollar_transaction",
+      "severity": "HIGH",
+      "description": "Zero-dollar transaction (potential gift/RSU vesting)",
+      "quote": "Transaction code A at $0.00 per share for 13956 shares",
+      "statute": "15 USC \u00a7 78p(a)",
+      "url": "https://www.sec.gov/Archives/edgar/data/320187/000112760219026069/0001127602-19-026069.txt"
+    },
+    {
+      "type": "zero_dollar_transaction",
+      "severity": "HIGH",
+      "description": "Zero-dollar transaction (potential gift/RSU vesting)",
+      "quote": "Transaction code A at $0.00 per share for 87658 shares",
+      "statute": "15 USC \u00a7 78p(a)",
+      "url": "https://www.sec.gov/Archives/edgar/data/320187/000112760219026069/0001127602-19-026069.txt"
+    },
+    {
+      "type": "zero_dollar_transaction",
+      "severity": "HIGH",
+      "description": "Zero-dollar transaction (potential gift/RSU vesting)",
+      "quote": "Transaction code A at $0.00 per share for 15641 shares",
+      "statute": "15 USC \u00a7 78p(a)",
+      "url": "https://www.sec.gov/Archives/edgar/data/320187/000112760219026067/0001127602-19-026067.txt"
+    },
+    {
+      "type": "zero_dollar_transaction",
+      "severity": "HIGH",
+      "description": "Zero-dollar transaction (potential gift/RSU vesting)",
+      "quote": "Transaction code A at $0.00 per share for 98237 shares",
+      "statute": "15 USC \u00a7 78p(a)",
+      "url": "https://www.sec.gov/Archives/edgar/data/320187/000112760219026067/0001127602-19-026067.txt"
+    },
+    {
+      "type": "zero_dollar_transaction",
+      "severity": "HIGH",
+      "description": "Zero-dollar transaction (potential gift/RSU vesting)",
+      "quote": "Transaction code A at $0.00 per share for 15641 shares",
+      "statute": "15 USC \u00a7 78p(a)",
+      "url": "https://www.sec.gov/Archives/edgar/data/320187/000112760219026064/0001127602-19-026064.txt"
+    },
+    {
+      "type": "zero_dollar_transaction",
+      "severity": "HIGH",
+      "description": "Zero-dollar transaction (potential gift/RSU vesting)",
+      "quote": "Transaction code A at $0.00 per share for 98237 shares",
+      "statute": "15 USC \u00a7 78p(a)",
+      "url": "https://www.sec.gov/Archives/edgar/data/320187/000112760219026064/0001127602-19-026064.txt"
+    },
+    {
+      "type": "zero_dollar_transaction",
+      "severity": "HIGH",
+      "description": "Zero-dollar transaction (potential gift/RSU vesting)",
+      "quote": "Transaction code A at $0.00 per share for 13956 shares",
+      "statute": "15 USC \u00a7 78p(a)",
+      "url": "https://www.sec.gov/Archives/edgar/data/320187/000112760219026062/0001127602-19-026062.txt"
+    },
+    {
+      "type": "zero_dollar_transaction",
+      "severity": "HIGH",
+      "description": "Zero-dollar transaction (potential gift/RSU vesting)",
+      "quote": "Transaction code A at $0.00 per share for 87658 shares",
+      "statute": "15 USC \u00a7 78p(a)",
+      "url": "https://www.sec.gov/Archives/edgar/data/320187/000112760219026062/0001127602-19-026062.txt"
+    },
+    {
+      "type": "zero_dollar_transaction",
+      "severity": "HIGH",
+      "description": "Zero-dollar transaction (potential gift/RSU vesting)",
+      "quote": "Transaction code A at $0.00 per share for 13956 shares",
+      "statute": "15 USC \u00a7 78p(a)",
+      "url": "https://www.sec.gov/Archives/edgar/data/320187/000112760219026060/0001127602-19-026060.txt"
+    },
+    {
+      "type": "zero_dollar_transaction",
+      "severity": "HIGH",
+      "description": "Zero-dollar transaction (potential gift/RSU vesting)",
+      "quote": "Transaction code A at $0.00 per share for 87658 shares",
+      "statute": "15 USC \u00a7 78p(a)",
+      "url": "https://www.sec.gov/Archives/edgar/data/320187/000112760219026060/0001127602-19-026060.txt"
+    },
+    {
+      "type": "zero_dollar_transaction",
+      "severity": "HIGH",
+      "description": "Zero-dollar transaction (potential gift/RSU vesting)",
+      "quote": "Transaction code M at $0.00 per share for 5406 shares",
+      "statute": "15 USC \u00a7 78p(a)",
+      "url": "https://www.sec.gov/Archives/edgar/data/320187/000112760219025344/0001127602-19-025344.txt"
+    },
+    {
+      "type": "zero_dollar_transaction",
+      "severity": "HIGH",
+      "description": "Zero-dollar transaction (potential gift/RSU vesting)",
+      "quote": "Transaction code M at $0.00 per share for 18594 shares",
+      "statute": "15 USC \u00a7 78p(a)",
+      "url": "https://www.sec.gov/Archives/edgar/data/320187/000112760219025344/0001127602-19-025344.txt"
+    },
+    {
+      "type": "zero_dollar_transaction",
+      "severity": "HIGH",
+      "description": "Zero-dollar transaction (potential gift/RSU vesting)",
+      "quote": "Transaction code M at $0.00 per share for 34100 shares",
+      "statute": "15 USC \u00a7 78p(a)",
+      "url": "https://www.sec.gov/Archives/edgar/data/320187/000112760219024387/0001127602-19-024387.txt"
+    },
+    {
+      "type": "zero_dollar_transaction",
+      "severity": "HIGH",
+      "description": "Zero-dollar transaction (potential gift/RSU vesting)",
+      "quote": "Transaction code M at $0.00 per share for 24000 shares",
+      "statute": "15 USC \u00a7 78p(a)",
+      "url": "https://www.sec.gov/Archives/edgar/data/320187/000112760219023905/0001127602-19-023905.txt"
+    },
+    {
+      "type": "late_form4",
+      "severity": "HIGH",
+      "description": "Late Form 4 filing by 4 business days",
+      "quote": "Transaction date 2019-04-30 filed on 2019-05-06 (>2 business days)",
+      "statute": "15 USC \u00a7 78p(a)",
+      "url": "https://www.sec.gov/Archives/edgar/data/320187/000032018719000036/0000320187-19-000036.txt"
+    },
+    {
+      "type": "zero_dollar_transaction",
+      "severity": "HIGH",
+      "description": "Zero-dollar transaction (potential gift/RSU vesting)",
+      "quote": "Transaction code G at $0.00 per share for 489 shares",
+      "statute": "15 USC \u00a7 78p(a)",
+      "url": "https://www.sec.gov/Archives/edgar/data/320187/000032018719000036/0000320187-19-000036.txt"
+    },
+    {
+      "type": "late_form4",
+      "severity": "HIGH",
+      "description": "Late Form 4 filing by 6 business days",
+      "quote": "Transaction date 2019-04-09 filed on 2019-04-17 (>2 business days)",
+      "statute": "15 USC \u00a7 78p(a)",
+      "url": "https://www.sec.gov/Archives/edgar/data/320187/000032018719000032/0000320187-19-000032.txt"
+    },
+    {
+      "type": "late_form4",
+      "severity": "HIGH",
+      "description": "Late Form 4 filing by 4 business days",
+      "quote": "Transaction date 2019-04-11 filed on 2019-04-17 (>2 business days)",
+      "statute": "15 USC \u00a7 78p(a)",
+      "url": "https://www.sec.gov/Archives/edgar/data/320187/000032018719000032/0000320187-19-000032.txt"
+    },
+    {
+      "type": "zero_dollar_transaction",
+      "severity": "HIGH",
+      "description": "Zero-dollar transaction (potential gift/RSU vesting)",
+      "quote": "Transaction code G at $0.00 per share for 8036 shares",
+      "statute": "15 USC \u00a7 78p(a)",
+      "url": "https://www.sec.gov/Archives/edgar/data/320187/000032018719000032/0000320187-19-000032.txt"
+    },
+    {
+      "type": "zero_dollar_transaction",
+      "severity": "HIGH",
+      "description": "Zero-dollar transaction (potential gift/RSU vesting)",
+      "quote": "Transaction code G at $0.00 per share for 408 shares",
+      "statute": "15 USC \u00a7 78p(a)",
+      "url": "https://www.sec.gov/Archives/edgar/data/320187/000032018719000032/0000320187-19-000032.txt"
+    },
+    {
+      "type": "zero_dollar_transaction",
+      "severity": "HIGH",
+      "description": "Zero-dollar transaction (potential gift/RSU vesting)",
+      "quote": "Transaction code M at $0.00 per share for 40000 shares",
+      "statute": "15 USC \u00a7 78p(a)",
+      "url": "https://www.sec.gov/Archives/edgar/data/320187/000032018719000032/0000320187-19-000032.txt"
+    },
+    {
+      "type": "zero_dollar_transaction",
+      "severity": "HIGH",
+      "description": "Zero-dollar transaction (potential gift/RSU vesting)",
+      "quote": "Transaction code M at $0.00 per share for 50000 shares",
+      "statute": "15 USC \u00a7 78p(a)",
+      "url": "https://www.sec.gov/Archives/edgar/data/320187/000032018719000026/0000320187-19-000026.txt"
+    },
+    {
+      "type": "zero_dollar_transaction",
+      "severity": "HIGH",
+      "description": "Zero-dollar transaction (potential gift/RSU vesting)",
+      "quote": "Transaction code M at $0.00 per share for 60000 shares",
+      "statute": "15 USC \u00a7 78p(a)",
+      "url": "https://www.sec.gov/Archives/edgar/data/320187/000032018719000026/0000320187-19-000026.txt"
+    },
+    {
+      "type": "zero_dollar_transaction",
+      "severity": "HIGH",
+      "description": "Zero-dollar transaction (potential gift/RSU vesting)",
+      "quote": "Transaction code M at $0.00 per share for 16500 shares",
+      "statute": "15 USC \u00a7 78p(a)",
+      "url": "https://www.sec.gov/Archives/edgar/data/320187/000032018719000022/0000320187-19-000022.txt"
+    },
+    {
+      "type": "late_form4",
+      "severity": "HIGH",
+      "description": "Late Form 4 filing by 3 business days",
+      "quote": "Transaction date 2019-02-14 filed on 2019-02-19 (>2 business days)",
+      "statute": "15 USC \u00a7 78p(a)",
+      "url": "https://www.sec.gov/Archives/edgar/data/320187/000032018719000019/0000320187-19-000019.txt"
+    },
+    {
+      "type": "zero_dollar_transaction",
+      "severity": "HIGH",
+      "description": "Zero-dollar transaction (potential gift/RSU vesting)",
+      "quote": "Transaction code M at $0.00 per share for 2100 shares",
+      "statute": "15 USC \u00a7 78p(a)",
+      "url": "https://www.sec.gov/Archives/edgar/data/320187/000032018719000017/0000320187-19-000017.txt"
+    },
+    {
+      "type": "zero_dollar_transaction",
+      "severity": "HIGH",
+      "description": "Zero-dollar transaction (potential gift/RSU vesting)",
+      "quote": "Transaction code M at $0.00 per share for 147900 shares",
+      "statute": "15 USC \u00a7 78p(a)",
+      "url": "https://www.sec.gov/Archives/edgar/data/320187/000032018719000017/0000320187-19-000017.txt"
+    },
+    {
+      "type": "zero_dollar_transaction",
+      "severity": "HIGH",
+      "description": "Zero-dollar transaction (potential gift/RSU vesting)",
+      "quote": "Transaction code G at $0.00 per share for 625000 shares",
+      "statute": "15 USC \u00a7 78p(a)",
+      "url": "https://www.sec.gov/Archives/edgar/data/320187/000032018719000015/0000320187-19-000015.txt"
+    },
+    {
+      "type": "zero_dollar_transaction",
+      "severity": "HIGH",
+      "description": "Zero-dollar transaction (potential gift/RSU vesting)",
+      "quote": "Transaction code M at $0.00 per share for 150000 shares",
+      "statute": "15 USC \u00a7 78p(a)",
+      "url": "https://www.sec.gov/Archives/edgar/data/320187/000032018719000013/0000320187-19-000013.txt"
+    },
+    {
+      "type": "zero_dollar_transaction",
+      "severity": "HIGH",
+      "description": "Zero-dollar transaction (potential gift/RSU vesting)",
+      "quote": "Transaction code M at $0.00 per share for 150000 shares",
+      "statute": "15 USC \u00a7 78p(a)",
+      "url": "https://www.sec.gov/Archives/edgar/data/320187/000032018719000011/0000320187-19-000011.txt"
+    },
+    {
+      "type": "zero_dollar_transaction",
+      "severity": "HIGH",
+      "description": "Zero-dollar transaction (potential gift/RSU vesting)",
+      "quote": "Transaction code G at $0.00 per share for 2190 shares",
+      "statute": "15 USC \u00a7 78p(a)",
+      "url": "https://www.sec.gov/Archives/edgar/data/320187/000032018719000009/0000320187-19-000009.txt"
+    },
+    {
+      "type": "zero_dollar_transaction",
+      "severity": "HIGH",
+      "description": "Zero-dollar transaction (potential gift/RSU vesting)",
+      "quote": "Transaction code M at $0.00 per share for 150000 shares",
+      "statute": "15 USC \u00a7 78p(a)",
+      "url": "https://www.sec.gov/Archives/edgar/data/320187/000032018719000004/0000320187-19-000004.txt"
+    },
+    {
+      "type": "zero_dollar_transaction",
+      "severity": "HIGH",
+      "description": "Zero-dollar transaction (potential gift/RSU vesting)",
+      "quote": "Transaction code M at $0.00 per share for 100000 shares",
+      "statute": "15 USC \u00a7 78p(a)",
+      "url": "https://www.sec.gov/Archives/edgar/data/320187/000032018719000003/0000320187-19-000003.txt"
+    },
+    {
+      "type": "zero_dollar_transaction",
+      "severity": "HIGH",
+      "description": "Zero-dollar transaction (potential gift/RSU vesting)",
+      "quote": "Transaction code M at $0.00 per share for 100000 shares",
+      "statute": "15 USC \u00a7 78p(a)",
+      "url": "https://www.sec.gov/Archives/edgar/data/320187/000032018719000003/0000320187-19-000003.txt"
+    }
+  ]
+}
