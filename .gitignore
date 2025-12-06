@@ -101,11 +101,7 @@ celerybeat.pid
 
 # Environments
 .python-version
-.env
-.env.local
-.env.*.local
-.env.production
-.env.development
+.env*
 .venv
 .venv*
 env/
@@ -115,39 +111,6 @@ env.bak/
 venv.bak/
 .venv39
 .venv_res
-
-# ============================================================================
-# API KEYS & SECRETS - NEVER COMMIT THESE
-# ============================================================================
-secrets/
-*.secret
-*.secrets
-*_secret.txt
-*_secrets.txt
-api_keys.txt
-api_keys.json
-api_keys.yaml
-credentials.json
-credentials.yaml
-service_account*.json
-.keys/
-config/secrets.yaml
-config/api_keys.yaml
-config/credentials.yaml
-
-# Specific API key patterns (backup protection)
-*openai*.key
-*anthropic*.key
-*openrouter*.key
-
-# ============================================================================
-# FORENSIC REPORTS & OUTPUT (may contain API error logs)
-# ============================================================================
-forensic_reports/
-output/
-*.log
-prosecution_grade_*.json
-prosecution_grade_*.log
 
 # Spyder project settings
 .spyderproject
