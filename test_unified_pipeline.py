@@ -5,6 +5,7 @@ Simple test script to verify unified pipeline infrastructure.
 
 import asyncio
 import sys
+import tempfile
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent))
@@ -54,8 +55,8 @@ async def test_basic_report_generation():
     )
     context.violations.append(violation)
     
-    # Generate report
-    output_dir = Path("/tmp/test_forensic_report")
+    # Generate report (use temp directory for cross-platform compatibility)
+    output_dir = Path(tempfile.gettempdir()) / "test_forensic_report"
     generator = UnifiedReportGenerator(output_dir)
     report_path = generator.generate_full_report(context)
     

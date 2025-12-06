@@ -35,6 +35,9 @@ from .config_manager import get_config
 
 logger = logging.getLogger(__name__)
 
+# Configuration constants
+MAX_CONTENT_LENGTH = 100000  # Maximum content length for initial parsing (can be increased)
+
 
 class UnifiedForensicPipeline:
     """
@@ -201,11 +204,22 @@ class UnifiedForensicPipeline:
         logger.info("=" * 80)
         
         try:
-            from .docsgpt import ParserFactory, SECChunker, SECChunkingStrategy
-            from .forensic_context import ParsedDocument, DocumentChunk
+            # Try to import DocsGPT components (optional dependency)
+            try:
+                from .docsgpt import ParserFactory, SECChunker, SECChunkingStrategy
+                from .forensic_context import ParsedDocument, DocumentChunk
+                docsgpt_available = True
+            except ImportError as e:
+                logger.warning(f"DocsGPT not available, using basic parsing: {e}")
+                from .forensic_context import ParsedDocument, DocumentChunk
+                docsgpt_available = False
             
-            parser_factory = ParserFactory()
-            chunker = SECChunker(strategy=SECChunkingStrategy.HYBRID)
+            if docsgpt_available:
+                parser_factory = ParserFactory()
+                chunker = SECChunker(strategy=SECChunkingStrategy.HYBRID)
+            else:
+                parser_factory = None
+                chunker = None
             
             for filing in context.filings:
                 if not filing.raw_content:
@@ -219,7 +233,7 @@ class UnifiedForensicPipeline:
                     # Create parsed document (simplified - full parsing would use ParserFactory)
                     parsed_doc = ParsedDocument(
                         doc_id=filing.accession_number,
-                        content=filing.raw_content[:10000],  # Limit for now
+                        content=filing.raw_content[:MAX_CONTENT_LENGTH],  # Configurable limit
                         sections={},
                         tables=[],
                         xbrl_facts={},
