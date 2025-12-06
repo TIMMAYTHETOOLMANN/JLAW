@@ -101,7 +101,10 @@ celerybeat.pid
 
 # Environments
 .python-version
-.env*
+.env
+.env.local
+.env.*.local
+!.env.example
 .venv
 .venv*
 env/
@@ -111,6 +114,13 @@ env.bak/
 venv.bak/
 .venv39
 .venv_res
+
+# API Keys & Secrets - NEVER COMMIT
+secrets/
+*.secret
+api_keys.txt
+api_keys.json
+credentials.json
 
 # Spyder project settings
 .spyderproject
