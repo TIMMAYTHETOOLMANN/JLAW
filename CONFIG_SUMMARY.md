@@ -13,16 +13,16 @@ Your JLAW Forensic System is now properly configured with API access!
 - **Does NOT require**: API key
 - **Your Configuration**: ✅ Properly set
   ```
-  SEC_EMAIL=timothyroessel@gmail.com
-  SEC_USER_AGENT=JLAW Forensic System timothyroessel@gmail.com
+  SEC_EMAIL=your-email@example.com
+  SEC_USER_AGENT=JLAW Forensic System your-email@example.com
   ```
 
 ### GovInfo/Data.gov (Optional)
 - **Requires**: API key for enhanced access
-- **Your API Key**: `QLSbdMWeb3QadP66hRAhw3V027uRU9fSYWPistqD`
+- **Your API Key**: Stored in `.env` (see `docs/API_SETUP_GUIDE.md`)
 - **Your Configuration**: ✅ Properly set
   ```
-  GOVINFO_API_KEY=QLSbdMWeb3QadP66hRAhw3V027uRU9fSYWPistqD
+  GOVINFO_API_KEY=<stored in .env>
   ```
 - **Note**: This is optional for SEC-only forensic analysis
 

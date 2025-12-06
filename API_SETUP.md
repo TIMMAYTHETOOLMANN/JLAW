@@ -8,9 +8,7 @@ Your API access for SEC EDGAR and GovInfo has been successfully configured.
 - **SEC EDGAR**: No API key required - only needs User-Agent with email
 - **GovInfo (data.gov)**: API key required for enhanced access (optional for SEC-only use)
 
-**Your Settings**:
-- **Email**: `timothyroessel@gmail.com`
-- **GovInfo API Key**: `QLSbdMWeb3QadP66hRAhw3V027uRU9fSYWPistqD`
+**Your Settings**: Stored securely in `.env` (see `docs/API_SETUP_GUIDE.md`)
 
 ---
 
@@ -20,11 +18,11 @@ Your `.env` file in the project root:
 
 ```bash
 # SEC EDGAR Configuration (No API key required - only User-Agent with email)
-SEC_USER_AGENT=JLAW Forensic System timothyroessel@gmail.com
-SEC_EMAIL=timothyroessel@gmail.com
+SEC_USER_AGENT=JLAW Forensic System your-email@example.com
+SEC_EMAIL=your-email@example.com
 
 # GovInfo API Configuration (API key for data.gov services - optional)
-GOVINFO_API_KEY=QLSbdMWeb3QadP66hRAhw3V027uRU9fSYWPistqD
+GOVINFO_API_KEY=<your-govinfo-api-key>
 ```
 
 ---
@@ -236,8 +234,8 @@ config.export_config('./config_export.json', include_secrets=False)
 
 **Solution**: Ensure `.env` file exists in project root with:
 ```bash
-SEC_EMAIL=timothyroessel@gmail.com
-SEC_USER_AGENT=JLAW Forensic System timothyroessel@gmail.com
+SEC_EMAIL=your-email@example.com
+SEC_USER_AGENT=JLAW Forensic System your-email@example.com
 ```
 
 ### "403 Forbidden" errors from SEC
@@ -246,7 +244,7 @@ SEC_USER_AGENT=JLAW Forensic System timothyroessel@gmail.com
 
 **Solution**: Verify `.env` has proper User-Agent:
 ```bash
-SEC_USER_AGENT=JLAW Forensic System timothyroessel@gmail.com
+SEC_USER_AGENT=JLAW Forensic System your-email@example.com
 ```
 
 The User-Agent **must** include your contact email per SEC requirements.
@@ -264,7 +262,7 @@ The User-Agent **must** include your contact email per SEC requirements.
 
 **Solution**: If you want to use GovInfo services, verify your key:
 ```bash
-GOVINFO_API_KEY=QLSbdMWeb3QadP66hRAhw3V027uRU9fSYWPistqD
+GOVINFO_API_KEY=<your-govinfo-key-from-data.gov>
 ```
 
 ---

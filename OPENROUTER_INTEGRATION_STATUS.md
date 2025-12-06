@@ -49,8 +49,7 @@ DualAgentCoordinator ready (openai=True, anthropic=True, govinfo=True)
 401 Unauthorized - Incorrect API key provided
 ```
 
-**Your OpenAI Key**:
-`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`
+**Your OpenAI Key**: Stored securely in `.env` file (see `docs/API_SETUP_GUIDE.md`)
 
 **Solution Options**:
 
@@ -67,7 +66,7 @@ DualAgentCoordinator ready (openai=True, anthropic=True, govinfo=True)
 You requested up to 2048 tokens, but can only afford 1826
 ```
 
-**Your OpenRouter Key**: `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`
+**Your OpenRouter Key**: Stored securely in `.env` file (see `docs/API_SETUP_GUIDE.md`)
 
 **Solution**:
 

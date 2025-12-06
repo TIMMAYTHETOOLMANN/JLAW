@@ -121,26 +121,28 @@ Your system now meets/exceeds the Nike 2019 PDF baseline:
 # DUAL-OPENAI CONFIGURATION (Temporary - until Anthropic/OpenRouter has credits)
 # ============================================================================
 
+# API keys are now stored securely in .env file
+# See docs/API_SETUP_GUIDE.md for setup instructions
+# Run: python setup_keys.py
+
 # OpenAI API Key (Primary Agent - Required)
-# Fresh key provided by user December 4, 2024
-OPENAI_API_KEY=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
+OPENAI_API_KEY=<stored in .env - see setup_keys.py>
 
 # OpenAI API Key (Secondary Agent - for Dual-OpenAI mode)
-# Using SAME key as primary (different prompting strategy makes them independent)
-OPENAI_SECONDARY_API_KEY=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
+OPENAI_SECONDARY_API_KEY=<stored in .env - see setup_keys.py>
 
 # ============================================================================
 # ANTHROPIC CONFIGURATION (✅ ENABLED - $15 credits available!)
 # ============================================================================
 
 # Anthropic API Key (Primary - Direct API, $15 credits added)
-ANTHROPIC_API_KEY=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
+ANTHROPIC_API_KEY=<stored in .env - see setup_keys.py>
 
-# OpenRouter API Key (Disabled - using direct Anthropic instead)
-# OPENROUTER_API_KEY=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
+# OpenRouter API Key
+OPENROUTER_API_KEY=<stored in .env - see setup_keys.py>
 
 # GovInfo API Key (Optional but Recommended)
-GOVINFO_API_KEY=QLSbdMWeb3QadP66hRAhw3V027uRU9fSYWPistqD
+GOVINFO_API_KEY=<stored in .env - see setup_keys.py>
 
 # SEC EDGAR Configuration
 SEC_USER_AGENT=JLAW Forensics System contact@jlaw-forensics.org

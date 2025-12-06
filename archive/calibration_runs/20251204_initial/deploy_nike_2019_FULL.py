@@ -17,12 +17,28 @@ import asyncio
 import json
 import logging
 import os
+import sys
 from datetime import datetime
 from pathlib import Path
 
-# Force environment reload
-os.environ[
-    'OPENAI_API_KEY'] = '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'
+# Add project root to path for imports
+project_root = Path(__file__).resolve().parent.parent.parent.parent
+sys.path.insert(0, str(project_root))
+
+# Load API keys from secure .env file
+try:
+    from config.secure_config import load_all_keys, get_api_key
+    load_all_keys()
+except ImportError:
+    # Fallback: load from .env manually if secure_config not available
+    env_file = project_root / '.env'
+    if env_file.exists():
+        with open(env_file) as f:
+            for line in f:
+                if '=' in line and not line.startswith('#'):
+                    key, _, value = line.strip().partition('=')
+                    if key and value:
+                        os.environ[key] = value
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)

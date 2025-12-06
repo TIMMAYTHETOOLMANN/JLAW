@@ -32,17 +32,17 @@
 ### Current .env Setup:
 ```ini
 # ✅ Anthropic (Working - $15 credits)
-ANTHROPIC_API_KEY=sk-ant-api03-k8yfOCvBM3sDvhw8gLddW5Z0Bah...
+ANTHROPIC_API_KEY=<stored in .env - see docs/API_SETUP_GUIDE.md>
 ANTHROPIC_MODEL=claude-3-opus-20240229
 ANTHROPIC_MAX_TOKENS=2048
 
 # ⚠️ OpenAI (Needs valid key)
-OPENAI_API_KEY=sk-proj-ozCdanX70ppD... (your working key)
+OPENAI_API_KEY=<stored in .env - see docs/API_SETUP_GUIDE.md>
 OPENAI_MODEL=gpt-4-turbo
 OPENAI_MAX_TOKENS=4096
 
 # ✅ GovInfo (Working)
-GOVINFO_API_KEY=QLSbdMWeb3QadP66hRAhw3V027uRU9fSYWPistqD
+GOVINFO_API_KEY=<stored in .env - see docs/API_SETUP_GUIDE.md>
 ```
 
 ---
@@ -67,9 +67,10 @@ GOVINFO_API_KEY=QLSbdMWeb3QadP66hRAhw3V027uRU9fSYWPistqD
 
 ### Issue: OpenAI Key Invalid
 
-The primary OpenAI key in .env is showing 401 error. You have a working key: `sk-proj-ozCdanX70ppD...`
+The primary OpenAI key in .env is showing 401 error. Ensure a valid key is configured.
 
 Make sure this is set as `OPENAI_API_KEY` in your `.env` file.
+Run `python setup_keys.py` to configure your API keys.
 
 ---
 
