@@ -148,3 +148,8 @@ cython_debug/
 
 # Redis database files
 dump.rdb
+
+# JLAW Forensic Analysis Output
+output/
+forensic_storage/
+jlaw_forensic_*.log
