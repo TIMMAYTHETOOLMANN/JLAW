@@ -1,0 +1,46 @@
+NIKE INC. (NKE) - 2019 SEC FILINGS FORENSIC ANALYSIS
+DOJ-LEVEL INVESTIGATION REPORT
+═══════════════════════════════════════════════
+═════════════════════════════════
+Report Generated: 2025-11-22 22:31:29
+Target Company: Nike Inc. (CIK: 0000320187)
+Analysis Period: January 1, 2019 - December 31, 2019
+Total Filings Analyzed: 89
+Total Violations Identified: 54
+Criminal Referrals Recommended: 1
+Estimated Total Damages: $65,650,000.00
+═══════════════════════════════════════════════
+═════════════════════════════════
+EXECUTIVE SUMMARY
+This forensic analysis examined all Nike Inc. SEC filings from calendar year 2019, applying DOJ-level 
+prosecutorial standards to identify securities law violations. The analysis employed sophisticated 
+surgical examination of each filing type with zero tolerance for false positives.
+VIOLATIONS BY TYPE
+⦁
+Section 16(a) Late Form 4 Filing: 29
+⦁
+Zero-Dollar Transaction - Potential Gift Disguise: 19
+⦁
+Section 10(b) Material Misstatement: 5
+⦁
+SOX 302 Officer Certification Deficiency: 1
+VIOLATIONS BY SEVERITY
+⦁
+HIGH: 49
+⦁
+MEDIUM: 4
+⦁
+CRITICAL: 1
+═══════════════════════════════════════════════
+═════════════════════════════════
+PER-FILING DETAILED ANALYSIS
+10-Q - Filed 2019-01-08
+Accession Number: 0000320187-19-000007
+Document URL: https://www.sec.gov/Archives/edgar/data/320187/000032018719000007/
+nke-11302018x10q.htm
+Filing Page: https://www.sec.gov/cgi-bin/viewer?
+action=view&cik=320187&accession_number=0000320187-19-000007&xbrl_type=v
+Violations Found: 1
+Violation 1: Section 10(b) Material Misstatement
+⦁
+Severity: HIGH

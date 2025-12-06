@@ -264,15 +264,67 @@ class RealSECDataFetcher:
         return filings
         
     async def fetch_filing_content(self, filing: SECFiling) -> str:
-        """Fetch the actual filing document content"""
+        """Fetch the actual filing document content from SEC EDGAR archives"""
         await self._rate_limit()
         
-        async with self.session.get(filing.document_url) as response:
-            if response.status == 200:
-                return await response.text()
-            else:
-                logger.error(f"Failed to fetch {filing.document_url}: {response.status}")
-                return ""
+        # Build proper URL paths
+        cik = filing.accession_number.split('-')[0] if '-' in filing.accession_number else "0"
+        # Extract CIK from the document URL if possible
+        if '/data/' in filing.document_url:
+            parts = filing.document_url.split('/data/')
+            if len(parts) > 1:
+                cik = parts[1].split('/')[0]
+        
+        accession_no_dashes = filing.accession_number.replace('-', '')
+        
+        # List of URLs to try in order
+        urls_to_try = []
+        
+        # Try the index.json first to get the actual file list
+        index_url = f"https://www.sec.gov/Archives/edgar/data/{cik}/{accession_no_dashes}/index.json"
+        
+        try:
+            async with self.session.get(index_url) as response:
+                if response.status == 200:
+                    index_data = await response.json()
+                    directory = index_data.get('directory', {})
+                    items = directory.get('item', [])
+                    
+                    # Find XML or HTML files
+                    for item in items:
+                        name = item.get('name', '')
+                        # For Form 4, look for XML files
+                        if filing.filing_type in ['4', '4/A']:
+                            if name.endswith('.xml') and 'xsl' not in name.lower():
+                                urls_to_try.append(f"https://www.sec.gov/Archives/edgar/data/{cik}/{accession_no_dashes}/{name}")
+                        # For other filings, look for HTML files
+                        elif name.endswith('.htm') or name.endswith('.html'):
+                            if item.get('size', 0) > 1000:  # Skip tiny files
+                                urls_to_try.append(f"https://www.sec.gov/Archives/edgar/data/{cik}/{accession_no_dashes}/{name}")
+                        # Also try primary document
+                        elif name == filing.primary_document:
+                            urls_to_try.insert(0, f"https://www.sec.gov/Archives/edgar/data/{cik}/{accession_no_dashes}/{name}")
+        except Exception as e:
+            logger.debug(f"Could not fetch index.json: {e}")
+        
+        # Add the original URL as fallback
+        urls_to_try.append(filing.document_url)
+        
+        # Try each URL
+        for url in urls_to_try:
+            try:
+                await self._rate_limit()
+                async with self.session.get(url) as response:
+                    if response.status == 200:
+                        content = await response.text()
+                        if len(content) > 100:  # Ensure we got real content
+                            logger.debug(f"Successfully fetched: {url}")
+                            return content
+            except Exception as e:
+                logger.debug(f"Error fetching {url}: {e}")
+        
+        logger.error(f"Failed to fetch content for {filing.accession_number}")
+        return ""
                 
     async def get_form4_details(self, filing: SECFiling) -> Dict[str, Any]:
         """
