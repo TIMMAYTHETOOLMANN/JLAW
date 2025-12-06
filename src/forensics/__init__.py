@@ -27,20 +27,13 @@ __version__ = "1.0.0"
 
 import logging
 
+# Initialize logger
 logger = logging.getLogger(__name__)
 
 # =============================================================================
 # PHASE 1-3: Core Analysis Modules
 # =============================================================================
-
-from .sec_edgar_analyzer import SECForensicAnalyzer, FilingAnalysis
-from .sec_edgar_api import SECEdgarAPI, FilingMetadata, fetch_nike_2019_filings, get_filings_sync
-from .statute_mapper import StatuteMapper, StatuteViolation, StatuteTitle
 from .api_resilience import (
-    CircuitBreaker, CircuitBreakerConfig, CircuitState,
-    ResilientAPIClient, RetryConfig, FailureType,
-    ExponentialBackoff, QueueManager,
-    CircuitBreakerOpenError, MaxRetriesExceededError,
     TokenBucket, create_sec_rate_limiter, create_govinfo_rate_limiter
 )
 from .immutable_storage import (
@@ -247,6 +240,47 @@ except ImportError:
     MultiPassResult = None
 
 # =============================================================================
+# DocsGPT Integration: Advanced Document Processing & Analysis
+# =============================================================================
+
+try:
+    from .docsgpt import (
+        ParserFactory, SECChunker, SECChunkingStrategy, DocsGPTConfig
+    )
+    from .docsgpt.document_analysis_orchestrator import (
+        DocumentAnalysisOrchestrator, AnalysisRequest, AnalysisResult
+    )
+    _docsgpt_available = True
+    logger.info("DocsGPT integration loaded successfully")
+except ImportError as e:
+    logger.warning(f"DocsGPT integration unavailable: {e}")
+    ParserFactory = None
+    SECChunker = None
+    SECChunkingStrategy = None
+    DocsGPTConfig = None
+    DocumentAnalysisOrchestrator = None
+    AnalysisRequest = None
+    AnalysisResult = None
+    _docsgpt_available = False
+
+# =============================================================================
+# Vector Store & Semantic Search
+# =============================================================================
+
+try:
+    from .vectorstore import VectorStoreFactory
+    from .search.semantic_engine import SECSemanticSearchEngine, SearchQuery, SearchHit
+    _vectorstore_available = True
+    logger.info("Vector store and semantic search loaded successfully")
+except ImportError as e:
+    logger.warning(f"Vector store unavailable: {e}")
+    VectorStoreFactory = None
+    SECSemanticSearchEngine = None
+    SearchQuery = None
+    SearchHit = None
+    _vectorstore_available = False
+
+# =============================================================================
 # Enhancement Modules: Entity Resolution & Narrative Analysis
 # =============================================================================
 
@@ -306,6 +340,8 @@ def get_system_status() -> dict:
             "phase_9_deployment": _deployment_available,
         },
         "enhancements": {
+            "docsgpt_integration": _docsgpt_available,
+            "vector_store": _vectorstore_available,
             "triangulation": _triangulation_available,
             "narrative_analysis": _analysis_available,
         },
@@ -314,6 +350,11 @@ def get_system_status() -> dict:
             _orchestrator_available,
             _deployment_available,
         ]),
+        "docsgpt_features": {
+            "multi_format_parsing": _docsgpt_available,
+            "semantic_search": _vectorstore_available,
+            "intelligent_chunking": _docsgpt_available,
+        }
     }
 
 
@@ -507,6 +548,19 @@ __all__ = [
     "AnthropicAgentAnalyzer",
     "MultiPassAnalysisStrategy",
     "MultiPassResult",
+    # DocsGPT Integration
+    "ParserFactory",
+    "SECChunker",
+    "SECChunkingStrategy",
+    "DocsGPTConfig",
+    "DocumentAnalysisOrchestrator",
+    "AnalysisRequest",
+    "AnalysisResult",
+    # Vector Store & Search
+    "VectorStoreFactory",
+    "SECSemanticSearchEngine",
+    "SearchQuery",
+    "SearchHit",
     # Enhancement modules
     "EntityResolver",
     "EntityMention",

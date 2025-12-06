@@ -519,6 +519,32 @@ class JSONParser(BaseDocumentParser):
         )
 
 
+class TextParser(BaseDocumentParser):
+    """Simple parser for plain text files."""
+    
+    supported_types = [DocumentType.TXT, DocumentType.MD, DocumentType.RST]
+    
+    def parse(self, file_path: Union[str, Path]) -> ParsedDocument:
+        """Parse text document."""
+        path = Path(file_path)
+        doc_id = f"txt_{path.stem}_{hashlib.md5(str(path).encode()).hexdigest()[:8]}"
+        
+        try:
+            with open(path, 'r', encoding='utf-8', errors='ignore') as f:
+                text_content = f.read()
+            logger.info(f"Parsed text file: {path.name}")
+        except Exception as e:
+            logger.error(f"Text parsing failed: {e}")
+            text_content = ""
+        
+        return ParsedDocument(
+            doc_id=doc_id,
+            source_path=str(path),
+            doc_type=DocumentType.TXT,
+            raw_text=text_content
+        )
+
+
 class ParserFactory:
     """
     Factory class for creating appropriate document parsers.
@@ -540,6 +566,9 @@ class ParserFactory:
         DocumentType.IXBRL: XBRLParser,
         DocumentType.XML: XBRLParser,
         DocumentType.JSON: JSONParser,
+        DocumentType.TXT: TextParser,
+        DocumentType.MD: TextParser,
+        DocumentType.RST: TextParser,
     }
     
     @classmethod
