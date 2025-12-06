@@ -48,7 +48,7 @@ __all__ = [
     'analyze_batch',
     'quick_risk_assessment',
     'correlate_all_transactions',
-    
+
     # Module 6: Financial Flow Tracer
     'FinancialFlowTracer',
     'trace_flows',

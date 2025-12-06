@@ -117,6 +117,12 @@ def get_flow_type(transaction_code: str) -> FlowType:
     return TRANSACTION_CODE_MAP.get(transaction_code.upper(), FlowType.UNKNOWN)
 
 
+def is_acquisition_flow(transaction_code: str) -> bool:
+    """Check if transaction code indicates an acquisition flow."""
+    flow_type = get_flow_type(transaction_code)
+    return flow_type in [FlowType.ACQUISITION, FlowType.GRANT, FlowType.EXERCISE]
+
+
 class FinancialFlowTracer:
     """
     Financial Flow Tracer for forensic transaction analysis.
@@ -251,7 +257,7 @@ class FinancialFlowTracer:
                 price = 0.0
 
             # Determine if acquisition based on code.
-            is_acquisition = transaction_code.upper() in ["A", "P", "M", "X", "I", "J"]
+            is_acquisition = is_acquisition_flow(transaction_code)
 
             flow = self.add_transaction(
                 insider_name=insider_name,
@@ -812,7 +818,7 @@ def trace_flows(transactions: List[Dict[str, Any]], config: Optional[Dict[str, A
             shares=shares,
             price_per_share=price,
             transaction_date=date,
-            is_acquisition=code.upper() in ["A", "P", "M", "X", "I", "J"],
+            is_acquisition=is_acquisition_flow(code),
         )
 
     return tracer.analyze()
@@ -890,7 +896,7 @@ def detect_enrichment(transactions: List[Dict[str, Any]]) -> List[Dict[str, Any]
             shares=shares,
             price_per_share=price,
             transaction_date=date,
-            is_acquisition=code.upper() in ["A", "P", "M", "X", "I", "J"],
+            is_acquisition=is_acquisition_flow(code),
         )
 
     patterns = tracer.detect_enrichment_schemes()

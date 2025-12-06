@@ -352,10 +352,8 @@ class FinancialFlowAnalyzer:
     def _detect_circular_flows(self) -> List[FlowPatternAlert]:
         """Detect circular flow patterns (potential wash trading)."""
         patterns = []
-        # Note: window_days is used for documentation of the detection window.
-        _ = self.config["circular_window_days"]
 
-        # Look for A->B and B->A flows within window.
+        # Look for A->B and B->A flows (bidirectional flows between entities).
         for source, targets in self._flow_graph.items():
             for target, forward_shares in targets.items():
                 reverse_shares = self._flow_graph.get(target, {}).get(source, 0)
