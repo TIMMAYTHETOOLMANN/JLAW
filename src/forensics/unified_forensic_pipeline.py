@@ -557,7 +557,6 @@ class UnifiedForensicPipeline:
     def _add_revenue_violation(self, context: ForensicContext, anomaly: Any, result: Any):
         """Add revenue recognition anomaly as a violation."""
         from .forensic_context import Violation
-        import uuid
         
         violation = Violation(
             violation_id=f"REV-{str(uuid.uuid4())[:8]}",
@@ -648,7 +647,6 @@ class UnifiedForensicPipeline:
     def _add_flow_violation(self, context: ForensicContext, alert: Any):
         """Add financial flow alert as a violation."""
         from .forensic_context import Violation
-        import uuid
         
         violation = Violation(
             violation_id=f"FLOW-{str(uuid.uuid4())[:8]}",
