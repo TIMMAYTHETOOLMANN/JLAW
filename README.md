@@ -2,16 +2,37 @@
 
 Zero-tolerance forensic analysis system for SEC filings with surgical precision. Combines traditional forensic accounting with advanced ML fraud detection.
 
-## Quick Start
+## 🚀 Unified Forensic Analysis System v4.0
+
+**NEW:** Single-command DOJ-grade forensic analysis platform! See [Unified Forensic System Documentation](docs/UNIFIED_FORENSIC_SYSTEM.md)
+
+```bash
+# Quick Start - Unified Analysis
+python jlaw_forensic.py --ticker NKE --year 2019
+
+# Full analysis with all modules
+python jlaw_forensic.py --cik 0000320187 --start-date 2019-01-01 --end-date 2019-12-31 --verbose
+```
+
+**Features:**
+- ✅ 13-Phase Linear Pipeline with Context Propagation
+- ✅ Dual-Agent AI (OpenAI + Anthropic) Analysis
+- ✅ DocsGPT Integration (9+ format support)
+- ✅ Financial Forensics (Revenue Recognition + Flow Analysis)
+- ✅ Quantitative Forensics (Beneish, Altman Z, Benford's Law)
+- ✅ GovInfo API Statutory Mapping
+- ✅ DOJ-Grade Report Generation
+
+## Legacy Quick Start
 
 ```bash
 # Install dependencies
 pip install -r requirements.txt
 
-# Run investigation
+# Run investigation (legacy)
 python jlaw_forensics.py investigate --cik 0001318605 --name "Tesla Inc" --years 3
 
-# Analyze single filing
+# Analyze single filing (legacy)
 python jlaw_forensics.py analyze --cik 0001318605 --accession 0001564590-24-000123
 
 # Verify system integrity
