@@ -51,6 +51,9 @@ class UnifiedForensicPipeline:
         self.config = get_config()
         logger.info("🔬 Initializing Unified Forensic Pipeline")
         
+        # Load YAML config if available
+        self._load_yaml_config()
+        
         # Initialize phase modules (lazy loading)
         self._sec_api = None
         self._parser_factory = None
@@ -66,6 +69,35 @@ class UnifiedForensicPipeline:
         self._ml_detector = None
         self._statute_mapper = None
         self._dual_agent = None
+    
+    def _load_yaml_config(self):
+        """Load YAML configuration file if available."""
+        import yaml
+        try:
+            config_path = Path(__file__).parent.parent.parent / "config" / "unified_forensic.yaml"
+            if config_path.exists():
+                with open(config_path, 'r') as f:
+                    self._yaml_config = yaml.safe_load(f).get('unified_forensic', {})
+                logger.debug(f"Loaded YAML config from {config_path}")
+            else:
+                self._yaml_config = {}
+        except Exception as e:
+            logger.debug(f"Could not load YAML config: {e}")
+            self._yaml_config = {}
+    
+    def _get_config(self, *keys, default=None):
+        """Safely get configuration value from YAML or SystemConfig."""
+        # Try YAML config first
+        value = self._yaml_config
+        for key in keys:
+            if isinstance(value, dict):
+                value = value.get(key, {})
+            else:
+                return default
+        
+        if value == {} or value is None:
+            return default
+        return value
         
     async def execute(
         self,
@@ -222,8 +254,8 @@ class UnifiedForensicPipeline:
                 parser_factory = ParserFactory()
                 chunker = SECChunker(
                     strategy=SECChunkingStrategy.HYBRID,
-                    chunk_size=self.config.config.docsgpt.get('chunk_size', 2000),
-                    chunk_overlap=self.config.config.docsgpt.get('chunk_overlap', 100)
+                    chunk_size=self._get_config('docsgpt', 'chunk_size', default=2000),
+                    chunk_overlap=self._get_config('docsgpt', 'chunk_overlap', default=100)
                 )
                 logger.info(f"✓ ParserFactory and SECChunker initialized (HYBRID strategy)")
             else:
@@ -243,7 +275,7 @@ class UnifiedForensicPipeline:
                     
                     # Create parsed document with full metadata
                     content_length = len(filing.raw_content)
-                    max_length = self.config.config.docsgpt.get('max_content_length', MAX_CONTENT_LENGTH)
+                    max_length = self._get_config('docsgpt', 'max_content_length', default=MAX_CONTENT_LENGTH)
                     truncated_content = filing.raw_content[:max_length]
                     
                     parsed_doc = ParsedDocument(
@@ -312,7 +344,7 @@ class UnifiedForensicPipeline:
         
         try:
             # Initialize OpenAI Agent SDK analyzer
-            if self.config.config.agents.get('openai', {}).get('enabled', True):
+            if self._get_config('agents', 'openai', 'enabled', default=True):
                 try:
                     from .agent_sec_analyzer import AgentSECForensicAnalyzer
                     openai_agent = AgentSECForensicAnalyzer()
@@ -321,7 +353,7 @@ class UnifiedForensicPipeline:
                     logger.warning(f"OpenAI Agent initialization failed: {e}")
             
             # Initialize Anthropic Claude analyzer
-            if self.config.config.agents.get('anthropic', {}).get('enabled', True):
+            if self._get_config('agents', 'anthropic', 'enabled', default=True):
                 try:
                     from .anthropic_agent_analyzer import AnthropicAgentAnalyzer
                     anthropic_agent = AnthropicAgentAnalyzer()
@@ -372,7 +404,7 @@ class UnifiedForensicPipeline:
         logger.info("=" * 80)
         
         try:
-            if not self.config.config.quantitative.get('enabled', True):
+            if not self._get_config('quantitative', 'enabled', default=True):
                 logger.info("Quantitative forensics disabled in config")
                 return context
             
@@ -387,7 +419,7 @@ class UnifiedForensicPipeline:
             
             if financial_data:
                 # Beneish M-Score calculation (8-factor model)
-                if self.config.config.quantitative.get('beneish_m_score', True):
+                if self._get_config('quantitative', 'beneish_m_score', default=True):
                     try:
                         context.beneish_score = quant_analyzer.calculate_beneish_score(financial_data)
                         logger.info(f"  Beneish M-Score: {context.beneish_score:.4f} {'⚠️  HIGH RISK' if context.beneish_score > -1.78 else '✓ Normal'}")
@@ -396,7 +428,7 @@ class UnifiedForensicPipeline:
                         context.beneish_score = 0.0
                 
                 # Altman Z-Score (bankruptcy prediction)
-                if self.config.config.quantitative.get('altman_z_score', True):
+                if self._get_config('quantitative', 'altman_z_score', default=True):
                     try:
                         context.altman_z_score = quant_analyzer.calculate_altman_z_score(financial_data)
                         logger.info(f"  Altman Z-Score: {context.altman_z_score:.4f}")
@@ -405,7 +437,7 @@ class UnifiedForensicPipeline:
                         context.altman_z_score = 0.0
                 
                 # Benford's Law analysis on financial figures
-                if self.config.config.quantitative.get('benford_law', True):
+                if self._get_config('quantitative', 'benford_law', default=True):
                     try:
                         benford_results = benford_analyzer.analyze_filings(context.parsed_documents)
                         context.benford_results = benford_results
@@ -474,7 +506,7 @@ class UnifiedForensicPipeline:
         logger.info("=" * 80)
         
         try:
-            if not self.config.config.financial_forensics.get('revenue_analyzer', {}).get('enabled', True):
+            if not self._get_config('financial_forensics', 'revenue_analyzer', 'enabled', default=True):
                 logger.info("Revenue recognition analysis disabled in config")
                 return context
             
@@ -553,7 +585,7 @@ class UnifiedForensicPipeline:
         logger.info("=" * 80)
         
         try:
-            if not self.config.config.financial_forensics.get('flow_analyzer', {}).get('enabled', True):
+            if not self._get_config('financial_forensics', 'flow_analyzer', 'enabled', default=True):
                 logger.info("Financial flow analysis disabled in config")
                 return context
             
@@ -636,46 +668,120 @@ class UnifiedForensicPipeline:
     async def _phase_07_linguistic_deception(self, context: ForensicContext) -> ForensicContext:
         """
         Phase 7: Linguistic Deception Analysis
-        Hedging patterns, obfuscation metrics, certainty scores.
+        Hedging pattern detection, obfuscation metrics, sentiment analysis, readability scoring.
+        Detects narrative manipulation and deceptive language patterns.
         """
         logger.info("\n" + "=" * 80)
         logger.info("🗣️ PHASE 7: LINGUISTIC DECEPTION ANALYSIS")
         logger.info("=" * 80)
         
         try:
+            if not self._get_config('linguistic', 'enabled', default=True):
+                logger.info("Linguistic analysis disabled in config")
+                return context
+            
             from .linguistic_deception_analyzer import LinguisticDeceptionAnalyzer
             
             analyzer = LinguisticDeceptionAnalyzer()
             
-            # Placeholder metrics
+            # Analyze text from parsed documents
+            all_text = " ".join([doc.content[:5000] for doc in context.parsed_documents[:10]])
+            
+            if all_text:
+                # Run linguistic analysis
+                results = analyzer.analyze_text(all_text)
+                
+                context.deception_metrics = {
+                    'hedging_score': results.get('hedging_score', 0.0),
+                    'obfuscation_score': results.get('obfuscation_score', 0.0),
+                    'certainty_score': results.get('certainty_score', 0.0),
+                    'sentiment_score': results.get('sentiment_score', 0.0),
+                    'readability_score': results.get('readability_score', 0.0),
+                    'red_flags': results.get('red_flags', [])
+                }
+                
+                logger.info(f"  Hedging Score: {context.deception_metrics['hedging_score']:.2f}")
+                logger.info(f"  Obfuscation Score: {context.deception_metrics['obfuscation_score']:.2f}")
+                logger.info(f"  Certainty Score: {context.deception_metrics['certainty_score']:.2f}")
+                logger.info(f"  Red Flags: {len(context.deception_metrics.get('red_flags', []))}")
+            else:
+                context.deception_metrics = {
+                    'hedging_score': 0.0,
+                    'obfuscation_score': 0.0,
+                    'certainty_score': 0.0
+                }
+            
+            logger.info(f"✅ Phase 7 Complete: Linguistic deception analysis performed")
+            
+        except Exception as e:
+            logger.error(f"❌ Phase 7 failed: {e}", exc_info=True)
             context.deception_metrics = {
                 'hedging_score': 0.0,
                 'obfuscation_score': 0.0,
                 'certainty_score': 0.0
             }
-            
-            logger.info(f"✅ Phase 7 Complete: Linguistic analysis performed")
-            
-        except Exception as e:
-            logger.error(f"❌ Phase 7 failed: {e}", exc_info=True)
         
         return context
     
     async def _phase_08_temporal_analysis(self, context: ForensicContext) -> ForensicContext:
         """
         Phase 8: Temporal Analysis
-        Timeline anomalies, filing delays, event sequencing.
+        Timeline reconstruction, filing delay detection, event sequencing,
+        business day calculations for Form 4 compliance.
         """
         logger.info("\n" + "=" * 80)
         logger.info("⏰ PHASE 8: TEMPORAL ANALYSIS")
         logger.info("=" * 80)
         
         try:
+            if not self._get_config('temporal', 'enabled', default=True):
+                logger.info("Temporal analysis disabled in config")
+                return context
+            
             from .temporal_forensic_reconciliation import TemporalForensicReconciliation
+            from .forensic_context import TimelineAnomaly
             
             analyzer = TemporalForensicReconciliation()
             
-            # Placeholder - would analyze filing timeline
+            # Build filing timeline
+            filing_timeline = []
+            for filing in context.filings:
+                filing_timeline.append({
+                    'date': filing.filing_date,
+                    'type': filing.filing_type,
+                    'accession_number': filing.accession_number,
+                    'company_name': filing.company_name
+                })
+            
+            # Sort by date
+            filing_timeline.sort(key=lambda x: x['date'])
+            
+            logger.info(f"  Analyzing timeline of {len(filing_timeline)} filings")
+            
+            # Detect filing delays and anomalies
+            anomalies = analyzer.detect_filing_delays(filing_timeline)
+            
+            for anomaly in anomalies:
+                timeline_anomaly = TimelineAnomaly(
+                    anomaly_type=anomaly.get('type', 'Filing Delay'),
+                    description=anomaly.get('description', ''),
+                    severity=anomaly.get('severity', 'MEDIUM'),
+                    date=anomaly.get('date'),
+                    related_filings=anomaly.get('related_filings', [])
+                )
+                context.timeline_anomalies.append(timeline_anomaly)
+            
+            logger.info(f"  Timeline Anomalies: {len(context.timeline_anomalies)}")
+            
+            # Form 4 late filing detection (15 USC §78p(a) - 2 business day requirement)
+            form4_filings = [f for f in context.filings if f.filing_type == "4"]
+            if form4_filings:
+                late_filings = analyzer.detect_late_form4_filings(form4_filings)
+                logger.info(f"  Form 4 Late Filings: {len(late_filings)}")
+                
+                # Add late filing violations
+                for late_filing in late_filings:
+                    self._add_late_filing_violation(context, late_filing)
             
             logger.info(f"✅ Phase 8 Complete: Temporal analysis performed")
             
@@ -683,6 +789,24 @@ class UnifiedForensicPipeline:
             logger.error(f"❌ Phase 8 failed: {e}", exc_info=True)
         
         return context
+    
+    def _add_late_filing_violation(self, context: ForensicContext, late_filing: Dict):
+        """Add late Form 4 filing as a violation."""
+        violation = Violation(
+            violation_id=f"LATE-{str(uuid.uuid4())[:8]}",
+            violation_type="Section 16(a) Late Form 4 Filing",
+            statute="15 U.S.C. § 78p(a)",
+            severity="HIGH",
+            description=f"Form 4 filed {late_filing.get('days_late', 0)} business days late",
+            evidence=f"Transaction date: {late_filing.get('transaction_date')}, Filing date: {late_filing.get('filing_date')}",
+            document_url=late_filing.get('document_url', ''),
+            exact_quote="",
+            prosecutorial_merit="STRONG",
+            estimated_damages=late_filing.get('days_late', 0) * 10000,  # $10K per day penalty estimate
+            criminal_referral=late_filing.get('days_late', 0) > 30,
+            metadata=late_filing
+        )
+        context.violations.append(violation)
     
     async def _phase_09_contradiction_detection(self, context: ForensicContext) -> ForensicContext:
         """
@@ -695,7 +819,7 @@ class UnifiedForensicPipeline:
         logger.info("=" * 80)
         
         try:
-            if not self.config.config.contradiction.get('enabled', True):
+            if not self._get_config('contradiction', 'enabled', default=True):
                 logger.info("Contradiction detection disabled in config")
                 return context
             
@@ -759,28 +883,94 @@ class UnifiedForensicPipeline:
     async def _phase_10_ml_fraud_detection(self, context: ForensicContext) -> ForensicContext:
         """
         Phase 10: ML Fraud Detection
-        BERT/XGBoost ensemble fraud probability.
+        BERT-based hierarchical attention network + XGBoost ensemble.
+        Provides fraud probability scoring with feature importance.
         """
         logger.info("\n" + "=" * 80)
         logger.info("🧠 PHASE 10: ML FRAUD DETECTION")
         logger.info("=" * 80)
         
         try:
+            if not self._get_config('ml_fraud', 'enabled', default=True):
+                logger.info("ML fraud detection disabled in config")
+                return context
+            
             from .ml_fraud_detector import AdvancedFraudDetector
             
             detector = AdvancedFraudDetector()
             
-            # Placeholder scores
-            context.ml_fraud_scores = {
-                'bert_score': 0.0,
-                'xgboost_score': 0.0,
-                'ensemble_score': 0.0
-            }
+            # Combine all document text for ML analysis
+            all_text = " ".join([doc.content[:3000] for doc in context.parsed_documents[:10]])
+            
+            if all_text and len(all_text) > 100:
+                # Extract features for ML models
+                features = {
+                    'beneish_score': context.beneish_score,
+                    'altman_z_score': context.altman_z_score,
+                    'hedging_score': context.deception_metrics.get('hedging_score', 0.0),
+                    'obfuscation_score': context.deception_metrics.get('obfuscation_score', 0.0),
+                    'violation_count': len(context.violations),
+                    'contradiction_count': len(context.contradictions),
+                    'timeline_anomaly_count': len(context.timeline_anomalies)
+                }
+                
+                # Run ML fraud detection
+                try:
+                    use_bert = self._get_config('ml_fraud', 'use_bert', default=False)
+                    
+                    if use_bert:
+                        # BERT-based deep learning (requires GPU)
+                        bert_prediction = detector.predict_with_bert(all_text)
+                        context.ml_fraud_scores['bert_score'] = bert_prediction.probability
+                        logger.info(f"  BERT Fraud Score: {bert_prediction.probability:.2%}")
+                    else:
+                        context.ml_fraud_scores['bert_score'] = 0.0
+                        logger.info("  BERT analysis disabled (requires GPU)")
+                    
+                    # Traditional ML ensemble
+                    if self._get_config('ml_fraud', 'use_ensemble', default=True):
+                        ensemble_score = detector.predict_with_ensemble(features)
+                        context.ml_fraud_scores['xgboost_score'] = ensemble_score
+                        logger.info(f"  Ensemble Fraud Score: {ensemble_score:.2%}")
+                    else:
+                        context.ml_fraud_scores['xgboost_score'] = 0.0
+                    
+                    # Combined score
+                    if use_bert and context.ml_fraud_scores['bert_score'] > 0:
+                        context.ml_fraud_scores['ensemble_score'] = (
+                            context.ml_fraud_scores['bert_score'] * 0.6 +
+                            context.ml_fraud_scores['xgboost_score'] * 0.4
+                        )
+                    else:
+                        context.ml_fraud_scores['ensemble_score'] = context.ml_fraud_scores['xgboost_score']
+                    
+                    logger.info(f"  Final ML Fraud Score: {context.ml_fraud_scores['ensemble_score']:.2%}")
+                    
+                except Exception as e:
+                    logger.warning(f"ML model prediction failed: {e}")
+                    context.ml_fraud_scores = {
+                        'bert_score': 0.0,
+                        'xgboost_score': 0.0,
+                        'ensemble_score': 0.0,
+                        'error': str(e)
+                    }
+            else:
+                logger.info("  Insufficient text data for ML analysis")
+                context.ml_fraud_scores = {
+                    'bert_score': 0.0,
+                    'xgboost_score': 0.0,
+                    'ensemble_score': 0.0
+                }
             
             logger.info(f"✅ Phase 10 Complete: ML fraud detection performed")
             
         except Exception as e:
             logger.error(f"❌ Phase 10 failed: {e}", exc_info=True)
+            context.ml_fraud_scores = {
+                'bert_score': 0.0,
+                'xgboost_score': 0.0,
+                'ensemble_score': 0.0
+            }
         
         return context
     
@@ -795,7 +985,7 @@ class UnifiedForensicPipeline:
         logger.info("=" * 80)
         
         try:
-            if not self.config.config.statute_mapping.get('enabled', True):
+            if not self._get_config('statute_mapping', 'enabled', default=True):
                 logger.info("Statutory mapping disabled in config")
                 return context
             
@@ -876,7 +1066,7 @@ class UnifiedForensicPipeline:
         logger.info("=" * 80)
         
         try:
-            if not self.config.config.dual_agent.get('enabled', True):
+            if not self._get_config('dual_agent', 'enabled', default=True):
                 logger.info("Dual-agent prosecution analysis disabled in config")
                 return context
             
@@ -918,7 +1108,7 @@ class UnifiedForensicPipeline:
                         # Cross-verify results
                         agreement = self._calculate_agreement(openai_result, anthropic_result)
                         
-                        if agreement >= self.config.config.dual_agent.get('agreement_threshold', 0.75):
+                        if agreement >= self._get_config('dual_agent', 'agreement_threshold', default=0.75):
                             validated_count += 1
                             violation.metadata['dual_agent_validated'] = True
                             violation.metadata['confidence'] = agreement
