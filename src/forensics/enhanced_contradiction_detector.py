@@ -19,7 +19,7 @@ import hashlib
 try:
     from sentence_transformers import SentenceTransformer, CrossEncoder
     SENTENCE_TRANSFORMERS_AVAILABLE = True
-except ImportError:
+except (ImportError, OSError, Exception):
     SENTENCE_TRANSFORMERS_AVAILABLE = False
     SentenceTransformer = None
     CrossEncoder = None
@@ -28,7 +28,7 @@ try:
     from transformers import AutoModelForSequenceClassification, AutoTokenizer
     import torch
     TRANSFORMERS_AVAILABLE = True
-except ImportError:
+except (ImportError, OSError, Exception):
     TRANSFORMERS_AVAILABLE = False
     AutoModelForSequenceClassification = None
     AutoTokenizer = None

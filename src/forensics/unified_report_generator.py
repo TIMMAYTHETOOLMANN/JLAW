@@ -230,8 +230,8 @@ class UnifiedReportGenerator:
         report.append("*Report prepared by JLAW Unified Forensic Analyzer*")
         report.append("*Classification: DOJ Criminal Division - Fraud Section Standards*")
         
-        # Write report
-        output_path.write_text("\n".join(report))
+        # Write report with UTF-8 encoding
+        output_path.write_text("\n".join(report), encoding='utf-8')
         logger.info(f"✅ Main report generated: {output_path}")
     
     def _generate_executive_summary(self, context: ForensicContext, output_path: Path):
@@ -268,7 +268,7 @@ class UnifiedReportGenerator:
         summary.append("- Full investigation recommended for all identified violations")
         summary.append("- Enhanced monitoring of future filings suggested")
         
-        output_path.write_text("\n".join(summary))
+        output_path.write_text("\n".join(summary), encoding='utf-8')
         logger.info(f"✅ Executive summary generated: {output_path}")
     
     def _generate_machine_readable_files(self, context: ForensicContext, output_dir: Path):
@@ -293,7 +293,7 @@ class UnifiedReportGenerator:
             }
             for v in context.violations
         ]
-        (output_dir / "violations.json").write_text(json.dumps(violations_data, indent=2))
+        (output_dir / "violations.json").write_text(json.dumps(violations_data, indent=2, ensure_ascii=False), encoding='utf-8')
         
         # timeline.json
         timeline_data = [
@@ -306,7 +306,7 @@ class UnifiedReportGenerator:
             }
             for a in context.timeline_anomalies
         ]
-        (output_dir / "timeline.json").write_text(json.dumps(timeline_data, indent=2))
+        (output_dir / "timeline.json").write_text(json.dumps(timeline_data, indent=2, ensure_ascii=False), encoding='utf-8')
         
         # contradictions.json
         contradictions_data = [
@@ -321,7 +321,7 @@ class UnifiedReportGenerator:
             }
             for c in context.contradictions
         ]
-        (output_dir / "contradictions.json").write_text(json.dumps(contradictions_data, indent=2))
+        (output_dir / "contradictions.json").write_text(json.dumps(contradictions_data, indent=2, ensure_ascii=False), encoding='utf-8')
         
         # quantitative_scores.json
         quantitative_data = {
@@ -334,10 +334,10 @@ class UnifiedReportGenerator:
                 'is_anomalous': v.is_anomalous
             } for k, v in context.benford_results.items()}
         }
-        (output_dir / "quantitative_scores.json").write_text(json.dumps(quantitative_data, indent=2))
+        (output_dir / "quantitative_scores.json").write_text(json.dumps(quantitative_data, indent=2, ensure_ascii=False), encoding='utf-8')
         
         # linguistic_analysis.json
-        (output_dir / "linguistic_analysis.json").write_text(json.dumps(context.deception_metrics, indent=2))
+        (output_dir / "linguistic_analysis.json").write_text(json.dumps(context.deception_metrics, indent=2, ensure_ascii=False), encoding='utf-8')
         
         # financial_flows.json
         flow_data = {}
@@ -348,7 +348,7 @@ class UnifiedReportGenerator:
                 'coordinated_activity': context.flow_analysis.coordinated_activity,
                 'risk_score': context.flow_analysis.risk_score
             }
-        (output_dir / "financial_flows.json").write_text(json.dumps(flow_data, indent=2))
+        (output_dir / "financial_flows.json").write_text(json.dumps(flow_data, indent=2, ensure_ascii=False), encoding='utf-8')
         
         # revenue_recognition.json
         revenue_data = {}
@@ -360,7 +360,7 @@ class UnifiedReportGenerator:
                 'anomalies': context.revenue_analysis.anomalies,
                 'risk_level': context.revenue_analysis.risk_level
             }
-        (output_dir / "revenue_recognition.json").write_text(json.dumps(revenue_data, indent=2))
+        (output_dir / "revenue_recognition.json").write_text(json.dumps(revenue_data, indent=2, ensure_ascii=False), encoding='utf-8')
         
         # statute_mapping.json
         statute_data = [
@@ -374,7 +374,7 @@ class UnifiedReportGenerator:
             }
             for s in context.statute_mappings
         ]
-        (output_dir / "statute_mapping.json").write_text(json.dumps(statute_data, indent=2))
+        (output_dir / "statute_mapping.json").write_text(json.dumps(statute_data, indent=2, ensure_ascii=False), encoding='utf-8')
         
         logger.info(f"✅ Machine-readable files generated: {output_dir}")
     
@@ -403,7 +403,7 @@ class UnifiedReportGenerator:
                 'timestamp': context.timestamp.isoformat()
             })
         
-        output_path.write_text(json.dumps(chain_data, indent=2))
+        output_path.write_text(json.dumps(chain_data, indent=2, ensure_ascii=False), encoding='utf-8')
         logger.info(f"✅ Chain of custody generated: {output_path}")
     
     def _generate_appendices(self, context: ForensicContext, output_dir: Path):
@@ -433,7 +433,7 @@ class UnifiedReportGenerator:
             "## Standards\n",
             "All analysis conforms to DOJ Criminal Division - Fraud Section standards for evidence collection and preservation."
         ]
-        (output_dir / "methodology.md").write_text("\n".join(methodology))
+        (output_dir / "methodology.md").write_text("\n".join(methodology), encoding='utf-8')
         
         # legal_framework.md
         legal = [
@@ -451,6 +451,6 @@ class UnifiedReportGenerator:
             "## References\n",
             "All statute references verified against official GovInfo.gov sources."
         ]
-        (output_dir / "legal_framework.md").write_text("\n".join(legal))
+        (output_dir / "legal_framework.md").write_text("\n".join(legal), encoding='utf-8')
         
         logger.info(f"✅ Appendices generated: {output_dir}")

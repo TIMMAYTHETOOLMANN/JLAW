@@ -27,7 +27,7 @@ except ImportError:
 try:
     import torch
     TORCH_AVAILABLE = True
-except ImportError:
+except (ImportError, OSError, Exception):
     TORCH_AVAILABLE = False
     torch = None
     
@@ -38,9 +38,12 @@ except ImportError:
 
 try:
     from transformers import AutoTokenizer, AutoModelForSequenceClassification
-    import torch.nn.functional as F
-    TRANSFORMERS_AVAILABLE = True
-except ImportError:
+    if TORCH_AVAILABLE:
+        import torch.nn.functional as F
+    else:
+        F = None
+    TRANSFORMERS_AVAILABLE = True and TORCH_AVAILABLE
+except (ImportError, OSError, Exception):
     TRANSFORMERS_AVAILABLE = False
     AutoTokenizer = None
     AutoModelForSequenceClassification = None

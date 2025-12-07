@@ -203,7 +203,158 @@ class SECEdgarAPI:
         self.last_request_time = 0.0
         
         logger.info(f"SECEdgarAPI initialized with cache_dir={self.cache_dir}")
+        
+        # Common ticker to CIK mappings (cache)
+        self._ticker_cik_cache: Dict[str, str] = {}
+        
+        # Common ticker to company name mappings
+        self._ticker_name_map: Dict[str, str] = {
+            'NKE': 'NIKE, Inc.',
+            'AAPL': 'Apple Inc.',
+            'MSFT': 'Microsoft Corporation',
+            'GOOGL': 'Alphabet Inc.',
+            'GOOG': 'Alphabet Inc.',
+            'AMZN': 'Amazon.com, Inc.',
+            'META': 'Meta Platforms, Inc.',
+            'FB': 'Meta Platforms, Inc.',
+            'TSLA': 'Tesla, Inc.',
+            'NVDA': 'NVIDIA Corporation',
+            'JPM': 'JPMorgan Chase & Co.',
+            'JNJ': 'Johnson & Johnson',
+            'V': 'Visa Inc.',
+            'WMT': 'Walmart Inc.',
+            'PG': 'Procter & Gamble Company',
+            'MA': 'Mastercard Incorporated',
+            'UNH': 'UnitedHealth Group Incorporated',
+            'HD': 'The Home Depot, Inc.',
+            'BAC': 'Bank of America Corporation',
+            'XOM': 'Exxon Mobil Corporation',
+            'PFE': 'Pfizer Inc.',
+            'CVX': 'Chevron Corporation',
+            'KO': 'The Coca-Cola Company',
+            'PEP': 'PepsiCo, Inc.',
+            'DIS': 'The Walt Disney Company',
+            'CSCO': 'Cisco Systems, Inc.',
+            'INTC': 'Intel Corporation',
+            'NFLX': 'Netflix, Inc.',
+            'BA': 'The Boeing Company',
+        }
     
+    def get_company_name(self, ticker: str) -> str:
+        """Get company name from ticker symbol."""
+        return self._ticker_name_map.get(ticker.upper(), f"{ticker.upper()} Company")
+
+    async def get_cik_from_ticker(self, ticker: str) -> Optional[str]:
+        """
+        Resolve a ticker symbol to CIK using SEC's company tickers file.
+        
+        Args:
+            ticker: Stock ticker symbol (e.g., 'NKE', 'AAPL')
+        
+        Returns:
+            CIK string (10-digit, zero-padded) or None if not found
+        """
+        ticker = ticker.upper().strip()
+        
+        # Check cache first
+        if ticker in self._ticker_cik_cache:
+            return self._ticker_cik_cache[ticker]
+        
+        # Known common tickers for immediate resolution
+        common_tickers = {
+            'NKE': '0000320187',
+            'AAPL': '0000320193',
+            'MSFT': '0000789019',
+            'GOOGL': '0001652044',
+            'GOOG': '0001652044',
+            'AMZN': '0001018724',
+            'META': '0001326801',
+            'FB': '0001326801',
+            'TSLA': '0001318605',
+            'NVDA': '0001045810',
+            'JPM': '0000019617',
+            'JNJ': '0000200406',
+            'V': '0001403161',
+            'WMT': '0000104169',
+            'PG': '0000080424',
+            'MA': '0001141391',
+            'UNH': '0000731766',
+            'HD': '0000354950',
+            'BAC': '0000070858',
+            'XOM': '0000034088',
+            'PFE': '0000078003',
+            'CVX': '0000093410',
+            'KO': '0000021344',
+            'PEP': '0000077476',
+            'ABBV': '0001551152',
+            'TMO': '0000097745',
+            'COST': '0000909832',
+            'MRK': '0000310158',
+            'DIS': '0001744489',
+            'CSCO': '0000858877',
+            'VZ': '0000732712',
+            'ADBE': '0000796343',
+            'INTC': '0000050863',
+            'CMCSA': '0001166691',
+            'NKE': '0000320187',
+            'ABT': '0000001800',
+            'ACN': '0001467373',
+            'CRM': '0001108524',
+            'DHR': '0000313616',
+            'NFLX': '0001065280',
+            'ORCL': '0001341439',
+            'TXN': '0000097476',
+            'PM': '0001413329',
+            'LIN': '0001707925',
+            'AMD': '0000002488',
+            'QCOM': '0000804328',
+            'IBM': '0000051143',
+            'GE': '0000040545',
+            'CAT': '0000018230',
+            'RTX': '0000101829',
+            'HON': '0000773840',
+            'AMGN': '0000318154',
+            'LOW': '0000060667',
+            'BA': '0000012927',
+        }
+        
+        if ticker in common_tickers:
+            cik = common_tickers[ticker]
+            self._ticker_cik_cache[ticker] = cik
+            logger.info(f"Resolved ticker {ticker} to CIK {cik} (from common list)")
+            return cik
+        
+        # Fallback: Try to fetch from SEC's company tickers JSON
+        try:
+            await self._rate_limit()
+            
+            # Create session if needed
+            if self._session is None:
+                self._session = aiohttp.ClientSession(
+                    headers={
+                        "User-Agent": self.user_agent,
+                        "Accept-Encoding": "gzip, deflate",
+                        "Accept": "application/json"
+                    }
+                )
+            
+            url = "https://www.sec.gov/files/company_tickers.json"
+            async with self._session.get(url) as response:
+                if response.status == 200:
+                    data = await response.json()
+                    # Format: {"0": {"cik_str": 320193, "ticker": "AAPL", "title": "Apple Inc."}, ...}
+                    for key, company in data.items():
+                        if company.get('ticker', '').upper() == ticker:
+                            cik = str(company['cik_str']).zfill(10)
+                            self._ticker_cik_cache[ticker] = cik
+                            logger.info(f"Resolved ticker {ticker} to CIK {cik} (from SEC API)")
+                            return cik
+        except Exception as e:
+            logger.warning(f"Failed to fetch ticker mapping from SEC: {e}")
+        
+        logger.warning(f"Could not resolve ticker {ticker} to CIK")
+        return None
+
     async def __aenter__(self) -> 'SECEdgarAPI':
         """Async context manager entry."""
         self._session = aiohttp.ClientSession(

@@ -45,10 +45,23 @@ from .forensic_orchestrator import (
 from .insider_form4_analyzer import (
     InsiderForm4Analyzer, Form4ViolationRecord
 )
-from .ml_fraud_detector import (
-    AdvancedFraudDetector, FraudPrediction,
-    FinancialFeatureExtractor, TextFeatureExtractor, TemporalFeatureExtractor
-)
+
+# ML fraud detector - optional (may fail if PyTorch has DLL issues on Windows)
+try:
+    from .ml_fraud_detector import (
+        AdvancedFraudDetector, FraudPrediction,
+        FinancialFeatureExtractor, TextFeatureExtractor, TemporalFeatureExtractor
+    )
+    ML_FRAUD_DETECTOR_AVAILABLE = True
+except (ImportError, OSError, Exception) as e:
+    logger.warning(f"ML fraud detector not available: {e}")
+    ML_FRAUD_DETECTOR_AVAILABLE = False
+    AdvancedFraudDetector = None
+    FraudPrediction = None
+    FinancialFeatureExtractor = None
+    TextFeatureExtractor = None
+    TemporalFeatureExtractor = None
+
 from .sec_forensic_extraction_system import (
     UniversalDocumentExtractor, ForensicSECDocumentAnalyzer,
     ExtractionResult, DocumentFormat,

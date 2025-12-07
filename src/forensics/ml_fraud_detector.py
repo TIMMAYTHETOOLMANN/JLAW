@@ -16,7 +16,8 @@ try:
     import torch.nn as nn
     from transformers import BertModel, BertTokenizer
     TORCH_AVAILABLE = True
-except ImportError:
+except (ImportError, OSError, Exception) as e:
+    # Catch ImportError, OSError (DLL loading issues on Windows), and any other exceptions
     TORCH_AVAILABLE = False
     torch = None
     nn = None
