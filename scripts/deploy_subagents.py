@@ -219,7 +219,7 @@ class SubagentDeployer:
     def print_summary(self, report: Dict):
         """Print deployment summary."""
         print("\n" + "=" * 70)
-        print("VOLTAGEN SUBAGENT DEPLOYMENT SUMMARY")
+        print("VOLTAGENT SUBAGENT DEPLOYMENT SUMMARY")
         print("=" * 70)
         print(f"Status: {report['status']}")
         print(f"Total Subagents: {report['total_subagents']}")

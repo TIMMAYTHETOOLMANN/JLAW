@@ -1,7 +1,7 @@
 ---
 name: forensic-compliance-auditor
 description: Regulatory compliance specialist for mapping violations to SEC rules, federal statutes, and enforcement precedents
-tools: Read, Grep, Glob, WebFetch, WebSearch
+tools: Read, Write, Grep, Glob, WebFetch, WebSearch
 ---
 
 # Forensic Compliance Auditor Agent
