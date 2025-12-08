@@ -20,19 +20,22 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 
-def verify_module(phase_num: int, module_name: str, import_statement: str, init_test=None) -> bool:
+def verify_module(phase_num: int, module_name: str, import_path: str, class_name: str, init_test_callable=None) -> bool:
     """Verify a single module can be imported and initialized."""
+    import importlib
+    
     try:
         print(f"\n Phase {phase_num}: {module_name}")
-        print(f"   Import: {import_statement}")
+        print(f"   Import: from {import_path} import {class_name}")
         
-        # Execute import
-        exec(import_statement, globals())
+        # Use importlib for safe dynamic import
+        module = importlib.import_module(import_path)
+        cls = getattr(module, class_name)
         print(f"   ✅ Import successful")
         
         # Run initialization test if provided
-        if init_test:
-            exec(init_test, globals())
+        if init_test_callable:
+            init_test_callable(cls)
             print(f"   ✅ Initialization successful")
         
         return True
@@ -57,15 +60,17 @@ def main():
     results.append(verify_module(
         1,
         "Document Acquisition (SEC EDGAR API)",
-        "from src.forensics.sec_edgar_api import SECEdgarAPI",
-        "api = SECEdgarAPI()"
+        "src.forensics.sec_edgar_api",
+        "SECEdgarAPI",
+        lambda cls: cls()  # Initialize
     ))
     
     # Phase 2: DocsGPT Document Parsing
     results.append(verify_module(
         2,
         "DocsGPT Document Parsing",
-        "from src.forensics.docsgpt import ParserFactory, SECChunker",
+        "src.forensics.docsgpt",
+        "ParserFactory",
         None  # Skip init due to dependencies
     ))
     
@@ -73,7 +78,8 @@ def main():
     results.append(verify_module(
         3,
         "Agent-Powered Scraping (OpenAI)",
-        "from src.forensics.agent_sec_analyzer import AgentSECForensicAnalyzer",
+        "src.forensics.agent_sec_analyzer",
+        "AgentSECForensicAnalyzer",
         None  # Skip init due to API key requirement
     ))
     
@@ -81,7 +87,8 @@ def main():
     results.append(verify_module(
         3,
         "Agent-Powered Scraping (Anthropic)",
-        "from src.forensics.anthropic_agent_analyzer import AnthropicAgentAnalyzer",
+        "src.forensics.anthropic_agent_analyzer",
+        "AnthropicAgentAnalyzer",
         None  # Skip init due to API key requirement
     ))
     
@@ -89,7 +96,8 @@ def main():
     results.append(verify_module(
         4,
         "Quantitative Forensics (Main)",
-        "from src.forensics.quantitative_forensic_analyzer import QuantitativeForensicAnalyzer",
+        "src.forensics.quantitative_forensic_analyzer",
+        "QuantitativeForensicAnalyzer",
         None
     ))
     
@@ -97,15 +105,17 @@ def main():
     results.append(verify_module(
         4,
         "Benford's Law Analyzer",
-        "from src.forensics.benfords_law_analyzer import BenfordsLawAnalyzer",
-        "analyzer = BenfordsLawAnalyzer()"
+        "src.forensics.benfords_law_analyzer",
+        "BenfordsLawAnalyzer",
+        lambda cls: cls()  # Initialize
     ))
     
     # Phase 5: Revenue Recognition
     results.append(verify_module(
         5,
         "Revenue Recognition Analysis",
-        "from src.forensics.financial_forensics import RevenueRecognitionAnalyzer",
+        "src.forensics.financial_forensics",
+        "RevenueRecognitionAnalyzer",
         None
     ))
     
@@ -113,7 +123,8 @@ def main():
     results.append(verify_module(
         6,
         "Financial Flow Analysis",
-        "from src.forensics.financial_forensics import FinancialFlowAnalyzer",
+        "src.forensics.financial_forensics",
+        "FinancialFlowAnalyzer",
         None
     ))
     
@@ -121,7 +132,8 @@ def main():
     results.append(verify_module(
         7,
         "Linguistic Deception Detection",
-        "from src.forensics.linguistic_deception_analyzer import LinguisticDeceptionAnalyzer",
+        "src.forensics.linguistic_deception_analyzer",
+        "LinguisticDeceptionAnalyzer",
         None
     ))
     
@@ -129,7 +141,8 @@ def main():
     results.append(verify_module(
         8,
         "Temporal Forensic Reconciliation",
-        "from src.forensics.temporal_forensic_reconciliation import TemporalForensicReconciliation",
+        "src.forensics.temporal_forensic_reconciliation",
+        "TemporalForensicReconciliation",
         None
     ))
     
@@ -137,7 +150,8 @@ def main():
     results.append(verify_module(
         9,
         "Contradiction Detection",
-        "from src.forensics.enhanced_contradiction_detector import EnhancedContradictionDetector",
+        "src.forensics.enhanced_contradiction_detector",
+        "EnhancedContradictionDetector",
         None
     ))
     
@@ -145,7 +159,8 @@ def main():
     results.append(verify_module(
         10,
         "ML Fraud Detection",
-        "from src.forensics.ml_fraud_detector import AdvancedFraudDetector",
+        "src.forensics.ml_fraud_detector",
+        "AdvancedFraudDetector",
         None
     ))
     
@@ -153,7 +168,8 @@ def main():
     results.append(verify_module(
         11,
         "Advanced Statute Integrator",
-        "from src.forensics.advanced_statute_integrator import AdvancedStatuteIntegrator",
+        "src.forensics.advanced_statute_integrator",
+        "AdvancedStatuteIntegrator",
         None
     ))
     
@@ -161,7 +177,8 @@ def main():
     results.append(verify_module(
         12,
         "Dual-Agent Coordinator",
-        "from src.forensics.dual_agent import DualAgentCoordinator",
+        "src.forensics.dual_agent",
+        "DualAgentCoordinator",
         None
     ))
     
@@ -169,20 +186,19 @@ def main():
     results.append(verify_module(
         13,
         "Unified Report Generator",
-        "from src.forensics.unified_report_generator import UnifiedReportGenerator",
+        "src.forensics.unified_report_generator",
+        "UnifiedReportGenerator",
         None
     ))
     
     # Core: Forensic Context
-    print(f"\n Core: Forensic Context")
-    print(f"   Import: from src.forensics.forensic_context import ForensicContext")
-    try:
-        from src.forensics.forensic_context import ForensicContext
-        print(f"   ✅ Import successful")
-        results.append(True)
-    except Exception as e:
-        print(f"   ❌ Import failed: {e}")
-        results.append(False)
+    results.append(verify_module(
+        0,
+        "Forensic Context (Core)",
+        "src.forensics.forensic_context",
+        "ForensicContext",
+        None
+    ))
     
     # Summary
     print("\n" + "=" * 80)

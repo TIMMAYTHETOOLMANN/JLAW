@@ -114,11 +114,11 @@ function Install-Dependencies($python) {
     Write-Section "Installing Dependencies"
     
     Write-Info "Upgrading pip, setuptools, wheel..."
-    & $python -m pip install --upgrade pip setuptools wheel --quiet
+    & $python -m pip install --upgrade pip setuptools wheel --progress-bar off 2>&1 | Out-Null
     
     if (Test-Path "requirements.txt") {
         Write-Info "Installing requirements from requirements.txt..."
-        & $python -m pip install -r requirements.txt --quiet
+        & $python -m pip install -r requirements.txt --progress-bar off
         Write-Success "Dependencies installed"
     }
     else {

@@ -25,6 +25,7 @@ import hashlib
 import time
 import logging
 from datetime import datetime, date, timedelta
+import datetime as dt_module  # For use in methods
 from pathlib import Path
 from typing import List, Dict, Any, Optional, Tuple
 from dataclasses import dataclass, field, asdict
@@ -301,7 +302,6 @@ class UnifiedForensicAnalyzer:
         logger.info(f"Company: {self.company_name}")
         
         # Parse date range for proper filtering
-        from datetime import datetime
         start_dt = datetime.strptime(start_date, '%Y-%m-%d')
         end_dt = datetime.strptime(end_date, '%Y-%m-%d')
         
@@ -337,8 +337,6 @@ class UnifiedForensicAnalyzer:
     
     def _parse_filing_batch(self, filing_data: Dict, start_dt, end_dt) -> List[Dict]:
         """Parse a batch of filings from SEC JSON response."""
-        from datetime import datetime
-        
         batch_filings = []
         
         accession_numbers = filing_data.get("accessionNumber", [])
