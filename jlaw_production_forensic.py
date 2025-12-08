@@ -25,6 +25,7 @@ import hashlib
 import time
 import logging
 from datetime import datetime, date, timedelta
+import datetime as dt_module  # For use in methods
 from pathlib import Path
 from typing import List, Dict, Any, Optional, Tuple
 from dataclasses import dataclass, field, asdict
@@ -300,32 +301,27 @@ class UnifiedForensicAnalyzer:
         self.company_name = data.get("name", self.company_name)
         logger.info(f"Company: {self.company_name}")
         
-        recent = data.get("filings", {}).get("recent", {})
-        start_year = start_date[:4]
+        # Parse date range for proper filtering
+        start_dt = datetime.strptime(start_date, '%Y-%m-%d')
+        end_dt = datetime.strptime(end_date, '%Y-%m-%d')
         
         filings = []
-        for i in range(len(recent.get("accessionNumber", []))):
-            filing_date = recent["filingDate"][i] if i < len(recent.get("filingDate", [])) else ""
-            if not filing_date.startswith(start_year):
+        
+        # Process recent filings
+        recent = data.get("filings", {}).get("recent", {})
+        filings.extend(self._parse_filing_batch(recent, start_dt, end_dt))
+        
+        # Process older filings if they exist (for comprehensive coverage)
+        older_files = data.get("filings", {}).get("files", [])
+        for file_info in older_files:
+            file_name = file_info.get('name', '')
+            if not file_name:
                 continue
-            
-            acc = recent["accessionNumber"][i]
-            acc_clean = acc.replace("-", "")
-            form = recent["form"][i] if i < len(recent.get("form", [])) else ""
-            report_date = recent["reportDate"][i] if i < len(recent.get("reportDate", [])) else None
-            primary_doc = recent["primaryDocument"][i] if i < len(recent.get("primaryDocument", [])) else ""
-            
-            filings.append({
-                "accession_number": acc,
-                "accession_clean": acc_clean,
-                "filing_type": form,
-                "filing_date": filing_date,
-                "report_date": report_date,
-                "primary_document": primary_doc,
-                "document_url": f"https://www.sec.gov/Archives/edgar/data/{self.cik}/{acc_clean}/{primary_doc}",
-                "viewer_url": f"https://www.sec.gov/cgi-bin/viewer?action=view&cik={self.cik}&accession_number={acc}&xbrl_type=v",
-                "index_url": f"https://www.sec.gov/Archives/edgar/data/{self.cik}/{acc_clean}/index.json"
-            })
+            # Fetch additional filing data
+            file_url = f"https://data.sec.gov/submissions/{file_name}"
+            older_data = await self._fetch_json(file_url)
+            if older_data:
+                filings.extend(self._parse_filing_batch(older_data, start_dt, end_dt))
         
         self.filings = filings
         
@@ -338,6 +334,49 @@ class UnifiedForensicAnalyzer:
             logger.info(f"  {ft}: {ct}")
         
         return filings
+    
+    def _parse_filing_batch(self, filing_data: Dict, start_dt, end_dt) -> List[Dict]:
+        """Parse a batch of filings from SEC JSON response."""
+        batch_filings = []
+        
+        accession_numbers = filing_data.get("accessionNumber", [])
+        filing_dates = filing_data.get("filingDate", [])
+        forms = filing_data.get("form", [])
+        report_dates = filing_data.get("reportDate", [])
+        primary_docs = filing_data.get("primaryDocument", [])
+        
+        for i in range(len(accession_numbers)):
+            filing_date = filing_dates[i] if i < len(filing_dates) else ""
+            if not filing_date:
+                continue
+            
+            # Check date range with proper date comparison
+            try:
+                filing_dt = datetime.strptime(filing_date, '%Y-%m-%d')
+                if not (start_dt <= filing_dt <= end_dt):
+                    continue
+            except ValueError:
+                continue
+            
+            acc = accession_numbers[i]
+            acc_clean = acc.replace("-", "")
+            form = forms[i] if i < len(forms) else ""
+            report_date = report_dates[i] if i < len(report_dates) else None
+            primary_doc = primary_docs[i] if i < len(primary_docs) else ""
+            
+            batch_filings.append({
+                "accession_number": acc,
+                "accession_clean": acc_clean,
+                "filing_type": form,
+                "filing_date": filing_date,
+                "report_date": report_date,
+                "primary_document": primary_doc,
+                "document_url": f"https://www.sec.gov/Archives/edgar/data/{self.cik}/{acc_clean}/{primary_doc}",
+                "viewer_url": f"https://www.sec.gov/cgi-bin/viewer?action=view&cik={self.cik}&accession_number={acc}&xbrl_type=v",
+                "index_url": f"https://www.sec.gov/Archives/edgar/data/{self.cik}/{acc_clean}/index.json"
+            })
+        
+        return batch_filings
     
     # ═══════════════════════════════════════════════════════════════════════════
     # FORM 4 ANALYSIS
