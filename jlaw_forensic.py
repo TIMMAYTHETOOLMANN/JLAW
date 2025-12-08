@@ -119,7 +119,9 @@ class CompleteUnifiedForensicSystem:
         start_date: str = None,
         end_date: str = None,
         company_name: str = None,
-        verbose: bool = False
+        verbose: bool = False,
+        filing_types: Optional[str] = None,
+        no_report: bool = False,
     ):
         """
         Execute complete 13-phase unified forensic analysis.
@@ -152,6 +154,13 @@ class CompleteUnifiedForensicSystem:
         if year:
             start_date = f"{year}-01-01"
             end_date = f"{year}-12-31"
+
+        # Normalize filing types
+        normalized_filing_types = None
+        if filing_types:
+            ft = filing_types.strip()
+            if ft.lower() != 'all':
+                normalized_filing_types = [p.strip() for p in ft.split(',') if p.strip()]
             
         print("\n" + "="*100)
         print("JLAW UNIFIED FORENSIC ANALYSIS SYSTEM - COMPLETE 13-PHASE PIPELINE")
@@ -160,6 +169,10 @@ class CompleteUnifiedForensicSystem:
         print(f"Period: {start_date} to {end_date}")
         print(f"Output: {self.output_dir}")
         print(f"Mode: LIVE SEC DATA + ALL 13 PHASES")
+        if normalized_filing_types is None:
+            print(f"Filing Types: ALL (comprehensive)")
+        else:
+            print(f"Filing Types: {', '.join(normalized_filing_types)}")
         print("="*100)
         
         # 
@@ -260,7 +273,8 @@ class CompleteUnifiedForensicSystem:
                     ticker=ticker,
                     cik=cik,
                     start_date=start_date,
-                    end_date=end_date
+                    end_date=end_date,
+                    filing_types=normalized_filing_types
                 )
                 
                 self.unified_results = {
@@ -312,24 +326,29 @@ class CompleteUnifiedForensicSystem:
         # STEP 5: COMPLETE OUTPUT STACK (Per README)
         # 
         
-        print("\n STEP 5: GENERATING COMPLETE OUTPUT STACK")
-        print("-" * 100)
-        
-        output_path = await self._generate_complete_output_stack(
-            merged_results,
-            company_name,
-            cik,
-            start_date,
-            end_date
-        )
-        
-        print(f"    OUTPUT STACK GENERATED:")
-        print(f"      Report Directory: {output_path}")
-        print(f"      Main Report:      {output_path / 'FORENSIC_REPORT.md'}")
-        print(f"      Executive Brief:  {output_path / 'executive_summary.md'}")
-        print(f"      Machine Data:     {output_path / 'machine_readable'}")
-        print(f"      Evidence Chain:   {output_path / 'evidence'}")
-        print(f"      Appendices:       {output_path / 'appendices'}")
+        if no_report:
+            print("\n STEP 5: REPORT GENERATION SKIPPED (--no-report)")
+            print("-" * 100)
+            output_path = None
+        else:
+            print("\n STEP 5: GENERATING COMPLETE OUTPUT STACK")
+            print("-" * 100)
+            
+            output_path = await self._generate_complete_output_stack(
+                merged_results,
+                company_name,
+                cik,
+                start_date,
+                end_date
+            )
+            
+            print(f"    OUTPUT STACK GENERATED:")
+            print(f"      Report Directory: {output_path}")
+            print(f"      Main Report:      {output_path / 'FORENSIC_REPORT.md'}")
+            print(f"      Executive Brief:  {output_path / 'executive_summary.md'}")
+            print(f"      Machine Data:     {output_path / 'machine_readable'}")
+            print(f"      Evidence Chain:   {output_path / 'evidence'}")
+            print(f"      Appendices:       {output_path / 'appendices'}")
         
         # 
         # FINAL SUMMARY
@@ -433,6 +452,15 @@ class CompleteUnifiedForensicSystem:
                     merged['violations'].append(v)
                     merged['total_violations'] += 1
                     merged['violation_types'][v.violation_type] = merged['violation_types'].get(v.violation_type, 0) + 1
+                    # Severity distribution & damages
+                    if getattr(v, 'severity', None):
+                        merged['severity_distribution'][v.severity] = merged['severity_distribution'].get(v.severity, 0) + 1
+                    try:
+                        merged['total_damages'] += float(getattr(v, 'estimated_damages', 0.0) or 0.0)
+                    except Exception:
+                        pass
+                    if getattr(v, 'criminal_referral', False):
+                        merged['criminal_referrals'] += 1
                     
             # Add enhanced metrics
             merged['benford_analysis'] = self.unified_results.get('benford_results', {})
@@ -441,6 +469,20 @@ class CompleteUnifiedForensicSystem:
             merged['contradictions'] = self.unified_results.get('contradictions', [])
             merged['ml_fraud_score'] = self.unified_results.get('ml_fraud_scores', {}).get('ensemble_score', 0.0)
             
+            # Merge filings count (use max/union of accession numbers)
+            try:
+                base_ids = {getattr(f, 'accession_number', None) for f in merged['filings']}
+                uni_filings = self.unified_results.get('filings', [])
+                for uf in uni_filings:
+                    if getattr(uf, 'accession_number', None) not in base_ids:
+                        merged['filings'].append(uf)
+                merged['filings_analyzed'] = len(merged['filings'])
+            except Exception:
+                merged['filings_analyzed'] = max(
+                    merged.get('filings_analyzed', 0),
+                    len(self.unified_results.get('filings', []))
+                )
+        
         return merged
         
     async def _generate_complete_output_stack(self, results, company_name, cik, start_date, end_date):
@@ -452,6 +494,25 @@ class CompleteUnifiedForensicSystem:
         output_path = self.output_dir / f"{company_slug}_{year}_FORENSIC_ANALYSIS_{timestamp}"
         output_path.mkdir(parents=True, exist_ok=True)
         
+        # If we have a full unified context and the unified report generator is available,
+        # delegate to it to produce the DOJ-grade, full output stack (preferred path).
+        try:
+            if REPORT_GENERATOR_AVAILABLE and self.unified_results and self.unified_results.get('context'):
+                context = self.unified_results['context']
+                # Ensure context metadata is populated
+                context.company_name = context.company_name or company_name
+                context.cik = context.cik or (cik or "")
+                context.analysis_period_start = context.analysis_period_start or start_date
+                context.analysis_period_end = context.analysis_period_end or end_date
+                
+                generator = UnifiedReportGenerator(output_path)
+                generator.generate_full_report(context)
+                
+                return output_path
+        except Exception as e:
+            logger.warning(f"Falling back to baseline output stack generation: {e}")
+        
+        # Fallback path: generate baseline-style output stack
         # Create subdirectories per README
         (output_path / "machine_readable").mkdir(exist_ok=True)
         (output_path / "evidence").mkdir(exist_ok=True)
@@ -521,6 +582,71 @@ class CompleteUnifiedForensicSystem:
         (output_path / "machine_readable" / "summary.json").write_text(
             json.dumps(summary, indent=2), encoding='utf-8'
         )
+
+        # Additional module outputs (if unified pipeline ran)
+        if self.unified_results:
+            try:
+                # Parsed documents metadata
+                pdocs = []
+                for d in self.unified_results.get('parsed_documents', []):
+                    md = getattr(d, 'metadata', {}) or {}
+                    pdocs.append({
+                        'doc_id': getattr(d, 'doc_id', ''),
+                        'filing_type': md.get('filing_type', ''),
+                        'filing_date': md.get('filing_date', ''),
+                        'document_url': md.get('document_url', ''),
+                        'content_length': md.get('content_length', None),
+                        'truncated': md.get('truncated', False)
+                    })
+                (output_path / "machine_readable" / "parsed_documents.json").write_text(
+                    json.dumps(pdocs, indent=2), encoding='utf-8'
+                )
+                # Temporal anomalies
+                tanoms = [
+                    {
+                        'type': getattr(a, 'anomaly_type', ''),
+                        'description': getattr(a, 'description', ''),
+                        'severity': getattr(a, 'severity', ''),
+                        'date': getattr(a, 'date', None),
+                        'related_filings': getattr(a, 'related_filings', [])
+                    } for a in self.unified_results.get('temporal_anomalies', [])
+                ]
+                (output_path / "machine_readable" / "temporal_anomalies.json").write_text(
+                    json.dumps(tanoms, indent=2), encoding='utf-8'
+                )
+                # Contradictions
+                contr = [
+                    {
+                        'type': getattr(c, 'contradiction_type', ''),
+                        'description': getattr(c, 'description', ''),
+                        'source_document': getattr(c, 'source_document', ''),
+                        'target_document': getattr(c, 'target_document', ''),
+                        'severity': getattr(c, 'severity', '')
+                    } for c in self.unified_results.get('contradictions', [])
+                ]
+                (output_path / "machine_readable" / "contradictions.json").write_text(
+                    json.dumps(contr, indent=2), encoding='utf-8'
+                )
+                # Statute mappings
+                try:
+                    statute_mappings = [
+                        {
+                            'statute': getattr(m, 'statute', ''),
+                            'name': getattr(m, 'name', ''),
+                            'jurisdiction': getattr(m, 'jurisdiction', ''),
+                            'penalties': getattr(m, 'penalties', ''),
+                            'govinfo_url': getattr(m, 'govinfo_url', ''),
+                            'applicable_violations': getattr(m, 'applicable_violations', [])
+                        }
+                        for m in getattr(self.unified_results.get('context'), 'statute_mappings', [])
+                    ]
+                except Exception:
+                    statute_mappings = []
+                (output_path / "machine_readable" / "statute_mappings.json").write_text(
+                    json.dumps(statute_mappings, indent=2), encoding='utf-8'
+                )
+            except Exception as e:
+                logger.warning(f"Failed to write extended machine-readable outputs: {e}")
         
         # 4. Chain of custody
         chain_of_custody = {
@@ -673,6 +799,11 @@ Examples:
     parser.add_argument('--output-dir', type=str, default='output', help='Output directory')
     parser.add_argument('--verbose', action='store_true', help='Enable verbose logging')
     parser.add_argument('--no-report', action='store_true', help='Skip report generation (testing only)')
+    parser.add_argument(
+        '--filing-types',
+        type=str,
+        help='Comma-separated SEC filing types to include (e.g., "10-K,10-Q,8-K,4,DEF 14A"). Use "all" (default) for all filings.'
+    )
     
     return parser.parse_args()
 
@@ -698,7 +829,9 @@ async def main():
             year=args.year,
             start_date=args.start_date,
             end_date=args.end_date,
-            verbose=args.verbose
+            verbose=args.verbose,
+            filing_types=args.filing_types,
+            no_report=args.no_report
         )
         
         print(f"\n Analysis complete! Output: {output_path}")

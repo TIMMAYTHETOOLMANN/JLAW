@@ -1,0 +1,16 @@
+=== Quick Demo: Multi-Tier SEC Fetcher ===
+Timestamp: 2025-12-08T03:14:09.775052
+Company: NIKE, Inc.
+Recent filings listed: 1000
+index.json items: 1
+Selected document: 0000320187-19-000113.txt
+Fetched content bytes: 205
+Preview: {"message": "Document not directly available via Archives; providing primary document candidate from EDGAR submissions.", "cik": "0000320187", "accession": "0000320187-19-000113", "primary_document": 
+
+Health summary:
+{
+  "total_requests": 3,
+  "cache_hits": 1,
+  "failovers": 6,
+  "rate_limit_hits": 0
+}

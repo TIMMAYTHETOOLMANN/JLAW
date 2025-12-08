@@ -5,7 +5,8 @@
 # Core dependencies
 aiohttp>=3.9.0
 aiofiles>=23.2.1
-numpy>=1.24.0
+# Pin to pre-2.0 to avoid ABI mismatches observed in environment
+numpy==1.26.4
 pandas>=2.0.0
 scikit-learn>=1.3.0
 polars>=1.0.0  # High-performance data processing
@@ -28,11 +29,10 @@ scipy>=1.10.0
 joblib>=1.3.0
 
 # Benford's Law Analysis
-benfordspy>=0.6.0  # Benford's Law testing library
+# External benford library removed (not available on PyPI). Use internal analyzer implementation.
 
 # Security & Evidence Chains
 cryptography>=41.0.0
-hashlib  # Built-in, for SHA-256 evidence hashes
 
 # Utilities
 python-dateutil>=2.8.2

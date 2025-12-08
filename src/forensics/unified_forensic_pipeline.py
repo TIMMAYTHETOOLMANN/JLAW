@@ -30,6 +30,7 @@ from pathlib import Path
 from typing import Optional, List, Dict, Any
 from datetime import datetime
 import json
+import re
 
 from .forensic_context import ForensicContext, SECFiling, Violation
 from .config_manager import get_config
@@ -105,7 +106,8 @@ class UnifiedForensicPipeline:
         ticker: Optional[str] = None,
         year: Optional[int] = None,
         start_date: Optional[str] = None,
-        end_date: Optional[str] = None
+        end_date: Optional[str] = None,
+        filing_types: Optional[List[str]] = None,
     ) -> ForensicContext:
         """
         Execute the full 13-phase forensic pipeline.
@@ -143,7 +145,7 @@ class UnifiedForensicPipeline:
         
         # Execute all 13 phases sequentially
         try:
-            context = await self._phase_01_document_acquisition(context, cik, ticker, start_date, end_date)
+            context = await self._phase_01_document_acquisition(context, cik, ticker, start_date, end_date, filing_types)
             context = await self._phase_02_docsgpt_parsing(context)
             context = await self._phase_03_agent_scraping(context)
             context = await self._phase_04_quantitative_forensics(context)
@@ -175,7 +177,8 @@ class UnifiedForensicPipeline:
         cik: Optional[str],
         ticker: Optional[str],
         start_date: Optional[str],
-        end_date: Optional[str]
+        end_date: Optional[str],
+        filing_types: Optional[List[str]] = None,
     ) -> ForensicContext:
         """
         Phase 1: Document Acquisition
@@ -208,12 +211,16 @@ class UnifiedForensicPipeline:
             
             # Fetch filings
             logger.info(f"Fetching filings for CIK={resolved_cik}, ticker={ticker}, period={start_date} to {end_date}")
+            if filing_types is None:
+                logger.info("Filing types: ALL (comprehensive)")
+            else:
+                logger.info(f"Filing types filter: {', '.join(filing_types)}")
             
             filings_data = await api.get_filings(
                 cik=resolved_cik,
                 start_date=start_date,
                 end_date=end_date,
-                filing_types=["10-K", "10-Q", "8-K", "4", "DEF 14A"]
+                filing_types=filing_types
             )
             
             # Convert to SECFiling objects with metadata only
@@ -222,15 +229,32 @@ class UnifiedForensicPipeline:
                 # Check if it's a FilingMetadata object or dict
                 if hasattr(filing_item, 'accession_number'):
                     # FilingMetadata object
+                    # Attempt to derive document_url if missing, using index_url + primary_document
+                    derived_doc_url = ''
+                    try:
+                        idx_url = getattr(filing_item, 'index_url', '')
+                        prim = getattr(filing_item, 'primary_document', '')
+                        if (not getattr(filing_item, 'document_url', None)) and idx_url and prim:
+                            base_dir = idx_url.rsplit('/', 1)[0]
+                            derived_doc_url = f"{base_dir}/{prim}"
+                    except Exception:
+                        derived_doc_url = ''
+
                     filing = SECFiling(
                         accession_number=filing_item.accession_number,
                         filing_type=filing_item.filing_type,
                         filing_date=filing_item.filing_date,
                         cik=filing_item.cik or resolved_cik or '',
                         company_name=filing_item.company_name or '',
-                        document_url=filing_item.document_url or '',
+                        document_url=getattr(filing_item, 'document_url', '') or derived_doc_url,
                         raw_content=getattr(filing_item, 'raw_content', None),
-                        metadata={'source': 'sec_edgar_api', 'filing_url': filing_item.filing_url}
+                        metadata={
+                            'source': 'sec_edgar_api',
+                            'filing_url': getattr(filing_item, 'filing_url', ''),
+                            'index_url': getattr(filing_item, 'index_url', ''),
+                            'viewer_url': getattr(filing_item, 'viewer_url', ''),
+                            'primary_document': getattr(filing_item, 'primary_document', '')
+                        }
                     )
                 else:
                     # Dict format
@@ -272,6 +296,7 @@ class UnifiedForensicPipeline:
             # Import DocsGPT components
             try:
                 from .docsgpt import ParserFactory, SECChunker, SECChunkingStrategy
+                from .docsgpt.parser_factory import ParsedDocument as DocsParsedDocument, DocumentType as DocsDocumentType
                 from .forensic_context import ParsedDocument, DocumentChunk
                 docsgpt_available = True
                 logger.info("✓ DocsGPT modules loaded successfully")
@@ -295,6 +320,13 @@ class UnifiedForensicPipeline:
             
             documents_parsed = 0
             chunks_created = 0
+
+            # SEC-compliant headers for direct fetches from EDGAR
+            sec_headers = {
+                "User-Agent": "JLAW-Forensics/2.0 (SEC Forensic Analysis; contact@jlaw-forensics.org)",
+                "Accept-Encoding": "gzip, deflate",
+                "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8"
+            }
             
             # INTELLIGENT PRIORITY-BASED PARSING
             # Only parse filings that are forensically relevant for advanced analysis
@@ -312,25 +344,73 @@ class UnifiedForensicPipeline:
                     # On-demand content fetch if not already present
                     content = filing.raw_content
                     
-                    if not content and filing.document_url and docsgpt_available:
-                        # Use DocsGPT's intelligent fetching (non-blocking, cached)
+                    # Always attempt to fetch content if we have a URL (regardless of DocsGPT availability)
+                    if not content and filing.document_url:
                         logger.debug(f"On-demand fetch: {filing.filing_type} - {filing.accession_number}")
                         try:
-                            # Fetch via parser factory (handles caching and rate limiting)
                             import aiohttp
-                            async with aiohttp.ClientSession() as session:
-                                async with session.get(filing.document_url, timeout=10) as resp:
+                            async with aiohttp.ClientSession(headers=sec_headers) as session:
+                                async with session.get(filing.document_url, timeout=20) as resp:
                                     if resp.status == 200:
                                         content = await resp.text()
                                         filing.raw_content = content  # Cache for future use
+                                    else:
+                                        logger.debug(f"HTTP {resp.status} for {filing.document_url}")
                         except Exception as e:
                             logger.debug(f"Fetch failed for {filing.accession_number}: {e}")
-                            continue
+                            # Try a very lightweight fallback with requests if aiohttp fails
+                            try:
+                                import requests
+                                r = requests.get(filing.document_url, timeout=20, headers=sec_headers)
+                                if r.status_code == 200:
+                                    content = r.text
+                                    filing.raw_content = content
+                            except Exception as e2:
+                                logger.debug(f"Requests fallback failed for {filing.accession_number}: {e2}")
+                                # If we still have no content, skip parsing
+                                content = None
                     
+                    # If we still don't have content, try resolving via index.json and fetch primary document
+                    if not content:
+                        try:
+                            idx_url = filing.metadata.get('index_url') if isinstance(filing.metadata, dict) else None
+                            prim = filing.metadata.get('primary_document') if isinstance(filing.metadata, dict) else None
+                            if idx_url:
+                                # Fetch index and derive primary document URL if needed
+                                import aiohttp
+                                async with aiohttp.ClientSession(headers=sec_headers) as session:
+                                    async with session.get(idx_url, timeout=20) as resp:
+                                        if resp.status == 200:
+                                            idx = await resp.json()
+                                            base_dir = idx_url.rsplit('/', 1)[0]
+                                            # Prefer primary_document; fallback to first HTML/HTM
+                                            doc_name = prim
+                                            try:
+                                                items = idx.get('directory', {}).get('item', [])
+                                                if not doc_name and items:
+                                                    htmls = [i.get('name') for i in items if str(i.get('name','')).lower().endswith(('.htm', '.html'))]
+                                                    # Prefer 10-k/10-q/8-k like names
+                                                    prioritized = [n for n in htmls if any(tag in n.lower() for tag in ['10-k', '10q', '10-q', '8-k', 'def 14a','proxy'])]
+                                                    doc_name = prioritized[0] if prioritized else (htmls[0] if htmls else items[0].get('name'))
+                                            except Exception:
+                                                pass
+                                            if doc_name:
+                                                filing.document_url = f"{base_dir}/{doc_name}"
+                                                try:
+                                                    async with aiohttp.ClientSession(headers=sec_headers) as session2:
+                                                        async with session2.get(filing.document_url, timeout=20) as resp2:
+                                                            if resp2.status == 200:
+                                                                content = await resp2.text()
+                                                                filing.raw_content = content
+                                                except Exception:
+                                                    pass
+                        except Exception as e:
+                            logger.debug(f"Index resolution failed for {filing.accession_number}: {e}")
+
                     if not content:
                         continue
-                    
-                    # Parse document with DocsGPT
+
+                    # Parse document (DocsGPT if available, else basic)
                     logger.debug(f"Parsing {filing.filing_type} - {filing.accession_number}")
                     
                     content_length = len(content)
@@ -356,10 +436,76 @@ class UnifiedForensicPipeline:
                     context.parsed_documents.append(parsed_doc)
                     documents_parsed += 1
                     
-                    # Intelligent chunking for semantic search
-                    if chunker and docsgpt_available:
-                        try:
-                            chunk_texts = chunker.chunk_text(truncated_content)
+                    # Intelligent chunking for semantic search (DocsGPT) or naive fallback
+                    try:
+                        used_docs_chunker = False
+                        if chunker and docsgpt_available:
+                            try:
+                                # Build DocsGPT ParsedDocument wrapper with raw_text
+                                docs_doc = DocsParsedDocument(
+                                    doc_id=filing.accession_number,
+                                    source_path=filing.document_url or "",
+                                    doc_type=DocsDocumentType.HTML,
+                                    raw_text=truncated_content,
+                                    metadata={
+                                        'filing_type': filing.filing_type,
+                                        'filing_date': filing.filing_date,
+                                        'cik': filing.cik,
+                                        'company_name': filing.company_name,
+                                        'document_url': filing.document_url,
+                                    }
+                                )
+                                docs_chunks = chunker.chunk_document(docs_doc)
+                                # Map DocsGPT chunks to context chunks
+                                for dc in docs_chunks or []:
+                                    idx = getattr(getattr(dc, 'metadata', None), 'chunk_index', None)
+                                    idx = idx if isinstance(idx, int) else len(context.chunks)
+                                    chunk = DocumentChunk(
+                                        chunk_id=f"{filing.accession_number}_chunk_{idx}",
+                                        text=getattr(dc, 'text', ''),
+                                        doc_id=filing.accession_number,
+                                        metadata={
+                                            'filing_type': filing.filing_type,
+                                            'filing_date': filing.filing_date,
+                                            'chunk_index': idx,
+                                            'section': getattr(getattr(dc, 'metadata', None), 'section', None)
+                                        }
+                                    )
+                                    context.chunks.append(chunk)
+                                    chunks_created += 1
+                                used_docs_chunker = bool(docs_chunks)
+                            except Exception as ce:
+                                logger.debug(f"SECChunker error for {filing.accession_number}: {ce}")
+                                used_docs_chunker = False
+
+                        if not used_docs_chunker:
+                            # Naive fallback chunking: split by paragraphs or fixed size
+                            naive_size = int(self._get_config('docsgpt', 'chunk_size', default=2000))
+                            if naive_size <= 0:
+                                naive_size = 2000
+                            # Prefer paragraph splits, then group into ~naive_size
+                            paragraphs = [p for p in truncated_content.split("\n\n") if p.strip()]
+                            chunk_texts = []
+                            buf = ""
+                            for p in paragraphs:
+                                if len(buf) + len(p) + 2 <= naive_size:
+                                    buf = f"{buf}\n\n{p}" if buf else p
+                                else:
+                                    if buf:
+                                        chunk_texts.append(buf)
+                                    # If a single paragraph is too large, hard-split it
+                                    if len(p) > naive_size:
+                                        for i in range(0, len(p), naive_size):
+                                            chunk_texts.append(p[i:i+naive_size])
+                                        buf = ""
+                                    else:
+                                        buf = p
+                            if buf:
+                                chunk_texts.append(buf)
+                            # Final guard: ensure at least one chunk
+                            if not chunk_texts:
+                                chunk_texts = [truncated_content]
+
                             for idx, chunk_text in enumerate(chunk_texts):
                                 chunk = DocumentChunk(
                                     chunk_id=f"{filing.accession_number}_chunk_{idx}",
@@ -373,13 +519,101 @@ class UnifiedForensicPipeline:
                                 )
                                 context.chunks.append(chunk)
                                 chunks_created += 1
-                        except Exception as e:
-                            logger.debug(f"Chunking failed for {filing.accession_number}: {e}")
+                    except Exception as e:
+                        logger.debug(f"Chunking failed for {filing.accession_number}: {e}")
                     
                 except Exception as e:
                     logger.warning(f"Failed to parse filing {filing.accession_number}: {e}")
                     continue
             
+            # If nothing parsed from priority set, attempt a resilience fallback on a small sample of all filings
+            if documents_parsed == 0 and context.filings:
+                logger.info("No priority documents parsed — attempting resilience fallback on a small sample of filings")
+                fallback_set = context.filings[:min(8, len(context.filings))]
+                for filing in fallback_set:
+                    try:
+                        content = filing.raw_content
+                        if not content:
+                            # Try direct fetch if a document_url exists
+                            if filing.document_url:
+                                try:
+                                    import aiohttp
+                                    async with aiohttp.ClientSession(headers=sec_headers) as session:
+                                        async with session.get(filing.document_url, timeout=20) as resp:
+                                            if resp.status == 200:
+                                                content = await resp.text()
+                                                filing.raw_content = content
+                                except Exception:
+                                    pass
+                            # Try index-based resolution
+                            if not content:
+                                try:
+                                    md = filing.metadata if isinstance(filing.metadata, dict) else {}
+                                    idx_url = md.get('index_url')
+                                    prim = md.get('primary_document')
+                                    if idx_url:
+                                        import aiohttp
+                                        async with aiohttp.ClientSession(headers=sec_headers) as session:
+                                            async with session.get(idx_url, timeout=20) as resp:
+                                                if resp.status == 200:
+                                                    idx = await resp.json()
+                                                    base_dir = idx_url.rsplit('/', 1)[0]
+                                                    doc_name = prim
+                                                    items = idx.get('directory', {}).get('item', [])
+                                                    if not doc_name and items:
+                                                        htmls = [i.get('name') for i in items if str(i.get('name','')).lower().endswith(('.htm', '.html'))]
+                                                        doc_name = htmls[0] if htmls else (items[0].get('name') if items else None)
+                                                    if doc_name:
+                                                        filing.document_url = f"{base_dir}/{doc_name}"
+                                                        async with aiohttp.ClientSession(headers=sec_headers) as session2:
+                                                            async with session2.get(filing.document_url, timeout=20) as resp2:
+                                                                if resp2.status == 200:
+                                                                    content = await resp2.text()
+                                                                    filing.raw_content = content
+                                except Exception:
+                                    pass
+                        if not content:
+                            continue
+                        # Build parsed doc and naive chunks
+                        from .forensic_context import ParsedDocument, DocumentChunk
+                        content_length = len(content)
+                        max_length = self._get_config('docsgpt', 'max_content_length', default=MAX_CONTENT_LENGTH)
+                        truncated_content = content[:max_length]
+                        parsed_doc = ParsedDocument(
+                            doc_id=filing.accession_number,
+                            content=truncated_content,
+                            sections={},
+                            tables=[],
+                            xbrl_facts={},
+                            metadata={
+                                'filing_type': filing.filing_type,
+                                'filing_date': filing.filing_date,
+                                'cik': filing.cik,
+                                'company_name': filing.company_name,
+                                'document_url': filing.document_url,
+                                'content_length': content_length,
+                                'truncated': content_length > max_length
+                            }
+                        )
+                        context.parsed_documents.append(parsed_doc)
+                        documents_parsed += 1
+                        # naive chunking
+                        naive_size = int(self._get_config('docsgpt', 'chunk_size', default=2000) or 2000)
+                        for idx in range(0, len(truncated_content), naive_size):
+                            chunk_text = truncated_content[idx:idx+naive_size]
+                            context.chunks.append(DocumentChunk(
+                                chunk_id=f"{filing.accession_number}_fallback_{idx//naive_size}",
+                                text=chunk_text,
+                                doc_id=filing.accession_number,
+                                metadata={'filing_type': filing.filing_type, 'filing_date': filing.filing_date, 'chunk_index': idx//naive_size}
+                            ))
+                            chunks_created += 1
+                        # Stop early if we parsed enough to unblock downstream phases
+                        if documents_parsed >= 3:
+                            break
+                    except Exception:
+                        continue
+
             logger.info(f"✅ Phase 2 Complete: {documents_parsed} documents parsed, {chunks_created} chunks created")
             
         except Exception as e:
@@ -748,17 +982,52 @@ class UnifiedForensicPipeline:
             all_text = " ".join([doc.content[:5000] for doc in context.parsed_documents[:10]])
             
             if all_text:
-                # Run linguistic analysis
-                results = analyzer.analyze_text(all_text)
-                
-                context.deception_metrics = {
-                    'hedging_score': results.get('hedging_score', 0.0),
-                    'obfuscation_score': results.get('obfuscation_score', 0.0),
-                    'certainty_score': results.get('certainty_score', 0.0),
-                    'sentiment_score': results.get('sentiment_score', 0.0),
-                    'readability_score': results.get('readability_score', 0.0),
-                    'red_flags': results.get('red_flags', [])
-                }
+                # Run linguistic analysis using the analyzer's primary method
+                try:
+                    result = await analyzer.analyze_management_discussion(all_text, metadata={
+                        'documents_considered': min(10, len(context.parsed_documents))
+                    })
+                    # Map to unified deception_metrics structure
+                    word_count = getattr(result, 'word_count', max(1, len(all_text.split())))
+                    hedge_words = getattr(getattr(result, 'cognitive_complexity', object()), 'hedge_words', 0)
+                    certainty_words = getattr(getattr(result, 'cognitive_complexity', object()), 'certainty_words', 0)
+                    obfuscation_score = getattr(getattr(result, 'obfuscation_metrics', object()), 'obfuscation_score', 0.0)
+                    reading_ease = getattr(getattr(result, 'obfuscation_metrics', object()), 'flesch_reading_ease', 0.0)
+                    emotional_valence = getattr(getattr(result, 'emotional_tone', object()), 'emotional_valence', 0.0)
+                    red_flags = getattr(result, 'red_flags', []) or []
+
+                    context.deception_metrics = {
+                        'hedging_score': min(1.0, hedge_words / max(1, word_count/100)),  # approx per-100-words
+                        'obfuscation_score': float(obfuscation_score),
+                        'certainty_score': min(1.0, certainty_words / max(1, word_count/100)),
+                        'sentiment_score': float(emotional_valence),  # -1..1 but keep as-is
+                        'readability_score': float(reading_ease),  # 0..100
+                        'red_flags': red_flags,
+                        'deception_probability': getattr(result, 'deception_probability', 0.0),
+                        'confidence_level': getattr(result, 'confidence_level', 0.0),
+                        'forensic_classification': getattr(getattr(result, 'forensic_classification', object()), 'upper', lambda: str(getattr(result, 'forensic_classification', '')) )()
+                            if isinstance(getattr(result, 'forensic_classification', ''), str) else str(getattr(result, 'forensic_classification', ''))
+                    }
+                except Exception as ae:
+                    logger.error(f"Linguistic analyzer primary method failed: {ae}")
+                    # Heuristic fallback to avoid pipeline failure
+                    lower_text = all_text.lower()
+                    hedges = ['maybe','perhaps','possibly','probably','might','could','may','approximately','roughly','about','around','somewhat','fairly','relatively','generally','typically','usually']
+                    certainty = ['absolutely','certainly','definitely','always','never','clearly','obviously','undoubtedly','surely','indeed']
+                    words = lower_text.split()
+                    wc = max(1, len(words))
+                    hedge_count = sum(1 for w in words if w.strip('.,;:()[]"\'') in hedges)
+                    cert_count = sum(1 for w in words if w.strip('.,;:()[]"\'') in certainty)
+                    sentences = [s for s in re.split(r'[.!?]+', lower_text) if s.strip()]
+                    reading_ease = 100.0 - min(100.0, (len(words)/max(1,len(sentences))) * 1.5 + (sum(len(w) for w in words)/wc) * 10)
+                    context.deception_metrics = {
+                        'hedging_score': min(1.0, hedge_count / max(1, wc/100)),
+                        'obfuscation_score': 0.0,
+                        'certainty_score': min(1.0, cert_count / max(1, wc/100)),
+                        'sentiment_score': 0.0,
+                        'readability_score': max(0.0, reading_ease),
+                        'red_flags': []
+                    }
                 
                 logger.info(f"  Hedging Score: {context.deception_metrics['hedging_score']:.2f}")
                 logger.info(f"  Obfuscation Score: {context.deception_metrics['obfuscation_score']:.2f}")

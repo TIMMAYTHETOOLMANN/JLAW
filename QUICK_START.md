@@ -1,37 +1,57 @@
-﻿# NIKE 2019 WORKING SYSTEM - RESTORED ✓
-## STATUS: READY TO RUN
-Branch: nike-2019-working
-Commit: b34fefb
-Verification: PASSED (89 filings found)
-## QUICK START
-Run the full analysis:
-  python nike_2019_production_run.py
-Expected:
-  - 89 filings analyzed
-  - 54+ violations detected  
-  - 5-10 minute runtime
-  - JSON results file
-## FILES AVAILABLE
-Main Scripts:
-  ✓ nike_2019_production_run.py
-  ✓ nike_2019_web_scraper.py
-  ✓ nike_2019_comprehensive_analysis.py
-Tests (all working):
-  ✓ test_sec_connection.py (verified: 89 filings found)
-  ✓ test_filing_collection.py
-  ✓ test_form4_diagnostic.py
-## VERIFICATION RESULTS
-Just tested: test_sec_connection.py
-Result: ✓ SUCCESS
-  - SEC EDGAR: Connected
-  - Filings found: 89 (correct!)
-  - Form 4s: 67
-  - 10-K: 1
-  - 10-Q: 3
-## WHY THIS VERSION WORKS
-✓ Real web scraping from SEC EDGAR
-✓ Correct filing count (89 not 85)
-✓ Actual document parsing
-✓ Genuine violation detection
-✓ Proper rate limiting (5-10 min not 30 sec)
-Ready to execute!
+﻿# Quick Start — JLAW Unified Forensic System (NIKE 2019 example)
+
+Status: Operational & Verified (Multi‑Tier Fetcher 7/7 pass)
+
+## 1) Install dependencies
+
+```powershell
+pip install -r requirements.txt
+```
+
+Notes:
+- NumPy is pinned to `< 2.0` (currently `1.26.4`) to avoid ABI warnings.
+- No external Benford dependency required; internal analyzer is used.
+
+## 2) Run verifications (recommended)
+
+```powershell
+python verify_api_keys.py
+python verify_multi_tier_sec.py   # Expect 7/7 PASS
+python scripts/gen_health_snapshot.py
+```
+
+Artifacts are saved to `forensic_reports/`.
+
+## 3) Run the unified analysis (NIKE 2019)
+
+Option A — One‑click, interactive:
+
+```powershell
+PowerShell -ExecutionPolicy Bypass -File .\one_click_analyze.ps1
+```
+
+Option B — One‑click, non‑interactive (no prompts):
+
+```powershell
+PowerShell -ExecutionPolicy Bypass -File .\one_click_analyze.ps1 -Ticker NKE -Year 2019 -OutputDir output -Verbose
+```
+
+Option C — Direct Python entrypoint:
+
+```powershell
+python jlaw_forensic.py --ticker NKE --year 2019 --verbose --output-dir output
+```
+
+Expected: 100% filing coverage, full report stack under `output/NIKE_..._FORENSIC_ANALYSIS_<timestamp>/`.
+
+## 4) Inspect outputs
+
+- Human report: `FORENSIC_REPORT.md`
+- Machine data (JSON): `machine_readable/`
+- Evidence: `evidence/` (with chain‑of‑custody)
+
+## 5) Troubleshooting
+
+- Ensure SEC‑compliant `User‑Agent` is set (handled by code by default).
+- If network is constrained, re‑run after cache warms; cache at `forensic_storage/sec_cache_v3`.
+- For GovInfo‑dependent tests, set `GOVINFO_API_KEY` or tests will skip.

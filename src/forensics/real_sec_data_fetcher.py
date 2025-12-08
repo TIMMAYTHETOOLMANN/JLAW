@@ -1,6 +1,14 @@
 """
 Real SEC EDGAR Data Fetcher - Fetches ACTUAL filings from SEC EDGAR API
 NO SAMPLE DATA - Production-grade API integration for forensic analysis
+
+ENHANCED VERSION 3.0:
+- Multi-tier fetching with intelligent failover
+- Circuit breaker pattern for resilience
+- Advanced rate limiting per endpoint
+- Automatic cache management
+- Request deduplication
+- Health monitoring
 """
 
 import asyncio
@@ -14,6 +22,14 @@ import logging
 from dataclasses import dataclass, asdict
 
 logger = logging.getLogger(__name__)
+
+# Import multi-tier fetcher for enhanced reliability
+try:
+    from .multi_tier_sec_fetcher import MultiTierSECFetcher, RequestPriority, SECTier, SECFetchError
+    MULTI_TIER_AVAILABLE = True
+except ImportError:
+    MULTI_TIER_AVAILABLE = False
+    logger.warning("Multi-tier SEC fetcher not available, using legacy single-tier mode")
 
 @dataclass
 class SECFiling:
@@ -47,37 +63,69 @@ class RealSECDataFetcher:
     """
     Fetches REAL SEC EDGAR data - NO SAMPLE DATA
     Implements SEC EDGAR REST API v2.0 for production forensic analysis
+    
+    ENHANCED VERSION 3.0:
+    - Automatically uses multi-tier fetching when available
+    - Falls back to legacy single-tier mode if needed
+    - Maintains backward compatibility
     """
     
     BASE_URL = "https://data.sec.gov"
     EDGAR_ARCHIVES = "https://www.sec.gov/cgi-bin/browse-edgar"
     
     # SEC requires user agent with contact info
-    USER_AGENT = "JLAW-Forensics/2.0 (Forensic Analysis System; contact@jlaw-forensics.org)"
+    USER_AGENT = "JLAW-Forensics/3.0 (Multi-Tier Forensic Analysis System; forensics@jlaw.ai)"
     
     # Rate limiting: SEC allows 10 requests/second but we'll be conservative
     RATE_LIMIT_DELAY = 0.15  # 6.67 requests/second
     
-    def __init__(self, cache_dir: Optional[Path] = None):
+    def __init__(self, cache_dir: Optional[Path] = None, use_multi_tier: bool = True):
         self.cache_dir = cache_dir or Path("forensic_storage/sec_cache")
         self.cache_dir.mkdir(parents=True, exist_ok=True)
         self.session: Optional[aiohttp.ClientSession] = None
         self.request_count = 0
         self.last_request_time = 0
         
+        # Multi-tier fetcher
+        self.use_multi_tier = use_multi_tier and MULTI_TIER_AVAILABLE
+        self.multi_tier_fetcher: Optional[MultiTierSECFetcher] = None
+        
+        if self.use_multi_tier:
+            logger.info("RealSECDataFetcher initialized with MULTI-TIER mode")
+        else:
+            logger.info("RealSECDataFetcher initialized with LEGACY SINGLE-TIER mode")
+        
     async def __aenter__(self):
         """Async context manager entry"""
-        self.session = aiohttp.ClientSession(
-            headers={
-                "User-Agent": self.USER_AGENT,
-                "Accept-Encoding": "gzip, deflate",
-                "Host": "data.sec.gov"
-            }
-        )
+        if self.use_multi_tier:
+            # Initialize multi-tier fetcher
+            self.multi_tier_fetcher = MultiTierSECFetcher(cache_dir=self.cache_dir)
+            await self.multi_tier_fetcher.__aenter__()
+            logger.info("Multi-tier SEC fetcher initialized successfully")
+        else:
+            # Legacy single-tier mode
+            self.session = aiohttp.ClientSession(
+                headers={
+                    "User-Agent": self.USER_AGENT,
+                    "Accept-Encoding": "gzip, deflate",
+                    "Host": "data.sec.gov"
+                }
+            )
         return self
         
     async def __aexit__(self, exc_type, exc_val, exc_tb):
         """Async context manager exit"""
+        if self.multi_tier_fetcher:
+            await self.multi_tier_fetcher.__aexit__(exc_type, exc_val, exc_tb)
+            
+            # Log health report
+            health_report = self.multi_tier_fetcher.get_health_report()
+            logger.info("SEC Fetcher Health Report:")
+            for tier, stats in health_report.get('tiers', {}).items():
+                logger.info(f"  {tier}: health={stats['health_score']:.2f}, "
+                           f"requests={stats['total_requests']}, "
+                           f"failures={stats['failure_count']}")
+        
         if self.session:
             await self.session.close()
             
@@ -90,8 +138,32 @@ class RealSECDataFetcher:
         self.request_count += 1
         
     async def _fetch_json(self, url: str, cache_key: Optional[str] = None) -> Dict:
-        """Fetch JSON with caching and rate limiting"""
+        """Fetch JSON with caching and rate limiting (multi-tier enhanced)"""
         
+        # Use multi-tier fetcher if available
+        if self.multi_tier_fetcher:
+            try:
+                response = await self.multi_tier_fetcher.fetch(
+                    url,
+                    priority=RequestPriority.HIGH,
+                    raise_on_failure=True
+                )
+                if response and response.content:
+                    try:
+                        data = json.loads(response.content)
+                        logger.debug(f"Multi-tier fetch successful: {url}")
+                        return data
+                    except json.JSONDecodeError as e:
+                        logger.error(f"JSON decode error from SEC for {url}: {e}")
+                        raise SECFetchError(url, message="Invalid JSON from SEC endpoint")
+            except SECFetchError:
+                # Propagate strict failure to callers (no silent failures)
+                raise
+            except Exception as e:
+                logger.error(f"Multi-tier fetch error: {e}, falling back to legacy mode")
+                # Fall through to legacy mode
+        
+        # Legacy single-tier mode
         # Check cache first
         if cache_key:
             cache_file = self.cache_dir / f"{cache_key}.json"
@@ -104,7 +176,7 @@ class RealSECDataFetcher:
         await self._rate_limit()
         
         # Fetch from SEC
-        logger.info(f"Fetching: {url}")
+        logger.info(f"Fetching (legacy mode): {url}")
         async with self.session.get(url) as response:
             if response.status == 200:
                 data = await response.json()
@@ -116,13 +188,28 @@ class RealSECDataFetcher:
                         json.dump(data, f, indent=2)
                         
                 return data
-            elif response.status == 429:
-                # Rate limited - wait and retry
-                logger.warning("Rate limited by SEC - waiting 60 seconds")
-                await asyncio.sleep(60)
+            elif response.status in (429, 503):
+                # Rate limited or service unavailable - honor Retry-After
+                ra = response.headers.get('Retry-After')
+                retry_after = 0.0
+                if ra:
+                    try:
+                        retry_after = float(ra)
+                    except ValueError:
+                        try:
+                            from email.utils import parsedate_to_datetime
+                            dt = parsedate_to_datetime(ra)
+                            retry_after = max(0.0, (dt - datetime.utcnow().replace(tzinfo=dt.tzinfo)).total_seconds())
+                        except Exception:
+                            retry_after = 0.0
+                exp_backoff = 2.0 + (1.0 * (self.request_count % 3))
+                backoff = min(90.0, max(retry_after, exp_backoff))
+                logger.warning(f"SEC returned {response.status}. Backing off for {backoff:.1f}s (Retry-After={ra or 'n/a'})")
+                await asyncio.sleep(backoff)
                 return await self._fetch_json(url, cache_key)
             else:
-                raise Exception(f"SEC API error: {response.status} - {await response.text()}")
+                text = await response.text()
+                raise Exception(f"SEC API error: {response.status} - {text}")
                 
     async def get_company_submissions(self, cik: str) -> Dict:
         """
@@ -264,8 +351,10 @@ class RealSECDataFetcher:
         return filings
         
     async def fetch_filing_content(self, filing: SECFiling) -> str:
-        """Fetch the actual filing document content from SEC EDGAR archives"""
-        await self._rate_limit()
+        """Fetch the actual filing document content from SEC EDGAR archives (multi-tier enhanced)
+
+        Raises SECFetchError when all strategies fail to avoid silent failures.
+        """
         
         # Build proper URL paths
         cik = filing.accession_number.split('-')[0] if '-' in filing.accession_number else "0"
@@ -283,48 +372,98 @@ class RealSECDataFetcher:
         # Try the index.json first to get the actual file list
         index_url = f"https://www.sec.gov/Archives/edgar/data/{cik}/{accession_no_dashes}/index.json"
         
-        try:
-            async with self.session.get(index_url) as response:
-                if response.status == 200:
-                    index_data = await response.json()
-                    directory = index_data.get('directory', {})
-                    items = directory.get('item', [])
-                    
-                    # Find XML or HTML files
-                    for item in items:
-                        name = item.get('name', '')
-                        # For Form 4, look for XML files
-                        if filing.filing_type in ['4', '4/A']:
-                            if name.endswith('.xml') and 'xsl' not in name.lower():
-                                urls_to_try.append(f"https://www.sec.gov/Archives/edgar/data/{cik}/{accession_no_dashes}/{name}")
-                        # For other filings, look for HTML files
-                        elif name.endswith('.htm') or name.endswith('.html'):
-                            if item.get('size', 0) > 1000:  # Skip tiny files
-                                urls_to_try.append(f"https://www.sec.gov/Archives/edgar/data/{cik}/{accession_no_dashes}/{name}")
-                        # Also try primary document
-                        elif name == filing.primary_document:
-                            urls_to_try.insert(0, f"https://www.sec.gov/Archives/edgar/data/{cik}/{accession_no_dashes}/{name}")
-        except Exception as e:
-            logger.debug(f"Could not fetch index.json: {e}")
+        # Use multi-tier fetcher to get index.json if available
+        index_data = None
+        if self.multi_tier_fetcher:
+            try:
+                response = await self.multi_tier_fetcher.fetch_filing_index(cik, filing.accession_number)
+                if response:
+                    index_data = response
+                    logger.debug(f"Got index.json via multi-tier: {index_url}")
+            except Exception as e:
+                logger.debug(f"Multi-tier index fetch failed: {e}")
         
-        # Add the original URL as fallback
-        urls_to_try.append(filing.document_url)
-        
-        # Try each URL
-        for url in urls_to_try:
+        # Fall back to legacy mode for index if needed
+        if not index_data and self.session:
             try:
                 await self._rate_limit()
-                async with self.session.get(url) as response:
+                async with self.session.get(index_url) as response:
                     if response.status == 200:
-                        content = await response.text()
-                        if len(content) > 100:  # Ensure we got real content
-                            logger.debug(f"Successfully fetched: {url}")
-                            return content
+                        index_data = await response.json()
             except Exception as e:
-                logger.debug(f"Error fetching {url}: {e}")
+                logger.debug(f"Could not fetch index.json: {e}")
         
-        logger.error(f"Failed to fetch content for {filing.accession_number}")
-        return ""
+        # Parse index to find best document URLs
+        if index_data:
+            directory = index_data.get('directory', {})
+            items = directory.get('item', [])
+            
+            # Find XML or HTML files
+            for item in items:
+                name = item.get('name', '')
+                item_size = item.get('size', 0)
+                
+                # Convert size to int if it's a string
+                try:
+                    item_size = int(item_size) if item_size else 0
+                except (ValueError, TypeError):
+                    item_size = 0
+                
+                # For Form 4, look for XML files
+                if filing.filing_type in ['4', '4/A']:
+                    if name.endswith('.xml') and 'xsl' not in name.lower():
+                        urls_to_try.append(f"https://www.sec.gov/Archives/edgar/data/{cik}/{accession_no_dashes}/{name}")
+                # For other filings, look for HTML files
+                elif name.endswith('.htm') or name.endswith('.html'):
+                    if item_size > 1000:  # Skip tiny files
+                        urls_to_try.append(f"https://www.sec.gov/Archives/edgar/data/{cik}/{accession_no_dashes}/{name}")
+                # Also try primary document
+                elif name == filing.primary_document:
+                    urls_to_try.insert(0, f"https://www.sec.gov/Archives/edgar/data/{cik}/{accession_no_dashes}/{name}")
+        
+        # Add the original URL as fallback
+        if filing.document_url:
+            urls_to_try.append(filing.document_url)
+        
+        # Add viewer URL as another fallback
+        if filing.filing_html_url:
+            urls_to_try.append(filing.filing_html_url)
+        
+        # Try each URL with multi-tier fetcher first, then legacy
+        for url in urls_to_try:
+            # Try multi-tier first
+            if self.multi_tier_fetcher:
+                try:
+                    response = await self.multi_tier_fetcher.fetch(
+                        url,
+                        priority=RequestPriority.HIGH,
+                        raise_on_failure=False
+                    )
+                    if response and response.content and len(response.content) > 100:
+                        logger.debug(f"Multi-tier fetch successful: {url}")
+                        return response.content
+                except Exception as e:
+                    logger.debug(f"Multi-tier fetch failed for {url}: {e}")
+            
+            # Fall back to legacy mode
+            if self.session:
+                try:
+                    await self._rate_limit()
+                    async with self.session.get(url) as response:
+                        if response.status == 200:
+                            content = await response.text()
+                            if len(content) > 100:  # Ensure we got real content
+                                logger.debug(f"Legacy fetch successful: {url}")
+                                return content
+                except Exception as e:
+                    logger.debug(f"Legacy fetch failed for {url}: {e}")
+        
+        logger.error(f"Failed to fetch content for {filing.accession_number} after trying {len(urls_to_try)} URLs")
+        # Avoid silent failure
+        raise SECFetchError(
+            url=filing.document_url or urls_to_try[0] if urls_to_try else "",
+            message=f"Unable to fetch filing content for accession {filing.accession_number}"
+        )
                 
     async def get_form4_details(self, filing: SECFiling) -> Dict[str, Any]:
         """

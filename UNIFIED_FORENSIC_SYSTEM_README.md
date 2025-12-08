@@ -67,7 +67,7 @@ output/{COMPANY}_{YEAR}_FORENSIC_ANALYSIS_{TIMESTAMP}/
 
 ### Prerequisites
 
-- Python 3.12 or higher
+- Python 3.11 or 3.12 (recommended: 3.11 for maximum third‑party ABI compatibility)
 - Required API keys (optional, for full functionality):
   - `OPENAI_API_KEY` - For OpenAI agent analysis
   - `ANTHROPIC_API_KEY` - For Anthropic agent analysis
@@ -86,6 +86,10 @@ cd JLAW
 ```bash
 pip install -r requirements.txt
 ```
+
+Note on environment hardening:
+- NumPy is pinned to `< 2.0` (currently `numpy==1.26.4`) to avoid ABI mismatches observed with some compiled dependencies. Keep this pin unless you explicitly validate NumPy 2.x compatibility for all modules in your environment.
+- No external Benford’s library is required; the system uses an internal analyzer. `benfordspy` was removed from `requirements.txt` as it is not available on PyPI.
 
 3. Configure API keys (create `.env` file):
 ```bash
@@ -124,6 +128,9 @@ python jlaw_forensic.py --ticker NKE --year 2019 --output-dir /path/to/output
 
 # Skip report generation (for testing pipeline only)
 python jlaw_forensic.py --ticker NKE --year 2019 --no-report
+
+# Limit to specific filing types (default is ALL filings)
+python jlaw_forensic.py --ticker NKE --year 2019 --filing-types "10-K,10-Q,8-K,4,DEF 14A"
 ```
 
 ### Command-Line Options
@@ -138,6 +145,79 @@ python jlaw_forensic.py --ticker NKE --year 2019 --no-report
 | `--output-dir DIR` | Base directory for report output (default: output/) |
 | `--verbose` | Enable verbose logging |
 | `--no-report` | Skip report generation (testing only) |
+| `--filing-types TYPES` | Comma-separated SEC filing types to include (e.g., `10-K,10-Q,8-K,4,DEF 14A`). Use `all` (default) for ALL filings |
+
+### One-Click Execution (Windows)
+
+For a fully guided, single-click experience on Windows, use the included PowerShell script:
+
+```powershell
+# From the project root
+PowerShell -ExecutionPolicy Bypass -File .\one_click_analyze.ps1
+```
+
+The script will:
+- Verify Python and pip
+- Install dependencies from `requirements.txt`
+- Optionally validate API keys
+- Prompt for `Ticker/CIK`, `Year` or `Start/End` dates
+- Prompt for `Filing Types` (default: ALL)
+- Run the full 13-phase analysis and open the output folder
+
+#### Non‑Interactive recipes
+
+Option A — Use the one‑click script with flags (no prompts):
+
+```powershell
+# Example: NIKE 2019, verbose, output to .\output
+PowerShell -ExecutionPolicy Bypass -File .\one_click_analyze.ps1 -Ticker NKE -Year 2019 -OutputDir output -Verbose
+# Optional flags:
+#   -CIK 0000320187
+#   -StartDate 2019-01-01 -EndDate 2019-12-31
+#   -FilingTypes "10-K,10-Q,8-K,4,DEF 14A"   # default: all
+#   -NoReport                                   # skip report generation
+#   -SkipDeps                                   # skip dependency installation
+#   -SkipKeyCheck                               # skip API key validation
+```
+
+Option B — Call the unified pipeline directly (bypasses PowerShell script):
+
+```powershell
+# Example: NIKE 2019, verbose, output to .\output
+python jlaw_forensic.py --ticker NKE --year 2019 --verbose --output-dir output
+```
+
+Optional pre‑flight checks:
+
+```powershell
+python verify_api_keys.py
+python verify_multi_tier_sec.py   # 7/7 expected pass with multi‑tier fetcher
+```
+
+To snapshot multi‑tier health for records:
+
+```powershell
+python scripts/gen_health_snapshot.py
+```
+
+### CI Pipeline (GitHub Actions)
+
+This repository includes a lightweight CI workflow that installs dependencies, executes verification scripts, and uploads health/diff artifacts when present.
+
+- Workflow: `.github/workflows/forensic_ci.yml`
+- Badge (replace OWNER/REPO with your GitHub org/repo):
+
+```
+![JLAW Forensic CI](https://github.com/OWNER/REPO/actions/workflows/forensic_ci.yml/badge.svg)
+```
+
+The workflow performs the following (best‑effort) steps:
+- Install dependencies (Python 3.11, pip cache)
+- Run `verify_multi_tier_sec.py` (continue‑on‑error)
+- Generate health snapshot via `scripts/gen_health_snapshot.py` (continue‑on‑error)
+- Run `pytest -q test_single_filing.py` (skips if `GOVINFO_API_KEY` not set)
+- Run `scripts/diff_artifacts.py` to diff latest NIKE 2019 artifacts (continue‑on‑error)
+- Upload `forensic_reports/` as a build artifact
 
 ## Architecture
 

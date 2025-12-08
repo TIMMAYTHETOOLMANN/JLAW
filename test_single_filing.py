@@ -1,9 +1,16 @@
 ﻿"""
 Single Filing Test - Nike 10-K 2019
 Verify core functionality before batch analysis
+
+Notes:
+- This test requires a valid GOVINFO_API_KEY (api.data.gov). If the key is not
+  present in the environment, the test will be skipped to avoid false failures.
+  Set GOVINFO_API_KEY in your environment or .env before running.
 """
 
 import asyncio
+import os
+import pytest
 import sys
 from datetime import datetime
 
@@ -29,8 +36,21 @@ async def test_single_filing():
         compression=True
     )
     
+    # Resolve GovInfo API key from environment (fallback to .env if available)
+    gov_key = os.getenv("GOVINFO_API_KEY", "").strip()
+    if not gov_key:
+        try:
+            from dotenv import load_dotenv  # type: ignore
+            load_dotenv()
+            gov_key = os.getenv("GOVINFO_API_KEY", "").strip()
+        except Exception:
+            pass
+
+    if not gov_key:
+        pytest.skip("GOVINFO_API_KEY not set; skipping single filing test that requires GovInfo")
+
     orchestrator = ForensicOrchestrator(
-        govinfo_api_key="DEMO_KEY",
+        govinfo_api_key=gov_key,
         storage_config=storage_config,
         audit_signing_key=b"test_audit_key"
     )
