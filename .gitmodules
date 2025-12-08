@@ -1,0 +1,3 @@
+[submodule "external_repos/DocsGPT"]
+	path = external_repos/DocsGPT
+	url = https://github.com/arc53/DocsGPT.git
