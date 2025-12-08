@@ -22,17 +22,17 @@ help:
 sync:
 	uv sync --frozen --all-extras
 
-# Check code formatting
+# Check code formatting (only on main source and test directories)
 format-check:
-	uv run ruff format --check .
+	uv run ruff format --check src/ tests/
 
-# Format code
+# Format code (only on main source and test directories)
 format:
-	uv run ruff format .
+	uv run ruff format src/ tests/
 
-# Run linting
+# Run linting (only on main source and test directories)
 lint:
-	uv run ruff check .
+	uv run ruff check src/ tests/
 
 # Run type checking
 mypy:
