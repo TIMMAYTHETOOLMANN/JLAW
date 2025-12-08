@@ -193,7 +193,7 @@ class UnifiedForensicPipeline:
             from .sec_edgar_api import SECEdgarAPI
             
             api = SECEdgarAPI()
-            
+
             # Resolve ticker to CIK if needed
             resolved_cik = cik
             company_name = None
@@ -208,21 +208,21 @@ class UnifiedForensicPipeline:
                 else:
                     logger.error(f"❌ Could not resolve ticker {ticker} to CIK")
                     return context
-            
+
             # Fetch filings
             logger.info(f"Fetching filings for CIK={resolved_cik}, ticker={ticker}, period={start_date} to {end_date}")
             if filing_types is None:
                 logger.info("Filing types: ALL (comprehensive)")
             else:
                 logger.info(f"Filing types filter: {', '.join(filing_types)}")
-            
+
             filings_data = await api.get_filings(
                 cik=resolved_cik,
                 start_date=start_date,
                 end_date=end_date,
                 filing_types=filing_types
             )
-            
+
             # Convert to SECFiling objects with metadata only
             # Content will be fetched on-demand by DocsGPT in Phase 2
             for filing_item in filings_data:
@@ -269,11 +269,11 @@ class UnifiedForensicPipeline:
                         metadata=filing_item
                     )
                 context.filings.append(filing)
-            
+
             # Update company name from first filing
             if context.filings and not context.company_name:
                 context.company_name = context.filings[0].company_name or "Unknown Company"
-            
+
             logger.info(f"✅ Phase 1 Complete: {len(context.filings)} filings acquired")
             
         except Exception as e:
