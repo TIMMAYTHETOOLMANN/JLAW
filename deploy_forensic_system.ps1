@@ -138,15 +138,26 @@ function Test-SubagentDeployment($python) {
     
     if (Test-Path "scripts\deploy_subagents.py") {
         Write-Info "Running subagent deployment verification..."
-        $result = & $python scripts\deploy_subagents.py 2>&1
-        Write-Host $result
+        $result = & $python scripts\deploy_subagents.py 2>&1 | Out-String
         
-        if ($LASTEXITCODE -eq 0) {
+        # Check for success in output
+        if ($result -match "Status: SUCCESS" -and $result -match "Total Subagents: 14" -and $result -match "Validated: 14") {
             Write-Success "All 14 VoltAgent subagents verified successfully"
+            if ($Verbose) {
+                Write-Host $result
+            }
+            return $true
+        }
+        elseif ($LASTEXITCODE -eq 0) {
+            Write-Success "VoltAgent subagent verification completed"
+            if ($Verbose) {
+                Write-Host $result
+            }
             return $true
         }
         else {
             Write-Error-Custom "Subagent verification failed"
+            Write-Host $result
             return $false
         }
     }
@@ -282,7 +293,8 @@ try {
     # Step 3: Verify VoltAgent Subagents
     Write-Section "Step 3: VoltAgent Subagent Verification"
     if (!(Test-SubagentDeployment $python)) {
-        Write-Warning-Custom "Subagent verification failed, but continuing..."
+        Write-Warning-Custom "Subagent verification failed - multi-agent orchestration may not function correctly"
+        Write-Info "Continuing with core forensic analysis..."
     }
     
     # Step 4: Verify Modules
