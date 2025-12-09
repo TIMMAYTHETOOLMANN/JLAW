@@ -6,8 +6,10 @@
   - Install required dependencies
   - Optionally validate API keys
   - Prompt for analysis parameters (Ticker/CIK, Year or Date Range, Filing Types)
+  - Pre‑flight verify all 13 modules are importable
   - Run the full 13‑phase unified pipeline
-  - Open the generated output folder automatically
+  - Perform post‑run validation that Phase 13 completed and reports exist
+  - Open the generated report automatically
 
  Interactive usage:
    PowerShell -ExecutionPolicy Bypass -File .\one_click_analyze.ps1
@@ -15,7 +17,7 @@
  Non‑interactive (CI‑friendly) usage:
    PowerShell -ExecutionPolicy Bypass -File .\one_click_analyze.ps1 `
      -Ticker NKE -Year 2019 -OutputDir output -Verbose `
-     -SkipDeps:$false -SkipKeyCheck:$false
+     -SkipDeps:$false -SkipKeyCheck:$false -SkipVerify:$false -Strict:$true -SkipPostCheck:$false
 
  Supported parameters (non‑interactive):
    -Ticker <string> | -CIK <string>
@@ -24,7 +26,11 @@
    -OutputDir <path> (default: output)
    -Verbose (switch; default: ON if not supplied)
    -NoReport (switch; default: OFF)
-#>
+   -SkipVerify (switch; default: OFF) — skip 13‑module verification
+   -Strict (switch; default: OFF) — fail fast if verification or post‑checks fail
+   -SkipPostCheck (switch; default: OFF) — skip post‑run validation checks
+   -ScanDocs (switch; default: OFF) — scan Markdown docs for stray run instructions
+ #>
 
 param(
   [switch]$SkipDeps,
@@ -38,7 +44,12 @@ param(
   [string]$FilingTypes = 'all',
   [string]$OutputDir = 'output',
   [switch]$Verbose,
-  [switch]$NoReport
+  [switch]$NoReport,
+  # Orchestration controls
+  [switch]$SkipVerify,
+  [switch]$Strict,
+  [switch]$SkipPostCheck,
+  [switch]$ScanDocs
 )
 
 Set-StrictMode -Version Latest
@@ -76,6 +87,51 @@ function Validate-Keys($python) {
     } catch {
       Write-Warning "Key validation encountered an issue: $($_.Exception.Message). Continuing."
     }
+  }
+}
+
+function Verify-Modules($python) {
+  if ($SkipVerify) { Write-Host 'Skipping 13-module verification (--SkipVerify)'; return }
+  if (-not (Test-Path -LiteralPath (Join-Path $PSScriptRoot 'verify_13_modules.py'))) { 
+    Write-Warning 'verify_13_modules.py not found — skipping pre-flight verification.'
+    return
+  }
+  Write-Section 'Pre‑Flight: Verifying All 13 Modules'
+  try {
+    & $python (Join-Path $PSScriptRoot 'verify_13_modules.py')
+    $exitCode = $LASTEXITCODE
+    if ($exitCode -ne 0) {
+      $msg = "13‑module verification failed (exit code $exitCode)."
+      if ($Strict) { throw $msg } else { Write-Warning "$msg Continuing anyway." }
+    } else {
+      Write-Host 'All modules verified successfully.' -ForegroundColor Green
+    }
+  } catch {
+    $msg = "13‑module verification encountered an error: $($_.Exception.Message)"
+    if ($Strict) { throw $msg } else { Write-Warning $msg }
+  }
+}
+
+function Scan-IntegrationDocs {
+  if (-not $ScanDocs) { return }
+  Write-Section 'Scanning Markdown Docs for Run Instructions'
+  try {
+    $mdFiles = Get-ChildItem -LiteralPath $PSScriptRoot -Filter '*.md' -Recurse -ErrorAction SilentlyContinue
+    $patterns = @('python ', 'PowerShell ', 'pwsh ', 'one_click_analyze.ps1', 'jlaw_forensic.py')
+    foreach ($file in $mdFiles) {
+      $lines = Get-Content -LiteralPath $file.FullName -ErrorAction SilentlyContinue
+      for ($i = 0; $i -lt $lines.Length; $i++) {
+        $line = $lines[$i]
+        if ($line -match 'python ' -or $line -match 'PowerShell ' -or $line -match 'pwsh ') {
+          # Highlight instructions that reference other scripts than our master script or jlaw_forensic.py
+          if ($line -notmatch 'one_click_analyze.ps1' -and $line -notmatch 'jlaw_forensic.py') {
+            Write-Host ("[Doc] {0}:{1} -> {2}" -f $file.FullName, ($i+1), $line.Trim()) -ForegroundColor DarkYellow
+          }
+        }
+      }
+    }
+  } catch {
+    Write-Warning "Doc scan warning: $($_.Exception.Message)"
   }
 }
 
@@ -147,11 +203,65 @@ function Open-LatestOutput($baseOut) {
       Sort-Object LastWriteTime -Descending |
       Select-Object -First 1
     if ($latest) {
-      Write-Host "Opening output: $($latest.FullName)" -ForegroundColor Green
-      Start-Process $latest.FullName | Out-Null
+      $mainReport = Join-Path $latest.FullName 'FORENSIC_REPORT.md'
+      if (Test-Path -LiteralPath $mainReport) {
+        Write-Host "Opening report: $mainReport" -ForegroundColor Green
+        Start-Process $mainReport | Out-Null
+      } else {
+        Write-Host "Opening output folder: $($latest.FullName)" -ForegroundColor Green
+        Start-Process $latest.FullName | Out-Null
+      }
     }
   } catch {
     Write-Warning "Could not open output folder: $($_.Exception.Message)"
+  }
+}
+
+function Post-RunValidation($outputDir) {
+  if ($SkipPostCheck) { Write-Host 'Skipping post‑run validation (--SkipPostCheck)'; return }
+  Write-Section 'Post‑Run Validation'
+  $errors = @()
+
+  try {
+    # 1) Check Phase 13 logged
+    $log = Get-ChildItem -LiteralPath $PSScriptRoot -Filter 'unified_complete_*.log' |
+      Sort-Object LastWriteTime -Descending |
+      Select-Object -First 1
+    if ($null -ne $log) {
+      $logContent = Get-Content -LiteralPath $log.FullName -ErrorAction SilentlyContinue
+      if (-not ($logContent | Select-String -SimpleMatch 'PHASE 13')) {
+        $errors += "Phase 13 not confirmed in latest log: $($log.Name)"
+      }
+    } else {
+      $errors += 'No unified_complete_*.log found to confirm Phase 13.'
+    }
+
+    # 2) Check latest output has a main report
+    $latestOut = $null
+    if (Test-Path -LiteralPath $outputDir) {
+      $latestOut = Get-ChildItem -LiteralPath $outputDir -Directory |
+        Where-Object { $_.Name -like '*_FORENSIC_ANALYSIS_*' } |
+        Sort-Object LastWriteTime -Descending |
+        Select-Object -First 1
+    }
+    if ($null -eq $latestOut) {
+      $errors += "No output directory found under '$outputDir'."
+    } else {
+      $reportPath = Join-Path $latestOut.FullName 'FORENSIC_REPORT.md'
+      if (-not (Test-Path -LiteralPath $reportPath)) {
+        $errors += "Main report not found: $reportPath"
+      }
+    }
+
+    if ($errors.Count -eq 0) {
+      Write-Host 'Post‑run validation passed: Phase 13 executed and report present.' -ForegroundColor Green
+    } else {
+      foreach ($e in $errors) { Write-Warning $e }
+      if ($Strict) { throw 'Post‑run validation failed (Strict mode).' }
+    }
+  } catch {
+    $msg = "Post‑run validation error: $($_.Exception.Message)"
+    if ($Strict) { throw $msg } else { Write-Warning $msg }
   }
 }
 
@@ -163,10 +273,13 @@ try {
 
   Ensure-DepInstall -python $python
   Validate-Keys -python $python
+  Verify-Modules -python $python
+  Scan-IntegrationDocs
 
   # Determine non-interactive mode if any of the data parameters were supplied
-  $niKeys = @('Ticker','CIK','Year','StartDate','EndDate','FilingTypes','OutputDir','Verbose','NoReport') | Where-Object { $PSBoundParameters.ContainsKey($_) }
-  $nonInteractive = $niKeys.Count -gt 0
+  # Force array output from the filter to avoid `.Count` errors when a single element matches
+  $niKeys = @(@('Ticker','CIK','Year','StartDate','EndDate','FilingTypes','OutputDir','Verbose','NoReport') | Where-Object { $PSBoundParameters.ContainsKey($_) })
+  $nonInteractive = $niKeys.Length -gt 0
 
   if ($nonInteractive) {
     # Build inputs object from provided parameters; apply sensible defaults
@@ -199,6 +312,7 @@ try {
   Write-Host "Command: jlaw_forensic.py $($args -join ' ')" -ForegroundColor DarkCyan
   & $python (Join-Path $PSScriptRoot 'jlaw_forensic.py') @args
 
+  Post-RunValidation -outputDir $inputs.OutputDir
   Open-LatestOutput -baseOut $inputs.OutputDir
   Write-Host 'Analysis complete.' -ForegroundColor Green
 }
