@@ -209,8 +209,11 @@ ELSE:
 
 ## Error Handling Patterns
 
-**Agent Timeout:**
+**Note:** The following are pseudocode examples illustrating error handling patterns. For actual implementation, refer to the VoltAgent/Claude Code API documentation for invoking subagents, or use the delegation methods in `src/forensics/unified_forensic_pipeline.py`.
+
+**Agent Timeout (Pseudocode):**
 ```python
+# Pseudocode example - actual implementation depends on VoltAgent API
 try:
     result = await invoke_agent(agent_name, context, timeout=300)
 except TimeoutError:
@@ -219,8 +222,9 @@ except TimeoutError:
     result = await invoke_agent(agent_name, context, timeout=600)
 ```
 
-**Agent Failure:**
+**Agent Failure (Pseudocode):**
 ```python
+# Pseudocode example - actual implementation depends on VoltAgent API
 try:
     result = await invoke_agent(primary_agent, context)
 except AgentError as e:
@@ -229,8 +233,9 @@ except AgentError as e:
     result = await invoke_agent(secondary_agent, context)
 ```
 
-**Invalid Output:**
+**Invalid Output (Pseudocode):**
 ```python
+# Pseudocode example - actual implementation depends on VoltAgent API
 result = await invoke_agent(agent_name, context)
 if not validate_output(result):
     log_error(f"Agent {agent_name} returned invalid output")

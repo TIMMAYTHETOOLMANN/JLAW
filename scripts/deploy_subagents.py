@@ -35,6 +35,7 @@ class SubagentDeployer:
         self.agents_dir = self.claude_dir / "agents"
         self.errors: List[str] = []
         self.warnings: List[str] = []
+        self.validated_count: int = 0
         
     def log(self, message: str, level: str = "INFO"):
         """Log a message with appropriate level."""
@@ -150,44 +151,29 @@ class SubagentDeployer:
             )
         
         self.log(f"✓ {file_path.name} validated", "SUCCESS")
+        self.validated_count += 1
         return True
     
     def verify_all_subagents(self) -> bool:
-        """Verify all required subagent files."""
+        """Verify all subagent files present in the agents directory."""
         self.log("\nVerifying subagent files...")
         
-        expected_files = {
-            "forensic": [
-                "forensic-nlp-analyst.md",
-                "forensic-financial-analyst.md",
-                "forensic-research-specialist.md",
-                "forensic-compliance-auditor.md"
-            ],
-            "orchestration": [
-                "forensic-workflow-orchestrator.md",
-                "multi-agent-coordinator.md",
-                "context-manager.md"
-            ],
-            "infrastructure": [
-                "devops-engineer.md",
-                "security-engineer.md",
-                "database-administrator.md",
-                "cloud-architect.md"
-            ],
-            "development": [
-                "python-pro.md",
-                "backend-developer.md",
-                "documentation-engineer.md"
-            ]
-        }
-        
         all_valid = True
-        for category, files in expected_files.items():
-            self.log(f"\n{category.upper()} Subagents:", "INFO")
-            for filename in files:
-                file_path = self.agents_dir / category / filename
-                if not self.verify_subagent_file(file_path):
-                    all_valid = False
+        # Iterate over each category directory in agents_dir
+        for category_dir in sorted(self.agents_dir.iterdir()):
+            if category_dir.is_dir():
+                category = category_dir.name
+                md_files = sorted(category_dir.glob("*.md"))
+                
+                if not md_files:
+                    self.log(f"\n{category.upper()} Subagents:", "INFO")
+                    self.log(f"No subagent files found in {category}/", "WARNING")
+                    continue
+                
+                self.log(f"\n{category.upper()} Subagents:", "INFO")
+                for md_file in md_files:
+                    if not self.verify_subagent_file(md_file):
+                        all_valid = False
         
         return all_valid
     
@@ -196,7 +182,7 @@ class SubagentDeployer:
         report = {
             "status": "SUCCESS" if not self.errors else "FAILED",
             "total_subagents": 0,
-            "validated_subagents": 0,
+            "validated_subagents": self.validated_count,
             "errors": self.errors,
             "warnings": self.warnings,
             "categories": {}
@@ -211,8 +197,6 @@ class SubagentDeployer:
                     "files": [f.name for f in md_files]
                 }
                 report["total_subagents"] += len(md_files)
-        
-        report["validated_subagents"] = report["total_subagents"] - len(self.errors)
         
         return report
     
