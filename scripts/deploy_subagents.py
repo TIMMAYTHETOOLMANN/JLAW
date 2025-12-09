@@ -160,20 +160,24 @@ class SubagentDeployer:
         
         all_valid = True
         # Iterate over each category directory in agents_dir
-        for category_dir in sorted(self.agents_dir.iterdir()):
-            if category_dir.is_dir():
-                category = category_dir.name
-                md_files = sorted(category_dir.glob("*.md"))
-                
-                if not md_files:
-                    self.log(f"\n{category.upper()} Subagents:", "INFO")
-                    self.log(f"No subagent files found in {category}/", "WARNING")
-                    continue
-                
+        for category_path in sorted(self.agents_dir.iterdir()):
+            # Skip non-directory items
+            if not category_path.is_dir():
+                self.log(f"Skipping non-directory item: {category_path.name}", "WARNING")
+                continue
+            
+            category = category_path.name
+            md_files = sorted(category_path.glob("*.md"))
+            
+            if not md_files:
                 self.log(f"\n{category.upper()} Subagents:", "INFO")
-                for md_file in md_files:
-                    if not self.verify_subagent_file(md_file):
-                        all_valid = False
+                self.log(f"No subagent files found in {category}/", "WARNING")
+                continue
+            
+            self.log(f"\n{category.upper()} Subagents:", "INFO")
+            for md_file in md_files:
+                if not self.verify_subagent_file(md_file):
+                    all_valid = False
         
         return all_valid
     

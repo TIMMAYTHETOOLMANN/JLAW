@@ -209,7 +209,7 @@ ELSE:
 
 ## Error Handling Patterns
 
-**Note:** The following are pseudocode examples illustrating error handling patterns. For actual implementation, refer to the VoltAgent/Claude Code API documentation for invoking subagents, or use the delegation methods in `src/forensics/unified_forensic_pipeline.py`.
+**Note:** The following are pseudocode examples illustrating error handling patterns. For actual implementation, refer to the VoltAgent/Claude Code API documentation for invoking subagents. Actual agent coordination logic should be implemented in `src/forensics/unified_forensic_pipeline.py` following these patterns.
 
 **Agent Timeout (Pseudocode):**
 ```python
