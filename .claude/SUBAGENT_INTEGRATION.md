@@ -276,9 +276,27 @@ Generate prosecution-ready compliance report with legal citations.
 
 ## Deployment and Verification
 
-### Deploy Subagents
+### Single-Click Deployment (Recommended)
 
-Run the deployment script to verify all subagents are properly configured:
+The VoltAgent subagent deployment is **fully integrated** into the JLAW single-click deployment script:
+
+```powershell
+# Windows PowerShell - Complete deployment with subagent verification
+PowerShell -ExecutionPolicy Bypass -File .\deploy_forensic_system.ps1
+```
+
+The deployment script automatically:
+1. Verifies Python environment
+2. Installs dependencies
+3. **Verifies all 14 VoltAgent subagents** (Step 3)
+4. Verifies 13 forensic modules (Step 4)
+5. Tests filing collection (Step 5)
+6. Runs forensic analysis (Step 6)
+7. Opens results folder (Step 7)
+
+### Manual Deployment Verification
+
+You can also run the deployment script independently:
 
 ```bash
 python scripts/deploy_subagents.py --verbose

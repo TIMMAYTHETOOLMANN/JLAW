@@ -32,7 +32,7 @@ python jlaw_forensic.py --cik 0000320187 --start-date 2019-01-01 --end-date 2019
 
 ### Windows (PowerShell)
 ```powershell
-# Complete deployment with all verifications
+# Complete deployment with all verifications including VoltAgent subagents
 PowerShell -ExecutionPolicy Bypass -File .\deploy_forensic_system.ps1
 
 # Quick analysis of Nike 2019 (benchmark)
@@ -41,6 +41,14 @@ PowerShell -ExecutionPolicy Bypass -File .\deploy_forensic_system.ps1 -Ticker NK
 # Analyze any company
 PowerShell -ExecutionPolicy Bypass -File .\deploy_forensic_system.ps1 -Ticker AAPL -Year 2020
 ```
+
+**What's Included:**
+- ✅ Python environment verification
+- ✅ Dependency installation
+- ✅ **VoltAgent subagent deployment (14 specialized agents)**
+- ✅ 13 forensic module verification
+- ✅ Filing collection testing
+- ✅ Complete forensic analysis execution
 
 ### Linux/Mac or Manual Python
 ```bash
