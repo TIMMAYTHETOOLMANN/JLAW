@@ -1,0 +1,12 @@
+{
+  "company": "NIKE, Inc.",
+  "cik": "0000320187",
+  "period": "2019-01-01 to 2019-12-31",
+  "total_filings": 0,
+  "total_violations": 0,
+  "criminal_referrals": 0,
+  "estimated_damages": 0.0,
+  "violation_types": {},
+  "severity_distribution": {},
+  "ml_fraud_score": 0.0
+}

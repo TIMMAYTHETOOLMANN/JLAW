@@ -1,0 +1,135 @@
+{
+  "report_metadata": {
+    "title": "NIKE, Inc. - 2019 SEC Filings Forensic Analysis",
+    "classification": "DOJ Criminal Division - Fraud Section Standards",
+    "generated": "2025-12-10T05:52:05.308633",
+    "analyzer_version": "JLAW Unified Forensic Analyzer v8.0",
+    "data_source": "SEC EDGAR (Live)"
+  },
+  "target_company": {
+    "name": "NIKE, Inc.",
+    "cik": "0000320187",
+    "analysis_period": "2019-01-01 to 2019-12-31"
+  },
+  "executive_summary": {
+    "total_filings_analyzed": 0,
+    "total_violations_identified": 0,
+    "criminal_referrals_recommended": 0,
+    "estimated_total_damages": 0
+  },
+  "violations_by_type": {},
+  "violations_by_severity": {},
+  "statutory_framework": [
+    {
+      "citation": "15 U.S.C. \u00a7 78j(b)",
+      "name": "Section 10(b) - Anti-Fraud Provisions",
+      "title": "Securities Exchange Act of 1934",
+      "text": "It shall be unlawful for any person, directly or indirectly, by the use of any means or instrumentality of interstate commerce or of the mails, or of any facility of any national securities exchange... to use or employ, in connection with the purchase or sale of any security registered on a national securities exchange or any security not so registered... any manipulative or deceptive device or contrivance in contravention of such rules and regulations as the Commission may prescribe.",
+      "penalties": "Civil penalties up to $2,304,757 per violation (entities); Criminal: up to 20 years imprisonment",
+      "govinfo_url": "https://www.govinfo.gov/content/pkg/USCODE-2023-title15/html/USCODE-2023-title15-chap2B-sec78j.htm"
+    },
+    {
+      "citation": "15 U.S.C. \u00a7 78p(a)",
+      "name": "Section 16(a) - Insider Reporting",
+      "title": "Securities Exchange Act of 1934",
+      "text": "Every person who is directly or indirectly the beneficial owner of more than 10 percent of any class of any equity security... or who is a director or an officer of the issuer of such security, shall file... a statement with the Commission... within two business days following the day on which the subject transaction has been executed.",
+      "penalties": "Civil penalties: $10,000 - $100,000 per violation depending on days late",
+      "govinfo_url": "https://www.govinfo.gov/content/pkg/USCODE-2023-title15/html/USCODE-2023-title15-chap2B-sec78p.htm"
+    },
+    {
+      "citation": "15 U.S.C. \u00a7 7241",
+      "name": "SOX Section 302 - Corporate Responsibility for Financial Reports",
+      "title": "Sarbanes-Oxley Act of 2002",
+      "text": "The principal executive officer or officers and the principal financial officer or officers, or persons performing similar functions, of each issuer shall each certify in each annual or quarterly report filed or submitted under section 13(a) or 15(d) of the Securities Exchange Act of 1934 that... the signing officer has reviewed the report... the report does not contain any untrue statement of a material fact.",
+      "penalties": "Civil: up to $1,000,000 and/or 10 years imprisonment; Willful violation: up to $5,000,000 and/or 20 years",
+      "govinfo_url": "https://www.govinfo.gov/content/pkg/USCODE-2023-title15/html/USCODE-2023-title15-chap98-subchapIII-sec7241.htm"
+    },
+    {
+      "citation": "17 CFR \u00a7 240.10b-5",
+      "name": "Rule 10b-5 - Employment of Manipulative and Deceptive Devices",
+      "title": "SEC Rules",
+      "text": "It shall be unlawful for any person... (a) To employ any device, scheme, or artifice to defraud, (b) To make any untrue statement of a material fact or to omit to state a material fact necessary in order to make the statements made... not misleading, or (c) To engage in any act, practice, or course of business which operates or would operate as a fraud or deceit upon any person.",
+      "penalties": "Incorporated into Section 10(b) enforcement",
+      "govinfo_url": "https://www.ecfr.gov/current/title-17/chapter-II/part-240/subpart-A/subject-group-ECFR87c89f7bd703f89/section-240.10b-5"
+    },
+    {
+      "citation": "17 CFR \u00a7 240.16a-3",
+      "name": "Rule 16a-3 - Reporting Transactions and Holdings",
+      "title": "SEC Rules",
+      "text": "Initial Statement of Beneficial Ownership of Securities. Every person who becomes a beneficial owner... shall file... a statement with the Commission containing the information required by Form 3. Statements of Changes in Beneficial Ownership. A statement on Form 4... shall be filed to report: any change in the beneficial ownership of any class of equity securities.",
+      "penalties": "Per Section 16(a) enforcement",
+      "govinfo_url": "https://www.ecfr.gov/current/title-17/chapter-II/part-240/subpart-A/subject-group-ECFRe3c6a6d9e5ef26b/section-240.16a-3"
+    },
+    {
+      "citation": "18 U.S.C. \u00a7 1343",
+      "name": "Wire Fraud",
+      "title": "United States Criminal Code",
+      "text": "Whoever, having devised or intending to devise any scheme or artifice to defraud, or for obtaining money or property by means of false or fraudulent pretenses, representations, or promises, transmits or causes to be transmitted by means of wire, radio, or television communication in interstate or foreign commerce, any writings, signs, signals, pictures, or sounds for the purpose of executing such scheme or artifice, shall be fined under this title or imprisoned not more than 20 years, or both.",
+      "penalties": "Up to 20 years imprisonment, fines",
+      "govinfo_url": "https://www.govinfo.gov/content/pkg/USCODE-2023-title18/html/USCODE-2023-title18-partI-chap63-sec1343.htm"
+    },
+    {
+      "citation": "18 U.S.C. \u00a7 1348",
+      "name": "Securities Fraud",
+      "title": "United States Criminal Code",
+      "text": "Whoever knowingly executes, or attempts to execute, a scheme or artifice (1) to defraud any person in connection with any commodity for future delivery, or any option on a commodity for future delivery, or any security of an issuer with a class of securities registered under section 12 of the Securities Exchange Act of 1934... shall be fined under this title, or imprisoned not more than 25 years, or both.",
+      "penalties": "Up to 25 years imprisonment, fines",
+      "govinfo_url": "https://www.govinfo.gov/content/pkg/USCODE-2023-title18/html/USCODE-2023-title18-partI-chap63-sec1348.htm"
+    },
+    {
+      "citation": "18 U.S.C. \u00a7 1350",
+      "name": "SOX Section 906 - Criminal Certification",
+      "title": "Sarbanes-Oxley Act of 2002",
+      "text": "Each periodic report containing financial statements filed by an issuer with the SEC shall be accompanied by a written statement by the CEO and CFO... certifying that the periodic report containing the financial statements fully complies with the requirements of section 13(a) or 15(d)... and that information contained in the periodic report fairly presents, in all material respects, the financial condition and results of operations of the issuer.",
+      "penalties": "Knowing violation: $1M fine and/or 10 years; Willful violation: $5M and/or 20 years",
+      "govinfo_url": "https://www.govinfo.gov/content/pkg/USCODE-2023-title18/html/USCODE-2023-title18-partI-chap63-sec1350.htm"
+    }
+  ],
+  "enforcement_precedents": {
+    "late_form4": [
+      {
+        "case": "SEC v. Cuban",
+        "year": 2013,
+        "penalty": 25000,
+        "citation": "SEC Release No. 34-69090"
+      },
+      {
+        "case": "In re Lions Gate Entertainment",
+        "year": 2014,
+        "penalty": 50000,
+        "citation": "SEC Admin Proc. 3-15711"
+      }
+    ],
+    "material_misstatement": [
+      {
+        "case": "SEC v. Lucent Technologies",
+        "year": 2004,
+        "penalty": 25000000,
+        "citation": "Lit. Release No. 18715"
+      },
+      {
+        "case": "In re Xerox Corp.",
+        "year": 2002,
+        "penalty": 10000000,
+        "citation": "SEC Admin Proc. 3-10763"
+      }
+    ],
+    "sox_302": [
+      {
+        "case": "SEC v. Diebold Inc.",
+        "year": 2010,
+        "penalty": 25000000,
+        "citation": "Lit. Release No. 21543"
+      },
+      {
+        "case": "In re Navistar Int'l",
+        "year": 2013,
+        "penalty": 7500000,
+        "citation": "SEC Admin Proc. 3-15327"
+      }
+    ]
+  },
+  "detailed_violations": [],
+  "filing_analyses": [],
+  "execution_time_seconds": 0.0022668838500976562
+}
