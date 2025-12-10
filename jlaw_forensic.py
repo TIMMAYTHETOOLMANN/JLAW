@@ -804,6 +804,11 @@ Examples:
         type=str,
         help='Comma-separated SEC filing types to include (e.g., "10-K,10-Q,8-K,4,DEF 14A"). Use "all" (default) for all filings.'
     )
+    parser.add_argument(
+        '--recursive-engine',
+        action='store_true',
+        help='Use 6-node Recursive Evidence Engine (blueprint integration mode)'
+    )
     
     return parser.parse_args()
 
@@ -819,7 +824,59 @@ async def main():
     if not args.year and not (args.start_date and args.end_date):
         print("Error: Must provide --year or both --start-date and --end-date")
         sys.exit(1)
-        
+    
+    # Use Recursive Evidence Engine if requested
+    if args.recursive_engine:
+        try:
+            from src.forensics.recursive_evidence_engine import RecursiveEvidenceEngine
+            
+            # Resolve CIK if ticker provided
+            cik = args.cik
+            if not cik and args.ticker:
+                ticker_map = {
+                    'NKE': '0000320187',
+                    'AAPL': '0000320193',
+                    'MSFT': '0000789019',
+                    'TSLA': '0001318605',
+                }
+                cik = ticker_map.get(args.ticker.upper())
+            
+            if not cik:
+                print(f"Error: Unknown ticker {args.ticker}")
+                sys.exit(1)
+            
+            # Determine date range
+            if args.year:
+                start_date = f"{args.year}-01-01"
+                end_date = f"{args.year}-12-31"
+            else:
+                start_date = args.start_date
+                end_date = args.end_date
+            
+            # Initialize and run recursive engine
+            engine = RecursiveEvidenceEngine(output_dir=args.output_dir)
+            
+            print("\n" + "="*60)
+            print("RECURSIVE EVIDENCE ENGINE - BLUEPRINT MODE")
+            print("="*60)
+            
+            result = await engine.run_investigation(
+                cik=cik,
+                start_date=start_date,
+                end_date=end_date,
+                target_entity=args.ticker or cik
+            )
+            
+            print(f"\n✅ Investigation complete!")
+            print(f"Total violations: {result.get('total_violations', 0)}")
+            sys.exit(0)
+            
+        except Exception as e:
+            logger.error(f"Recursive engine failed: {e}", exc_info=True)
+            print(f"\n❌ Recursive engine failed: {e}")
+            sys.exit(1)
+    
+    # Otherwise use standard unified system
     system = CompleteUnifiedForensicSystem(output_dir=args.output_dir)
     
     try:
