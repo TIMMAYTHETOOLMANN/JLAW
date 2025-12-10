@@ -737,3 +737,301 @@ class TemporalFeatureExtractor:
         
         return min(volatility, 1.0)
 
+
+class OptimizedFraudDetector:
+    """
+    XGBoost-based fraud detector with Bayesian hyperparameter optimization.
+    
+    Features:
+    - Optuna TPE sampler for hyperparameter tuning
+    - SMOTE-ENN for class imbalance handling
+    - Target: 0.912 AUC with 90%+ recall
+    - Cross-validation for robust evaluation
+    """
+    
+    def __init__(self):
+        """Initialize optimized fraud detector."""
+        self.logger = logging.getLogger("OptimizedFraudDetector")
+        
+        # Check if required packages are available
+        self.xgboost_available = False
+        self.optuna_available = False
+        self.imblearn_available = False
+        
+        try:
+            import xgboost
+            self.xgboost_available = True
+        except ImportError:
+            self.logger.warning("⚠️ XGBoost not available - install: pip install xgboost")
+        
+        try:
+            import optuna
+            self.optuna_available = True
+        except ImportError:
+            self.logger.warning("⚠️ Optuna not available - install: pip install optuna")
+        
+        try:
+            from imblearn.combine import SMOTEENN
+            self.imblearn_available = True
+        except ImportError:
+            self.logger.warning("⚠️ imbalanced-learn not available - install: pip install imbalanced-learn")
+        
+        self.model = None
+        self.best_params = None
+        self.feature_names = None
+        self.scaler = StandardScaler() if SKLEARN_AVAILABLE else None
+    
+    def optimize_hyperparameters(
+        self,
+        X_train: np.ndarray,
+        y_train: np.ndarray,
+        n_trials: int = 100,
+        timeout: int = 3600,
+        cv_folds: int = 5
+    ) -> Dict[str, Any]:
+        """
+        Optimize XGBoost hyperparameters using Optuna with TPE sampler.
+        
+        Args:
+            X_train: Training features
+            y_train: Training labels
+            n_trials: Number of optimization trials
+            timeout: Maximum optimization time in seconds
+            cv_folds: Number of cross-validation folds
+        
+        Returns:
+            Dictionary of best hyperparameters
+        """
+        if not self.optuna_available or not self.xgboost_available:
+            self.logger.error("Cannot optimize: optuna or xgboost not available")
+            return {}
+        
+        import optuna
+        from optuna.samplers import TPESampler
+        import xgboost as xgb
+        from sklearn.model_selection import cross_val_score
+        
+        self.logger.info(f"Starting hyperparameter optimization: {n_trials} trials, {timeout}s timeout")
+        
+        def objective(trial):
+            """Optuna objective function."""
+            # Suggest hyperparameters
+            params = {
+                'max_depth': trial.suggest_int('max_depth', 2, 10),
+                'learning_rate': trial.suggest_float('learning_rate', 1e-3, 0.1, log=True),
+                'n_estimators': trial.suggest_int('n_estimators', 100, 1000),
+                'subsample': trial.suggest_float('subsample', 0.5, 1.0),
+                'colsample_bytree': trial.suggest_float('colsample_bytree', 0.5, 1.0),
+                'min_child_weight': trial.suggest_int('min_child_weight', 1, 20),
+                'reg_alpha': trial.suggest_float('reg_alpha', 1e-8, 10.0, log=True),
+                'reg_lambda': trial.suggest_float('reg_lambda', 1e-8, 10.0, log=True),
+                'gamma': trial.suggest_float('gamma', 1e-8, 1.0, log=True),
+                'scale_pos_weight': trial.suggest_float('scale_pos_weight', 1, 10),
+            }
+            
+            # Add fixed parameters
+            params.update({
+                'objective': 'binary:logistic',
+                'eval_metric': 'auc',
+                'random_state': 42,
+                'n_jobs': -1
+            })
+            
+            # Create model
+            model = xgb.XGBClassifier(**params)
+            
+            # Cross-validation with AUC scoring
+            try:
+                scores = cross_val_score(
+                    model,
+                    X_train,
+                    y_train,
+                    cv=cv_folds,
+                    scoring='roc_auc',
+                    n_jobs=-1
+                )
+                auc_score = scores.mean()
+            except Exception as e:
+                self.logger.warning(f"Cross-validation failed: {e}")
+                auc_score = 0.0
+            
+            return auc_score
+        
+        # Create study with TPE sampler
+        study = optuna.create_study(
+            direction='maximize',
+            sampler=TPESampler(seed=42)
+        )
+        
+        # Optimize
+        study.optimize(
+            objective,
+            n_trials=n_trials,
+            timeout=timeout,
+            show_progress_bar=True
+        )
+        
+        self.best_params = study.best_params
+        
+        self.logger.info(f"Optimization complete!")
+        self.logger.info(f"Best AUC: {study.best_value:.4f}")
+        self.logger.info(f"Best parameters: {self.best_params}")
+        
+        return self.best_params
+    
+    def train(
+        self,
+        X_train: np.ndarray,
+        y_train: np.ndarray,
+        X_val: Optional[np.ndarray] = None,
+        y_val: Optional[np.ndarray] = None,
+        use_smote: bool = True,
+        optimize: bool = True,
+        n_trials: int = 50
+    ):
+        """
+        Train optimized fraud detection model.
+        
+        Args:
+            X_train: Training features
+            y_train: Training labels
+            X_val: Validation features (optional)
+            y_val: Validation labels (optional)
+            use_smote: Apply SMOTE-ENN for class imbalance
+            optimize: Perform hyperparameter optimization
+            n_trials: Number of optimization trials
+        """
+        if not self.xgboost_available:
+            self.logger.error("Cannot train: xgboost not available")
+            return
+        
+        import xgboost as xgb
+        
+        # Scale features
+        if self.scaler:
+            X_train = self.scaler.fit_transform(X_train)
+            if X_val is not None:
+                X_val = self.scaler.transform(X_val)
+        
+        # Handle class imbalance with SMOTE-ENN
+        if use_smote and self.imblearn_available:
+            self.logger.info("Applying SMOTE-ENN for class imbalance...")
+            from imblearn.combine import SMOTEENN
+            
+            try:
+                smote_enn = SMOTEENN(random_state=42)
+                X_train, y_train = smote_enn.fit_resample(X_train, y_train)
+                self.logger.info(f"Resampled training set size: {len(y_train)}")
+            except Exception as e:
+                self.logger.warning(f"SMOTE-ENN failed: {e}, using original data")
+        
+        # Optimize hyperparameters
+        if optimize and self.optuna_available:
+            self.optimize_hyperparameters(X_train, y_train, n_trials=n_trials)
+        
+        # Use optimized parameters or defaults
+        if self.best_params:
+            params = self.best_params.copy()
+            params.update({
+                'objective': 'binary:logistic',
+                'eval_metric': 'auc',
+                'random_state': 42,
+                'n_jobs': -1
+            })
+        else:
+            # Default parameters (good baseline)
+            params = {
+                'max_depth': 6,
+                'learning_rate': 0.01,
+                'n_estimators': 500,
+                'subsample': 0.8,
+                'colsample_bytree': 0.8,
+                'min_child_weight': 5,
+                'reg_alpha': 0.1,
+                'reg_lambda': 1.0,
+                'gamma': 0.1,
+                'scale_pos_weight': 5,
+                'objective': 'binary:logistic',
+                'eval_metric': 'auc',
+                'random_state': 42,
+                'n_jobs': -1
+            }
+        
+        self.logger.info("Training XGBoost model...")
+        
+        # Create and train model
+        self.model = xgb.XGBClassifier(**params)
+        
+        if X_val is not None and y_val is not None:
+            # Train with validation set
+            eval_set = [(X_train, y_train), (X_val, y_val)]
+            self.model.fit(
+                X_train,
+                y_train,
+                eval_set=eval_set,
+                verbose=False
+            )
+        else:
+            self.model.fit(X_train, y_train)
+        
+        self.logger.info("Training complete!")
+        
+        # Evaluate on validation set if available
+        if X_val is not None and y_val is not None:
+            from sklearn.metrics import roc_auc_score, recall_score, precision_score
+            
+            y_pred_proba = self.model.predict_proba(X_val)[:, 1]
+            y_pred = self.model.predict(X_val)
+            
+            auc = roc_auc_score(y_val, y_pred_proba)
+            recall = recall_score(y_val, y_pred)
+            precision = precision_score(y_val, y_pred)
+            
+            self.logger.info(f"Validation AUC: {auc:.4f}")
+            self.logger.info(f"Validation Recall: {recall:.4f}")
+            self.logger.info(f"Validation Precision: {precision:.4f}")
+    
+    def predict(
+        self,
+        X: np.ndarray,
+        return_probabilities: bool = True
+    ) -> np.ndarray:
+        """
+        Predict fraud probability.
+        
+        Args:
+            X: Feature matrix
+            return_probabilities: Return probabilities instead of binary predictions
+        
+        Returns:
+            Fraud probabilities or binary predictions
+        """
+        if self.model is None:
+            self.logger.error("Model not trained")
+            return np.zeros(len(X))
+        
+        if self.scaler:
+            X = self.scaler.transform(X)
+        
+        if return_probabilities:
+            return self.model.predict_proba(X)[:, 1]
+        else:
+            return self.model.predict(X)
+    
+    def get_feature_importance(self) -> Dict[str, float]:
+        """
+        Get feature importance scores.
+        
+        Returns:
+            Dictionary mapping feature names to importance scores
+        """
+        if self.model is None:
+            return {}
+        
+        importance = self.model.feature_importances_
+        
+        if self.feature_names:
+            return dict(zip(self.feature_names, importance))
+        else:
+            return {f"feature_{i}": imp for i, imp in enumerate(importance)}
+
