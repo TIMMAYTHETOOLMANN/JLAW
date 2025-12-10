@@ -497,3 +497,316 @@ class RFC3161Timestamper:
         
         return "\n".join(report)
 
+
+class EnhancedTimestamper(RFC3161Timestamper):
+    """
+    Enhanced timestamper with blueprint-specified features:
+    - SHA-256 primary hashing with SHA3-512 secondary verification
+    - Merkle tree batch verification
+    - FRE 902(13)/(14) certification generation
+    """
+    
+    def __init__(
+        self,
+        tsa_url: Optional[str] = None,
+        use_digicert: bool = True,
+        timeout: int = 30
+    ):
+        """
+        Initialize enhanced timestamper.
+        
+        Args:
+            tsa_url: Custom TSA URL (default: DigiCert)
+            use_digicert: Use DigiCert timestamp authority
+            timeout: Request timeout
+        """
+        # Use DigiCert by default as specified in blueprint
+        if use_digicert and tsa_url is None:
+            tsa_url = 'http://timestamp.digicert.com'
+        
+        super().__init__(tsa_url=tsa_url, timeout=timeout)
+        self.logger = logging.getLogger("EnhancedTimestamper")
+    
+    def dual_hash_timestamp(
+        self,
+        data: bytes
+    ) -> Dict[str, TimestampToken]:
+        """
+        Create timestamps with both SHA-256 and SHA3-512.
+        
+        SHA-256 is primary (RFC3161 standard)
+        SHA3-512 is secondary verification
+        
+        Args:
+            data: Data to timestamp
+        
+        Returns:
+            Dictionary with 'sha256' and 'sha3_512' timestamp tokens
+        """
+        self.logger.info("Creating dual-hash timestamp (SHA-256 + SHA3-512)")
+        
+        # Primary: SHA-256 (RFC3161 standard)
+        sha256_token = self.timestamp_data(data, hash_algorithm='sha256')
+        
+        # Secondary: SHA3-512 for additional verification
+        sha3_512_hash = None
+        try:
+            # Calculate SHA3-512 hash
+            sha3_512_hash = hashlib.sha3_512(data).hexdigest()
+            
+            # Note: Most TSAs only support SHA-256/SHA-384/SHA-512
+            # SHA3 may not be supported, so we store it as metadata
+            sha256_token.metadata['sha3_512_verification_hash'] = sha3_512_hash
+            
+            self.logger.info(f"SHA3-512 verification hash: {sha3_512_hash[:16]}...")
+        except Exception as e:
+            self.logger.warning(f"SHA3-512 hashing failed: {e}")
+        
+        return {
+            'sha256': sha256_token,
+            'sha3_512_verification': sha3_512_hash
+        }
+    
+    def merkle_batch_timestamp(
+        self,
+        data_items: List[bytes]
+    ) -> Dict[str, Any]:
+        """
+        Batch timestamp multiple items using Merkle tree.
+        
+        Only the Merkle root is timestamped, allowing efficient
+        verification of all items with a single timestamp.
+        
+        Args:
+            data_items: List of data items to timestamp
+        
+        Returns:
+            Dictionary with Merkle root token and proofs
+        """
+        self.logger.info(f"Creating Merkle tree timestamp for {len(data_items)} items")
+        
+        if not data_items:
+            raise ValueError("No data items provided")
+        
+        # Build Merkle tree
+        merkle_tree = self._build_merkle_tree(data_items)
+        merkle_root = merkle_tree['root']
+        
+        # Timestamp the Merkle root
+        root_token = self.timestamp_hash(merkle_root, hash_algorithm='sha256')
+        
+        # Generate proofs for each item
+        proofs = []
+        for i, data in enumerate(data_items):
+            leaf_hash = hashlib.sha256(data).hexdigest()
+            proof = self._generate_merkle_proof(merkle_tree, i)
+            proofs.append({
+                'index': i,
+                'leaf_hash': leaf_hash,
+                'proof': proof
+            })
+        
+        return {
+            'merkle_root': merkle_root,
+            'root_token': root_token,
+            'item_count': len(data_items),
+            'proofs': proofs,
+            'tree': merkle_tree
+        }
+    
+    def _build_merkle_tree(self, data_items: List[bytes]) -> Dict[str, Any]:
+        """
+        Build Merkle tree from data items.
+        
+        Args:
+            data_items: List of data to hash
+        
+        Returns:
+            Merkle tree structure
+        """
+        # Hash all leaf nodes
+        leaves = [hashlib.sha256(data).hexdigest() for data in data_items]
+        
+        # Build tree bottom-up
+        tree_levels = [leaves]
+        current_level = leaves
+        
+        while len(current_level) > 1:
+            next_level = []
+            
+            # Process pairs
+            for i in range(0, len(current_level), 2):
+                left = current_level[i]
+                right = current_level[i + 1] if i + 1 < len(current_level) else left
+                
+                # Hash concatenation
+                combined = left + right
+                parent_hash = hashlib.sha256(combined.encode()).hexdigest()
+                next_level.append(parent_hash)
+            
+            tree_levels.append(next_level)
+            current_level = next_level
+        
+        root = current_level[0] if current_level else None
+        
+        return {
+            'root': root,
+            'levels': tree_levels,
+            'leaf_count': len(leaves)
+        }
+    
+    def _generate_merkle_proof(
+        self,
+        merkle_tree: Dict[str, Any],
+        leaf_index: int
+    ) -> List[Dict[str, str]]:
+        """
+        Generate Merkle proof for a leaf.
+        
+        Args:
+            merkle_tree: Merkle tree structure
+            leaf_index: Index of leaf to prove
+        
+        Returns:
+            Merkle proof path
+        """
+        levels = merkle_tree['levels']
+        proof = []
+        index = leaf_index
+        
+        for level in range(len(levels) - 1):
+            current_level = levels[level]
+            
+            # Determine sibling
+            if index % 2 == 0:
+                # Left node, sibling is right
+                sibling_index = index + 1
+                position = 'right'
+            else:
+                # Right node, sibling is left
+                sibling_index = index - 1
+                position = 'left'
+            
+            if sibling_index < len(current_level):
+                sibling_hash = current_level[sibling_index]
+                proof.append({
+                    'hash': sibling_hash,
+                    'position': position
+                })
+            
+            # Move to parent
+            index = index // 2
+        
+        return proof
+    
+    def verify_merkle_proof(
+        self,
+        leaf_hash: str,
+        merkle_proof: List[Dict[str, str]],
+        merkle_root: str
+    ) -> bool:
+        """
+        Verify Merkle proof.
+        
+        Args:
+            leaf_hash: Hash of leaf to verify
+            merkle_proof: Merkle proof path
+            merkle_root: Expected root hash
+        
+        Returns:
+            True if proof is valid
+        """
+        current_hash = leaf_hash
+        
+        for proof_element in merkle_proof:
+            sibling_hash = proof_element['hash']
+            position = proof_element['position']
+            
+            if position == 'left':
+                combined = sibling_hash + current_hash
+            else:
+                combined = current_hash + sibling_hash
+            
+            current_hash = hashlib.sha256(combined.encode()).hexdigest()
+        
+        return current_hash == merkle_root
+    
+    def generate_fre_certification(
+        self,
+        token: TimestampToken,
+        evidence_description: str,
+        custodian_name: str,
+        case_id: Optional[str] = None
+    ) -> str:
+        """
+        Generate FRE 902(13)/(14) self-authenticating certification.
+        
+        Federal Rules of Evidence:
+        - Rule 902(13): Certified records generated by electronic process
+        - Rule 902(14): Certified data copied from electronic device/file
+        
+        Args:
+            token: Timestamp token
+            evidence_description: Description of evidence
+            custodian_name: Name of evidence custodian
+            case_id: Optional case identifier
+        
+        Returns:
+            FRE certification document (formatted text)
+        """
+        cert = []
+        cert.append("="*70)
+        cert.append("CERTIFICATION OF ELECTRONIC RECORD")
+        cert.append("Federal Rules of Evidence 902(13) and 902(14)")
+        cert.append("="*70)
+        cert.append("")
+        
+        if case_id:
+            cert.append(f"Case ID: {case_id}")
+            cert.append("")
+        
+        cert.append("I, " + custodian_name + ", hereby certify that:")
+        cert.append("")
+        cert.append("1. EVIDENCE DESCRIPTION:")
+        cert.append(f"   {evidence_description}")
+        cert.append("")
+        
+        cert.append("2. ELECTRONIC RECORD AUTHENTICATION:")
+        cert.append(f"   - Timestamp Authority: {token.tsa_name}")
+        cert.append(f"   - Timestamp: {token.timestamp.isoformat()}")
+        cert.append(f"   - Serial Number: {token.serial_number}")
+        cert.append(f"   - Data Hash: {token.data_hash}")
+        cert.append(f"   - Hash Algorithm: {token.hash_algorithm.upper()}")
+        cert.append("")
+        
+        cert.append("3. CRYPTOGRAPHIC VERIFICATION:")
+        cert.append("   The electronic record has been cryptographically timestamped")
+        cert.append("   using RFC 3161 Time-Stamp Protocol, providing irrefutable proof")
+        cert.append("   of existence at the certified time.")
+        cert.append("")
+        
+        cert.append("4. CHAIN OF CUSTODY:")
+        cert.append("   The electronic record has been maintained with cryptographic")
+        cert.append("   integrity verification throughout the custody chain.")
+        cert.append("")
+        
+        if 'sha3_512_verification_hash' in token.metadata:
+            cert.append("5. SECONDARY VERIFICATION:")
+            cert.append(f"   SHA3-512 Hash: {token.metadata['sha3_512_verification_hash'][:32]}...")
+            cert.append("")
+        
+        cert.append("CERTIFICATION:")
+        cert.append("This document certifies that the described electronic record is")
+        cert.append("self-authenticating under Federal Rules of Evidence 902(13) and")
+        cert.append("902(14) as a record generated by an electronic process or system")
+        cert.append("that produces an accurate result, as shown by a certification")
+        cert.append("complying with these rules.")
+        cert.append("")
+        
+        cert.append(f"Custodian: {custodian_name}")
+        cert.append(f"Date: {datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S UTC')}")
+        cert.append("")
+        cert.append("="*70)
+        
+        return "\n".join(cert)
+

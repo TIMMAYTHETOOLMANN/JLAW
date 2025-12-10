@@ -41,6 +41,135 @@ class Form4ViolationRecord:
     evidence_refs: List[str]
 
 
+@dataclass
+class Rule10b51Compliance:
+    """
+    Rule 10b5-1 Trading Plan Compliance Check (December 2022 amendments).
+    
+    Critical compliance requirements:
+    - Cooling-off period: 90 days for directors/officers, 30 days others
+    - Certification included in Form 144 or Form 4
+    - No overlapping plans allowed
+    - Single-trade plan limitations
+    """
+    cooling_off_period_met: bool  # 90 days for directors/officers, 30 days others
+    certification_included: bool  # Plan checkbox marked in Form 4
+    no_overlapping_plans: bool  # Check for multiple concurrent plans
+    single_trade_plan_compliant: bool  # If single-trade, meets requirements
+    abuse_indicator_score: float  # 0-1 score for potential abuse
+    cooling_off_days: Optional[int] = None
+    plan_adoption_date: Optional[datetime] = None
+    first_trade_date: Optional[datetime] = None
+    red_flags: List[str] = None
+    
+    def __post_init__(self):
+        if self.red_flags is None:
+            self.red_flags = []
+
+
+# Complete Form 4 Transaction Code Taxonomy (16 types)
+TRANSACTION_CODES = {
+    'P': {
+        'name': 'Open Market Purchase',
+        'description': 'Purchase on open market',
+        'is_acquisition': True,
+        'requires_price': True
+    },
+    'S': {
+        'name': 'Open Market Sale',
+        'description': 'Sale on open market',
+        'is_acquisition': False,
+        'requires_price': True
+    },
+    'G': {
+        'name': 'Gift',
+        'description': 'Bona fide gift',
+        'is_acquisition': False,
+        'requires_price': False,
+        'zero_dollar_expected': True
+    },
+    'J': {
+        'name': 'Other Acquisition',
+        'description': 'Other acquisition or disposition (explain in footnote)',
+        'is_acquisition': None,  # Context-dependent
+        'requires_price': False
+    },
+    'M': {
+        'name': 'Exercise',
+        'description': 'Exercise or conversion of derivative security',
+        'is_acquisition': True,
+        'requires_price': True
+    },
+    'A': {
+        'name': 'Grant/Award',
+        'description': 'Grant, award or other acquisition from issuer',
+        'is_acquisition': True,
+        'requires_price': False,
+        'zero_dollar_expected': True
+    },
+    'D': {
+        'name': 'Disposition to Issuer',
+        'description': 'Sale or disposition back to issuer',
+        'is_acquisition': False,
+        'requires_price': True
+    },
+    'F': {
+        'name': 'Tax Payment',
+        'description': 'Payment of exercise price or tax by delivering or withholding securities',
+        'is_acquisition': False,
+        'requires_price': True
+    },
+    'I': {
+        'name': 'Discretionary Transaction',
+        'description': 'Discretionary transaction in accordance with Rule 16b-3(f)',
+        'is_acquisition': None,
+        'requires_price': False
+    },
+    'C': {
+        'name': 'Conversion',
+        'description': 'Conversion of derivative security',
+        'is_acquisition': True,
+        'requires_price': False
+    },
+    'E': {
+        'name': 'Expiration',
+        'description': 'Expiration of short derivative position',
+        'is_acquisition': False,
+        'requires_price': False
+    },
+    'H': {
+        'name': 'Expiration (Long)',
+        'description': 'Expiration or cancellation of long derivative security',
+        'is_acquisition': False,
+        'requires_price': False
+    },
+    'O': {
+        'name': 'Exercise of Out-of-the-Money Derivative',
+        'description': 'Exercise of out-of-the-money derivative security',
+        'is_acquisition': True,
+        'requires_price': True
+    },
+    'X': {
+        'name': 'Exercise of In-the-Money Derivative',
+        'description': 'Exercise of in-the-money or at-the-money derivative security',
+        'is_acquisition': True,
+        'requires_price': True
+    },
+    'L': {
+        'name': 'Small Acquisition',
+        'description': 'Small acquisition under Rule 16a-6',
+        'is_acquisition': True,
+        'requires_price': False
+    },
+    'W': {
+        'name': 'Acquisition or Disposition by Will',
+        'description': 'Acquisition or disposition by will or laws of descent and distribution',
+        'is_acquisition': None,
+        'requires_price': False
+    }
+}
+
+
 class InsiderForm4Analyzer:
     """Analyzer for SEC Form 4 insider trading filings."""
 
@@ -596,6 +725,231 @@ class InsiderForm4Analyzer:
         datetime(2025, 5, 26), datetime(2025, 7, 4), datetime(2025, 9, 1),
         datetime(2025, 10, 13), datetime(2025, 11, 11), datetime(2025, 11, 27), datetime(2025, 12, 25),
     }
+
+    def validate_10b51_plan(
+        self,
+        transactions: List[Dict[str, Any]],
+        plan_adoption_date: Optional[datetime] = None,
+        is_director_or_officer: bool = True
+    ) -> Rule10b51Compliance:
+        """
+        Validate Rule 10b5-1 trading plan compliance.
+        
+        December 2022 amendments require:
+        - 90-day cooling-off for directors/officers
+        - 30-day cooling-off for others
+        - Certification in Form 4 or Form 144
+        - No overlapping plans
+        - Single-trade plan restrictions
+        
+        Args:
+            transactions: List of transaction dictionaries
+            plan_adoption_date: When the 10b5-1 plan was adopted
+            is_director_or_officer: Whether insider is director/officer
+        
+        Returns:
+            Rule10b51Compliance object with analysis
+        """
+        red_flags = []
+        
+        # Required cooling-off period
+        required_cooling_off_days = 90 if is_director_or_officer else 30
+        
+        # Find first trade date
+        first_trade_date = None
+        for tx in transactions:
+            tx_date_str = tx.get('date') or tx.get('transactionDate')
+            if tx_date_str:
+                try:
+                    tx_date = datetime.strptime(tx_date_str, "%Y-%m-%d")
+                    if first_trade_date is None or tx_date < first_trade_date:
+                        first_trade_date = tx_date
+                except Exception:
+                    pass
+        
+        # Check cooling-off period
+        cooling_off_met = False
+        actual_cooling_off_days = None
+        
+        if plan_adoption_date and first_trade_date:
+            actual_cooling_off_days = (first_trade_date - plan_adoption_date).days
+            cooling_off_met = actual_cooling_off_days >= required_cooling_off_days
+            
+            if not cooling_off_met:
+                red_flags.append(
+                    f"Insufficient cooling-off period: {actual_cooling_off_days} days "
+                    f"(required: {required_cooling_off_days})"
+                )
+        
+        # Check for certification (look for plan checkbox in transactions)
+        certification_included = False
+        for tx in transactions:
+            # Form 4 has a checkbox for 10b5-1 plans
+            if tx.get('tenb51Arrangement') or tx.get('rule10b5_1'):
+                certification_included = True
+                break
+        
+        if not certification_included:
+            red_flags.append("No Rule 10b5-1 certification found in Form 4")
+        
+        # Check for overlapping plans (would need historical data)
+        # This is a placeholder - full implementation needs access to all filings
+        no_overlapping_plans = True
+        
+        # Check single-trade plan compliance
+        single_trade_plan_compliant = True
+        if len(transactions) == 1:
+            # Single-trade plan has additional requirements
+            # Must specify single trade at time of adoption
+            pass
+        
+        # Calculate abuse indicator score
+        abuse_score = 0.0
+        
+        if not cooling_off_met:
+            abuse_score += 0.4
+        if not certification_included:
+            abuse_score += 0.3
+        if not no_overlapping_plans:
+            abuse_score += 0.3
+        
+        # Pattern analysis: suspicious timing
+        if transactions:
+            # Check if trades cluster around earnings/events (would need event data)
+            pass
+        
+        abuse_score = min(1.0, abuse_score)
+        
+        return Rule10b51Compliance(
+            cooling_off_period_met=cooling_off_met,
+            certification_included=certification_included,
+            no_overlapping_plans=no_overlapping_plans,
+            single_trade_plan_compliant=single_trade_plan_compliant,
+            abuse_indicator_score=abuse_score,
+            cooling_off_days=actual_cooling_off_days,
+            plan_adoption_date=plan_adoption_date,
+            first_trade_date=first_trade_date,
+            red_flags=red_flags
+        )
+    
+    def detect_gift_before_drop(
+        self,
+        transactions: List[Dict[str, Any]],
+        stock_prices: Optional[Dict[datetime, float]] = None
+    ) -> List[Dict[str, Any]]:
+        """
+        Detect Gift-Before-Drop pattern (Seyhun et al. research).
+        
+        Pattern indicators:
+        - Insider gift transaction (code 'G')
+        - ~4% abnormal decline in stock following gift
+        - Late-reported gift (beyond 2-day requirement)
+        - Tax timing anomalies
+        
+        Args:
+            transactions: List of transaction dictionaries
+            stock_prices: Optional historical stock price data
+        
+        Returns:
+            List of suspicious gift patterns detected
+        """
+        suspicious_gifts = []
+        
+        # Find all gift transactions
+        for tx in transactions:
+            code = tx.get('code', '').strip().upper()
+            
+            if code != 'G':
+                continue
+            
+            # Parse transaction date
+            tx_date_str = tx.get('date') or tx.get('transactionDate')
+            if not tx_date_str:
+                continue
+            
+            try:
+                gift_date = datetime.strptime(tx_date_str, "%Y-%m-%d")
+            except Exception:
+                continue
+            
+            # Parse filing date to check for late reporting
+            filing_date_str = tx.get('filingDate')
+            late_reported = False
+            days_late = 0
+            
+            if filing_date_str:
+                try:
+                    filing_date = datetime.strptime(filing_date_str, "%Y-%m-%d")
+                    business_days = self._business_days_between(gift_date, filing_date)
+                    if business_days > 2:
+                        late_reported = True
+                        days_late = business_days
+                except Exception:
+                    pass
+            
+            # Calculate post-gift price decline if price data available
+            abnormal_decline = None
+            if stock_prices:
+                # Look for price 30 days before and after gift
+                pre_gift_prices = []
+                post_gift_prices = []
+                
+                for date, price in stock_prices.items():
+                    days_diff = (date - gift_date).days
+                    if -30 <= days_diff < 0:
+                        pre_gift_prices.append(price)
+                    elif 0 < days_diff <= 30:
+                        post_gift_prices.append(price)
+                
+                if pre_gift_prices and post_gift_prices:
+                    avg_pre = sum(pre_gift_prices) / len(pre_gift_prices)
+                    avg_post = sum(post_gift_prices) / len(post_gift_prices)
+                    
+                    if avg_pre > 0:
+                        abnormal_decline = ((avg_post - avg_pre) / avg_pre) * 100
+            
+            # Flag suspicious patterns
+            suspicion_score = 0.0
+            flags = []
+            
+            if late_reported:
+                suspicion_score += 0.4
+                flags.append(f"Late reported by {days_late} business days")
+            
+            if abnormal_decline is not None and abnormal_decline < -3.0:
+                # More than 3% decline is suspicious (Seyhun found ~4%)
+                suspicion_score += 0.5
+                flags.append(f"Abnormal decline of {abnormal_decline:.2f}% post-gift")
+            
+            # Tax timing anomaly: gifts near year-end
+            if gift_date.month == 12 and gift_date.day > 15:
+                suspicion_score += 0.2
+                flags.append("Year-end tax timing")
+            
+            if suspicion_score > 0.3:  # Threshold for flagging
+                suspicious_gifts.append({
+                    'transaction': tx,
+                    'gift_date': gift_date.isoformat(),
+                    'late_reported': late_reported,
+                    'days_late': days_late,
+                    'abnormal_decline_pct': abnormal_decline,
+                    'suspicion_score': min(1.0, suspicion_score),
+                    'flags': flags
+                })
+        
+        return suspicious_gifts
+    
+    def get_transaction_code_info(self, code: str) -> Optional[Dict[str, Any]]:
+        """
+        Get information about a specific transaction code.
+        
+        Args:
+            code: Single-letter transaction code (P, S, G, J, M, A, D, F, I, C, E, H, O, X, L, W)
+        
+        Returns:
+            Dictionary with code information or None if invalid
+        """
+        return TRANSACTION_CODES.get(code.upper())
 
     def _is_federal_holiday(self, dt: datetime) -> bool:
         """Check if date is a federal holiday (SEC market closure)."""

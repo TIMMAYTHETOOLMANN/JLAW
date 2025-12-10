@@ -59,6 +59,10 @@ spacy>=3.5.0
 xgboost>=2.0.0
 redis>=5.0.0
 
+# Blueprint Integration Enhancements
+optuna>=3.0.0  # Bayesian optimization for XGBoost
+imbalanced-learn>=0.10.0  # SMOTE-ENN for class imbalance
+
 # Advanced AI Agents (Dual-Agent System)
 anthropic>=0.40.0
 openai>=1.0.0

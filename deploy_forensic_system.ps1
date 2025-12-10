@@ -173,13 +173,13 @@ function Test-ModuleVerification($python) {
         return $true
     }
     
-    Write-Section "Verifying 13 Forensic Modules"
+    Write-Section "Verifying Forensic Modules (13 Core + 6 Blueprint)"
     
     $result = & $python verify_13_modules.py 2>&1
     Write-Host $result
     
     if ($LASTEXITCODE -eq 0) {
-        Write-Success "All 13 modules verified successfully"
+        Write-Success "All modules verified successfully (13 core + 6 blueprint integration)"
         return $true
     }
     else {

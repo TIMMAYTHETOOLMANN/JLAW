@@ -50,9 +50,9 @@ def verify_module(phase_num: int, module_name: str, import_path: str, class_name
 
 def main():
     print("=" * 80)
-    print("JLAW FORENSIC SYSTEM - 13-MODULE VERIFICATION")
+    print("JLAW FORENSIC SYSTEM - MODULE VERIFICATION")
     print("=" * 80)
-    print("\nVerifying all 13 forensic analysis modules are properly integrated...")
+    print("\nVerifying forensic analysis modules (13 core + 6 blueprint integration)...")
     
     results = []
     
@@ -198,6 +198,59 @@ def main():
         "src.forensics.forensic_context",
         "ForensicContext",
         None
+    ))
+    
+    # Blueprint Integration Modules
+    print("\n" + "=" * 80)
+    print("BLUEPRINT INTEGRATION MODULES")
+    print("=" * 80)
+    
+    results.append(verify_module(
+        14,
+        "ContradictionEngine (DeBERTa-v3-large)",
+        "src.forensics.enhanced_contradiction_detector",
+        "ContradictionEngine",
+        lambda cls: cls()
+    ))
+    
+    results.append(verify_module(
+        15,
+        "Section 16(b) Calculator",
+        "src.forensics.section16b_calculator",
+        "Section16bCalculator",
+        lambda cls: cls()
+    ))
+    
+    results.append(verify_module(
+        16,
+        "Optimized Fraud Detector (XGBoost+Optuna)",
+        "src.forensics.ml_fraud_detector",
+        "OptimizedFraudDetector",
+        lambda cls: cls()
+    ))
+    
+    results.append(verify_module(
+        17,
+        "Pre-Announcement Trading Detector",
+        "src.forensics.pre_announcement_detector",
+        "PreAnnouncementDetector",
+        lambda cls: cls()
+    ))
+    
+    results.append(verify_module(
+        18,
+        "Recursive Evidence Engine",
+        "src.forensics.recursive_evidence_engine",
+        "RecursiveEvidenceEngine",
+        lambda cls: cls()
+    ))
+    
+    results.append(verify_module(
+        19,
+        "Enhanced Timestamper (RFC3161)",
+        "src.forensics.rfc3161_timestamper",
+        "EnhancedTimestamper",
+        lambda cls: cls()
     ))
     
     # Summary
