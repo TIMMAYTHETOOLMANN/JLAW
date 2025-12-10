@@ -13,7 +13,7 @@ The analysis produces:
 - Evidence chain of custody
 - DOJ-level prosecution recommendations
 
-Expected Output: 97 violations detected across 89 filings
+Expected Output: Multiple violations detected across all filings (target: 54+ violations)
 """
 
 import asyncio
@@ -25,6 +25,13 @@ from typing import Tuple, Dict
 from jlaw_production_forensic import UnifiedForensicAnalyzer
 
 logger = logging.getLogger(__name__)
+
+# Benchmark constants
+# Source: BENCHMARK_GOLDSTANDARD.md - Nike 2019 baseline analysis
+BENCHMARK_TARGET_VIOLATIONS = 54
+NIKE_CIK = "0000320187"
+NIKE_COMPANY_NAME = "NIKE, Inc."
+ANALYSIS_YEAR = 2019
 
 
 async def run_nike_2019_production() -> bool:
@@ -46,10 +53,10 @@ async def run_nike_2019_production() -> bool:
     print("\n" + "="*80)
     print("   NIKE 2019 FORENSIC ANALYSIS - PRODUCTION RUN")
     print("="*80)
-    print("\nTarget: NIKE, Inc. (CIK: 0000320187)")
-    print("Period: Calendar Year 2019 (2019-01-01 to 2019-12-31)")
-    print("Expected Filings: 89 (Form 4, 10-K, 10-Q, 8-K)")
-    print("Expected Violations: 54+ (Benchmark Standard)")
+    print(f"\nTarget: {NIKE_COMPANY_NAME} (CIK: {NIKE_CIK})")
+    print(f"Period: Calendar Year {ANALYSIS_YEAR} ({ANALYSIS_YEAR}-01-01 to {ANALYSIS_YEAR}-12-31)")
+    print("Expected Filings: All Form 4, 10-K, 10-Q, 8-K filings")
+    print(f"Benchmark Target: {BENCHMARK_TARGET_VIOLATIONS}+ violations")
     print("\nThis analysis will:")
     print("  • Collect all Nike SEC filings from 2019")
     print("  • Analyze Form 4s for late filings and zero-dollar transactions")
@@ -59,9 +66,12 @@ async def run_nike_2019_production() -> bool:
     print("="*80 + "\n")
     
     try:
-        # Initialize analyzer with Nike 2019 parameters
-        # The UnifiedForensicAnalyzer is pre-configured for Nike 2019
-        async with UnifiedForensicAnalyzer() as analyzer:
+        # Initialize analyzer with Nike 2019 parameters explicitly
+        # Default parameters happen to be Nike, but we pass them explicitly for clarity
+        async with UnifiedForensicAnalyzer(
+            cik=NIKE_CIK,
+            company_name=NIKE_COMPANY_NAME
+        ) as analyzer:
             # Run the complete analysis pipeline
             # This executes all phases:
             # 1. Document collection from SEC EDGAR
@@ -103,22 +113,21 @@ async def run_nike_2019_production() -> bool:
             
             print("\n" + "="*80)
             
-            # Benchmark validation
-            BENCHMARK_TARGET = 54
-            benchmark_met = total_violations >= BENCHMARK_TARGET
+            # Benchmark validation using module-level constant
+            benchmark_met = total_violations >= BENCHMARK_TARGET_VIOLATIONS
             
             print("\n" + "="*80)
             print("   BENCHMARK VALIDATION")
             print("="*80)
-            print(f"\nBenchmark Target:  {BENCHMARK_TARGET} violations")
+            print(f"\nBenchmark Target:  {BENCHMARK_TARGET_VIOLATIONS} violations")
             print(f"Actual Results:    {total_violations} violations")
             
             if benchmark_met:
                 print(f"\n✅ BENCHMARK MET - Analysis exceeds minimum standard")
-                print(f"   Delta: +{total_violations - BENCHMARK_TARGET} violations above target")
+                print(f"   Delta: +{total_violations - BENCHMARK_TARGET_VIOLATIONS} violations above target")
             else:
                 print(f"\n⚠️  BENCHMARK NOT MET - Results below target")
-                print(f"   Gap: {BENCHMARK_TARGET - total_violations} violations short")
+                print(f"   Gap: {BENCHMARK_TARGET_VIOLATIONS - total_violations} violations short")
             
             print("="*80 + "\n")
             
@@ -145,12 +154,12 @@ async def run_nike_2019_production() -> bool:
 
 
 async def run_nike_2019_with_custom_params(
-    cik: str = "0000320187",
-    company_name: str = "NIKE, Inc.",
-    year: int = 2019
+    cik: str = None,
+    company_name: str = None,
+    year: int = None
 ) -> Tuple[str, Dict]:
     """
-    Execute Nike 2019 analysis with custom parameters.
+    Execute forensic analysis with custom parameters.
     
     This is a more flexible version that allows customization of:
     - Company CIK
@@ -158,13 +167,17 @@ async def run_nike_2019_with_custom_params(
     - Analysis year
     
     Args:
-        cik: SEC Central Index Key for the target company
-        company_name: Full legal name of the company
-        year: Calendar year for analysis
+        cik: SEC Central Index Key for the target company (defaults to Nike)
+        company_name: Full legal name of the company (defaults to Nike)
+        year: Calendar year for analysis (defaults to 2019)
         
     Returns:
         Tuple[str, Dict]: (markdown_report, json_report)
     """
+    # Use defaults from module constants if not provided
+    cik = cik or NIKE_CIK
+    company_name = company_name or NIKE_COMPANY_NAME
+    year = year or ANALYSIS_YEAR
     
     print(f"\n{'='*80}")
     print(f"FORENSIC ANALYSIS - CUSTOM PARAMETERS")
@@ -173,13 +186,11 @@ async def run_nike_2019_with_custom_params(
     print(f"Period: {year}")
     print(f"{'='*80}\n")
     
-    # Update global constants in jlaw_production_forensic
-    import jlaw_production_forensic as jpf
-    jpf.NIKE_CIK = cik
-    jpf.TARGET_COMPANY = company_name
-    jpf.ANALYSIS_YEAR = year
-    
-    async with UnifiedForensicAnalyzer() as analyzer:
+    # Pass parameters directly to analyzer constructor
+    async with UnifiedForensicAnalyzer(
+        cik=cik,
+        company_name=company_name
+    ) as analyzer:
         markdown_report, json_report = await analyzer.run_complete_analysis()
         return markdown_report, json_report
 
