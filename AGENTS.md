@@ -69,3 +69,86 @@ Commit messages should be concise and written in the imperative mood. Small, foc
 - Consistent style: code formatted with `uv run ruff format`, imports sorted, and type hints passing `uv run mypy .`.
 - Clear documentation for any public API changes.
 - Clean history and a helpful PR description.
+
+---
+
+## Claude Code Subagent Integration (JLAW Forensic Platform)
+
+### Overview
+
+The JLAW forensic analysis platform includes 14 specialized VoltAgent Claude Code subagents for multi-agent orchestration in forensic investigations. These subagents provide domain-specific expertise across forensic analysis, infrastructure, and development.
+
+### Subagent Categories
+
+#### 1. Forensic Subagents (`.claude/agents/forensic/`)
+
+Specialized agents for SEC filing analysis and fraud detection:
+
+- **forensic-nlp-analyst**: NLP specialist for contradiction detection and linguistic analysis
+- **forensic-financial-analyst**: Quantitative analyst for Beneish M-Score, Benford's Law, and ML fraud detection
+- **forensic-research-specialist**: Research specialist for SEC filing retrieval and whistleblower investigation
+- **forensic-compliance-auditor**: Regulatory compliance mapping to SEC rules and federal statutes
+
+#### 2. Orchestration Subagents (`.claude/agents/orchestration/`)
+
+Coordinate multi-agent workflows:
+
+- **forensic-workflow-orchestrator**: Master orchestrator for comprehensive forensic investigations
+- **multi-agent-coordinator**: Tactical coordinator for agent handoffs and task routing
+- **context-manager**: Manages investigation context and state across agent invocations
+
+#### 3. Infrastructure Subagents (`.claude/agents/infrastructure/`)
+
+Support deployment and infrastructure:
+
+- **devops-engineer**: CI/CD pipelines and deployment automation
+- **security-engineer**: Evidence integrity and chain of custody verification
+- **database-administrator**: Forensic data storage management
+- **cloud-architect**: Cloud deployment architecture (AWS, Azure, GCP)
+
+#### 4. Development Subagents (`.claude/agents/development/`)
+
+Assist with development tasks:
+
+- **python-pro**: Expert Python development for forensic modules
+- **backend-developer**: REST API and microservices development
+- **documentation-engineer**: Technical documentation and API docs
+
+### Integration with JLAW Modules
+
+Subagents integrate with core forensic modules:
+
+- `src/forensics/enhanced_contradiction_detector.py` - NLP analysis
+- `src/forensics/benfords_law_analyzer.py` - Statistical analysis
+- `src/forensics/ml_fraud_detector.py` - Machine learning models
+- `src/forensics/multi_tier_sec_fetcher.py` - SEC data retrieval
+- `src/forensics/forensic_statutory_mapper.py` - Compliance mapping
+- `src/forensics/unified_forensic_pipeline.py` - Orchestration
+
+### Usage
+
+Deploy and verify subagents:
+
+```bash
+python scripts/deploy_subagents.py --verbose
+```
+
+### Documentation
+
+- **Comprehensive Guide**: [.claude/SUBAGENT_INTEGRATION.md](.claude/SUBAGENT_INTEGRATION.md)
+- **Individual Subagents**: [.claude/agents/](.claude/agents/)
+- **Example Invocations**: See integration guide for detailed usage examples
+
+### Architecture
+
+```
+Forensic Workflow Orchestrator
+    ↓
+Multi-Agent Coordinator & Context Manager
+    ↓
+[NLP Analyst] [Financial Analyst] [Research Specialist] [Compliance Auditor]
+    ↓
+Evidence Aggregation & Report Generation
+```
+
+For detailed information on using subagents, see [.claude/SUBAGENT_INTEGRATION.md](.claude/SUBAGENT_INTEGRATION.md).

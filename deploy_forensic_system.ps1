@@ -7,6 +7,7 @@
     - Verifies Python installation
     - Installs all required dependencies
     - Validates API keys (optional)
+    - Verifies VoltAgent subagent deployment (14 subagents)
     - Verifies all 13 forensic modules
     - Tests filing collection (Nike 2019 benchmark)
     - Runs complete forensic analysis
@@ -124,6 +125,45 @@ function Install-Dependencies($python) {
     else {
         Write-Error-Custom "requirements.txt not found"
         throw "requirements.txt not found"
+    }
+}
+
+function Test-SubagentDeployment($python) {
+    if ($SkipTests) {
+        Write-Warning-Custom "Skipping subagent verification (--SkipTests)"
+        return $true
+    }
+    
+    Write-Section "Verifying VoltAgent Subagent Deployment"
+    
+    if (Test-Path "scripts\deploy_subagents.py") {
+        Write-Info "Running subagent deployment verification..."
+        $result = & $python scripts\deploy_subagents.py 2>&1 | Out-String
+        
+        # Check for success in output
+        if ($result -match "Status: SUCCESS" -and $result -match "Total Subagents: 14" -and $result -match "Validated: 14") {
+            Write-Success "All 14 VoltAgent subagents verified successfully"
+            if ($Verbose) {
+                Write-Host $result
+            }
+            return $true
+        }
+        elseif ($LASTEXITCODE -eq 0) {
+            Write-Success "VoltAgent subagent verification completed"
+            if ($Verbose) {
+                Write-Host $result
+            }
+            return $true
+        }
+        else {
+            Write-Error-Custom "Subagent verification failed"
+            Write-Host $result
+            return $false
+        }
+    }
+    else {
+        Write-Warning-Custom "Subagent deployment script not found, skipping..."
+        return $true
     }
 }
 
@@ -250,25 +290,32 @@ try {
     Write-Section "Step 2: Dependency Installation"
     Install-Dependencies $python
     
-    # Step 3: Verify Modules
-    Write-Section "Step 3: Module Verification"
+    # Step 3: Verify VoltAgent Subagents
+    Write-Section "Step 3: VoltAgent Subagent Verification"
+    if (!(Test-SubagentDeployment $python)) {
+        Write-Warning-Custom "Subagent verification failed - multi-agent orchestration may not function correctly"
+        Write-Info "Continuing with core forensic analysis..."
+    }
+    
+    # Step 4: Verify Modules
+    Write-Section "Step 4: Forensic Module Verification"
     if (!(Test-ModuleVerification $python)) {
         Write-Warning-Custom "Some modules failed verification, but continuing..."
     }
     
-    # Step 4: Test Filing Collection
-    Write-Section "Step 4: Filing Collection Test"
+    # Step 5: Test Filing Collection
+    Write-Section "Step 5: Filing Collection Test"
     Test-FilingCount $python | Out-Null
     
-    # Step 5: Run Analysis
-    Write-Section "Step 5: Forensic Analysis Execution"
+    # Step 6: Run Analysis
+    Write-Section "Step 6: Forensic Analysis Execution"
     Write-Info "Target: $($Ticker ? $Ticker : $CIK) - Year: $Year"
     if (!(Run-ForensicAnalysis $python)) {
         throw "Forensic analysis failed"
     }
     
-    # Step 6: Open Results
-    Write-Section "Step 6: Results"
+    # Step 7: Open Results
+    Write-Section "Step 7: Results"
     Open-OutputFolder
     
     # Success
