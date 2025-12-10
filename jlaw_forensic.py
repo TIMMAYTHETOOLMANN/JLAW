@@ -27,6 +27,9 @@
 import asyncio
 import sys
 import logging
+import json
+import glob
+import shutil
 from pathlib import Path
 from datetime import datetime
 from typing import Optional
@@ -422,7 +425,6 @@ class CompleteUnifiedForensicSystem:
         company_slug = company_name.replace(' ', '_').replace(',', '').replace('.', '')
         year = start_date[:4] if start_date else str(merged_results.get('year', ''))
         root_md = Path.cwd() / f"{company_slug}_{year}_FORENSIC_ANALYSIS_*.md"
-        import glob
         root_files = glob.glob(str(root_md))
         if root_files:
             print(f"\n BACKWARDS-COMPATIBLE FILES (Root Directory):")
@@ -590,7 +592,6 @@ class CompleteUnifiedForensicSystem:
         print(f"   ✓ Generated executive_summary.md")
         
         # 3. Machine-readable outputs
-        import json
         print(f"   ✓ Generating machine-readable files...")
         
         violations_data = [
@@ -730,7 +731,6 @@ class CompleteUnifiedForensicSystem:
             
             # Copy markdown report
             if (output_path / "FORENSIC_REPORT.md").exists():
-                import shutil
                 shutil.copy2(output_path / "FORENSIC_REPORT.md", root_md)
                 logger.info(f"Created root-level report: {root_md.name}")
                 print(f"   ✓ Created {root_md.name}")
@@ -738,7 +738,6 @@ class CompleteUnifiedForensicSystem:
             # Copy or create JSON summary
             summary_json_path = output_path / "machine_readable" / "summary.json"
             if summary_json_path.exists():
-                import shutil
                 shutil.copy2(summary_json_path, root_json)
                 logger.info(f"Created root-level JSON: {root_json.name}")
                 print(f"   ✓ Created {root_json.name}")

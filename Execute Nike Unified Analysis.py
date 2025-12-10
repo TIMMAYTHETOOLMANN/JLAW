@@ -33,6 +33,7 @@ EXPECTED OUTPUT:
 import asyncio
 import sys
 import logging
+import glob
 from pathlib import Path
 from datetime import datetime
 
@@ -171,7 +172,6 @@ async def run_nike_analysis():
         print(f"    Main Report:     {output_path / 'FORENSIC_REPORT.md'}")
         
         # Check for root-level files
-        import glob
         root_md_files = glob.glob(str(PROJECT_ROOT / "NIKE_Inc_2019_FORENSIC_ANALYSIS_*.md"))
         root_json_files = glob.glob(str(PROJECT_ROOT / "NIKE_Inc_2019_FORENSIC_ANALYSIS_*.json"))
         

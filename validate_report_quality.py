@@ -40,7 +40,7 @@ def validate_markdown_report(md_path: Path) -> Tuple[bool, List[str]]:
     issues = []
     
     if not md_path.exists():
-        return False, ["Markdown report file not found"]
+        return False, [f"Markdown report file not found: {md_path}"]
     
     content = md_path.read_text(encoding='utf-8')
     lines = content.split('\n')
@@ -137,7 +137,7 @@ def validate_json_summary(json_path: Path) -> Tuple[bool, List[str]]:
     if 'total_violations' in data:
         if data['total_violations'] == 0:
             issues.append("No violations found (might indicate incomplete analysis)")
-            print(f"  ⚠ No violations found (this is unusual for Nike 2019)")
+            print(f"  ⚠ No violations found (unusual - check if analysis completed)")
         else:
             print(f"  ✓ Violations found: {data['total_violations']}")
     
@@ -272,7 +272,7 @@ def main():
     if not is_valid:
         print_section("TROUBLESHOOTING")
         print("\n  To fix these issues:")
-        print("    1. Re-run the analysis: python 'Execute Nike Unified Analysis.py'")
+        print("    1. Re-run the analysis: python \"Execute Nike Unified Analysis.py\"")
         print("    2. Check log files for errors")
         print("    3. Verify internet connection (needed for SEC data)")
         print("    4. Ensure dependencies are installed: pip install -r requirements.txt")
