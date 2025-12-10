@@ -27,6 +27,9 @@
 import asyncio
 import sys
 import logging
+import json
+import glob
+import shutil
 from pathlib import Path
 from datetime import datetime
 from typing import Optional
@@ -173,6 +176,19 @@ class CompleteUnifiedForensicSystem:
             print(f"Filing Types: ALL (comprehensive)")
         else:
             print(f"Filing Types: {', '.join(normalized_filing_types)}")
+        
+        # Report module availability status
+        print(f"\n MODULE STATUS:")
+        if PIPELINE_AVAILABLE:
+            print(f"   ✓ Unified 13-Phase Pipeline: Available")
+        else:
+            print(f"   ⚠ Unified 13-Phase Pipeline: Not Available (using baseline)")
+        if REPORT_GENERATOR_AVAILABLE:
+            print(f"   ✓ Unified Report Generator:  Available")
+        else:
+            print(f"   ⚠ Unified Report Generator:  Not Available (using baseline)")
+        print(f"   ✓ Baseline Production System: Available (guaranteed comprehensive reports)")
+        
         print("="*100)
         
         # 
@@ -397,8 +413,23 @@ class CompleteUnifiedForensicSystem:
             risk = 'HIGH' if merged_results['ml_fraud_score'] > 0.7 else 'ELEVATED' if merged_results['ml_fraud_score'] > 0.5 else 'MODERATE'
             print(f"   Risk Level:          {risk}")
             
-        print(f"\n OUTPUT LOCATION:")
-        print(f"   {output_path}")
+        print(f"\n OUTPUT LOCATIONS:")
+        print(f"   Primary Report Directory: {output_path}")
+        print(f"   Main Report (Markdown):   {output_path / 'FORENSIC_REPORT.md'}")
+        print(f"   Executive Summary:        {output_path / 'executive_summary.md'}")
+        print(f"   Machine Readable Data:    {output_path / 'machine_readable/'}")
+        print(f"   Evidence Chain:           {output_path / 'evidence/'}")
+        
+        # Check if root-level copies exist
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        company_slug = company_name.replace(' ', '_').replace(',', '').replace('.', '')
+        year = start_date[:4] if start_date else str(merged_results.get('year', ''))
+        root_md = Path.cwd() / f"{company_slug}_{year}_FORENSIC_ANALYSIS_*.md"
+        root_files = glob.glob(str(root_md))
+        if root_files:
+            print(f"\n BACKWARDS-COMPATIBLE FILES (Root Directory):")
+            for f in sorted(root_files)[-2:]:  # Show last 2 files
+                print(f"   {Path(f).name}")
         
         print("\n" + "="*100)
         
@@ -494,8 +525,13 @@ class CompleteUnifiedForensicSystem:
         output_path = self.output_dir / f"{company_slug}_{year}_FORENSIC_ANALYSIS_{timestamp}"
         output_path.mkdir(parents=True, exist_ok=True)
         
+        logger.info(f"Generating report stack in: {output_path}")
+        print(f"\n  Generating comprehensive reports...")
+        print(f"  Output directory: {output_path}")
+        
         # If we have a full unified context and the unified report generator is available,
         # delegate to it to produce the DOJ-grade, full output stack (preferred path).
+        used_unified_generator = False
         try:
             if REPORT_GENERATOR_AVAILABLE and self.unified_results and self.unified_results.get('context'):
                 context = self.unified_results['context']
@@ -505,12 +541,20 @@ class CompleteUnifiedForensicSystem:
                 context.analysis_period_start = context.analysis_period_start or start_date
                 context.analysis_period_end = context.analysis_period_end or end_date
                 
+                logger.info("Using UnifiedReportGenerator for full 13-phase report")
+                print("   Using advanced UnifiedReportGenerator...")
                 generator = UnifiedReportGenerator(output_path)
                 generator.generate_full_report(context)
+                used_unified_generator = True
+                print("   ✓ Unified report generation complete")
                 
-                return output_path
+                # Continue to also generate backwards-compatible flat files
         except Exception as e:
-            logger.warning(f"Falling back to baseline output stack generation: {e}")
+            logger.warning(f"Unified report generator failed, using baseline: {e}")
+            print(f"   ⚠ Advanced report generator not available, using baseline...")
+        
+        if not used_unified_generator:
+            print("   Using baseline report generator...")
         
         # Fallback path: generate baseline-style output stack
         # Create subdirectories per README
@@ -540,13 +584,15 @@ class CompleteUnifiedForensicSystem:
             main_report += enhanced_section
             
         (output_path / "FORENSIC_REPORT.md").write_text(main_report, encoding='utf-8')
+        print(f"   ✓ Generated FORENSIC_REPORT.md ({len(main_report)} chars)")
         
         # 2. Executive summary
         exec_summary = self._generate_executive_summary(results, company_name, start_date, end_date)
         (output_path / "executive_summary.md").write_text(exec_summary, encoding='utf-8')
+        print(f"   ✓ Generated executive_summary.md")
         
         # 3. Machine-readable outputs
-        import json
+        print(f"   ✓ Generating machine-readable files...")
         
         violations_data = [
             {
@@ -565,6 +611,7 @@ class CompleteUnifiedForensicSystem:
         (output_path / "machine_readable" / "violations.json").write_text(
             json.dumps(violations_data, indent=2), encoding='utf-8'
         )
+        print(f"   ✓ Generated violations.json ({len(violations_data)} violations)")
         
         # Summary statistics
         summary = {
@@ -582,6 +629,7 @@ class CompleteUnifiedForensicSystem:
         (output_path / "machine_readable" / "summary.json").write_text(
             json.dumps(summary, indent=2), encoding='utf-8'
         )
+        print(f"   ✓ Generated summary.json")
 
         # Additional module outputs (if unified pipeline ran)
         if self.unified_results:
@@ -665,10 +713,38 @@ class CompleteUnifiedForensicSystem:
         (output_path / "evidence" / "chain_of_custody.json").write_text(
             json.dumps(chain_of_custody, indent=2), encoding='utf-8'
         )
+        print(f"   ✓ Generated chain_of_custody.json")
         
         # 5. Methodology appendix
         methodology = self._generate_methodology()
         (output_path / "appendices" / "methodology.md").write_text(methodology, encoding='utf-8')
+        print(f"   ✓ Generated methodology.md")
+        
+        # 6. BACKWARDS COMPATIBILITY: Create flat files in root directory
+        # This ensures users can find reports in the expected location
+        try:
+            root_report_name = f"{company_slug}_{year}_FORENSIC_ANALYSIS_{timestamp}"
+            
+            # Copy main report to root with standardized name
+            root_md = Path.cwd() / f"{root_report_name}.md"
+            root_json = Path.cwd() / f"{root_report_name}.json"
+            
+            # Copy markdown report
+            if (output_path / "FORENSIC_REPORT.md").exists():
+                shutil.copy2(output_path / "FORENSIC_REPORT.md", root_md)
+                logger.info(f"Created root-level report: {root_md.name}")
+                print(f"   ✓ Created {root_md.name}")
+            
+            # Copy or create JSON summary
+            summary_json_path = output_path / "machine_readable" / "summary.json"
+            if summary_json_path.exists():
+                shutil.copy2(summary_json_path, root_json)
+                logger.info(f"Created root-level JSON: {root_json.name}")
+                print(f"   ✓ Created {root_json.name}")
+            
+        except Exception as e:
+            logger.warning(f"Failed to create root-level backwards-compatible files: {e}")
+            print(f"   ⚠ Could not create root-level copies: {e}")
         
         return output_path
         
