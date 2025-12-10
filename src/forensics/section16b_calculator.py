@@ -384,11 +384,20 @@ def calculate_short_swing_profit(
     transaction_objs = []
     
     for t in transactions:
-        # Parse date
-        if isinstance(t['date'], str):
-            date = datetime.fromisoformat(t['date'].replace('Z', '+00:00'))
-        else:
-            date = t['date']
+        # Parse date with error handling
+        try:
+            if isinstance(t['date'], str):
+                # Handle ISO format with optional 'Z' suffix
+                date_str = t['date'].replace('Z', '+00:00')
+                date = datetime.fromisoformat(date_str)
+            elif isinstance(t['date'], datetime):
+                date = t['date']
+            else:
+                logger.warning(f"Invalid date type: {type(t['date'])}, skipping transaction")
+                continue
+        except (ValueError, AttributeError) as e:
+            logger.warning(f"Failed to parse date '{t.get('date')}': {e}, skipping transaction")
+            continue
         
         # Parse type
         type_str = t['type'].lower()

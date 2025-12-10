@@ -50,9 +50,9 @@ def verify_module(phase_num: int, module_name: str, import_path: str, class_name
 
 def main():
     print("=" * 80)
-    print("JLAW FORENSIC SYSTEM - 13-MODULE VERIFICATION")
+    print("JLAW FORENSIC SYSTEM - MODULE VERIFICATION")
     print("=" * 80)
-    print("\nVerifying all 13 forensic analysis modules are properly integrated...")
+    print("\nVerifying forensic analysis modules (13 core + 6 blueprint integration)...")
     
     results = []
     

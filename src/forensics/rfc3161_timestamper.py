@@ -549,6 +549,7 @@ class EnhancedTimestamper(RFC3161Timestamper):
         sha256_token = self.timestamp_data(data, hash_algorithm='sha256')
         
         # Secondary: SHA3-512 for additional verification
+        sha3_512_hash = None
         try:
             # Calculate SHA3-512 hash
             sha3_512_hash = hashlib.sha3_512(data).hexdigest()
@@ -563,7 +564,7 @@ class EnhancedTimestamper(RFC3161Timestamper):
         
         return {
             'sha256': sha256_token,
-            'sha3_512_verification': sha3_512_hash if 'sha3_512_hash' in locals() else None
+            'sha3_512_verification': sha3_512_hash
         }
     
     def merkle_batch_timestamp(

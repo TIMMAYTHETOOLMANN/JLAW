@@ -446,8 +446,16 @@ class PreAnnouncementDetector:
         car_std = car / (ar_std * np.sqrt(event_length))
         
         # Two-tailed t-test (approximate with normal distribution)
-        from scipy import stats
-        p_value = 2 * (1 - stats.norm.cdf(abs(car_std)))
+        try:
+            from scipy import stats
+            p_value = 2 * (1 - stats.norm.cdf(abs(car_std)))
+        except ImportError:
+            # Fallback: use approximate normal CDF without scipy
+            # For large samples, use standard normal approximation
+            # P(|Z| > z) ≈ 2 * (1 - Φ(|z|))
+            # Approximate Φ(z) using error function
+            from math import erf, sqrt
+            p_value = 2 * (1 - (0.5 * (1 + erf(abs(car_std) / sqrt(2)))))
         
         return p_value
     
