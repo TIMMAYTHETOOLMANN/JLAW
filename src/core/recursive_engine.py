@@ -127,11 +127,23 @@ class RecursiveProsecutorialEngineV2:
         from src.nodes.node1_form4.form4_parser import Form4Parser
         from src.nodes.node1_form4.short_swing_calc import ShortSwingCalculator
         from src.nodes.node1_form4.gift_pattern_detector import GiftPatternDetector
+        
+        # NEW: Nodes 2-5
+        from src.nodes.node2_def14a.compensation_analyzer import DEF14ACompensationAnalyzer
+        from src.nodes.node3_10q.temporal_consistency_validator import TemporalConsistencyValidator
+        from src.nodes.node4_10k_sox.sox_certification_analyzer import SOXCertificationAnalyzer
+        from src.nodes.node5_irs.irc83_tax_calculator import IRC83TaxCalculator
         from src.nodes.node6_routing.enforcement_router import EnforcementRouter
         
         self.form4_parser = Form4Parser()
         self.short_swing_calc = ShortSwingCalculator()
         self.gift_detector = GiftPatternDetector()
+        
+        # NEW: Initialize Nodes 2-5
+        self.node2_def14a = DEF14ACompensationAnalyzer()
+        self.node3_10q = TemporalConsistencyValidator()
+        self.node4_sox = SOXCertificationAnalyzer()
+        self.node5_irc83 = IRC83TaxCalculator()
         self.enforcement_router = EnforcementRouter()
         
         # Phase 2 nodes
@@ -197,16 +209,37 @@ class RecursiveProsecutorialEngineV2:
             phase1_results.append(node1_result)
             total_violations += node1_result.violations_found
             
-            for node_id, node_name in [
-                ("NODE_2", "DEF 14A"), ("NODE_3", "10-Q"),
-                ("NODE_4", "10-K SOX"), ("NODE_5", "IRS"), ("NODE_6", "Routing")
-            ]:
-                print(f"  → {node_id[-1]}: {node_name}")
-                phase1_results.append(NodeResult(
-                    node_id=node_id, node_name=node_name, status="success",
-                    violations_found=0, alerts_generated=0, findings={},
-                    execution_time_seconds=0.1
-                ))
+            # Node 2: DEF 14A Compensation Analysis
+            print("  → Node 2: DEF 14A Executive Compensation")
+            node2_result = await self._execute_node2(sec_client, cik, start_date, end_date, company_name)
+            phase1_results.append(node2_result)
+            total_violations += node2_result.violations_found
+            
+            # Node 3: 10-Q Temporal Consistency
+            print("  → Node 3: 10-Q Temporal Consistency")
+            node3_result = await self._execute_node3(sec_client, cik, start_date, end_date, company_name)
+            phase1_results.append(node3_result)
+            total_violations += node3_result.violations_found
+            
+            # Node 4: 10-K SOX Certification
+            print("  → Node 4: 10-K SOX Certification Analysis")
+            node4_result = await self._execute_node4(sec_client, cik, start_date, end_date, company_name)
+            phase1_results.append(node4_result)
+            total_violations += node4_result.violations_found
+            
+            # Node 5: IRC §83 Tax Exposure
+            print("  → Node 5: IRC §83 Tax Exposure")
+            node5_result = await self._execute_node5(sec_client, cik, start_date, end_date, company_name)
+            phase1_results.append(node5_result)
+            total_violations += node5_result.violations_found
+            
+            # Node 6: Enforcement Routing
+            print("  → Node 6: Enforcement Routing")
+            phase1_results.append(NodeResult(
+                node_id="NODE_6", node_name="Routing", status="success",
+                violations_found=0, alerts_generated=0, findings={},
+                execution_time_seconds=0.1
+            ))
             
             # PHASE 2
             print("\n⚡ PHASE 2: Extended Intelligence (Nodes 7-12)")
@@ -349,6 +382,218 @@ class RecursiveProsecutorialEngineV2:
         except Exception as e:
             return NodeResult(
                 node_id="NODE_1", node_name="Form 4 Analysis",
+                status="error", violations_found=0, alerts_generated=0,
+                findings={}, execution_time_seconds=time.time() - start,
+                error_message=str(e)
+            )
+    
+    async def _execute_node2(
+        self, sec_client, cik: str, start_date: date, end_date: date, company_name: str
+    ) -> NodeResult:
+        """Execute Node 2: DEF 14A Compensation Analysis."""
+        start = time.time()
+        
+        try:
+            # Fetch latest proxy statement (DEF 14A)
+            proxy_filings = await sec_client.get_filings(cik, "DEF 14A", start_date, end_date, limit=1)
+            
+            if not proxy_filings:
+                logger.info("No DEF 14A filings found")
+                return NodeResult(
+                    node_id="NODE_2", node_name="DEF 14A Analysis",
+                    status="success", violations_found=0, alerts_generated=0,
+                    findings={"proxy_statements_analyzed": 0},
+                    execution_time_seconds=time.time() - start
+                )
+            
+            # Get proxy text
+            proxy_text = await sec_client.get_filing_text(proxy_filings[0])
+            
+            # Placeholder financials - would extract from 10-K
+            financials = {
+                "total_shareholder_return": 0,
+                "revenue_growth_pct": 0,
+                "eps_growth_pct": 0,
+                "prior_year_ceo_comp": 0
+            }
+            
+            # Analyze
+            results = self.node2_def14a.analyze_proxy_statement(proxy_text, financials)
+            
+            return NodeResult(
+                node_id="NODE_2",
+                node_name="DEF 14A Analysis",
+                status="success",
+                violations_found=results.get('violations_detected', 0),
+                alerts_generated=results.get('violations_detected', 0),
+                findings=results,
+                execution_time_seconds=time.time() - start
+            )
+        except Exception as e:
+            logger.error(f"Node 2 error: {e}")
+            return NodeResult(
+                node_id="NODE_2", node_name="DEF 14A Analysis",
+                status="error", violations_found=0, alerts_generated=0,
+                findings={}, execution_time_seconds=time.time() - start,
+                error_message=str(e)
+            )
+    
+    async def _execute_node3(
+        self, sec_client, cik: str, start_date: date, end_date: date, company_name: str
+    ) -> NodeResult:
+        """Execute Node 3: 10-Q Temporal Consistency."""
+        start = time.time()
+        
+        try:
+            # Fetch recent 10-Q filings
+            quarterly_filings = await sec_client.get_filings(cik, "10-Q", start_date, end_date, limit=4)
+            
+            if len(quarterly_filings) < 2:
+                logger.info("Insufficient 10-Q filings for temporal analysis")
+                return NodeResult(
+                    node_id="NODE_3", node_name="10-Q Analysis",
+                    status="success", violations_found=0, alerts_generated=0,
+                    findings={"quarters_analyzed": len(quarterly_filings)},
+                    execution_time_seconds=time.time() - start
+                )
+            
+            # Parse quarterly data - simplified
+            parsed_quarters = []
+            for filing in quarterly_filings:
+                # In production, would extract XBRL data
+                parsed_quarters.append({
+                    "fiscal_year": filing.filing_date.year,
+                    "fiscal_quarter": (filing.filing_date.month - 1) // 3 + 1,
+                    "filing_date": filing.filing_date.isoformat(),
+                    "period_end_date": filing.filing_date.isoformat(),
+                    "revenue": 0,
+                    "cost_of_revenue": 0,
+                    "gross_profit": 0,
+                    "operating_expenses": 0,
+                    "operating_income": 0,
+                    "net_income": 0,
+                    "eps_basic": 0,
+                    "eps_diluted": 0,
+                    "total_assets": 0,
+                    "total_liabilities": 0,
+                    "stockholders_equity": 0,
+                    "cash": 0,
+                    "accounts_receivable": 0,
+                    "inventory": 0,
+                    "accounts_payable": 0,
+                    "operating_cash_flow": 0,
+                    "investing_cash_flow": 0,
+                    "financing_cash_flow": 0
+                })
+            
+            company_info = {"cik": cik, "name": company_name}
+            results = self.node3_10q.analyze_quarterly_series(parsed_quarters, company_info)
+            
+            return NodeResult(
+                node_id="NODE_3",
+                node_name="10-Q Analysis",
+                status="success",
+                violations_found=results.get('violations_detected', 0),
+                alerts_generated=results.get('violations_detected', 0),
+                findings=results,
+                execution_time_seconds=time.time() - start
+            )
+        except Exception as e:
+            logger.error(f"Node 3 error: {e}")
+            return NodeResult(
+                node_id="NODE_3", node_name="10-Q Analysis",
+                status="error", violations_found=0, alerts_generated=0,
+                findings={}, execution_time_seconds=time.time() - start,
+                error_message=str(e)
+            )
+    
+    async def _execute_node4(
+        self, sec_client, cik: str, start_date: date, end_date: date, company_name: str
+    ) -> NodeResult:
+        """Execute Node 4: 10-K SOX Certification."""
+        start = time.time()
+        
+        try:
+            # Fetch latest 10-K
+            annual_filings = await sec_client.get_filings(cik, "10-K", start_date, end_date, limit=1)
+            
+            if not annual_filings:
+                logger.info("No 10-K filings found")
+                return NodeResult(
+                    node_id="NODE_4", node_name="10-K SOX Analysis",
+                    status="success", violations_found=0, alerts_generated=0,
+                    findings={"annual_reports_analyzed": 0},
+                    execution_time_seconds=time.time() - start
+                )
+            
+            # Get 10-K text
+            annual_text = await sec_client.get_filing_text(annual_filings[0])
+            
+            company_info = {"cik": cik, "name": company_name}
+            results = self.node4_sox.analyze_annual_report(annual_text, company_info)
+            
+            return NodeResult(
+                node_id="NODE_4",
+                node_name="10-K SOX Analysis",
+                status="success",
+                violations_found=results.get('violations_detected', 0),
+                alerts_generated=results.get('violations_detected', 0),
+                findings=results,
+                execution_time_seconds=time.time() - start
+            )
+        except Exception as e:
+            logger.error(f"Node 4 error: {e}")
+            return NodeResult(
+                node_id="NODE_4", node_name="10-K SOX Analysis",
+                status="error", violations_found=0, alerts_generated=0,
+                findings={}, execution_time_seconds=time.time() - start,
+                error_message=str(e)
+            )
+    
+    async def _execute_node5(
+        self, sec_client, cik: str, start_date: date, end_date: date, company_name: str
+    ) -> NodeResult:
+        """Execute Node 5: IRC §83 Tax Exposure."""
+        start = time.time()
+        
+        try:
+            # Fetch Form 4 transactions for equity analysis
+            form4_filings = await sec_client.get_form4_filings(cik, start_date, end_date)
+            
+            form4_transactions = []
+            for filing in form4_filings:
+                xml = await sec_client.get_form4_xml(filing)
+                if xml:
+                    parsed = self.form4_parser.parse_xml(xml, filing.accession_number, filing.filing_date)
+                    for txn in parsed.transactions:
+                        form4_transactions.append({
+                            "transaction_date": txn.transaction_date.isoformat(),
+                            "shares": txn.shares,
+                            "price_per_share": float(txn.price_per_share) if txn.price_per_share else 0,
+                            "transaction_code": txn.transaction_code
+                        })
+            
+            # Placeholder grant data - would extract from proxy/10-K
+            grant_data = []
+            
+            company_info = {"cik": cik, "ticker": company_name}
+            results = self.node5_irc83.analyze_equity_compensation(
+                form4_transactions, grant_data, company_info
+            )
+            
+            return NodeResult(
+                node_id="NODE_5",
+                node_name="IRC §83 Analysis",
+                status="success",
+                violations_found=results.get('violations_detected', 0),
+                alerts_generated=results.get('violations_detected', 0),
+                findings=results,
+                execution_time_seconds=time.time() - start
+            )
+        except Exception as e:
+            logger.error(f"Node 5 error: {e}")
+            return NodeResult(
+                node_id="NODE_5", node_name="IRC §83 Analysis",
                 status="error", violations_found=0, alerts_generated=0,
                 findings={}, execution_time_seconds=time.time() - start,
                 error_message=str(e)
