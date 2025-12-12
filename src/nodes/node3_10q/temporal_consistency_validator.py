@@ -12,7 +12,7 @@ import re
 import json
 import hashlib
 from dataclasses import dataclass, field, asdict
-from datetime import datetime, date, timedelta
+from datetime import datetime, date, timezone, timedelta
 from typing import List, Dict, Optional, Tuple, Any, Union
 from decimal import Decimal, ROUND_HALF_UP
 from enum import Enum
@@ -119,7 +119,7 @@ class TemporalViolation:
     threshold_exceeded: float
     regulatory_citations: List[str]
     evidence_hash: str
-    detected_at: datetime = field(default_factory=datetime.utcnow)
+    detected_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
     
     def to_dict(self) -> Dict:
         result = asdict(self)
@@ -696,7 +696,7 @@ class TemporalConsistencyValidator:
         """Compile analysis results"""
         results = {
             "node": "NODE_3_10Q",
-            "analysis_timestamp": datetime.utcnow().isoformat() + "Z",
+            "analysis_timestamp": datetime.now(timezone.utc).isoformat() + "Z",
             "quarters_analyzed": len(self.quarters),
             "quarters": [
                 {
