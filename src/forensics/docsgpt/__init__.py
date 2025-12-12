@@ -1,33 +1,49 @@
 """
-DocsGPT Integration Module for JLAW SEC Forensic System
-========================================================
+DocsGPT Integration Module
+==========================
 
-This module integrates DocsGPT's advanced document parsing, chunking,
-and embedding capabilities with JLAW's forensic analysis infrastructure.
+Provides advanced document parsing and semantic search for SEC forensic analysis.
 
-Key Components:
-- ParserFactory: Unified document parsing for all SEC filing formats
-- SECChunker: Intelligent chunking optimized for SEC documents
-- Adapters: Format-specific parsing adapters
-
-Usage:
-    from src.forensics.docsgpt import ParserFactory, SECChunker
-    
-    parser = ParserFactory.get_parser("10-K.pdf")
-    documents = parser.parse()
-    chunks = SECChunker().chunk(documents)
+Components:
+- DocumentParser: Multi-format document parsing (PDF, HTML, XBRL, etc.)
+- SECDocumentAnalyzer: SEC-specific filing analysis
+- FAISSVectorStore: Vector storage and similarity search
+- SECVectorSearchEngine: Semantic search across filings
 """
 
-from .parser_factory import ParserFactory
-from .sec_chunking import SECChunker, SECChunkingStrategy
-from .config import DocsGPTConfig
+from .document_parser import (
+    DocumentParser,
+    SECDocumentAnalyzer,
+    DocumentFormat,
+    SECFilingType,
+    ParsedDocument,
+    DocumentChunk,
+    ChunkingStrategy
+)
+
+from .vector_store import (
+    FAISSVectorStore,
+    SECVectorSearchEngine,
+    EmbeddingGenerator,
+    VectorDocument,
+    SearchResult
+)
 
 __all__ = [
-    'ParserFactory',
-    'SECChunker',
-    'SECChunkingStrategy',
-    'DocsGPTConfig',
+    # Parser classes
+    'DocumentParser',
+    'SECDocumentAnalyzer',
+    'DocumentFormat',
+    'SECFilingType',
+    'ParsedDocument',
+    'DocumentChunk',
+    'ChunkingStrategy',
+    
+    # Vector store classes
+    'FAISSVectorStore',
+    'SECVectorSearchEngine',
+    'EmbeddingGenerator',
+    'VectorDocument',
+    'SearchResult'
 ]
-
-__version__ = "1.0.0"
 
