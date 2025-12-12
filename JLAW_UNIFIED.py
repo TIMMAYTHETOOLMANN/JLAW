@@ -1073,6 +1073,86 @@ class UnifiedForensicEngine:
 # CLI INTERFACE
 # ═══════════════════════════════════════════════════════════════════════════════════════════════
 
+def print_ascii_banner():
+    """Print ASCII banner"""
+    banner = """
+╔══════════════════════════════════════════════════════════════════════════════════════════════╗
+║                                                                                              ║
+║                       JLAW TACTICAL DEPLOYMENT v5.0                                          ║
+║                                                                                              ║
+║                    FORENSIC ANALYSIS & COMPLIANCE ENFORCEMENT                                ║
+║                                                                                              ║
+╠══════════════════════════════════════════════════════════════════════════════════════════════╣
+║                                                                                              ║
+║  • Node 2: DEF 14A Compensation Analysis                                                     ║
+║  • Node 3: 10-Q Temporal Consistency Validation                                              ║
+║  • Node 4: 10-K SOX Certification Analysis                                                   ║
+║  • Node 5: IRC §83 Tax Exposure Calculator                                                   ║
+║                                                                                              ║
+║  • Local Caching Infrastructure                                                              ║
+║  • PDF Report Generation (Court-Ready)                                                       ║
+║  • Recursive Engine Integration                                                              ║
+║                                                                                              ║
+╚══════════════════════════════════════════════════════════════════════════════════════════════╝
+    """
+    print(banner)
+
+
+def check_dependencies() -> Dict[str, bool]:
+    """
+    Check if key dependencies are installed
+    
+    Returns:
+        Dict mapping dependency name to installation status
+    """
+    deps = {
+        'diskcache': False,
+        'reportlab': False,
+        'httpx': False,
+        'pandas': False,
+        'lxml': False,
+        'cryptography': False,
+        'aiohttp': False
+    }
+    
+    for dep in deps.keys():
+        try:
+            __import__(dep)
+            deps[dep] = True
+        except ImportError:
+            deps[dep] = False
+    
+    return deps
+
+
+def print_dependency_status(deps: Dict[str, bool]) -> None:
+    """Print dependency installation status"""
+    print("\n" + "=" * 70)
+    print("DEPENDENCY CHECK")
+    print("=" * 70)
+    
+    all_installed = True
+    for dep, installed in deps.items():
+        status = "✓ INSTALLED" if installed else "✗ MISSING"
+        color = "\033[32m" if installed else "\033[31m"
+        reset = "\033[0m"
+        print(f"  {dep.ljust(20)} {color}{status}{reset}")
+        if not installed:
+            all_installed = False
+    
+    print("=" * 70)
+    
+    if not all_installed:
+        print("\n⚠️  Some dependencies are missing. Install with:")
+        print("    pip install -r requirements.txt")
+        print()
+    else:
+        print("\n✓ All key dependencies are installed")
+        print()
+    
+    return all_installed
+
+
 def parse_args() -> argparse.Namespace:
     """Parse command line arguments."""
     parser = argparse.ArgumentParser(
@@ -1087,6 +1167,7 @@ Examples:
 """
     )
     
+    parser.add_argument('--demo', action='store_true', help='Run demo analysis with test data')
     parser.add_argument('--cik', type=str, help='Company CIK number')
     parser.add_argument('--company', type=str, help='Company name or ticker (auto-lookup)')
     parser.add_argument('--year', type=int, help='Analysis year')
@@ -1094,6 +1175,8 @@ Examples:
     parser.add_argument('--end', type=str, help='End date (YYYY-MM-DD)')
     parser.add_argument('--auto', action='store_true', help='Auto mode (no confirmations)')
     parser.add_argument('--output', type=str, default='output', help='Output directory')
+    parser.add_argument('--no-pdf', action='store_true', help='Skip PDF report generation')
+    parser.add_argument('--check-deps', action='store_true', help='Check dependencies and exit')
     
     return parser.parse_args()
 
@@ -1144,6 +1227,50 @@ def interactive_config() -> TargetConfig:
 async def main():
     """Main entry point."""
     args = parse_args()
+    
+    # Print banner
+    print_ascii_banner()
+    
+    # Check dependencies if requested
+    if args.check_deps:
+        deps = check_dependencies()
+        all_installed = print_dependency_status(deps)
+        return 0 if all_installed else 1
+    
+    # Demo mode
+    if args.demo:
+        print("\n🎯 Running DEMO mode with test data...")
+        print("=" * 70)
+        
+        # Import recursive engine
+        try:
+            from src.core.recursive_engine_integration import JLAWRecursiveEngine
+            
+            engine = JLAWRecursiveEngine(
+                cik="0000320193",
+                company_name="Apple Inc. (Demo)",
+                year=2024,
+                output_dir=args.output,
+                enable_cache=True,
+                enable_pdf=not args.no_pdf
+            )
+            
+            results = await engine.run_full_analysis(generate_pdf=not args.no_pdf)
+            
+            print("\n✓ Demo analysis complete!")
+            print(f"  Results saved to: {args.output}/")
+            print(f"  Total violations: {results.get('total_violations', 0)}")
+            print(f"  Total alerts: {results.get('total_alerts', 0)}")
+            
+            return 0
+            
+        except ImportError as e:
+            print(f"\n✗ Error: Could not import recursive engine: {e}")
+            print("  Make sure all dependencies are installed.")
+            return 1
+        except Exception as e:
+            print(f"\n✗ Demo analysis failed: {e}")
+            return 1
     
     # Build configuration
     if args.cik or args.company:
