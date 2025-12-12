@@ -416,7 +416,7 @@ class IRC83TaxCalculator:
                         description=f"§83(b) election filed {(grant.section_83b_election_date - grant.grant_date).days} "
                                    f"days after grant (>30 day deadline). Election invalid.",
                         affected_individual=grant.recipient_name,
-                        tax_exposure=ordinary_income * self.ORDINARY_INCOME_RATE,
+                        tax_exposure=ordinary_income * Decimal("0.37"),  # Top federal rate
                         penalty_exposure=ordinary_income * Decimal("0.20"),  # 20% accuracy penalty
                         regulatory_citations=[
                             "IRC §83(b)",
@@ -446,7 +446,7 @@ class IRC83TaxCalculator:
                                        f"(${grant.grant_price} vs ${grant.fmv_at_grant}). "
                                        f"Discount triggers ordinary income recognition.",
                             affected_individual=grant.recipient_name,
-                            tax_exposure=discount_value * self.ORDINARY_INCOME_RATE,
+                            tax_exposure=discount_value * Decimal("0.37"),  # Top federal rate
                             penalty_exposure=discount_value * Decimal("0.20"),
                             regulatory_citations=[
                                 "IRC §83(a)",
@@ -527,8 +527,8 @@ class IRC83TaxCalculator:
                     description=f"Deferred compensation of ${deferred_amount:,.0f} may violate "
                                f"Section 409A substantial risk of forfeiture requirements",
                     affected_individual=person,
-                    tax_exposure=deferred_amount * self.ORDINARY_INCOME_RATE,
-                    penalty_exposure=deferred_amount * Decimal("0.20"),  # 20% additional tax
+                    tax_exposure=deferred_amount * Decimal("0.37"),  # Top federal rate
+                    penalty_exposure=deferred_amount * self.SECTION_409A_ADDITIONAL_TAX,  # 20% additional tax
                     regulatory_citations=[
                         "IRC §409A",
                         "Treas. Reg. §1.409A-1 through §1.409A-6"
@@ -553,8 +553,8 @@ class IRC83TaxCalculator:
                         description=f"Vested restricted stock generated ${ordinary_income:,.0f} "
                                    f"of ordinary income requiring W-2 reporting",
                         affected_individual=grant.recipient_name,
-                        tax_exposure=ordinary_income * self.ORDINARY_INCOME_RATE,
-                        penalty_exposure=ordinary_income * self.ORDINARY_INCOME_RATE * Decimal("0.05"),  # 5% per month
+                        tax_exposure=ordinary_income * Decimal("0.37"),  # Top federal rate
+                        penalty_exposure=ordinary_income * Decimal("0.37") * Decimal("0.05"),  # 5% per month
                         regulatory_citations=[
                             "IRC §83(a)",
                             "IRC §3401 (wage withholding)",
