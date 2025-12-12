@@ -100,3 +100,13 @@ gunicorn>=23.0.0
 celery>=5.4.0
 retry>=0.9.0
 tqdm>=4.65.0
+
+# ============================================
+# Nodes 2-5 Infrastructure Dependencies
+# ============================================
+
+# Local Caching (file-based, no Redis required)
+diskcache>=5.6.0
+
+# PDF Report Generation
+reportlab>=4.0.0

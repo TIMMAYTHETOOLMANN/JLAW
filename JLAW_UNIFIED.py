@@ -827,7 +827,7 @@ class UnifiedForensicEngine:
     # ═══════════════════════════════════════════════════════════════════════════════════════════
     
     async def _execute_phase_9_dossier_generation(self):
-        """Phase 9: Generate comprehensive DOJ-grade dossier."""
+        """Phase 9: Generate comprehensive DOJ-grade PDF dossier."""
         phase = AnalysisPhase.DOSSIER_GENERATION
         start = time.time()
         
@@ -836,6 +836,55 @@ class UnifiedForensicEngine:
         self.logger.info(f"{'═' * 70}")
         
         self.logger.info("  Compiling DOJ-grade dossier...")
+        
+        try:
+            # Import PDF generator
+            from src.reporting.pdf_generator import ForensicPDFGenerator
+            
+            # Compile analysis results
+            analysis_results = {
+                "total_violations": len(self.violations),
+                "critical_alerts": len([v for v in self.violations if v.severity == "CRITICAL"]),
+                "high_alerts": len([v for v in self.violations if v.severity == "HIGH"]),
+                "violations": [
+                    {
+                        "violation_type": v.violation_type,
+                        "severity": 8 if v.severity == "CRITICAL" else 6,
+                        "description": v.description,
+                        "evidence_hash": v.evidence_hash,
+                        "regulatory_citations": v.regulatory_citations,
+                        "detected_at": datetime.now().isoformat()
+                    }
+                    for v in self.violations
+                ],
+                "regulatory_routing": {
+                    "SEC": any("SEC" in v.regulatory_citations[0] for v in self.violations if v.regulatory_citations),
+                    "DOJ": any("DOJ" in str(v.regulatory_citations) for v in self.violations),
+                    "IRS": any("IRS" in str(v.regulatory_citations) or "IRC" in str(v.regulatory_citations) for v in self.violations)
+                },
+                "estimated_penalties": {
+                    "civil_minimum": 100000 * len(self.violations),
+                    "civil_maximum": 500000 * len(self.violations),
+                    "criminal_exposure": len([v for v in self.violations if v.severity == "CRITICAL"]) > 0,
+                    "prison_years_maximum": 20 if len([v for v in self.violations if v.severity == "CRITICAL"]) > 0 else 0
+                }
+            }
+            
+            # Generate PDF
+            generator = ForensicPDFGenerator()
+            pdf_path = generator.generate_forensic_dossier(
+                case_id=self.config.case_id,
+                company_name=self.config.company_name,
+                cik=self.config.cik,
+                analysis_results=analysis_results
+            )
+            
+            self.logger.info(f"  ✓ PDF dossier generated: {pdf_path}")
+            
+        except ImportError as e:
+            self.logger.warning(f"  ⚠ PDF generation skipped (ReportLab not installed): {e}")
+        except Exception as e:
+            self.logger.error(f"  ✗ PDF generation failed: {e}")
         
         duration = time.time() - start
         
