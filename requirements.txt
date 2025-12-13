@@ -70,6 +70,21 @@ scipy>=1.11.0
 xgboost>=2.0.0
 redis>=5.0.0
 
+# ============================================
+# Fortified Nodes 10-15 Dependencies
+# ============================================
+
+# Node 11: Network Analysis (Neo4j Integration)
+neo4j>=5.15.0  # Neo4j Python driver for graph database
+
+# Node 12: Earnings Call Analysis (DeBERTa)
+# transformers>=4.30.0 already included above
+# torch>=2.0.0 already included above
+
+# Node 15: Market Correlation (WebSocket + ML)
+websockets>=12.0  # WebSocket client for Polygon.io real-time data
+# scikit-learn>=1.3.0 already included above for Isolation Forest
+
 # Blueprint Integration Enhancements
 optuna>=3.0.0  # Bayesian optimization for XGBoost
 imbalanced-learn>=0.10.0  # SMOTE-ENN for class imbalance
