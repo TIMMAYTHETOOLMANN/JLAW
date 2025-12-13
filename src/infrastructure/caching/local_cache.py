@@ -11,8 +11,9 @@ import json
 import pickle
 import time
 from pathlib import Path
-from typing import Any, Optional, Callable
+from typing import Any, Optional, Callable, Dict, List
 from datetime import datetime, timedelta
+from dataclasses import dataclass, field
 import logging
 
 try:
@@ -204,6 +205,128 @@ def lru_cached_ticker_to_cik(ticker: str) -> Optional[str]:
     return None
 
 
+@dataclass
+class CacheEntry:
+    """Individual cache entry with metadata"""
+    key: str
+    value: Any
+    created_at: float
+    expires_at: Optional[float]
+    access_count: int = 0
+    last_accessed: float = field(default_factory=time.time)
+    
+    def is_expired(self) -> bool:
+        """Check if entry is expired"""
+        if self.expires_at is None:
+            return False
+        return time.time() > self.expires_at
+    
+    def access(self) -> None:
+        """Record access"""
+        self.access_count += 1
+        self.last_accessed = time.time()
+
+
+@dataclass  
+class CacheStatistics:
+    """Cache performance metrics"""
+    total_entries: int
+    total_size_bytes: int
+    hit_count: int
+    miss_count: int
+    eviction_count: int
+    hit_rate: float = 0.0
+    
+    def __post_init__(self):
+        """Calculate hit rate"""
+        total_requests = self.hit_count + self.miss_count
+        if total_requests > 0:
+            self.hit_rate = self.hit_count / total_requests
+
+
+class SECEdgarCache:
+    """
+    Specialized cache for SEC EDGAR filings with appropriate TTLs.
+    
+    Cache TTLs:
+    - Filing data: 24h (filings don't change once published)
+    - Company info: 1 week (company metadata changes infrequently)
+    - XBRL facts: 24h (financial data is immutable)
+    """
+    
+    # TTL Constants (seconds)
+    FILING_DATA_TTL = 86400        # 24 hours
+    COMPANY_INFO_TTL = 604800      # 1 week
+    XBRL_FACTS_TTL = 86400         # 24 hours
+    FORM4_TTL = 43200              # 12 hours (insider trades)
+    
+    def __init__(self, cache_dir: str = "./cache/sec_edgar"):
+        """Initialize SEC EDGAR cache"""
+        self.cache = LocalCache(cache_dir=cache_dir)
+        logger.info(f"Initialized SEC EDGAR cache at {cache_dir}")
+    
+    def get_filing(self, cik: str, form_type: str, filing_date: str) -> Optional[Dict]:
+        """Get cached filing data"""
+        key = f"filing:{cik}:{form_type}:{filing_date}"
+        return self.cache.get(key)
+    
+    def set_filing(self, cik: str, form_type: str, filing_date: str, data: Dict) -> None:
+        """Cache filing data"""
+        key = f"filing:{cik}:{form_type}:{filing_date}"
+        self.cache.set(key, data, ttl=self.FILING_DATA_TTL)
+    
+    def get_company_info(self, cik: str) -> Optional[Dict]:
+        """Get cached company information"""
+        key = f"company:{cik}"
+        return self.cache.get(key)
+    
+    def set_company_info(self, cik: str, data: Dict) -> None:
+        """Cache company information"""
+        key = f"company:{cik}"
+        self.cache.set(key, data, ttl=self.COMPANY_INFO_TTL)
+    
+    def get_xbrl_facts(self, cik: str, fiscal_year: int) -> Optional[Dict]:
+        """Get cached XBRL financial facts"""
+        key = f"xbrl:{cik}:{fiscal_year}"
+        return self.cache.get(key)
+    
+    def set_xbrl_facts(self, cik: str, fiscal_year: int, data: Dict) -> None:
+        """Cache XBRL financial facts"""
+        key = f"xbrl:{cik}:{fiscal_year}"
+        self.cache.set(key, data, ttl=self.XBRL_FACTS_TTL)
+    
+    def get_form4_transactions(self, cik: str, start_date: str, end_date: str) -> Optional[List]:
+        """Get cached Form 4 transactions"""
+        key = f"form4:{cik}:{start_date}:{end_date}"
+        return self.cache.get(key)
+    
+    def set_form4_transactions(self, cik: str, start_date: str, end_date: str, data: List) -> None:
+        """Cache Form 4 transactions"""
+        key = f"form4:{cik}:{start_date}:{end_date}"
+        self.cache.set(key, data, ttl=self.FORM4_TTL)
+    
+    def clear_company(self, cik: str) -> None:
+        """Clear all cached data for a company"""
+        # Pattern-based deletion (if supported by cache backend)
+        if hasattr(self.cache, 'clear_pattern'):
+            self.cache.clear_pattern(f"*:{cik}:*")
+        else:
+            logger.warning("Pattern-based cache clearing not supported")
+
+
+def cached(ttl: int = 3600, key_prefix: str = ""):
+    """
+    Function decorator for caching results
+    
+    Usage:
+        @cached(ttl=3600, key_prefix="expensive")
+        def expensive_function(arg1, arg2):
+            return result
+    """
+    cache = get_cache()
+    return cache.cached_function(ttl=ttl, key_prefix=key_prefix)
+
+
 # Example usage
 if __name__ == "__main__":
     # Initialize cache
@@ -232,3 +355,19 @@ if __name__ == "__main__":
     
     # Stats
     print(f"Cache stats: {cache.stats()}")
+    
+    # SEC EDGAR Cache demo
+    print("\n--- SEC EDGAR Cache Demo ---")
+    sec_cache = SECEdgarCache()
+    
+    # Cache a filing
+    sec_cache.set_filing(
+        cik="0000320193",
+        form_type="10-K",
+        filing_date="2024-03-15",
+        data={"revenue": 1000000, "net_income": 100000}
+    )
+    
+    # Retrieve filing
+    filing = sec_cache.get_filing("0000320193", "10-K", "2024-03-15")
+    print(f"Cached filing: {filing}")
