@@ -117,7 +117,7 @@ class TimescaleDBClient:
         port: int = 5432,
         database: str = "market_data",
         user: str = "postgres",
-        password: str = "password"
+        password: Optional[str] = None
     ):
         """
         Initialize TimescaleDB client.
@@ -127,13 +127,13 @@ class TimescaleDBClient:
             port: Database port
             database: Database name
             user: Database user
-            password: Database password
+            password: Database password (required for production)
         """
         self.host = host
         self.port = port
         self.database = database
         self.user = user
-        self.password = password
+        self.password = password or ""  # Empty string for development only
         
         self.pool: Optional[Any] = None
         self.mock_mode = not ASYNCPG_AVAILABLE

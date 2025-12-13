@@ -76,9 +76,13 @@ class RFC3161Client:
     
     AUTHORITIES = {
         "freetsa": "https://freetsa.org/tsr",
-        "digicert": "http://timestamp.digicert.com",
+        "digicert": "http://timestamp.digicert.com",  # Note: DigiCert uses HTTP for TSA protocol
         "local": "local"
     }
+    
+    # Note: DigiCert TSA endpoint uses HTTP as per RFC 3161 standard.
+    # The timestamp response itself is cryptographically signed by the TSA,
+    # ensuring integrity regardless of transport protocol.
     
     def __init__(self, authority: str = "local"):
         """
