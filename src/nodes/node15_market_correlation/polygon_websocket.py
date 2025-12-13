@@ -26,7 +26,7 @@ class PolygonWebSocketClient:
         self.api_key = api_key
         self.websocket_url = websocket_url
         self.logger = logger
-        self.mock_mode = not api_key
+        self.mock_mode = api_key is None or (isinstance(api_key, str) and api_key.strip() == '')
     
     async def connect(self):
         """Connect to WebSocket."""

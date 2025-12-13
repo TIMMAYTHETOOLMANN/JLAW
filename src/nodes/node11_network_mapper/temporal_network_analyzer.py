@@ -296,6 +296,8 @@ class TemporalNetworkAnalyzer:
             # New nodes
             new_nodes = nodes2 - nodes1
             for node_id in new_nodes:
+                if node_id not in snapshot2.centrality_metrics:
+                    continue
                 metrics = snapshot2.centrality_metrics[node_id]
                 changes.append(NetworkChange(
                     change_type='node_added',

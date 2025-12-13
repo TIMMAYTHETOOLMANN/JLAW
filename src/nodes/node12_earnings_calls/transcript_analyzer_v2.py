@@ -13,7 +13,6 @@ from dataclasses import dataclass, field
 from datetime import datetime, date
 from typing import List, Dict, Any, Optional
 from enum import Enum
-import hashlib
 import logging
 
 from .deberta_detector import DeBERTaContradictionDetector, ContradictionResult
