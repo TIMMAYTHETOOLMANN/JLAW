@@ -434,4 +434,135 @@ class SECEdgarClient:
             start_date=start_date,
             end_date=end_date
         )
+    
+    async def get_company_concept(
+        self,
+        cik: str,
+        taxonomy: str,
+        concept: str
+    ) -> Optional[Dict]:
+        """
+        Get company concept data from XBRL API.
+        
+        Args:
+            cik: Company CIK
+            taxonomy: Taxonomy (e.g., "us-gaap", "ifrs-full")
+            concept: Concept tag (e.g., "Revenues", "AccountsReceivableNetCurrent")
+            
+        Returns:
+            Company concept JSON with time series data
+            
+        Example:
+            concept = await client.get_company_concept(
+                "320193", "us-gaap", "Revenues"
+            )
+        """
+        cik_padded = cik.zfill(10)
+        url = f"{self.BASE_URL}/api/xbrl/companyconcept/CIK{cik_padded}/{taxonomy}/{concept}.json"
+        return await self._fetch_json(url)
+    
+    async def get_frames(
+        self,
+        taxonomy: str,
+        concept: str,
+        unit: str,
+        period: str
+    ) -> Optional[Dict]:
+        """
+        Get frames data (all companies for a given concept/period).
+        
+        Args:
+            taxonomy: Taxonomy (e.g., "us-gaap")
+            concept: Concept tag (e.g., "Revenues")
+            unit: Unit (e.g., "USD")
+            period: Period in format CY2023Q4I or CY2023
+            
+        Returns:
+            Frames JSON with all companies reporting that concept
+            
+        Example:
+            frames = await client.get_frames(
+                "us-gaap", "Revenues", "USD", "CY2023"
+            )
+        """
+        url = f"{self.BASE_URL}/api/xbrl/frames/{taxonomy}/{concept}/{unit}/{period}.json"
+        return await self._fetch_json(url)
+    
+    async def get_ticker_cik_mapping(self) -> Optional[Dict[str, str]]:
+        """
+        Get ticker to CIK mapping from SEC.
+        
+        Returns:
+            Dictionary mapping ticker symbols to CIKs
+            
+        Example:
+            mapping = await client.get_ticker_cik_mapping()
+            cik = mapping.get("AAPL")  # Returns "320193"
+        """
+        url = "https://www.sec.gov/files/company_tickers.json"
+        data = await self._fetch_json(url)
+        if not data:
+            return None
+        
+        # Convert to simple ticker -> CIK mapping
+        mapping = {}
+        for entry in data.values():
+            ticker = entry.get("ticker", "").upper()
+            cik = str(entry.get("cik_str", ""))
+            if ticker and cik:
+                mapping[ticker] = cik
+        
+        return mapping
+    
+    async def cik_from_ticker(self, ticker: str) -> Optional[str]:
+        """
+        Get CIK from ticker symbol.
+        
+        Args:
+            ticker: Stock ticker symbol (e.g., "AAPL")
+            
+        Returns:
+            CIK string or None if not found
+        """
+        mapping = await self.get_ticker_cik_mapping()
+        if mapping:
+            return mapping.get(ticker.upper())
+        return None
+    
+    async def extract_xbrl_concepts(
+        self,
+        cik: str,
+        fiscal_year: int,
+        concepts: List[str],
+        taxonomy: str = "us-gaap"
+    ) -> Dict[str, Any]:
+        """
+        Extract multiple XBRL concepts for a fiscal year.
+        
+        Args:
+            cik: Company CIK
+            fiscal_year: Fiscal year
+            concepts: List of concept names (e.g., ["Revenues", "Assets"])
+            taxonomy: Taxonomy to use (default: "us-gaap")
+            
+        Returns:
+            Dictionary mapping concept names to values
+        """
+        results = {}
+        
+        for concept in concepts:
+            data = await self.get_company_concept(cik, taxonomy, concept)
+            if data and "units" in data:
+                # Try to find USD values
+                units = data.get("units", {})
+                usd_values = units.get("USD", [])
+                
+                # Find value for the requested fiscal year
+                for fact in usd_values:
+                    if (fact.get("fy") == fiscal_year and 
+                        fact.get("form") in ["10-K", "10-Q"]):
+                        results[concept] = fact.get("val")
+                        break
+        
+        return results
 
