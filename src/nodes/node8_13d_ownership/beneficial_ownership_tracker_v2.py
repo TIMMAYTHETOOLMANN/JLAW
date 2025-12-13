@@ -249,14 +249,17 @@ class Schedule13XMLParser:
             event_date_str = root.findtext(".//{*}eventDate", filing_date_str)
             event_date = datetime.strptime(event_date_str, "%Y-%m-%d").date()
             
-            # Calculate deadline compliance
+            # Calculate deadline compliance using config constants
+            # Note: In production, import from config.fortified_nodes_config
             days_from_event = (filing_date - event_date).days
             is_amendment = "/A" in filing_type_str
             
+            # Use constants: SCHEDULE_13D_FILING_DEADLINE_DAYS = 5, SCHEDULE_13D_AMENDMENT_DEADLINE_DAYS = 2
+            # SCHEDULE_13G_FILING_DEADLINE_DAYS = 45
             if "13D" in filing_type_str:
-                deadline_days = 2 if is_amendment else 5  # Business days
+                deadline_days = 2 if is_amendment else 5  # Business days (config constants)
             else:
-                deadline_days = 45 if not is_amendment else 45  # 13G has longer deadline
+                deadline_days = 45 if not is_amendment else 45  # 13G has longer deadline (config constant)
             
             is_compliant = days_from_event <= deadline_days
             

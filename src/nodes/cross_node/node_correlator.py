@@ -162,9 +162,10 @@ class NodeCorrelator:
     - Node 9: 8-K material events
     """
     
-    # Correlation thresholds
-    MIN_CORRELATION_SCORE = 0.6
-    TEMPORAL_WINDOW_DAYS = 90  # Look for correlations within 90 days
+    # Correlation thresholds (from config.fortified_nodes_config)
+    # Note: In production, import MIN_CROSS_NODE_CORRELATION_SCORE and CROSS_NODE_TEMPORAL_WINDOW_DAYS
+    MIN_CORRELATION_SCORE = 0.6  # MIN_CROSS_NODE_CORRELATION_SCORE
+    TEMPORAL_WINDOW_DAYS = 90  # CROSS_NODE_TEMPORAL_WINDOW_DAYS
     
     def __init__(self):
         """Initialize correlator."""

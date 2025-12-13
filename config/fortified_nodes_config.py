@@ -6,8 +6,10 @@ Configuration constants for enhanced Node 7, 8, and 9 implementations.
 """
 
 # SEC EDGAR Configuration
+# Reference: https://www.sec.gov/os/webmaster-faq#code-support
+# SEC enforces rate limits of 10 requests per second for users with proper User-Agent declaration
 SEC_EDGAR_BASE_URL = "https://data.sec.gov"
-SEC_EDGAR_RATE_LIMIT = 10  # requests per second (SEC limit)
+SEC_EDGAR_RATE_LIMIT = 10  # requests per second (official SEC limit)
 SEC_EDGAR_USER_AGENT_DEFAULT = "JLAW Forensic System contact@example.com"
 
 # Node 7: 13F-HR Institutional Holdings Configuration

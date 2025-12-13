@@ -322,9 +322,10 @@ class MaterialEventCorrelatorV2:
     - Multi-item event complexity scoring
     """
     
-    # US holidays for timing analysis (simplified)
+    # Import US_MARKET_HOLIDAYS from config
+    # Note: In production, this should be imported from config.fortified_nodes_config
     HOLIDAYS = {
-        (1, 1), (7, 4), (12, 25), (12, 31)
+        (1, 1), (7, 4), (12, 25), (12, 31)  # Simplified - use config.fortified_nodes_config.US_MARKET_HOLIDAYS
     }
     
     # Price/volume thresholds

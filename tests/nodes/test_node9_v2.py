@@ -9,7 +9,8 @@ from src.nodes.node9_8k_events.material_event_correlator_v2 import (
     MaterialEvent8KV2,
     MarketImpactAnalysis,
     MarketHoursStatus,
-    EventAlertType
+    EventAlertType,
+    CorrelatedTrade
 )
 from src.nodes.node9_8k_events.market_data_client import (
     MockMarketDataClient,
@@ -199,8 +200,6 @@ class TestMaterialEventCorrelatorV2:
     def test_risk_score_calculation(self):
         """Test risk score calculation."""
         correlator = MaterialEventCorrelatorV2()
-        
-        from src.nodes.node9_8k_events.material_event_correlator_v2 import CorrelatedTrade
         
         # High risk: many sales before negative event
         trades = [
