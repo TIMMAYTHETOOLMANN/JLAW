@@ -91,6 +91,8 @@ def load_all_keys() -> Dict[str, bool]:
         'OPENROUTER_API_KEY': {'required': False, 'prefix': 'sk-or-'},
         'GOVINFO_API_KEY': {'required': False, 'prefix': None},
         'SEC_USER_AGENT': {'required': True, 'prefix': None},
+        'POLYGON_API_KEY': {'required': False, 'prefix': None},
+        'SEC_EDGAR_USER_AGENT': {'required': False, 'prefix': None},
     }
     
     results = {}
@@ -129,6 +131,8 @@ def print_configuration_status():
         ('OPENROUTER_API_KEY', 'OpenRouter'),
         ('GOVINFO_API_KEY', 'GovInfo'),
         ('SEC_USER_AGENT', 'SEC User Agent'),
+        ('POLYGON_API_KEY', 'Polygon.io Market Data'),
+        ('SEC_EDGAR_USER_AGENT', 'SEC EDGAR User Agent'),
     ]
     
     for key_name, display_name in keys_to_check:
