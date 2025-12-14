@@ -131,18 +131,18 @@ class RecursiveProsecutorialEngineV2:
         from src.nodes.node1_form4.short_swing_calc import ShortSwingCalculator
         from src.nodes.node1_form4.gift_pattern_detector import GiftPatternDetector
         
-        # NEW: Nodes 2-5
-        from src.nodes.node2_def14a.compensation_analyzer import DEF14ACompensationAnalyzer
-        from src.nodes.node3_10q.temporal_consistency_validator import TemporalConsistencyValidator
-        from src.nodes.node4_10k_sox.sox_certification_analyzer import SOXCertificationAnalyzer
-        from src.nodes.node5_irs.irc83_tax_calculator import IRC83TaxCalculator
+        # Nodes 2-5: Import from unified module packages
+        from src.nodes.node2_def14a import DEF14ACompensationAnalyzer
+        from src.nodes.node3_10q import TemporalConsistencyValidator
+        from src.nodes.node4_10k_sox import SOXCertificationAnalyzer
+        from src.nodes.node5_irs import IRC83TaxCalculator
         from src.nodes.node6_routing.enforcement_router import EnforcementRouter
         
         self.form4_parser = Form4Parser()
         self.short_swing_calc = ShortSwingCalculator()
         self.gift_detector = GiftPatternDetector()
         
-        # NEW: Initialize Nodes 2-5
+        # Initialize Nodes 2-5
         self.node2_def14a = DEF14ACompensationAnalyzer()
         self.node3_10q = TemporalConsistencyValidator()
         self.node4_sox = SOXCertificationAnalyzer()
@@ -405,7 +405,7 @@ class RecursiveProsecutorialEngineV2:
         self, sec_client, cik: str, start_date: date, end_date: date, company_name: str
     ) -> NodeResult:
         """Execute Node 2: DEF 14A Compensation Analysis."""
-        from src.nodes.node2_def14a.compensation_analyzer import DEF14ACompensationAnalyzer
+        from src.nodes.node2_def14a import DEF14ACompensationAnalyzer
         
         start = time.time()
         violations = []
