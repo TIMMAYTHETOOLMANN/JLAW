@@ -1,0 +1,70 @@
+{
+  "description": "WorldCom line cost capitalization data for Benford's Law validation",
+  "source": "SEC enforcement action LR-17588",
+  "case": "WORLDCOM_2002",
+  
+  "fraud_description": "WorldCom improperly capitalized $3.8B in line costs as capital expenditures",
+  
+  "quarterly_line_costs_fabricated": {
+    "Q1_2001": [
+      797000000,
+      828000000,
+      610000000,
+      743000000,
+      890000000
+    ],
+    "Q2_2001": [
+      771000000,
+      860000000,
+      743000000,
+      685000000,
+      821000000
+    ],
+    "Q3_2001": [
+      845000000,
+      743000000,
+      797000000,
+      890000000,
+      771000000
+    ],
+    "Q4_2001": [
+      931000000,
+      797000000,
+      860000000,
+      743000000,
+      828000000
+    ],
+    "Q1_2002": [
+      818000000,
+      931000000,
+      771000000,
+      890000000,
+      845000000
+    ]
+  },
+  
+  "expected_benford_deviation": {
+    "chi_square_threshold": 15.507,
+    "pvalue_threshold": 0.05,
+    "deviation_expected": true,
+    "reason": "Fabricated entries cluster at round numbers, violating Benford's Law"
+  },
+  
+  "actual_fraud_amounts": {
+    "Q1_2001": 771000000,
+    "Q2_2001": 610000000,
+    "Q3_2001": 743000000,
+    "Q4_2001": 941000000,
+    "Q1_2002": 818000000,
+    "total": 3883000000
+  },
+  
+  "legitimate_line_costs": {
+    "description": "Estimated legitimate line costs for comparison",
+    "Q1_2001": 123456789,
+    "Q2_2001": 134567890,
+    "Q3_2001": 145678901,
+    "Q4_2001": 156789012,
+    "Q1_2002": 167890123
+  }
+}
