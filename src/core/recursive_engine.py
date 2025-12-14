@@ -319,7 +319,7 @@ class RecursiveProsecutorialEngineV2:
                     company_name=company_name
                 )
                 correlation_time = time.time() - correlation_start
-                print(f"  ✓ Cross-node correlation completed ({len(correlation_analysis.alerts)} alerts)")
+                print(f"  ✓ Cross-node correlation completed ({len(correlation_analysis.cross_node_alerts)} alerts)")
             except Exception as e:
                 print(f"  ⚠ Cross-node correlation failed: {str(e)}")
                 logger.warning(f"Cross-node correlation failed: {e}")
