@@ -390,7 +390,9 @@ class TestCompensationAnalysisResult:
             filing_date=date(2024, 4, 15),
             accession_number="0000320187-24-000001",
             neo_compensation=[],
-            total_neo_compensation=Decimal("0")
+            total_neo_compensation=Decimal("0"),
+            say_on_pay_vote=None,
+            ceo_pay_ratio=None
         )
         
         assert result.cik == "0000320187"
@@ -399,3 +401,5 @@ class TestCompensationAnalysisResult:
         assert result.total_neo_compensation == Decimal("0")
         assert result.violations == []
         assert result.red_flags == []
+        assert result.say_on_pay_vote is None
+        assert result.ceo_pay_ratio is None
