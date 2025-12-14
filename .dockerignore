@@ -59,12 +59,14 @@ forensic_storage/
 .env
 .env.*
 
-# Documentation
-*.md
+# Documentation (keep README.md, exclude others)
+!README.md
 docs/
 IMPLEMENTATION_*.md
 FORTIFIED_*.md
 NODES_*.md
+JLAW_LOCAL_DEPLOYMENT_*.md
+NODE2_*.md
 
 # CI/CD
 .github/

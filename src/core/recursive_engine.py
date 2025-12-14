@@ -313,9 +313,11 @@ class RecursiveProsecutorialEngineV2:
             print("\n🔗 Cross-Node Correlation Analysis")
             try:
                 correlation_start = time.time()
-                # Collect all phase 1 and 2 results for correlation
-                all_results = phase1_results + phase2_results
-                correlation_analysis = self.node_correlator.correlate_nodes(all_results)
+                # Generate unified cross-node analysis
+                correlation_analysis = self.node_correlator.generate_unified_analysis(
+                    cik=cik,
+                    company_name=company_name
+                )
                 correlation_time = time.time() - correlation_start
                 print(f"  ✓ Cross-node correlation completed ({len(correlation_analysis.alerts)} alerts)")
             except Exception as e:

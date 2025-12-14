@@ -35,7 +35,7 @@ jobs:
     - name: Lint with ruff
       run: |
         # Stop the build if there are Python syntax errors or undefined names
-        ruff check . --select=E9,F63,F7,F82 --target-version=py39
+        ruff check . --select=E9,F63,F7,F82
       continue-on-error: true
 
     - name: Lint with flake8
