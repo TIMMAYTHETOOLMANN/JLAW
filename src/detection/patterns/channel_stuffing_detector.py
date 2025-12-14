@@ -293,6 +293,9 @@ class ChannelStuffingDetector:
         accounts_receivable = quarter_data['accounts_receivable']
         
         # Calculate DSO: (AR / Revenue) * 90 days
+        # NOTE: Using 90 days as standard quarter length. For more precision,
+        # calculate actual days in quarter or make this configurable.
+        # This approximation is standard in financial analysis.
         days_sales_outstanding = (accounts_receivable / total_revenue * 90) if total_revenue > 0 else 0
         
         # Calculate changes vs prior quarter

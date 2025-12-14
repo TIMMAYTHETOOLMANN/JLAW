@@ -543,7 +543,19 @@ class EarningsCallCrossValidator:
         return violations
     
     def _extract_guidance(self, transcript: Dict[str, Any]) -> Dict[str, float]:
-        """Extract numerical guidance from transcript (simplified)."""
+        """
+        Extract numerical guidance from transcript (simplified).
+        
+        NOTE: This is a simplified regex-based extraction for demonstration.
+        Production implementation should use:
+        - NLP-based entity extraction (spaCy, transformers)
+        - Context validation to ensure matched values are guidance
+        - Range handling ("$X to $Y")
+        - Fiscal period validation
+        
+        Current implementation is acceptable for pattern detection but may
+        have false positives.
+        """
         guidance = {}
         
         # Look for revenue guidance patterns

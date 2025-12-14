@@ -292,10 +292,18 @@ class CourtPDFGenerator:
         story.extend(self._build_attestation_page(case_caption, certifying_person))
         
         # Build PDF with page numbers and optional watermark
+        # Note: We use a page counter since doc.page doesn't exist in ReportLab
+        page_counter = {'current': 0}
+        
+        def on_page(canvas, doc, is_first=False):
+            if not is_first:
+                page_counter['current'] += 1
+            self._add_page_decorations(canvas, doc, page_counter['current'] if not is_first else 1, watermark)
+        
         doc.build(
             story,
-            onFirstPage=lambda canvas, doc: self._add_page_decorations(canvas, doc, 1, watermark),
-            onLaterPages=lambda canvas, doc: self._add_page_decorations(canvas, doc, doc.page, watermark)
+            onFirstPage=lambda canvas, doc: on_page(canvas, doc, is_first=True),
+            onLaterPages=lambda canvas, doc: on_page(canvas, doc, is_first=False)
         )
         
         logger.info(f"Court-ready PDF report generated: {output_path}")
@@ -689,7 +697,9 @@ I am available to provide testimony regarding the contents of this report and th
         # Add watermark if specified
         if watermark:
             canvas.setFont(self.TITLE_FONT_NAME, 60)
-            canvas.setFillColorRGB(0.9, 0.9, 0.9, alpha=0.3)
+            # ReportLab's setFillColorRGB doesn't support alpha parameter
+            # Using light gray color (0.9, 0.9, 0.9) for watermark effect
+            canvas.setFillColorRGB(0.9, 0.9, 0.9)
             canvas.saveState()
             canvas.translate(4.25 * inch, 5.5 * inch)
             canvas.rotate(45)

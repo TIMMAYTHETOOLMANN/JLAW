@@ -396,7 +396,16 @@ class OptionsBackdatingDetector:
         return False
     
     def _calculate_business_days(self, start_date: date, end_date: date) -> int:
-        """Calculate business days between two dates (simplified)."""
+        """
+        Calculate business days between two dates (simplified).
+        
+        NOTE: This is a simplified calculation using 5/7 ratio.
+        For production use, consider using a proper business day library
+        (e.g., pandas.bdate_range) that accounts for actual weekends and holidays.
+        
+        This approximation is acceptable for fraud detection threshold checking
+        where exact precision is less critical than pattern identification.
+        """
         if start_date > end_date:
             return 0
         
