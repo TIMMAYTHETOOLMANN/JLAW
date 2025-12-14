@@ -18,6 +18,9 @@ import time
 
 logger = logging.getLogger(__name__)
 
+# Configuration constants
+MAX_DEF14A_FILINGS_TO_ANALYZE = 3  # Limit number of proxy statements analyzed per run
+
 
 @dataclass
 class NodeResult:
@@ -402,50 +405,90 @@ class RecursiveProsecutorialEngineV2:
         self, sec_client, cik: str, start_date: date, end_date: date, company_name: str
     ) -> NodeResult:
         """Execute Node 2: DEF 14A Compensation Analysis."""
+        from src.nodes.node2_def14a.compensation_analyzer import DEF14ACompensationAnalyzer
+        
         start = time.time()
+        violations = []
+        alerts = []
         
         try:
-            # Fetch latest proxy statement (DEF 14A)
-            proxy_filings = await sec_client.get_filings(cik, "DEF 14A", start_date, end_date, limit=1)
+            # Fetch DEF 14A filings
+            def14a_filings = await sec_client.get_filings(
+                cik=cik,
+                form_types=["DEF 14A"],
+                start_date=start_date,
+                end_date=end_date
+            )
             
-            if not proxy_filings:
-                logger.info("No DEF 14A filings found")
+            if not def14a_filings:
                 return NodeResult(
-                    node_id="NODE_2", node_name="DEF 14A Analysis",
-                    status="success", violations_found=0, alerts_generated=0,
-                    findings={"proxy_statements_analyzed": 0},
+                    node_id="NODE_2",
+                    node_name="DEF 14A Compensation",
+                    status="no_data",
+                    violations_found=0,
+                    alerts_generated=0,
+                    findings={"message": "No DEF 14A filings found in date range"},
                     execution_time_seconds=time.time() - start
                 )
             
-            # Get proxy text
-            proxy_text = await sec_client.get_filing_text(proxy_filings[0])
+            analyzer = DEF14ACompensationAnalyzer(mock_mode=False)
             
-            # Placeholder financials - would extract from 10-K
-            financials = {
-                "total_shareholder_return": 0,
-                "revenue_growth_pct": 0,
-                "eps_growth_pct": 0,
-                "prior_year_ceo_comp": 0
-            }
+            # Analyze each DEF 14A filing
+            all_results = []
+            for filing in def14a_filings[:MAX_DEF14A_FILINGS_TO_ANALYZE]:
+                # Fetch filing content
+                filing_content = await sec_client.get_filing_content(filing)
+                
+                if not filing_content:
+                    continue
+                
+                # Run analysis
+                result = await analyzer.analyze_proxy(
+                    proxy_content=filing_content,
+                    cik=cik,
+                    company_name=company_name,
+                    fiscal_year=filing.filing_date.year,
+                    filing_date=filing.filing_date,
+                    accession_number=filing.accession_number,
+                    prior_year_data=None  # Would pass prior year result if available
+                )
+                
+                all_results.append(result)
+                
+                # Collect violations
+                violations.extend(result.violations)
+                alerts.extend(result.red_flags)
             
-            # Analyze
-            results = self.node2_def14a.analyze_proxy_statement(proxy_text, financials)
+            # Use most recent result for summary stats
+            latest_result = all_results[0] if all_results else None
             
             return NodeResult(
                 node_id="NODE_2",
-                node_name="DEF 14A Analysis",
+                node_name="DEF 14A Compensation",
                 status="success",
-                violations_found=results.get('violations_detected', 0),
-                alerts_generated=results.get('violations_detected', 0),
-                findings=results,
+                violations_found=len(violations),
+                alerts_generated=len(alerts),
+                findings={
+                    "filings_analyzed": len(all_results),
+                    "total_neo_compensation": str(latest_result.total_neo_compensation) if latest_result else "0",
+                    "pay_performance_score": latest_result.pay_performance_alignment_score if latest_result else 0,
+                    "governance_score": latest_result.governance_score if latest_result else 0,
+                    "disclosure_score": latest_result.disclosure_quality_score if latest_result else 0,
+                    "ceo_pay_ratio": latest_result.ceo_pay_ratio.pay_ratio if latest_result and latest_result.ceo_pay_ratio else None
+                },
                 execution_time_seconds=time.time() - start
             )
+            
         except Exception as e:
-            logger.error(f"Node 2 error: {e}")
+            logger.error(f"Node 2 error: {e}", exc_info=True)
             return NodeResult(
-                node_id="NODE_2", node_name="DEF 14A Analysis",
-                status="error", violations_found=0, alerts_generated=0,
-                findings={}, execution_time_seconds=time.time() - start,
+                node_id="NODE_2",
+                node_name="DEF 14A Compensation",
+                status="error",
+                violations_found=0,
+                alerts_generated=0,
+                findings={},
+                execution_time_seconds=time.time() - start,
                 error_message=str(e)
             )
     
