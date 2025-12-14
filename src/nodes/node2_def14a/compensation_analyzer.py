@@ -54,9 +54,9 @@ class AwardVestingType(Enum):
 
 class SayOnPayOutcome(Enum):
     """Classification of Say-on-Pay voting outcomes."""
-    STRONG_SUPPORT = "strong_support"  # >90% approval
-    APPROVED = "approved"  # 50-90% approval
-    WEAK_SUPPORT = "weak_support"  # 50-70% approval
+    STRONG_SUPPORT = "strong_support"  # ≥90% approval
+    APPROVED = "approved"  # 70-89% approval
+    WEAK_SUPPORT = "weak_support"  # 50-69% approval
     REJECTED = "rejected"  # <50% approval
 
 
@@ -413,7 +413,17 @@ class DEF14ACompensationAnalyzer:
     async def _extract_neo_compensation(
         self, proxy_content: str, fiscal_year: int
     ) -> List[NEOCompensation]:
-        """Extract Named Executive Officer compensation from Summary Compensation Table."""
+        """
+        Extract Named Executive Officer compensation from Summary Compensation Table.
+        
+        NOTE: This is a simplified implementation. Production systems should use:
+        - XBRL-tagged compensation data when available
+        - Structured HTML/XML table parsing
+        - PDF extraction libraries for scanned documents
+        - Machine learning models for unstructured text
+        
+        For now, returns empty list for real proxy content (use mock_mode=True for testing).
+        """
         neo_list = []
         
         # Pattern to find Summary Compensation Table
@@ -421,15 +431,22 @@ class DEF14ACompensationAnalyzer:
         sct_match = re.search(sct_pattern, proxy_content)
         
         if not sct_match:
-            logger.warning("Summary Compensation Table not found")
+            logger.warning("Summary Compensation Table not found in proxy content")
             return neo_list
         
         # Extract table region
         table_region = proxy_content[sct_match.end():sct_match.end() + 10000]
         
-        # Simplified extraction - production would use structured parsing
-        # For demonstration, create sample NEO records
-        logger.info("Extracting NEO compensation data from Summary Compensation Table")
+        # TODO: Implement structured table parsing
+        # Production implementation would:
+        # 1. Parse HTML tables or XBRL tags
+        # 2. Extract executive names and titles
+        # 3. Parse monetary values from each compensation column
+        # 4. Classify performance-based vs time-based awards
+        # 5. Identify the CEO
+        
+        logger.info("NEO compensation extraction requires structured parsing (not yet implemented)")
+        logger.info("Use mock_mode=True for testing with generated data")
         
         return neo_list
     
@@ -507,7 +524,12 @@ class DEF14ACompensationAnalyzer:
     async def _extract_golden_parachutes(
         self, proxy_content: str, neo_list: List[NEOCompensation]
     ) -> List[GoldenParachute]:
-        """Extract golden parachute/change-in-control provisions."""
+        """
+        Extract golden parachute/change-in-control provisions.
+        
+        NOTE: Production implementation would parse specific sections of the proxy
+        for detailed severance provisions. Use mock_mode=True for testing.
+        """
         golden_parachutes = []
         
         # Pattern for change-in-control provisions
@@ -515,13 +537,18 @@ class DEF14ACompensationAnalyzer:
         if not re.search(cic_pattern, proxy_content):
             return golden_parachutes
         
-        logger.info("Golden parachute provisions detected")
+        logger.info("Golden parachute section detected - detailed parsing not yet implemented")
         return golden_parachutes
     
     async def _extract_related_party_transactions(
         self, proxy_content: str, filing_date: date
     ) -> List[RelatedPartyTransaction]:
-        """Scan for related party transactions per Item 404."""
+        """
+        Scan for related party transactions per Item 404.
+        
+        NOTE: Production implementation would parse Item 404 disclosures.
+        Use mock_mode=True for testing.
+        """
         transactions = []
         
         # Pattern for related party disclosure
@@ -529,7 +556,7 @@ class DEF14ACompensationAnalyzer:
         if not re.search(rpt_pattern, proxy_content):
             return transactions
         
-        logger.info("Related party transaction section found")
+        logger.info("Related party transaction section found - detailed parsing not yet implemented")
         return transactions
     
     async def _extract_clawback_policy(self, proxy_content: str) -> Optional[ClawbackPolicy]:

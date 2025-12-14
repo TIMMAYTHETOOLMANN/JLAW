@@ -18,6 +18,9 @@ import time
 
 logger = logging.getLogger(__name__)
 
+# Configuration constants
+MAX_DEF14A_FILINGS_TO_ANALYZE = 3  # Limit number of proxy statements analyzed per run
+
 
 @dataclass
 class NodeResult:
@@ -432,7 +435,7 @@ class RecursiveProsecutorialEngineV2:
             
             # Analyze each DEF 14A filing
             all_results = []
-            for filing in def14a_filings[:3]:  # Limit to 3 most recent
+            for filing in def14a_filings[:MAX_DEF14A_FILINGS_TO_ANALYZE]:
                 # Fetch filing content
                 filing_content = await sec_client.get_filing_content(filing)
                 
