@@ -1,0 +1,83 @@
+{
+  "description": "Luckin Coffee quarterly data for channel stuffing validation",
+  "source": "SEC enforcement action LR-24928",
+  "case": "LUCKIN_COFFEE_2020",
+  
+  "fraud_description": "Luckin Coffee fabricated over $310M in sales through fake transactions and channel stuffing",
+  
+  "quarterly_data": {
+    "Q1_2019": {
+      "revenue": 421600000,
+      "revenue_month1": 130000000,
+      "revenue_month2": 135000000,
+      "revenue_month3": 156600000,
+      "last_month_concentration": 0.3715,
+      "accounts_receivable": 95000000,
+      "allowance_doubtful": 2000000,
+      "return_rate": 0.018,
+      "credit_terms_days": 30,
+      "store_count": 2370
+    },
+    "Q2_2019": {
+      "revenue": 909090000,
+      "revenue_month1": 280000000,
+      "revenue_month2": 290000000,
+      "revenue_month3": 339090000,
+      "last_month_concentration": 0.373,
+      "accounts_receivable": 250000000,
+      "allowance_doubtful": 5000000,
+      "return_rate": 0.022,
+      "credit_terms_days": 32,
+      "store_count": 2963
+    },
+    "Q3_2019": {
+      "revenue": 1050000000,
+      "revenue_month1": 320000000,
+      "revenue_month2": 330000000,
+      "revenue_month3": 400000000,
+      "last_month_concentration": 0.381,
+      "accounts_receivable": 320000000,
+      "allowance_doubtful": 8000000,
+      "return_rate": 0.028,
+      "credit_terms_days": 35,
+      "store_count": 3680
+    },
+    "Q4_2019": {
+      "revenue": 1190000000,
+      "revenue_month1": 360000000,
+      "revenue_month2": 370000000,
+      "revenue_month3": 460000000,
+      "last_month_concentration": 0.387,
+      "accounts_receivable": 380000000,
+      "allowance_doubtful": 12000000,
+      "return_rate": 0.045,
+      "credit_terms_days": 40,
+      "store_count": 4507
+    }
+  },
+  
+  "fraud_indicators": {
+    "fabricated_revenue": 310000000,
+    "fabrication_period": "Q2_2019 to Q4_2019",
+    "methods": [
+      "Fake purchase orders",
+      "Inflated same-store sales",
+      "Related party transactions",
+      "Channel stuffing to distributors"
+    ],
+    "red_flags": [
+      "Quarter-end revenue concentration above 40%",
+      "AR growing faster than revenue",
+      "DSO increasing quarter-over-quarter",
+      "Return rates spiking",
+      "Credit terms extending"
+    ]
+  },
+  
+  "detection_expectations": {
+    "quarter_end_concentration": "Should flag Q3 and Q4 2019",
+    "ar_revenue_divergence": "Should flag all quarters Q2-Q4 2019",
+    "dso_acceleration": "Should flag Q2-Q4 2019",
+    "overall_severity": "HIGH or CRITICAL"
+  }
+}

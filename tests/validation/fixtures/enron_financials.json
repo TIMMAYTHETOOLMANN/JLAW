@@ -1,0 +1,74 @@
+{
+  "description": "Enron Corporation financial data for M-Score validation",
+  "source": "SEC EDGAR filings and public records",
+  "case": "ENRON_2001",
+  
+  "1998": {
+    "revenue": 31300000000,
+    "accounts_receivable": 2100000000,
+    "current_assets": 5900000000,
+    "total_assets": 29300000000,
+    "cogs": 27300000000,
+    "gross_margin": 4000000000,
+    "depreciation": 700000000,
+    "sg_a": 1600000000,
+    "total_liabilities": 18200000000,
+    "shareholders_equity": 11100000000,
+    "net_income": 700000000,
+    "cash_flow_operations": 1200000000
+  },
+  
+  "1999": {
+    "revenue": 40100000000,
+    "accounts_receivable": 3000000000,
+    "current_assets": 7300000000,
+    "total_assets": 33400000000,
+    "cogs": 34800000000,
+    "gross_margin": 5300000000,
+    "depreciation": 800000000,
+    "sg_a": 1900000000,
+    "total_liabilities": 20800000000,
+    "shareholders_equity": 12600000000,
+    "net_income": 890000000,
+    "cash_flow_operations": 1500000000
+  },
+  
+  "2000": {
+    "revenue": 100800000000,
+    "accounts_receivable": 10400000000,
+    "current_assets": 30400000000,
+    "total_assets": 65500000000,
+    "cogs": 94500000000,
+    "gross_margin": 6300000000,
+    "depreciation": 900000000,
+    "sg_a": 2500000000,
+    "total_liabilities": 54000000000,
+    "shareholders_equity": 11500000000,
+    "net_income": 980000000,
+    "cash_flow_operations": 800000000
+  },
+  
+  "2001_q3": {
+    "revenue": 138700000000,
+    "accounts_receivable": 14300000000,
+    "current_assets": 35200000000,
+    "total_assets": 61800000000,
+    "cogs": 130900000000,
+    "gross_margin": 7800000000,
+    "depreciation": 800000000,
+    "sg_a": 3000000000,
+    "total_liabilities": 58000000000,
+    "shareholders_equity": 3800000000,
+    "net_income": -640000000,
+    "cash_flow_operations": -1000000000
+  },
+  
+  "fraud_indicators": {
+    "dsri_escalation": "Receivables grew faster than sales",
+    "gmi_deterioration": "Gross margin deteriorating despite revenue growth",
+    "aqi_decline": "Asset quality declining with SPE manipulation",
+    "sgi_high_growth": "Massive revenue growth created manipulation incentive",
+    "depi_declining": "Depreciation declining despite asset growth",
+    "tata_high_accruals": "High accruals relative to assets"
+  }
+}
