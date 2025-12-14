@@ -309,6 +309,30 @@ class SECEdgarClient:
         # Form 4 XML is usually the primary document
         return await self._fetch(filing.document_url)
     
+    async def get_filing_text(self, filing: SECFiling) -> Optional[str]:
+        """
+        Get filing text content.
+        
+        Args:
+            filing: SECFiling object
+            
+        Returns:
+            Raw text content string
+        """
+        return await self._fetch(filing.document_url)
+    
+    async def get_filing_content(self, filing: SECFiling) -> Optional[str]:
+        """
+        Get filing content (alias for get_filing_text).
+        
+        Args:
+            filing: SECFiling object
+            
+        Returns:
+            Raw content string
+        """
+        return await self.get_filing_text(filing)
+    
     async def get_xbrl_facts(self, cik: str) -> Optional[Dict]:
         """
         Get XBRL company facts.
