@@ -62,7 +62,7 @@ class BountyEstimate:
     
     def __repr__(self) -> str:
         """Prevent accidental serialization."""
-        return f"<BountyEstimate [INTERNAL USE ONLY - DO NOT SERIALIZE]>"
+        return "<BountyEstimate [INTERNAL USE ONLY - DO NOT SERIALIZE]>"
     
     def __str__(self) -> str:
         """Prevent accidental serialization."""

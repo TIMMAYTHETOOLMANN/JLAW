@@ -3,13 +3,13 @@ Comprehensive Test Suite for JLAW Nodes 2-5 System Unification
 ===============================================================
 
 Tests all node implementations, module exports, and internal access controls.
-Validates that nodes support mock_mode, proper exports, and evidence chain hashing.
+Validates proper exports, internal access control, and evidence chain hashing.
 
-Total: 39 test cases covering:
-- Node 2: DEF 14A Compensation Analysis (8 tests)
-- Node 3: 10-Q Temporal Consistency (8 tests)
-- Node 4: 10-K SOX Certification (8 tests)
-- Node 5: IRC §83 Tax Calculator (8 tests)
+Total: 35 test cases covering:
+- Node 2: DEF 14A Compensation Analysis (7 tests)
+- Node 3: 10-Q Temporal Consistency (7 tests)
+- Node 4: 10-K SOX Certification (7 tests)
+- Node 5: IRC §83 Tax Calculator (7 tests)
 - Internal Module Access Control (5 tests)
 - Unified Package Exports (2 tests)
 """

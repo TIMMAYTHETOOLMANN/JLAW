@@ -2,14 +2,16 @@
 JLAW Nodes Package - Unified Exports
 ====================================
 
-Centralized exports for all 15 node modules in the JLAW system.
+Centralized exports for JLAW node modules.
 Each node is responsible for specific SEC filing analysis and violation detection.
 
-Architecture:
-- Nodes 1-6: Core SEC Filing Analysis (Phase 1)
-- Nodes 7-12: Extended Intelligence (Phase 2)
-- Nodes 13-14: Financial Health Prediction (Phase 3)
-- Node 15: Market Correlation (Phase 4)
+This module currently provides unified exports for Nodes 2-5:
+- Node 2: DEF 14A Compensation Analysis
+- Node 3: 10-Q Temporal Consistency Validation
+- Node 4: 10-K SOX Certification Analysis
+- Node 5: IRC §83 Tax Exposure Calculation
+
+Additional nodes (1, 6-15) are available but not yet unified in this export structure.
 """
 
 # Node 1: Form 4 Insider Trading Analysis

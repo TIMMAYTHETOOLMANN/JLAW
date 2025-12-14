@@ -246,47 +246,43 @@ This prevents circular imports and improves code maintainability.
 
 ### Test Coverage
 
-A comprehensive test suite has been created in `tests/test_node_implementations.py` with **39 test cases**:
+A comprehensive test suite has been created in `tests/test_node_implementations.py` with **35 test cases**:
 
-#### Node 2 Tests (8 tests)
+#### Node 2 Tests (7 tests)
 1. Module exports verification
 2. Unified package import
-3. Mock mode support
-4. Evidence chain hashing
-5. Violation detection
-6. Compensation types validation
-7. NEO compensation validation
-8. Data model validation
+3. Evidence chain hashing
+4. Violation detection
+5. Compensation types validation
+6. NEO compensation validation
+7. Async analysis support
 
-#### Node 3 Tests (8 tests)
+#### Node 3 Tests (7 tests)
 1. Module exports verification
 2. Unified package import
-3. Mock mode support
+3. Analysis support
 4. QuarterlyMetrics dataclass
 5. Violation types enumeration
 6. Evidence hashing
 7. Serialization support
-8. Temporal consistency detection
 
-#### Node 4 Tests (8 tests)
+#### Node 4 Tests (7 tests)
 1. Module exports verification
 2. Unified package import
-3. Mock mode support
+3. Analysis support
 4. SOX violation types
 5. Audit opinion types
 6. Section 302 certification
 7. Material weakness detection
-8. Certification validation
 
-#### Node 5 Tests (8 tests)
+#### Node 5 Tests (7 tests)
 1. Module exports verification
 2. Unified package import
-3. Mock mode support
+3. Analysis support
 4. Equity award types
 5. Violation types
 6. EquityGrant dataclass
 7. Tax exposure calculation
-8. Compliance validation
 
 #### Internal Module Tests (5 tests)
 1. Access requires acknowledgment
