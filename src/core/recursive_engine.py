@@ -174,8 +174,19 @@ class RecursiveProsecutorialEngineV2:
         self.node15_market = MarketCorrelationEngine(self.polygon_api_key)
         
         # Detection modules
+        # Core pattern detector (15 patterns)
         from src.detection.patterns.advanced_patterns import AdvancedPatternDetector
+        # NEW: Options backdating detector (Erik Lie methodology, SOX 403 compliance)
+        from src.detection.patterns.options_backdating_detector import OptionsBackdatingDetector
+        # NEW: Channel stuffing detector (revenue manipulation, DSO analysis)
+        from src.detection.patterns.channel_stuffing_detector import ChannelStuffingDetector
+        # NEW: Earnings call cross-validator (Reg FD compliance, 8-K cross-reference)
+        from src.nodes.node12_earnings_calls.cross_validator import EarningsCallCrossValidator
+        
         self.pattern_detector = AdvancedPatternDetector()
+        self.backdating_detector = OptionsBackdatingDetector()
+        self.channel_stuffing_detector = ChannelStuffingDetector()
+        self.earnings_cross_validator = EarningsCallCrossValidator()
     
     async def run_full_analysis(
         self,
