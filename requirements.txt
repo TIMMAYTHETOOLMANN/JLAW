@@ -150,3 +150,23 @@ diskcache>=5.6.0
 # PDF Report Generation
 reportlab>=4.0.0
 PyPDF2>=3.0.0
+
+# ============================================
+# Production SEC Forensic System Dependencies
+# ============================================
+
+# RFC 3161 Timestamping
+rfc3161ng>=2.1.0  # RFC 3161 timestamp protocol
+
+# Merkle Trees
+merkletools>=1.0.3  # Merkle tree for evidence batch verification
+
+# Database Integration
+psycopg2-binary>=2.9.0  # PostgreSQL adapter (for TimescaleDB)
+asyncpg>=0.29.0  # Async PostgreSQL driver
+
+# NLP Models
+sentence-transformers>=2.2.0  # For bi-encoder and cross-encoder models
+
+# Additional Core Dependencies (if not already present)
+# aiolimiter>=1.1.0 already included above

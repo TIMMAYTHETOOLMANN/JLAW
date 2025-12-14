@@ -18,9 +18,10 @@ import base64
 
 @dataclass
 class HashResult:
-    """Cryptographic hash result with dual-algorithm verification."""
+    """Cryptographic hash result with triple-algorithm verification."""
     sha256: str
     sha3_512: str
+    blake2b: str
     input_size: int
     computed_at: datetime = field(default_factory=datetime.utcnow)
     
@@ -28,46 +29,53 @@ class HashResult:
         return {
             "sha256": self.sha256,
             "sha3_512": self.sha3_512,
+            "blake2b": self.blake2b,
             "input_size": self.input_size,
             "computed_at": self.computed_at.isoformat()
         }
     
     def verify(self, other: 'HashResult') -> bool:
-        """Verify hash match with both algorithms."""
-        return self.sha256 == other.sha256 and self.sha3_512 == other.sha3_512
+        """Verify hash match with all three algorithms."""
+        return (self.sha256 == other.sha256 and 
+                self.sha3_512 == other.sha3_512 and
+                self.blake2b == other.blake2b)
 
 
 class HashService:
     """
     Prosecution-grade cryptographic hash service.
     
-    Implements dual-algorithm hashing for evidence integrity:
-    - SHA-256: Primary hash (NIST FIPS 180-4)
-    - SHA3-512: Secondary verification (NIST FIPS 202)
+    Implements triple-algorithm hashing for evidence integrity:
+    - SHA-256: Primary hash (NIST FIPS 180-4) - widely adopted, 128-bit collision resistance
+    - SHA3-512: Secondary verification (NIST FIPS 202) - Keccak-based, quantum-resistant candidate
+    - BLAKE2b: Tertiary verification - faster than SHA-3, used in cryptocurrencies
     
     This approach provides:
     - 128-bit collision resistance (SHA-256)
     - Algorithm diversity for long-term security
     - Court-accepted standards (widely adopted, peer-reviewed)
+    - Future-proof against algorithm-specific attacks
     """
     
     @staticmethod
     def compute_hash(data: bytes) -> HashResult:
         """
-        Compute dual-algorithm hash of binary data.
+        Compute triple-algorithm hash of binary data.
         
         Args:
             data: Raw bytes to hash
             
         Returns:
-            HashResult with SHA-256 and SHA3-512 hashes
+            HashResult with SHA-256, SHA3-512, and BLAKE2b hashes
         """
         sha256_hash = hashlib.sha256(data).hexdigest()
         sha3_512_hash = hashlib.sha3_512(data).hexdigest()
+        blake2b_hash = hashlib.blake2b(data).hexdigest()
         
         return HashResult(
             sha256=sha256_hash,
             sha3_512=sha3_512_hash,
+            blake2b=blake2b_hash,
             input_size=len(data)
         )
     
