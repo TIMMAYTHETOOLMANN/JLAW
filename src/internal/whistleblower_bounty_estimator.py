@@ -139,10 +139,13 @@ class WhistleblowerBountyEstimator:
         
         # Classify violations by type and severity
         violation_count = len(violations)
-        critical_violations = sum(
-            1 for v in violations 
-            if v.get('severity') == 'critical' or v.get('severity', 0) >= 8
-        )
+        critical_violations = 0
+        for v in violations:
+            severity = v.get('severity')
+            if severity == 'critical':
+                critical_violations += 1
+            elif isinstance(severity, (int, float)) and severity >= 8:
+                critical_violations += 1
         
         # Estimate sanctions based on violation types
         min_sanctions = Decimal("0")
