@@ -185,11 +185,14 @@ class RecursiveProsecutorialEngineV2:
         from src.detection.patterns.channel_stuffing_detector import ChannelStuffingDetector
         # NEW: Earnings call cross-validator (Reg FD compliance, 8-K cross-reference)
         from src.nodes.node12_earnings_calls.cross_validator import EarningsCallCrossValidator
+        # Cross-node correlator for unified analysis
+        from src.nodes.cross_node import NodeCorrelator
         
         self.pattern_detector = AdvancedPatternDetector()
         self.backdating_detector = OptionsBackdatingDetector()
         self.channel_stuffing_detector = ChannelStuffingDetector()
         self.earnings_cross_validator = EarningsCallCrossValidator()
+        self.node_correlator = NodeCorrelator()
     
     async def run_full_analysis(
         self,
@@ -305,6 +308,21 @@ class RecursiveProsecutorialEngineV2:
                 violations_found=0, alerts_generated=len(node12_output.alerts),
                 findings={}, execution_time_seconds=0.1
             ))
+            
+            # Cross-Node Correlation (after Phase 2)
+            print("\n🔗 Cross-Node Correlation Analysis")
+            try:
+                correlation_start = time.time()
+                # Generate unified cross-node analysis
+                correlation_analysis = self.node_correlator.generate_unified_analysis(
+                    cik=cik,
+                    company_name=company_name
+                )
+                correlation_time = time.time() - correlation_start
+                print(f"  ✓ Cross-node correlation completed ({len(correlation_analysis.cross_node_alerts)} alerts)")
+            except Exception as e:
+                print(f"  ⚠ Cross-node correlation failed: {str(e)}")
+                logger.warning(f"Cross-node correlation failed: {e}")
             
             # PHASE 3
             print("\n⚡ PHASE 3: Financial Health (Nodes 13-14)")
