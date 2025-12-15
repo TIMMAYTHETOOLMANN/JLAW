@@ -835,21 +835,29 @@ class RecursiveProsecutorialEngineV2:
         try:
             # Use executives from Node 2 (DEF 14A) for network analysis
             # Also fetch Form 4 trades for coordinated activity detection
-            form4_filings = await sec_client.get_form4_filings(cik, start_date, end_date)
-            
             form4_trades = []
-            for filing in form4_filings[:10]:  # Limit for performance
-                xml = await sec_client.get_form4_xml(filing)
-                if xml:
-                    parsed = self.form4_parser.parse_xml(xml, filing.accession_number, filing.filing_date)
-                    for txn in parsed.transactions:
-                        form4_trades.append({
-                            "transaction_date": txn.transaction_date.isoformat(),
-                            "shares": txn.shares,
-                            "price_per_share": float(txn.price_per_share) if txn.price_per_share else 0,
-                            "transaction_code": txn.transaction_code,
-                            "insider_name": parsed.reporting_person.person_name
-                        })
+            
+            try:
+                form4_filings = await sec_client.get_form4_filings(cik, start_date, end_date)
+                
+                for filing in form4_filings[:10]:  # Limit for performance
+                    try:
+                        xml = await sec_client.get_form4_xml(filing)
+                        if xml:
+                            parsed = self.form4_parser.parse_xml(xml, filing.accession_number, filing.filing_date)
+                            for txn in parsed.transactions:
+                                form4_trades.append({
+                                    "transaction_date": txn.transaction_date.isoformat(),
+                                    "shares": txn.shares,
+                                    "price_per_share": float(txn.price_per_share) if txn.price_per_share else 0,
+                                    "transaction_code": txn.transaction_code,
+                                    "insider_name": parsed.reporting_person.person_name
+                                })
+                    except Exception as filing_error:
+                        logger.warning(f"Failed to parse Form 4 filing {filing.accession_number}: {filing_error}")
+                        continue
+            except Exception as fetch_error:
+                logger.warning(f"Failed to fetch Form 4 filings: {fetch_error}")
             
             node11_output = self.node11_network.analyze(
                 form4_trades=form4_trades if form4_trades else None
@@ -894,17 +902,21 @@ class RecursiveProsecutorialEngineV2:
             
             transcripts = []
             for filing in filings[:5]:  # Limit for performance
-                # Check if 8-K contains Item 7.01 (Regulation FD Disclosure)
-                content = await sec_client.get_filing_text(filing)
-                if content and "Item 7.01" in content:
-                    # Simplified transcript extraction
-                    # In production, would parse HTML/text to extract Q&A sections
-                    transcripts.append({
-                        "company_id": cik,
-                        "call_date": filing.filing_date,
-                        "fiscal_period": f"Q{(filing.filing_date.month - 1) // 3 + 1} {filing.filing_date.year}",
-                        "segments": []  # Would extract actual segments from content
-                    })
+                try:
+                    # Check if 8-K contains Item 7.01 (Regulation FD Disclosure)
+                    content = await sec_client.get_filing_text(filing)
+                    if content and "Item 7.01" in content:
+                        # Simplified transcript extraction
+                        # In production, would parse HTML/text to extract Q&A sections
+                        transcripts.append({
+                            "company_id": cik,
+                            "call_date": filing.filing_date,
+                            "fiscal_period": f"Q{(filing.filing_date.month - 1) // 3 + 1} {filing.filing_date.year}",
+                            "segments": []  # Would extract actual segments from content
+                        })
+                except Exception as filing_error:
+                    logger.warning(f"Failed to process 8-K filing {filing.accession_number}: {filing_error}")
+                    continue
             
             node12_output = self.node12_transcripts.analyze_batch(
                 transcripts if transcripts else []
