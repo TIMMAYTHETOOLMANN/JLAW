@@ -46,6 +46,7 @@ def load_dotenv_file(env_path: Optional[Path] = None) -> Dict[str, str]:
     
     try:
         with open(env_path, 'r', encoding='utf-8') as f:
+            for line in f:
                 line = line.strip()
                 if not line or line.startswith('#'):
                     continue
@@ -78,6 +79,7 @@ def get_api_key(key_name: str, required: bool = False) -> Optional[str]:
         value = None
     
     if required and not value:
+        logger.warning(f"Required API key {key_name} is not set")
     
     return value
 

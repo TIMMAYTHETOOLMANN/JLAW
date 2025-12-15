@@ -63,7 +63,7 @@ spacy>=3.7.0  # NLP processing
 nltk>=3.8.0  # Natural Language Toolkit
 
 # Financial Analysis
-benford-py>=0.6.0  # Benford's Law analysis
+benford-py>=0.5.0  # Benford's Law analysis (0.6.0 doesn't exist on PyPI)
 scipy>=1.11.0
 
 # NIST Integrated Compliance Analyzer (Module 2)
@@ -159,7 +159,8 @@ PyPDF2>=3.0.0
 rfc3161ng>=2.1.0  # RFC 3161 timestamp protocol
 
 # Merkle Trees
-merkletools>=1.0.3  # Merkle tree for evidence batch verification
+# merkletools>=1.0.3  # Disabled due to pysha3 build failures on Windows (C compiler issues)
+# Note: Python 3.12+ has built-in hashlib.sha3 support - use that instead
 
 # Database Integration
 psycopg2-binary>=2.9.0  # PostgreSQL adapter (for TimescaleDB)

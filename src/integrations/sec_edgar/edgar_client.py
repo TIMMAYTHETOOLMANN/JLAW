@@ -213,7 +213,8 @@ class SECEdgarClient:
         cik: str,
         form_types: Optional[List[str]] = None,
         start_date: Optional[date] = None,
-        end_date: Optional[date] = None
+        end_date: Optional[date] = None,
+        limit: Optional[int] = None
     ) -> List[SECFiling]:
         """
         Get filtered list of filings for a company.
@@ -223,6 +224,7 @@ class SECEdgarClient:
             form_types: Filter to specific form types
             start_date: Filter to filings on/after this date
             end_date: Filter to filings on/before this date
+            limit: Maximum number of filings to return
             
         Returns:
             List of SECFiling objects
@@ -290,6 +292,10 @@ class SECEdgarClient:
                 document_url=f"{self.ARCHIVES_URL}/{cik_clean}/{accession_clean}/{primary_doc}",
                 index_url=f"{self.ARCHIVES_URL}/{cik_clean}/{accession_clean}/index.json"
             ))
+            
+            # Check limit
+            if limit and len(filings) >= limit:
+                break
         
         return filings
     
@@ -590,3 +596,23 @@ class SECEdgarClient:
         
         return results
 
+    
+    # Backward compatibility methods
+    async def get_submissions(self, cik: str) -> Optional[Dict]:
+        """Alias for get_company_submissions (backward compatibility)."""
+        return await self.get_company_submissions(cik)
+    
+    async def get_filings_by_type(
+        self,
+        cik: str,
+        form_type: str,
+        start_date: Optional[date] = None,
+        end_date: Optional[date] = None
+    ) -> List[SECFiling]:
+        """Get filings by single form type (backward compatibility)."""
+        return await self.get_filings(
+            cik,
+            form_types=[form_type],
+            start_date=start_date,
+            end_date=end_date
+        )
