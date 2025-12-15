@@ -31,11 +31,13 @@ class FINRAForm144Data:
     # Filer information
     filer_cik: str
     filer_name: str
-    filer_address: Optional[str] = None
     
     # Issuer information
     issuer_cik: str
     issuer_name: str
+    
+    # Optional fields
+    filer_address: Optional[str] = None
     issuer_symbol: Optional[str] = None
     
     # Relationship
@@ -50,7 +52,7 @@ class FINRAForm144Data:
     cusip: Optional[str] = None
     
     # Proposed sale
-    proposed_sale_date: date = None
+    proposed_sale_date: Optional[date] = None
     proposed_sale_shares: int = 0
     proposed_sale_value: float = 0.0
     
