@@ -119,9 +119,42 @@ class TargetConfig:
     company_name: str
     start_date: date
     end_date: date
-    filing_types: List[str] = field(default_factory=lambda: ["4", "10-K", "10-Q", "8-K"])
+    filing_types: List[str] = field(default_factory=lambda: [
+        # Insider Trading
+        "3", "4", "5",
+        # Annual & Quarterly Reports
+        "10-K", "10-K/A", "10-Q", "10-Q/A",
+        # Current Reports
+        "8-K", "8-K/A",
+        # Proxy Statements
+        "DEF 14A", "DEFA14A", "DEFM14A", "DEFR14A",
+        # Beneficial Ownership
+        "SC 13D", "SC 13D/A", "SC 13G", "SC 13G/A",
+        # Institutional Holdings
+        "13F-HR", "13F-HR/A",
+        # Restricted Stock Sales
+        "144",
+        # Registration Statements
+        "S-1", "S-1/A", "S-3", "S-3/A", "S-4", "S-4/A", "S-8", "S-11", "S-11/A",
+        # Prospectus
+        "424B1", "424B2", "424B3", "424B4", "424B5",
+        # Tender Offers
+        "SC TO-T", "SC TO-I",
+        # Going Private
+        "SC 13E-3",
+        # Late Filing Notifications
+        "NT 10-K", "NT 10-Q",
+        # Other Material Filings
+        "6-K", "20-F", "40-F"
+    ])
     output_dir: Path = field(default_factory=lambda: Path("output"))
     auto_mode: bool = False
+    case_id: str = field(default_factory=lambda: "")
+    
+    def __post_init__(self):
+        """Auto-generate case_id if not provided."""
+        if not self.case_id:
+            self.case_id = f"JLAW-{self.cik}-{datetime.now().strftime('%Y%m%d%H%M%S')}"
     
     def to_dict(self) -> Dict[str, Any]:
         return {
@@ -129,7 +162,8 @@ class TargetConfig:
             "company_name": self.company_name,
             "start_date": str(self.start_date),
             "end_date": str(self.end_date),
-            "filing_types": self.filing_types
+            "filing_types": self.filing_types,
+            "case_id": self.case_id
         }
 
 

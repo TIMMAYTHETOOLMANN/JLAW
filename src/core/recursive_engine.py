@@ -1160,3 +1160,6 @@ class RecursiveProsecutorialEngineV2:
         print(f"║  Execution Time: {time_sec:.2f} seconds")
         print(f"{'═' * 70}\n")
 
+
+# Backward compatibility alias
+RecursiveProsecutorialEngine = RecursiveProsecutorialEngineV2
