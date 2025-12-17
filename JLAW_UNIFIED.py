@@ -203,6 +203,12 @@ class Violation:
     estimated_penalty: float
     criminal_referral: bool
     evidence_hash: str
+    regulatory_citations: List[str] = field(default_factory=list)
+    exact_quote: str = ""
+    document_url: str = ""
+    document_section: str = ""
+    detected_by: str = "pattern"
+    confirmed_by: List[str] = field(default_factory=list)
     
     def to_dict(self) -> Dict[str, Any]:
         return asdict(self)
@@ -871,8 +877,171 @@ class UnifiedForensicEngine:
         
         self.logger.info("  Compiling DOJ-grade dossier...")
         
+        generated_reports = []
+        
+        # Generate DOJ-level comprehensive report (Markdown + JSON)
         try:
-            # Import PDF generator
+            from src.reporting.doj_report_generator import DOJReportGenerator
+            from src.reporting.models import (
+                FilingAnalysisReport,
+                ViolationEvidence,
+                ChainOfCustodyRecord,
+                DualAgentConsensus,
+                SeverityLevel,
+                ProsecutorialMerit,
+                AgentSource,
+                StatutoryReference,
+                ExactQuote,
+                DamageEstimate,
+            )
+            
+            # Convert violations to ViolationEvidence objects
+            violation_evidences: List[ViolationEvidence] = []
+            for v in self.violations:
+                # Map severity
+                severity_map = {
+                    "CRITICAL": SeverityLevel.CRITICAL,
+                    "HIGH": SeverityLevel.HIGH,
+                    "MEDIUM": SeverityLevel.MEDIUM,
+                    "LOW": SeverityLevel.LOW,
+                }
+                severity = severity_map.get(v.severity, SeverityLevel.MEDIUM)
+                
+                # Map source
+                source_map = {
+                    "openai": AgentSource.OPENAI,
+                    "anthropic": AgentSource.ANTHROPIC,
+                    "both": AgentSource.BOTH,
+                    "pattern": AgentSource.PATTERN,
+                    "node": AgentSource.NODE,
+                }
+                source = source_map.get(v.detected_by, AgentSource.PATTERN)
+                
+                # Determine merit
+                merit_map = {
+                    SeverityLevel.CRITICAL: ProsecutorialMerit.STRONG,
+                    SeverityLevel.HIGH: ProsecutorialMerit.STRONG,
+                    SeverityLevel.MEDIUM: ProsecutorialMerit.MODERATE,
+                    SeverityLevel.LOW: ProsecutorialMerit.WEAK,
+                }
+                merit = merit_map.get(severity, ProsecutorialMerit.MODERATE)
+                
+                # Damage estimate
+                damage_multipliers = {
+                    SeverityLevel.CRITICAL: (500000, 2000000, 1000000, True, 20),
+                    SeverityLevel.HIGH: (100000, 500000, 250000, False, 0),
+                    SeverityLevel.MEDIUM: (50000, 100000, 75000, False, 0),
+                    SeverityLevel.LOW: (10000, 50000, 25000, False, 0),
+                }
+                min_d, max_d, disg, crim, years = damage_multipliers.get(
+                    severity, (50000, 100000, 75000, False, 0)
+                )
+                
+                damage_estimate = DamageEstimate(
+                    civil_minimum=min_d,
+                    civil_maximum=max_d,
+                    disgorgement_estimate=disg,
+                    criminal_exposure=crim,
+                    prison_years_maximum=years,
+                    calculation_methodology="Severity-based estimation"
+                )
+                
+                # Create statutory reference
+                statutory_ref = StatutoryReference(
+                    citation=v.statutory_reference,
+                    title="",
+                    summary="",
+                )
+                
+                # Create exact quote if available
+                exact_quotes = []
+                if v.exact_quote:
+                    exact_quotes.append(ExactQuote(
+                        quote_text=v.exact_quote,
+                        document_url=v.document_url,
+                        document_section=v.document_section,
+                    ))
+                
+                violation_evidence = ViolationEvidence(
+                    violation_id=v.violation_id,
+                    violation_type=v.violation_type,
+                    severity=severity,
+                    statutory_reference=statutory_ref,
+                    description=v.description,
+                    exact_quotes=exact_quotes,
+                    document_url=v.document_url,
+                    document_section=v.document_section,
+                    filing_accession=v.filing_accession,
+                    filing_date=v.filing_date,
+                    prosecutorial_merit=merit,
+                    damage_estimate=damage_estimate,
+                    detected_by=source,
+                    confirmed_by=[source_map.get(c, AgentSource.PATTERN) for c in v.confirmed_by],
+                    evidence_hash=v.evidence_hash,
+                )
+                violation_evidences.append(violation_evidence)
+            
+            # Group violations by filing
+            filings_map: Dict[str, List[ViolationEvidence]] = defaultdict(list)
+            for ve in violation_evidences:
+                filings_map[ve.filing_accession].append(ve)
+            
+            # Create filing reports
+            filing_reports: List[FilingAnalysisReport] = []
+            for accession, violations_list in filings_map.items():
+                # Get filing info from first violation
+                first_v = violations_list[0] if violations_list else None
+                
+                filing_report = FilingAnalysisReport(
+                    accession_number=accession,
+                    filing_type="",  # Would be populated from filing data
+                    filing_date=first_v.filing_date if first_v else "",
+                    company_name=self.config.company_name,
+                    cik=self.config.cik,
+                    document_url=first_v.document_url if first_v else "",
+                    violations=violations_list,
+                    red_flags=[],
+                    dual_agent_consensus=None,
+                )
+                filing_reports.append(filing_report)
+            
+            # Convert custody records to ChainOfCustodyRecord
+            chain_records: List[ChainOfCustodyRecord] = []
+            for i, cr in enumerate(self.custody_records):
+                chain_record = ChainOfCustodyRecord(
+                    record_id=cr.get("record_id", f"COC-{i+1:04d}"),
+                    evidence_type=cr.get("evidence_type", "document"),
+                    evidence_description=cr.get("description", "SEC Filing"),
+                    collected_at=datetime.utcnow(),
+                    collected_by="JLAW Forensic System",
+                    storage_location=cr.get("storage_location", "local"),
+                    sha256_hash=cr.get("hash", ""),
+                    verification_status="verified",
+                )
+                chain_records.append(chain_record)
+            
+            # Generate DOJ report
+            doj_generator = DOJReportGenerator(output_dir=str(self.config.output_dir))
+            doj_outputs = doj_generator.generate_comprehensive_report(
+                case_id=self.config.case_id,
+                company_name=self.config.company_name,
+                cik=self.config.cik,
+                filing_reports=filing_reports,
+                chain_of_custody=chain_records,
+                output_formats=['markdown', 'json']
+            )
+            
+            for fmt, path in doj_outputs.items():
+                self.logger.info(f"  ✓ DOJ {fmt.upper()} report generated: {path}")
+                generated_reports.append(str(path))
+            
+        except ImportError as e:
+            self.logger.warning(f"  ⚠ DOJ report generation skipped (missing module): {e}")
+        except Exception as e:
+            self.logger.error(f"  ✗ DOJ report generation failed: {e}")
+        
+        # Generate PDF dossier (original functionality)
+        try:
             from src.reporting.pdf_generator import ForensicPDFGenerator
             
             # Compile analysis results
@@ -886,15 +1055,21 @@ class UnifiedForensicEngine:
                         "severity": 8 if v.severity == "CRITICAL" else 6,
                         "description": v.description,
                         "evidence_hash": v.evidence_hash,
-                        "regulatory_citations": v.regulatory_citations,
+                        "regulatory_citations": v.regulatory_citations if v.regulatory_citations else [v.statutory_reference],
                         "detected_at": datetime.now().isoformat()
                     }
                     for v in self.violations
                 ],
                 "regulatory_routing": {
-                    "SEC": any("SEC" in v.regulatory_citations[0] for v in self.violations if v.regulatory_citations),
+                    "SEC": any(
+                        "SEC" in (v.regulatory_citations[0] if v.regulatory_citations else v.statutory_reference)
+                        for v in self.violations
+                    ),
                     "DOJ": any("DOJ" in str(v.regulatory_citations) for v in self.violations),
-                    "IRS": any("IRS" in str(v.regulatory_citations) or "IRC" in str(v.regulatory_citations) for v in self.violations)
+                    "IRS": any(
+                        "IRS" in str(v.regulatory_citations) or "IRC" in str(v.regulatory_citations)
+                        for v in self.violations
+                    )
                 },
                 "estimated_penalties": {
                     "civil_minimum": 100000 * len(self.violations),
@@ -905,7 +1080,7 @@ class UnifiedForensicEngine:
             }
             
             # Generate PDF
-            generator = ForensicPDFGenerator()
+            generator = ForensicPDFGenerator(output_dir=str(self.config.output_dir))
             pdf_path = generator.generate_forensic_dossier(
                 case_id=self.config.case_id,
                 company_name=self.config.company_name,
@@ -914,6 +1089,7 @@ class UnifiedForensicEngine:
             )
             
             self.logger.info(f"  ✓ PDF dossier generated: {pdf_path}")
+            generated_reports.append(str(pdf_path))
             
         except ImportError as e:
             self.logger.warning(f"  ⚠ PDF generation skipped (ReportLab not installed): {e}")
@@ -926,11 +1102,12 @@ class UnifiedForensicEngine:
             phase=phase,
             status="success",
             duration_seconds=duration,
-            findings_count=1,
-            alerts_count=0
+            findings_count=len(generated_reports),
+            alerts_count=0,
+            data={"generated_reports": generated_reports}
         ))
         
-        self.logger.info(f"\n  Phase 9 complete in {duration:.2f}s")
+        self.logger.info(f"\n  Phase 9 complete in {duration:.2f}s ({len(generated_reports)} reports generated)")
     
     # ═══════════════════════════════════════════════════════════════════════════════════════════
     # HELPER METHODS

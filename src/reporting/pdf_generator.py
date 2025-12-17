@@ -25,6 +25,8 @@ try:
     REPORTLAB_AVAILABLE = True
 except ImportError:
     REPORTLAB_AVAILABLE = False
+    # Provide fallback values when ReportLab is not available
+    inch = 72.0  # Standard points per inch
     logging.warning("ReportLab not installed - PDF generation unavailable")
 
 logging.basicConfig(level=logging.INFO)

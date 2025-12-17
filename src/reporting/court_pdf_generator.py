@@ -60,6 +60,14 @@ try:
     REPORTLAB_AVAILABLE = True
 except ImportError:
     REPORTLAB_AVAILABLE = False
+    # Provide fallback values when ReportLab is not available
+    inch = 72.0  # Standard points per inch
+    Flowable = object  # Fallback type for type hints
+    SimpleDocTemplate = object
+    # Create a mock pdf_canvas module for type hints
+    class _MockCanvas:
+        Canvas = object
+    pdf_canvas = _MockCanvas()
     logging.warning("ReportLab not installed - PDF generation unavailable")
 
 logger = logging.getLogger(__name__)

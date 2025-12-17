@@ -19,6 +19,7 @@ ENHANCED INVESTIGATIVE WORKFLOW:
 
 from __future__ import annotations
 
+import json
 import os
 import logging
 from typing import Any, Dict, List, Optional, Set
@@ -576,3 +577,199 @@ class DualAgentCoordinator:
                 await self.statute_integrator.close()
             except Exception:
                 pass
+
+    def convert_to_filing_report(
+        self,
+        investigation: Dict[str, Any],
+        filing_metadata: Dict[str, Any]
+    ) -> Optional[Any]:
+        """
+        Convert investigation results to FilingAnalysisReport for DOJ reporting.
+        
+        This method bridges the gap between dual-agent analysis output and
+        the standardized reporting models used by DOJReportGenerator.
+        
+        Args:
+            investigation: Results from investigate_with_cross_reference()
+            filing_metadata: Metadata about the filing being analyzed
+            
+        Returns:
+            FilingAnalysisReport or None if conversion fails
+        """
+        try:
+            from src.reporting.models import (
+                FilingAnalysisReport,
+                DualAgentConsensus,
+                ViolationEvidence,
+                SeverityLevel,
+                ProsecutorialMerit,
+                AgentSource,
+                StatutoryReference,
+                ExactQuote,
+                DamageEstimate,
+                RedFlag,
+            )
+            import hashlib
+            from datetime import datetime
+            
+            # Extract merged violations
+            merged_violations = investigation.get("merged_violations", [])
+            
+            # Convert to ViolationEvidence objects
+            violation_evidences: List[ViolationEvidence] = []
+            for i, v in enumerate(merged_violations, 1):
+                # Determine severity
+                severity_str = (v.get("severity") or "MEDIUM").upper()
+                severity_map = {
+                    "CRITICAL": SeverityLevel.CRITICAL,
+                    "HIGH": SeverityLevel.HIGH,
+                    "MEDIUM": SeverityLevel.MEDIUM,
+                    "LOW": SeverityLevel.LOW,
+                }
+                severity = severity_map.get(severity_str, SeverityLevel.MEDIUM)
+                
+                # Determine source
+                source_str = v.get("_source", "pattern")
+                source_map = {
+                    "openai": AgentSource.OPENAI,
+                    "anthropic": AgentSource.ANTHROPIC,
+                    "both": AgentSource.BOTH,
+                    "pattern": AgentSource.PATTERN,
+                }
+                source = source_map.get(source_str, AgentSource.PATTERN)
+                
+                # Confirmed by
+                confirmed_by = []
+                for c in v.get("_confirmed_by", []):
+                    if c == "anthropic":
+                        confirmed_by.append(AgentSource.ANTHROPIC)
+                    elif c == "openai":
+                        confirmed_by.append(AgentSource.OPENAI)
+                
+                # Extract statutory reference
+                statute_citation = v.get("statute") or v.get("statutory_citation") or ""
+                legal_framework = v.get("legal_framework", {})
+                primary_statute = legal_framework.get("primary_statute", {})
+                
+                statutory_ref = StatutoryReference(
+                    citation=statute_citation or primary_statute.get("citation", ""),
+                    title=primary_statute.get("title", ""),
+                    summary=primary_statute.get("summary", ""),
+                    full_text=primary_statute.get("full_text"),
+                    govinfo_url=primary_statute.get("govinfo_url"),
+                    cfr_reference=None,
+                    penalties=primary_statute.get("penalties"),
+                )
+                
+                # Extract exact quotes
+                exact_quotes = []
+                quote_text = v.get("exact_quote") or v.get("quote")
+                if quote_text:
+                    exact_quotes.append(ExactQuote(
+                        quote_text=quote_text,
+                        document_url=v.get("document_url") or v.get("url") or filing_metadata.get("document_url", ""),
+                        document_section=v.get("document_section") or v.get("section", ""),
+                        page_number=v.get("page_number"),
+                        line_range=v.get("line_range"),
+                        html_context=v.get("html_context"),
+                    ))
+                
+                # Determine prosecutorial merit
+                merit_map = {
+                    SeverityLevel.CRITICAL: ProsecutorialMerit.STRONG,
+                    SeverityLevel.HIGH: ProsecutorialMerit.STRONG,
+                    SeverityLevel.MEDIUM: ProsecutorialMerit.MODERATE,
+                    SeverityLevel.LOW: ProsecutorialMerit.WEAK,
+                }
+                merit = merit_map.get(severity, ProsecutorialMerit.MODERATE)
+                
+                # Calculate damage estimate
+                damage_multipliers = {
+                    SeverityLevel.CRITICAL: (500000, 2000000, 1000000, True, 20),
+                    SeverityLevel.HIGH: (100000, 500000, 250000, False, 0),
+                    SeverityLevel.MEDIUM: (50000, 100000, 75000, False, 0),
+                    SeverityLevel.LOW: (10000, 50000, 25000, False, 0),
+                }
+                min_d, max_d, disg, crim, years = damage_multipliers.get(
+                    severity, (50000, 100000, 75000, False, 0)
+                )
+                
+                damage_estimate = DamageEstimate(
+                    civil_minimum=min_d,
+                    civil_maximum=max_d,
+                    disgorgement_estimate=disg,
+                    criminal_exposure=crim,
+                    prison_years_maximum=years,
+                    calculation_methodology="Severity-based estimation with dual-agent validation"
+                )
+                
+                # Generate evidence hash
+                violation_type = v.get("type") or v.get("violation_type") or "UNKNOWN"
+                description = v.get("description") or ""
+                evidence_data = f"{violation_type}{description}{filing_metadata.get('accession_number', '')}"
+                evidence_hash = hashlib.sha256(evidence_data.encode()).hexdigest()
+                
+                # Create ViolationEvidence
+                violation_evidence = ViolationEvidence(
+                    violation_id=f"V-{filing_metadata.get('accession_number', 'UNK')[:10]}-{i:03d}",
+                    violation_type=violation_type,
+                    severity=severity,
+                    statutory_reference=statutory_ref,
+                    description=description,
+                    exact_quotes=exact_quotes,
+                    document_url=v.get("document_url") or filing_metadata.get("document_url", ""),
+                    document_section=v.get("document_section", ""),
+                    filing_accession=filing_metadata.get("accession_number", ""),
+                    filing_date=filing_metadata.get("filing_date", ""),
+                    prosecutorial_merit=merit,
+                    damage_estimate=damage_estimate,
+                    detected_by=source,
+                    confirmed_by=confirmed_by,
+                    evidence_hash=evidence_hash,
+                )
+                
+                violation_evidences.append(violation_evidence)
+            
+            # Create dual-agent consensus
+            summary = investigation.get("investigation_summary", {})
+            dual_agent_consensus = DualAgentConsensus(
+                openai_findings_count=summary.get("openai_initial_count", 0),
+                anthropic_findings_count=summary.get("anthropic_cross_reference_count", 0),
+                overlap_count=summary.get("overlap_count", 0),
+                openai_unique_count=summary.get("openai_unique_count", 0),
+                anthropic_unique_count=summary.get("anthropic_unique_count", 0),
+                confidence_level=summary.get("confidence_level", 0.0),
+            )
+            
+            # Generate filing content hash
+            content_hash = hashlib.sha256(
+                json.dumps(investigation, sort_keys=True, default=str).encode()
+            ).hexdigest()
+            
+            # Create FilingAnalysisReport
+            report = FilingAnalysisReport(
+                accession_number=filing_metadata.get("accession_number", ""),
+                filing_type=filing_metadata.get("filing_type", "UNKNOWN"),
+                filing_date=filing_metadata.get("filing_date", ""),
+                company_name=filing_metadata.get("company_name", ""),
+                cik=filing_metadata.get("cik", ""),
+                document_url=filing_metadata.get("document_url", ""),
+                violations=violation_evidences,
+                red_flags=[],  # Can be populated from analysis
+                dual_agent_consensus=dual_agent_consensus,
+                openai_raw_analysis=investigation.get("openai_findings"),
+                anthropic_raw_analysis=investigation.get("anthropic_cross_reference"),
+                financial_metrics={},
+                statistical_data={
+                    "statutes_correlated": summary.get("statutes_correlated", 0),
+                    "regulations_correlated": summary.get("regulations_correlated", 0),
+                    "govinfo_enriched": summary.get("govinfo_enriched", False),
+                },
+                filing_content_hash=content_hash,
+            )
+            
+            return report
+            
+        except Exception as e:
+            logger.error(f"Failed to convert investigation to filing report: {e}")
+            return None
