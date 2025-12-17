@@ -4,6 +4,10 @@
 
 ---
 
+> 🏆 **[VIEW HOLY GRAIL PIPELINE →](HOLY_GRAIL_PIPELINE.md)** Complete visual documentation of the entire system from document acquisition to courtroom-ready report.
+
+---
+
 ## EXECUTIVE SUMMARY
 
 JLAW is a **DOJ-grade SEC filing forensic analysis platform** implementing a **15-node recursive prosecutorial engine** with **23 fraud detection patterns**, **10 specialized Claude subagents**, **DocsGPT document parsing**, and **dual AI agent cross-validation**. The system produces courtroom-ready forensic dossiers from SEC EDGAR filings.
