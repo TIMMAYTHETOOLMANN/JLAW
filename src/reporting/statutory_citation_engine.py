@@ -451,7 +451,7 @@ class StatutoryCitationEngine:
                     civil_penalty_max=statute.civil_penalty_max,
                     criminal_penalty=statute.criminal_exposure,
                     prison_years_max=statute.prison_years_max,
-                    govinfo_url=f"https://www.govinfo.gov/content/pkg/USCODE-2022-title{self._extract_title(statute.citation)}/html/USCODE-2022-title{self._extract_title(statute.citation)}.htm",
+                    govinfo_url=self._build_govinfo_url(statute.citation),
                 )
         
         return None
@@ -482,6 +482,11 @@ class StatutoryCitationEngine:
             return match.group(1)
         
         return "15"  # Default to Title 15 (Securities)
+    
+    def _build_govinfo_url(self, citation: str) -> str:
+        """Build GovInfo URL from citation."""
+        title_num = self._extract_title(citation)
+        return f"https://www.govinfo.gov/content/pkg/USCODE-2022-title{title_num}/html/USCODE-2022-title{title_num}.htm"
     
     def format_citation(
         self,

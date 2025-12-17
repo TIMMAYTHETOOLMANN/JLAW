@@ -485,6 +485,9 @@ class TestChainOfCustodyLogger:
                 source="SEC EDGAR",
             )
         
+        # Ensure we have enough events
+        assert len(chain.events) >= 2, "Need at least 2 events for tamper test"
+        
         # Tamper with a field that IS included in the hash (evidence_id)
         original_evidence_id = chain.events[1].evidence_id
         chain.events[1].evidence_id = "TAMPERED-ID"
