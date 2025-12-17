@@ -692,12 +692,85 @@ Key: `aiohttp`, `openai`, `anthropic`, `python-dotenv`, `pdfplumber`, `beautiful
 
 ---
 
-## PLACEHOLDER NODES (Enhancement Targets)
+## DOJ-LEVEL FORENSIC REPORTING ENHANCEMENT
 
-- **Node 2**: DEF 14A compensation deep analysis
-- **Node 3**: 10-Q temporal consistency validation
-- **Node 4**: 10-K SOX certification deep analysis
-- **Node 5**: IRS ��83 tax exposure calculation
+### Overview
+
+JLAW now includes a comprehensive DOJ-level forensic reporting layer that transforms analysis outputs into prosecution-ready documentation. The reporting system uses the Nike 2019 analysis as the gold standard baseline for quality.
+
+### Key Features
+
+| Feature | Description |
+|---------|-------------|
+| **Per-Filing Breakdown** | Every filing receives detailed analysis with exact quotes |
+| **Statutory Citations** | GovInfo API integration for enriched legal references |
+| **Dual-Agent Consensus** | OpenAI + Anthropic cross-validation tracking |
+| **Chain of Custody** | Cryptographic SHA-256 hash chaining with tamper detection |
+| **Evidence Packaging** | Merkle tree integrity verification |
+| **Multi-Format Output** | Markdown, JSON, and HTML report formats |
+
+### New Reporting Modules
+
+```
+src/reporting/
+├── constants.py              # Statutory references, violation types
+├── evidence_packager.py      # Evidence packaging with merkle trees
+├── statutory_citation_engine.py  # GovInfo API integration
+├── chain_of_custody_logger.py    # Cryptographic custody tracking
+├── doj_report_generator.py   # Main report generator (enhanced)
+└── models.py                 # Data models (enhanced)
+```
+
+### Quick Start - DOJ Report Generation
+
+```python
+from src.reporting import (
+    DOJReportGenerator,
+    EvidencePackager,
+    ChainOfCustodyLogger,
+)
+
+# Initialize components
+generator = DOJReportGenerator(output_dir="./output/reports")
+
+# Generate report from filing analysis
+outputs = generator.generate_comprehensive_report(
+    case_id="JLAW-320187-2024",
+    company_name="NIKE, Inc.",
+    cik="320187",
+    filing_reports=filing_analysis_list,
+    chain_of_custody=custody_records,
+    output_formats=['markdown', 'json']
+)
+
+print(f"Report generated: {outputs['markdown']}")
+```
+
+### Nike 2019 Baseline Standards
+
+Reports are validated against these minimum quality metrics:
+
+| Metric | Requirement |
+|--------|-------------|
+| Exact Quotes per Violation | ≥ 1 |
+| Statutory Citations per Violation | ≥ 1 |
+| Chain of Custody Records | Required |
+| Dual-Agent Validation | When available |
+| Damage Estimation | Required |
+
+### Documentation
+
+- **[REPORTING_ENHANCEMENT_SUMMARY.md](REPORTING_ENHANCEMENT_SUMMARY.md)** - Complete implementation guide
+- **[VALIDATION_CHECKLIST.md](VALIDATION_CHECKLIST.md)** - Quality assurance criteria
+
+### Testing
+
+```bash
+# Run DOJ reporting tests
+pytest tests/test_doj_report_validation.py -v
+pytest tests/test_evidence_integrity.py -v
+pytest tests/test_nike_2019_baseline.py -v
+```
 
 ---
 
@@ -707,5 +780,5 @@ MIT License
 
 ---
 
-*System Version: 3.0 - Unified Deployment | December 2025*
+*System Version: 3.1 - DOJ-Level Forensic Reporting | December 2025*
 
