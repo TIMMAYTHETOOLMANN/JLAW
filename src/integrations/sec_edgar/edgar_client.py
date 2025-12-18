@@ -29,6 +29,7 @@ from enum import Enum
 import logging
 import time
 import json
+import os
 
 logger = logging.getLogger(__name__)
 
@@ -105,13 +106,34 @@ class RateLimiter:
     Token bucket rate limiter for SEC EDGAR API.
     
     SEC allows 10 requests/second maximum.
-    We use 100ms minimum interval for safety.
+    We use 9 req/sec (111ms minimum interval) for safety buffer.
+    
+    This is a singleton instance shared across all SECEdgarClient instances
+    to prevent concurrent rate violations.
     """
     
-    def __init__(self, requests_per_second: float = 10.0):
+    _instance = None
+    _lock_class = asyncio.Lock()
+    
+    def __new__(cls, requests_per_second: float = 9.0):
+        """Ensure singleton pattern for rate limiter."""
+        if cls._instance is None:
+            cls._instance = super(RateLimiter, cls).__new__(cls)
+            cls._instance._initialized = False
+        return cls._instance
+    
+    def __init__(self, requests_per_second: float = 9.0):
+        """Initialize rate limiter (only once due to singleton)."""
+        if self._initialized:
+            return
+        
+        self.requests_per_second = requests_per_second
         self.min_interval = 1.0 / requests_per_second
         self.last_request = 0.0
         self._lock = asyncio.Lock()
+        self.request_count = 0
+        self._initialized = True
+        logger.info(f"Initialized shared SEC rate limiter: {requests_per_second} req/sec (min interval: {self.min_interval:.3f}s)")
     
     async def acquire(self):
         """Wait until rate limit allows next request."""
@@ -120,20 +142,35 @@ class RateLimiter:
             elapsed = now - self.last_request
             
             if elapsed < self.min_interval:
-                await asyncio.sleep(self.min_interval - elapsed)
+                sleep_time = self.min_interval - elapsed
+                await asyncio.sleep(sleep_time)
             
             self.last_request = time.time()
+            self.request_count += 1
+            
+            if self.request_count % 100 == 0:
+                logger.debug(f"Rate limiter: {self.request_count} requests processed")
+
+
+# Global singleton rate limiter instance shared across all clients
+_SHARED_RATE_LIMITER = RateLimiter(requests_per_second=9.0)
 
 
 class SECEdgarClient:
     """
-    SEC EDGAR API Client with rate limiting.
+    SEC EDGAR API Client with rate limiting and retry logic.
     
     Implements all required endpoints for forensic analysis:
     - Company submissions history
     - XBRL financial facts
     - Form 4 XML content
     - Full-text filing retrieval
+    
+    Features:
+    - Shared rate limiter across all instances (9 req/sec)
+    - Exponential backoff for 429 (rate limit) errors
+    - Mock mode for testing without API access
+    - User-Agent validation
     """
     
     BASE_URL = "https://data.sec.gov"
@@ -142,21 +179,43 @@ class SECEdgarClient:
     # Default User-Agent (MUST be customized for production)
     DEFAULT_USER_AGENT = "JLAW-Forensics/2.0 (forensics@jlaw-system.org)"
     
+    # Retry configuration for 429 errors
+    MAX_RETRIES = 4
+    RETRY_DELAYS = [1, 2, 4, 8]  # Exponential backoff in seconds
+    
     def __init__(
         self,
         user_agent: Optional[str] = None,
-        requests_per_second: float = 10.0
+        requests_per_second: float = 9.0,
+        mock_mode: bool = False
     ):
         """
         Initialize SEC EDGAR client.
         
         Args:
-            user_agent: Contact information for SEC (required)
-            requests_per_second: Rate limit (max 10)
+            user_agent: Contact information for SEC (required, must include email)
+            requests_per_second: Rate limit (ignored - shared limiter uses 9 req/sec)
+            mock_mode: If True, return mock data instead of making real API calls
         """
+        # Check for mock mode from environment
+        self.mock_mode = mock_mode or os.environ.get('SEC_MOCK_MODE', '').lower() in ('true', '1', 'yes')
+        
+        # Get user agent from parameter or environment
+        if user_agent is None:
+            user_agent = os.environ.get('SEC_USER_AGENT') or os.environ.get('SEC_EDGAR_USER_AGENT')
+        
         self.user_agent = user_agent or self.DEFAULT_USER_AGENT
-        self.rate_limiter = RateLimiter(min(10.0, requests_per_second))
+        
+        # Use the shared global rate limiter (singleton)
+        self.rate_limiter = _SHARED_RATE_LIMITER
+        
         self.session: Optional[aiohttp.ClientSession] = None
+        
+        # Log initialization
+        if self.mock_mode:
+            logger.info("SEC EDGAR Client initialized in MOCK MODE - no real API calls will be made")
+        else:
+            logger.debug(f"SEC EDGAR Client initialized with User-Agent: {self.user_agent[:50]}...")
     
     async def __aenter__(self):
         """Async context manager entry."""
@@ -171,19 +230,113 @@ class SECEdgarClient:
             await self.session.close()
     
     async def _fetch(self, url: str) -> Optional[str]:
-        """Fetch URL with rate limiting."""
-        await self.rate_limiter.acquire()
+        """
+        Fetch URL with rate limiting and exponential backoff for 429 errors.
         
-        try:
-            async with self.session.get(url, timeout=30) as response:
-                if response.status == 200:
-                    return await response.text()
-                else:
-                    logger.warning(f"SEC fetch failed: {url} -> {response.status}")
-                    return None
-        except Exception as e:
-            logger.error(f"SEC fetch error: {url} -> {e}")
-            return None
+        Args:
+            url: URL to fetch
+            
+        Returns:
+            Response text or None if failed
+        """
+        # Mock mode - return sample data
+        if self.mock_mode:
+            logger.debug(f"Mock mode: simulating fetch for {url}")
+            return self._get_mock_response(url)
+        
+        # Retry loop with exponential backoff
+        for attempt in range(self.MAX_RETRIES):
+            await self.rate_limiter.acquire()
+            
+            try:
+                async with self.session.get(url, timeout=30) as response:
+                    if response.status == 200:
+                        return await response.text()
+                    elif response.status == 429:
+                        # Rate limited - use exponential backoff
+                        if attempt < self.MAX_RETRIES - 1:
+                            delay = self.RETRY_DELAYS[attempt]
+                            logger.warning(
+                                f"SEC API rate limit (429) hit for {url}. "
+                                f"Retry {attempt + 1}/{self.MAX_RETRIES - 1} after {delay}s delay"
+                            )
+                            await asyncio.sleep(delay)
+                            continue
+                        else:
+                            logger.error(
+                                f"SEC API rate limit (429) - max retries exceeded for {url}. "
+                                f"Consider reducing request rate or checking User-Agent configuration."
+                            )
+                            return None
+                    elif response.status == 403:
+                        logger.warning(f"SEC fetch forbidden (403): {url}")
+                        return None
+                    else:
+                        logger.warning(f"SEC fetch failed: {url} -> HTTP {response.status}")
+                        return None
+            except asyncio.TimeoutError:
+                logger.warning(f"SEC fetch timeout: {url}")
+                return None
+            except Exception as e:
+                logger.error(f"SEC fetch error: {url} -> {e}")
+                return None
+        
+        return None
+    
+    def _get_mock_response(self, url: str) -> str:
+        """
+        Return mock data for testing.
+        
+        Args:
+            url: URL being requested
+            
+        Returns:
+            Mock JSON or XML response
+        """
+        if "submissions/CIK" in url:
+            # Mock submissions response
+            return json.dumps({
+                "name": "Mock Company Inc.",
+                "filings": {
+                    "recent": {
+                        "accessionNumber": ["0001234567-24-000001"],
+                        "form": ["10-K"],
+                        "filingDate": ["2024-01-15"],
+                        "reportDate": ["2023-12-31"],
+                        "primaryDocument": ["mock-10k.htm"],
+                        "fileNumber": ["001-12345"]
+                    }
+                }
+            })
+        elif "companyfacts/CIK" in url:
+            # Mock XBRL facts response
+            return json.dumps({
+                "entityName": "Mock Company Inc.",
+                "facts": {
+                    "us-gaap": {
+                        "Revenues": {
+                            "units": {
+                                "USD": [
+                                    {
+                                        "val": 1000000,
+                                        "fy": 2023,
+                                        "form": "10-K",
+                                        "fp": "FY"
+                                    }
+                                ]
+                            }
+                        }
+                    }
+                }
+            })
+        elif "company_tickers.json" in url:
+            # Mock ticker mapping
+            return json.dumps({
+                "0": {"ticker": "MOCK", "cik_str": "1234567", "title": "Mock Company Inc."}
+            })
+        else:
+            # Mock document content
+            return "<?xml version='1.0'?><document>Mock filing content</document>"
     
     async def _fetch_json(self, url: str) -> Optional[Dict]:
         """Fetch JSON from URL."""
