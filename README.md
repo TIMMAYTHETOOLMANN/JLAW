@@ -52,6 +52,22 @@ python JLAW_UNIFIED.py --cik 320187 --year 2019 --auto
 | Netflix | NFLX | 1065280 |
 | Nvidia | NVDA | 1045810 |
 
+### SEC API Configuration
+
+**IMPORTANT:** Before running JLAW, configure your SEC EDGAR API access:
+
+1. Copy `.env.example` to `.env`
+2. Set `SEC_USER_AGENT` with your organization name and contact email
+3. Verify configuration: `python -c "from config.secure_config import print_configuration_status; print_configuration_status()"`
+
+**📖 Full Setup Guide:** [docs/SEC_API_SETUP.md](docs/SEC_API_SETUP.md)
+
+**Features:**
+- ✅ Shared rate limiter (9 req/sec) prevents concurrent violations
+- ✅ Exponential backoff for 429 errors (automatic retry)
+- ✅ User-Agent validation with placeholder detection
+- ✅ Mock mode for testing without API access
+
 ---
 
 ## 9-PHASE EXECUTION PIPELINE
@@ -87,7 +103,7 @@ python JLAW_UNIFIED.py --cik 320187 --year 2019 --auto
 ┌─────────────────────────────────────────────────────────────────────────────┐
 │                         PHASE 1: DOCUMENT ACQUISITION                       │
 ├─────────────────────────────────────────────────────────────────────────────┤
-│  • SEC EDGAR Rate Limiter (10 req/sec)                                     │
+│  • SEC EDGAR Shared Rate Limiter (9 req/sec w/ exponential backoff)       │
 │  • Multi-format Parser: XML, XBRL, HTML, PDF                               │
 │  • RFC 3161 Timestamp ← Evidence Chain Start                               │
 │  • SHA-256 Hash Generation ← Tamper Detection                              │

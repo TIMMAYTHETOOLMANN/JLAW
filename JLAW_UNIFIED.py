@@ -443,6 +443,24 @@ class UnifiedForensicEngine:
         self.logger.info(f"  Period: {self.config.start_date} to {self.config.end_date}")
         self.logger.info(f"  Filing Types: {', '.join(self.config.filing_types)}")
         
+        # Validate SEC API configuration FIRST (before any API calls)
+        self.logger.info("\n  Validating SEC API configuration...")
+        try:
+            from config.secure_config import validate_sec_configuration
+            is_valid, config_errors = validate_sec_configuration()
+            if not is_valid:
+                self.logger.error("    ✗ SEC API configuration is INVALID:")
+                for error in config_errors:
+                    for line in error.split('\n'):
+                        if line.strip():
+                            self.logger.error(f"      {line.strip()}")
+                errors.append("SEC API configuration invalid - requests will fail with HTTP 429")
+            else:
+                self.logger.info("    ✓ SEC API configuration valid")
+                self.logger.info("    ✓ User-Agent contains contact email")
+        except Exception as e:
+            self.logger.warning(f"    ⚠ Could not validate SEC configuration: {e}")
+        
         # Initialize modules
         self.logger.info("\n  Initializing modules...")
         
@@ -450,7 +468,7 @@ class UnifiedForensicEngine:
         try:
             from src.integrations.sec_edgar.edgar_client import SECEdgarClient
             self._sec_client = SECEdgarClient
-            self.logger.info("    ✓ SEC EDGAR Client")
+            self.logger.info("    ✓ SEC EDGAR Client (shared rate limiter: 9 req/sec)")
         except Exception as e:
             errors.append(f"SEC Client: {e}")
             self.logger.warning(f"    ✗ SEC EDGAR Client: {e}")
