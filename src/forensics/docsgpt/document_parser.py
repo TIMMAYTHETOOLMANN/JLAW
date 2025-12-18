@@ -237,11 +237,17 @@ class ChunkingStrategy:
         word_chunk_size = int(chunk_size / 0.75)
         word_overlap = int(overlap / 0.75)
         
+        # Ensure overlap doesn't exceed chunk size to prevent infinite loops
+        word_overlap = min(word_overlap, word_chunk_size - 1)
+        
         while start < len(words):
             end = start + word_chunk_size
             chunk_words = words[start:end]
             chunks.append(' '.join(chunk_words))
             start = end - word_overlap
+            # Ensure we always advance to prevent infinite loop
+            if start <= 0:
+                start = end
         
         return chunks
 
@@ -252,16 +258,21 @@ class EntityExtractor:
     # Entity patterns
     MONEY_PATTERN = r'\$[\d,]+(?:\.\d{2})?(?:\s?(?:million|billion|M|B))?'
     DATE_PATTERN = r'\b\d{1,2}[/-]\d{1,2}[/-]\d{2,4}\b|\b(?:January|February|March|April|May|June|July|August|September|October|November|December)\s+\d{1,2},?\s+\d{4}\b'
-    CIK_PATTERN = r'\b(?:CIK|cik)\s*[:#]?\s*(\d{10})\b'
+    CIK_PATTERN = r'\b(?:CIK|cik)\s*[:#]?\s*\d{10}\b'
     CUSIP_PATTERN = r'\b[0-9]{3}[0-9A-Z]{5}[0-9]\b'
     
     @classmethod
     def extract_entities(cls, text: str) -> Dict[str, List[str]]:
         """Extract all entities from text."""
+        # Extract CIKs and clean them to get just the 10-digit numbers
+        cik_matches = cls._extract_pattern(text, cls.CIK_PATTERN)
+        # Extract just the 10-digit numbers from CIK matches
+        ciks = [re.search(r'\d{10}', match).group() for match in cik_matches if re.search(r'\d{10}', match)]
+        
         entities = {
             "money": cls._extract_pattern(text, cls.MONEY_PATTERN),
             "dates": cls._extract_pattern(text, cls.DATE_PATTERN),
-            "ciks": cls._extract_pattern(text, cls.CIK_PATTERN),
+            "ciks": ciks,
             "cusips": cls._extract_pattern(text, cls.CUSIP_PATTERN)
         }
         return entities
@@ -289,17 +300,19 @@ class XBRLParser:
         
         Returns dict with financial metrics.
         """
+        import tempfile
+        
         try:
             # Try using arelle for proper XBRL parsing
             from arelle import ModelManager, Cntlr, ModelXbrl
             
             # Create a temporary file for arelle
-            import tempfile
-            with tempfile.NamedTemporaryFile(mode='wb', suffix='.xbrl', delete=False) as f:
-                f.write(content)
-                temp_path = f.name
-            
+            temp_path = None
             try:
+                with tempfile.NamedTemporaryFile(mode='wb', suffix='.xbrl', delete=False) as f:
+                    f.write(content)
+                    temp_path = f.name
+                
                 # Initialize arelle controller
                 ctrl = Cntlr.Cntlr(logFileName='logToBuffer')
                 model_manager = ModelManager.initialize(ctrl)
@@ -330,9 +343,12 @@ class XBRLParser:
                 return facts
             
             finally:
-                # Clean up temp file
-                if os.path.exists(temp_path):
-                    os.unlink(temp_path)
+                # Clean up temp file securely
+                if temp_path and os.path.exists(temp_path):
+                    try:
+                        os.unlink(temp_path)
+                    except OSError:
+                        logger.warning(f"Failed to cleanup temp file: {temp_path}")
         
         except ImportError:
             logger.warning("arelle-release not installed, falling back to XML parsing")
@@ -438,20 +454,25 @@ class DOCXParser:
     
     def _parse_docx2txt_fallback(self, content: bytes) -> str:
         """Fallback using docx2txt."""
+        import tempfile
+        
         try:
             import docx2txt
-            import tempfile
             
-            with tempfile.NamedTemporaryFile(mode='wb', suffix='.docx', delete=False) as f:
-                f.write(content)
-                temp_path = f.name
-            
+            temp_path = None
             try:
+                with tempfile.NamedTemporaryFile(mode='wb', suffix='.docx', delete=False) as f:
+                    f.write(content)
+                    temp_path = f.name
+                
                 text = docx2txt.process(temp_path)
                 return text
             finally:
-                if os.path.exists(temp_path):
-                    os.unlink(temp_path)
+                if temp_path and os.path.exists(temp_path):
+                    try:
+                        os.unlink(temp_path)
+                    except OSError:
+                        logger.warning(f"Failed to cleanup temp file: {temp_path}")
         
         except Exception as e:
             logger.error(f"docx2txt fallback error: {e}")
