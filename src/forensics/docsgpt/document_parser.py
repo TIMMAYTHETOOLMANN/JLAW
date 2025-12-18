@@ -197,9 +197,11 @@ class ChunkingStrategy:
         ] else cls.SEC_8K_PATTERNS
         
         sections = []
-        combined_pattern = '|'.join(f'({p})' for p in patterns)
+        # Remove (?i) flags from individual patterns and add IGNORECASE flag to finditer
+        clean_patterns = [p.replace('(?i)', '') for p in patterns]
+        combined_pattern = '|'.join(f'({p})' for p in clean_patterns)
         
-        matches = list(re.finditer(combined_pattern, text))
+        matches = list(re.finditer(combined_pattern, text, re.IGNORECASE))
         
         if not matches:
             return [("FULL_DOCUMENT", text)]
@@ -916,12 +918,12 @@ class UniversalDocumentParser:
         text_lower = text.lower()
         filename_lower = filename.lower()
         
-        # Check filename first
-        if '10-k' in filename_lower:
+        # Check filename first (handle both with and without hyphens)
+        if '10-k' in filename_lower or '10k' in filename_lower:
             return SECFilingType.FORM_10K
-        if '10-q' in filename_lower:
+        if '10-q' in filename_lower or '10q' in filename_lower:
             return SECFilingType.FORM_10Q
-        if '8-k' in filename_lower:
+        if '8-k' in filename_lower or '8k' in filename_lower:
             return SECFilingType.FORM_8K
         if 'def14a' in filename_lower or 'def 14a' in filename_lower:
             return SECFilingType.DEF_14A
