@@ -153,3 +153,6 @@ dump.rdb
 output/
 forensic_storage/
 jlaw_forensic_*.log
+
+# JLAW Cache Directory
+.jlaw_cache/
