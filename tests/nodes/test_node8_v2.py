@@ -42,9 +42,9 @@ class TestBeneficialOwnershipTrackerV2:
         
         narrative = """
         The shares were acquired for investment purposes only in the ordinary course
-        of business. The reporting person is a passive investment and has no intention
-        to influence or control the company. There are no current plans to seek board
-        representation or make proposals.
+        of business. The reporting person is a passive investment entity and has no
+        intention to influence or control the company. The investment is purely
+        financial in nature with no activist agenda.
         """
         
         intent = tracker.analyze_intent_v2(narrative)
