@@ -194,6 +194,108 @@ class SECEdgarClient:
                 return None
         return None
     
+    async def _resolve_xml_from_index(self, filing) -> Optional[str]:
+        """
+        Resolve actual XML document URL using index.json.
+        
+        SEC EDGAR blocks XSL-transformed URLs (xslF345X03/form4.xml).
+        This method fetches the filing index.json to find the actual XML file.
+        
+        Args:
+            filing: SECFiling object with index_url
+            
+        Returns:
+            Actual XML document URL or None if not found
+        """
+        try:
+            index_data = await self._fetch_json(filing.index_url)
+            if not index_data:
+                return None
+            
+            # Look for XML files in the directory listing
+            directory = index_data.get("directory", {})
+            items = directory.get("item", [])
+            
+            # For Form 4, look for the actual form XML file
+            xml_candidates = []
+            for item in items:
+                name = item.get("name", "")
+                if name.endswith(".xml") and not name.startswith("xsl"):
+                    # Prefer files that match form naming conventions
+                    if any(pattern in name.lower() for pattern in ["form4", "form3", "form5", "edgardoc"]):
+                        xml_candidates.insert(0, name)  # Higher priority
+                    else:
+                        xml_candidates.append(name)
+            
+            # Try the primary document without XSL prefix if it's XML
+            primary_doc = filing.primary_document
+            if "xsl" in primary_doc.lower():
+                # Extract actual filename from xslF345X03/form4.xml -> form4.xml
+                import re
+                match = re.search(r'xsl[^/]+/(.+\.xml)$', primary_doc, re.IGNORECASE)
+                if match:
+                    actual_filename = match.group(1)
+                    if actual_filename in [item.get("name", "") for item in items]:
+                        xml_candidates.insert(0, actual_filename)
+            
+            if xml_candidates:
+                # Build URL for the first candidate
+                accession_clean = filing.accession_number.replace("-", "")
+                cik_clean = filing.cik.lstrip("0") or "0"
+                return f"{self.ARCHIVES_URL}/{cik_clean}/{accession_clean}/{xml_candidates[0]}"
+            
+            return None
+        except Exception as e:
+            logger.warning(f"Failed to resolve XML from index: {e}")
+            return None
+    
+    async def _fetch_with_fallback(self, filing, is_xml: bool = False) -> Optional[str]:
+        """
+        Fetch document with fallback to index.json resolution.
+        
+        Args:
+            filing: SECFiling object
+            is_xml: Whether to look for XML files specifically
+            
+        Returns:
+            Document content or None
+        """
+        # First try the direct URL
+        content = await self._fetch(filing.document_url)
+        if content:
+            return content
+        
+        logger.info(f"Direct fetch failed for {filing.document_url}, trying index.json resolution")
+        
+        # For XML files (Form 4, etc.), try resolving via index.json
+        if is_xml or filing.form_type in ["3", "4", "5"]:
+            resolved_url = await self._resolve_xml_from_index(filing)
+            if resolved_url and resolved_url != filing.document_url:
+                logger.info(f"Resolved URL via index.json: {resolved_url}")
+                content = await self._fetch(resolved_url)
+                if content:
+                    return content
+        
+        # Try additional fallback patterns for Form 4
+        if filing.form_type in ["3", "4", "5"]:
+            accession_clean = filing.accession_number.replace("-", "")
+            cik_clean = filing.cik.lstrip("0") or "0"
+            
+            fallback_patterns = [
+                f"{self.ARCHIVES_URL}/{cik_clean}/{accession_clean}/form4.xml",
+                f"{self.ARCHIVES_URL}/{cik_clean}/{accession_clean}/edgardoc.xml",
+                f"{self.ARCHIVES_URL}/{cik_clean}/{accession_clean}/doc4.xml",
+            ]
+            
+            for fallback_url in fallback_patterns:
+                if fallback_url != filing.document_url:
+                    content = await self._fetch(fallback_url)
+                    if content:
+                        logger.info(f"Fetched via fallback pattern: {fallback_url}")
+                        return content
+        
+        return None
+    
     async def get_company_submissions(self, cik: str) -> Optional[Dict]:
         """
         Get company filing history.
@@ -303,6 +405,9 @@ class SECEdgarClient:
         """
         Get Form 4 XML content.
         
+        Uses index.json resolution to find actual XML files when
+        XSL-transformed URLs return 403 errors.
+        
         Args:
             filing: SECFiling object for a Form 4
             
@@ -312,12 +417,14 @@ class SECEdgarClient:
         if filing.form_type not in ["3", "4", "5"]:
             return None
         
-        # Form 4 XML is usually the primary document
-        return await self._fetch(filing.document_url)
+        # Use fallback mechanism to handle XSL-transformed URLs that return 403
+        return await self._fetch_with_fallback(filing, is_xml=True)
     
     async def get_filing_text(self, filing: SECFiling) -> Optional[str]:
         """
         Get filing text content.
+        
+        Uses fallback mechanism to handle 403 errors from XSL-transformed URLs.
         
         Args:
             filing: SECFiling object
@@ -325,6 +432,10 @@ class SECEdgarClient:
         Returns:
             Raw text content string
         """
+        # Use fallback mechanism for Form 4 and similar filings
+        if filing.form_type in ["3", "4", "5"]:
+            return await self._fetch_with_fallback(filing, is_xml=True)
+        
         return await self._fetch(filing.document_url)
     
     async def get_filing_content(self, filing: SECFiling) -> Optional[str]:
