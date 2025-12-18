@@ -5,85 +5,101 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+      target: production
     container_name: jlaw-forensics
     environment:
-      # API Keys (set these in .env file)
-      - OPENAI_API_KEY=${OPENAI_API_KEY}
-      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
-      - GOVINFO_API_KEY=${GOVINFO_API_KEY}
+      - SEC_USER_AGENT=${SEC_USER_AGENT:-JLAW-Forensics/4.0 (forensics@jlaw-system.org)}
+      - SEC_RATE_LIMIT=${SEC_RATE_LIMIT:-6.0}
+      - SEC_CACHE_ENABLED=true
       - POLYGON_API_KEY=${POLYGON_API_KEY}
-      - SEC_USER_AGENT=${SEC_USER_AGENT}
-      # Database connections
       - NEO4J_URI=bolt://neo4j:7687
-      - NEO4J_USER=${NEO4J_USER:-neo4j}
-      - NEO4J_PASSWORD=${NEO4J_PASSWORD:-jlaw_password}
-      - NEO4J_DATABASE=${NEO4J_DATABASE:-jlaw}
+      - NEO4J_USER=neo4j
+      - NEO4J_PASSWORD=${NEO4J_PASSWORD:-jlaw_secure_password}
+      - TIMESCALE_HOST=timescaledb
+      - TIMESCALE_PORT=5432
+      - TIMESCALE_USER=jlaw
+      - TIMESCALE_PASSWORD=${TIMESCALE_PASSWORD:-jlaw_secure_password}
       - REDIS_HOST=redis
       - REDIS_PORT=6379
-      - REDIS_PASSWORD=${REDIS_PASSWORD:-}
-      - REDIS_DB=${REDIS_DB:-0}
-      # Logging
-      - LOG_LEVEL=${LOG_LEVEL:-INFO}
-    volumes:
-      - ./output:/app/output
-      - ./forensic_storage:/app/forensic_storage
-      - ./.env:/app/.env:ro
+      - RFC3161_TIMESTAMP_URL=https://freetsa.org/tsr
     depends_on:
-      - neo4j
-      - redis
+      neo4j:
+        condition: service_healthy
+      timescaledb:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    volumes:
+      - ./evidence:/app/evidence
+      - ./reports:/app/reports
+      - jlaw_cache:/app/.jlaw_cache
     networks:
       - jlaw-network
-    stdin_open: true
-    tty: true
+    restart: unless-stopped
 
   neo4j:
     image: neo4j:5.15-community
     container_name: jlaw-neo4j
     environment:
-      - NEO4J_AUTH=${NEO4J_USER:-neo4j}/${NEO4J_PASSWORD:-jlaw_password}
+      - NEO4J_AUTH=neo4j/${NEO4J_PASSWORD:-jlaw_secure_password}
       - NEO4J_PLUGINS=["apoc"]
-      - NEO4J_dbms_security_procedures_unrestricted=apoc.*
+      - NEO4J_dbms_memory_heap_initial__size=512m
       - NEO4J_dbms_memory_heap_max__size=2G
     ports:
-      - "7474:7474"  # HTTP
-      - "7687:7687"  # Bolt
+      - "7474:7474"
+      - "7687:7687"
     volumes:
-      - neo4j-data:/data
-      - neo4j-logs:/logs
-      - neo4j-import:/import
-      - neo4j-plugins:/plugins
+      - neo4j_data:/data
+      - neo4j_logs:/logs
     networks:
       - jlaw-network
     healthcheck:
       test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:7474 || exit 1"]
-      interval: 15s
+      interval: 30s
       timeout: 10s
       retries: 5
-      start_period: 40s
+      start_period: 30s
+    restart: unless-stopped
+
+  timescaledb:
+    image: timescale/timescaledb:latest-pg15
+    container_name: jlaw-timescaledb
+    environment:
+      - POSTGRES_USER=jlaw
+      - POSTGRES_PASSWORD=${TIMESCALE_PASSWORD:-jlaw_secure_password}
+      - POSTGRES_DB=jlaw_forensics
+    ports:
+      - "5432:5432"
+    volumes:
+      - timescale_data:/var/lib/postgresql/data
+    networks:
+      - jlaw-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U jlaw -d jlaw_forensics"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
 
   redis:
     image: redis:7-alpine
     container_name: jlaw-redis
-    command: redis-server --appendonly yes
     ports:
       - "6379:6379"
     volumes:
-      - redis-data:/data
+      - redis_data:/data
     networks:
       - jlaw-network
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
+    command: redis-server --appendonly yes
+    restart: unless-stopped
 
 networks:
   jlaw-network:
     driver: bridge
 
 volumes:
-  neo4j-data:
-  neo4j-logs:
-  neo4j-import:
-  neo4j-plugins:
-  redis-data:
+  neo4j_data:
+  neo4j_logs:
+  timescale_data:
+  redis_data:
+  jlaw_cache:

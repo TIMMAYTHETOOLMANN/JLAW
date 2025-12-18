@@ -1,46 +1,39 @@
-# JLAW SEC Forensic Analysis System
-# Python 3.11 slim-based container for production deployment
+# JLAW SEC Forensic Financial Analysis System
+FROM python:3.11-slim AS base
 
-FROM python:3.11-slim
+LABEL maintainer="JLAW Development Team"
+LABEL description="JLAW SEC Forensic Financial Analysis System - 15-Node Recursive Prosecutorial Engine"
+LABEL version="4.0.0"
 
-# Set working directory
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PYTHONPATH=/app \
+    PIP_NO_CACHE_DIR=1
+
 WORKDIR /app
 
-# Set environment variables
-ENV PYTHONUNBUFFERED=1 \
-    PYTHONDONTWRITEBYTECODE=1 \
-    PIP_NO_CACHE_DIR=1 \
-    PIP_DISABLE_PIP_VERSION_CHECK=1
-
-# Install system dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
-    git \
+    libpq-dev \
     curl \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy requirements first for better layer caching
-COPY requirements.txt .
+FROM base AS dependencies
+COPY requirements.txt pyproject.toml ./
+RUN pip install --upgrade pip && pip install -r requirements.txt
 
-# Install Python dependencies
-RUN pip install --upgrade pip && \
-    pip install -r requirements.txt
+FROM dependencies AS production
+COPY src/ ./src/
+COPY config/ ./config/
 
-# Copy application code
-COPY . .
+RUN useradd --create-home --shell /bin/bash jlaw && \
+    chown -R jlaw:jlaw /app && \
+    mkdir -p /app/evidence /app/reports /app/.jlaw_cache && \
+    chown -R jlaw:jlaw /app/evidence /app/reports /app/.jlaw_cache
 
-# Create output directories
-RUN mkdir -p output forensic_storage
-
-# Set proper permissions
-RUN useradd -m -u 1000 jlaw && \
-    chown -R jlaw:jlaw /app
-
-# Switch to non-root user
 USER jlaw
 
-# Expose port (if needed for future API server)
-EXPOSE 8000
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+    CMD python -c "from src.core import recursive_engine; print('OK')" || exit 1
 
-# Default command - run the unified script
-CMD ["python", "JLAW_UNIFIED.py"]
+CMD ["python", "-m", "src.core.recursive_engine"]
