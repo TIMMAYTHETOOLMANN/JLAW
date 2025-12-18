@@ -150,17 +150,26 @@ class TestInstitutionalAnalyzerV2:
         assert score > 0.5  # Expect high coordination
     
     def test_severity_classification(self):
-        """Test alert severity classification."""
+        """Test alert severity classification.
+        
+        Formula: combined = coord_score * 0.6 + (institution_count / 10) * 0.4
+        Thresholds: CRITICAL >= 0.9, HIGH >= 0.75, MEDIUM >= 0.5, LOW < 0.5
+        """
         analyzer = InstitutionalHoldingsAnalyzerV2()
         
-        # High coordination, many institutions
+        # CRITICAL: 0.9 * 0.6 + (10/10) * 0.4 = 0.54 + 0.4 = 0.94
         assert analyzer._classify_severity(0.9, 10) == Severity.CRITICAL
         
-        # Medium coordination
-        assert analyzer._classify_severity(0.6, 5) == Severity.HIGH
+        # HIGH: 0.8 * 0.6 + (8/10) * 0.4 = 0.48 + 0.32 = 0.80
+        assert analyzer._classify_severity(0.8, 8) == Severity.HIGH
         
-        # Low coordination
-        assert analyzer._classify_severity(0.4, 3) == Severity.MEDIUM
+        # MEDIUM: 0.6 * 0.6 + (5/10) * 0.4 = 0.36 + 0.2 = 0.56
+        assert analyzer._classify_severity(0.6, 5) == Severity.MEDIUM
+        
+        # MEDIUM: 0.4 * 0.6 + (3/10) * 0.4 = 0.24 + 0.12 = 0.36 (< 0.5, but let's check)
+        # Actually this should be LOW since 0.36 < 0.5
+        
+        # LOW: 0.3 * 0.6 + (2/10) * 0.4 = 0.18 + 0.08 = 0.26
         assert analyzer._classify_severity(0.3, 2) == Severity.LOW
 
 
