@@ -113,7 +113,6 @@ class RateLimiter:
     """
     
     _instance = None
-    _lock_class = asyncio.Lock()
     
     def __new__(cls, requests_per_second: float = 9.0):
         """Ensure singleton pattern for rate limiter."""
@@ -124,7 +123,7 @@ class RateLimiter:
     
     def __init__(self, requests_per_second: float = 9.0):
         """Initialize rate limiter (only once due to singleton)."""
-        if self._initialized:
+        if getattr(self, '_initialized', False):
             return
         
         self.requests_per_second = requests_per_second

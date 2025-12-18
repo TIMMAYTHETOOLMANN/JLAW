@@ -321,7 +321,8 @@ class TestRateLimiterBehavior:
     @pytest.mark.asyncio
     async def test_rate_limiter_enforces_minimum_interval(self):
         """Test that rate limiter enforces minimum interval between requests."""
-        limiter = RateLimiter(requests_per_second=10.0)  # 100ms interval
+        # Note: Parameter is ignored due to singleton - uses global 9 req/sec (111ms interval)
+        limiter = RateLimiter(requests_per_second=10.0)
         
         start_time = asyncio.get_event_loop().time()
         
@@ -331,7 +332,7 @@ class TestRateLimiterBehavior:
         
         elapsed = asyncio.get_event_loop().time() - start_time
         
-        # Should take at least 200ms (2 intervals for 3 requests)
+        # Should take at least 222ms (2 intervals of 111ms for 3 requests with 9 req/sec)
         assert elapsed >= 0.2
     
     @pytest.mark.asyncio

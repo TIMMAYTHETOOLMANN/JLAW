@@ -120,8 +120,9 @@ def validate_sec_user_agent(user_agent: Optional[str]) -> Tuple[bool, str]:
                 f"Format: 'CompanyName/Version (contact@company.com)'"
             )
     
-    # Check for email address (basic validation)
-    email_pattern = r'[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}'
+    # Check for email address (comprehensive validation)
+    # Supports most valid email formats including +, apostrophes, etc.
+    email_pattern = r"[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*"
     if not re.search(email_pattern, user_agent):
         return False, (
             f"SEC_USER_AGENT must include a valid email address: '{user_agent}'. "
