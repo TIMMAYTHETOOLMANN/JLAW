@@ -1,88 +1,29 @@
-# Git
 .git
 .gitignore
-.gitmodules
-
-# Python
-__pycache__/
+__pycache__
 *.py[cod]
 *$py.class
 *.so
-.Python
-*.egg-info/
-dist/
-build/
-.eggs/
-*.egg
-
-# Virtual environments
-.venv
-.venv*/
+.eggs
+*.egg-info
+.mypy_cache
+.pytest_cache
+.coverage
+htmlcov/
 venv/
-venv*/
-env/
-ENV/
-env.bak/
-venv.bak/
-.venv39
-.venv_res
-
-# IDE
+.venv/
 .idea/
 .vscode/
-*.swp
-*.swo
-*~
 .DS_Store
-
-# Testing
-.pytest_cache/
-.coverage
-.coverage.*
-htmlcov/
-.tox/
-.hypothesis/
-*.cover
-.cache
-nosetests.xml
-coverage.xml
-
-# Logs
-*.log
-jlaw_forensic_*.log
-
-# Output directories (mount as volumes instead)
-output/
-forensic_storage/
-
-# Environment files (mount separately)
 .env
-.env.*
-
-# Documentation (keep README.md, exclude others)
-!README.md
+.env.local
+.env.*.local
+tests/
 docs/
-IMPLEMENTATION_*.md
-FORTIFIED_*.md
-NODES_*.md
-JLAW_LOCAL_DEPLOYMENT_*.md
-NODE2_*.md
-
-# CI/CD
-.github/
-.gitlab-ci.yml
-.travis.yml
-
-# Docker
-Dockerfile
-docker-compose.yml
-.dockerignore
-
-# Misc
-*.bak
-*.tmp
-tmp/
-temp/
-.cache/
-.aider*
-dump.rdb
+*.md
+!README.md
+dist/
+build/
+*.log
+logs/
+.jlaw_cache/
