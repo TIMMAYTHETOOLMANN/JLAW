@@ -21,6 +21,7 @@ Form Coverage:
 
 import asyncio
 import aiohttp
+import re
 from dataclasses import dataclass, field
 from datetime import datetime, date
 from typing import List, Dict, Any, Optional
@@ -231,7 +232,6 @@ class SECEdgarClient:
             primary_doc = filing.primary_document
             if "xsl" in primary_doc.lower():
                 # Extract actual filename from xslF345X03/form4.xml -> form4.xml
-                import re
                 match = re.search(r'xsl[^/]+/(.+\.xml)$', primary_doc, re.IGNORECASE)
                 if match:
                     actual_filename = match.group(1)
