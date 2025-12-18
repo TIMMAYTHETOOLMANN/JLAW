@@ -685,11 +685,53 @@ class HTMLParser:
             return text
         
         except ImportError:
-            # Fallback: regex-based HTML stripping
-            text = re.sub(r'<script[^>]*>.*?</script>', '', html, flags=re.DOTALL | re.IGNORECASE)
-            text = re.sub(r'<style[^>]*>.*?</style>', '', text, flags=re.DOTALL | re.IGNORECASE)
-            text = re.sub(r'<[^>]+>', ' ', text)
-            return re.sub(r'\s+', ' ', text).strip()
+            # Fallback: Use html.parser for safer HTML stripping
+            # Note: This is a simplified fallback and BeautifulSoup is strongly recommended
+            logger.warning("BeautifulSoup not available, using simplified HTML parsing")
+            try:
+                from html.parser import HTMLParser
+                
+                class SimpleHTMLStripper(HTMLParser):
+                    def __init__(self):
+                        super().__init__()
+                        self.text = []
+                        self.skip_tags = {'script', 'style', 'head', 'meta', 'link'}
+                        self.in_skip_tag = False
+                    
+                    def handle_starttag(self, tag, attrs):
+                        if tag.lower() in self.skip_tags:
+                            self.in_skip_tag = True
+                    
+                    def handle_endtag(self, tag):
+                        if tag.lower() in self.skip_tags:
+                            self.in_skip_tag = False
+                    
+                    def handle_data(self, data):
+                        if not self.in_skip_tag:
+                            self.text.append(data.strip())
+                    
+                    def get_text(self):
+                        return ' '.join(filter(None, self.text))
+                
+                stripper = SimpleHTMLStripper()
+                stripper.feed(html)
+                text = stripper.get_text()
+                # Clean up whitespace
+                text = re.sub(r'\s+', ' ', text).strip()
+                return text
+            
+            except Exception as e:
+                logger.error(f"HTML parsing failed: {e}")
+                # Last resort: return text as-is with basic tag removal via simple split
+                # This is intentionally very basic to avoid regex security issues
+                parts = html.split('<')
+                text_parts = []
+                for part in parts:
+                    if '>' in part:
+                        text_parts.append(part.split('>', 1)[1])
+                    else:
+                        text_parts.append(part)
+                return ' '.join(text_parts).strip()
 
 
 class XMLParser:
