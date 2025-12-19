@@ -870,8 +870,8 @@ class RecursiveProsecutorialEngine:
                 violations_found=0,
                 alerts_generated=len(node11_output.alerts),
                 findings={
-                    "executives_tracked": node11_output.executives_tracked,
-                    "board_interlocks": node11_output.board_interlocks_detected,
+                    "persons_analyzed": node11_output.persons_analyzed,
+                    "board_interlocks": node11_output.board_interlocks,
                     "form4_trades_analyzed": len(form4_trades)
                 },
                 execution_time_seconds=time.time() - start
@@ -930,8 +930,9 @@ class RecursiveProsecutorialEngine:
                 alerts_generated=len(node12_output.alerts),
                 findings={
                     "transcripts_found": len(transcripts),
-                    "transcripts_analyzed": len(transcripts),
-                    "reg_fd_alerts": node12_output.reg_fd_alerts
+                    "transcripts_analyzed": node12_output.transcripts_analyzed,
+                    "contradictions_found": node12_output.contradictions_found,
+                    "excessive_hedging_count": node12_output.excessive_hedging_count
                 },
                 execution_time_seconds=time.time() - start
             )
