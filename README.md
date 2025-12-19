@@ -411,106 +411,239 @@ SEC_RAISE_ON_FINAL_FAILURE=false      # Graceful degradation
 
 ## DIRECTORY STRUCTURE
 
+### Core System Files
+
 ```
-JLAW2/
-������ JLAW_UNIFIED.py                    # SINGLE DEPLOYMENT SCRIPT
-������ README.md                          # This document
-������ requirements.txt                   # Python dependencies
-������ .env                               # API keys
-��
-������ .claude/agents/                    # 10 Claude Subagent Configurations
-��   ������ forensic/
-��   ��   ������ forensic-compliance-auditor.md
-��   ��   ������ forensic-financial-analyst.md
-��   ��   ������ forensic-nlp-analyst.md
-��   ��   ������ forensic-research-specialist.md
-��   ��   ������ security-auditor.md
-��   ������ infrastructure/
-��   ��   ������ database-administrator.md
-��   ��   ������ devops-engineer.md
-��   ������ orchestration/
-��   ��   ������ forensic-workflow-orchestrator.md
-��   ��   ������ multi-agent-coordinator.md
-��   ������ development/
-��       ������ python-pro.md
-��
-������ src/
-��   ������ core/                          # CORE ENGINE
-��   ��   ������ recursive_engine.py        # 15-node orchestrator (CANONICAL)
-��   ��   ������ evidence_chain/
-��   ��   ��   ������ hash_service.py        # SHA-256/SHA3-512 hashing
-��   ��   ��   ������ chain_validator.py     # Evidence chain integrity
-��   ��   ��   ������ rfc3161_client.py      # RFC 3161 timestamping
-��   ��   ������ custody/
-��   ��       ������ custody.py             # Chain of custody tracking
-��   ��
-��   ������ nodes/                         # 15 FORENSIC ANALYSIS NODES
-��   ��   ������ node1_form4/               # Form 4 Insider Transactions
-��   ��   ��   ������ form4_parser.py        # XML parsing
-��   ��   ��   ������ short_swing_calc.py    # Section 16(b) profits
-��   ��   ��   ������ gift_pattern_detector.py # Seyhun detection
-��   ��   ������ node2_def14a/              # DEF 14A Proxy
-��   ��   ������ node3_10q/                 # 10-Q Quarterly
-��   ��   ������ node4_10k_sox/             # 10-K SOX Cert
-��   ��   ������ node5_irs/                 # IRS ��83 Tax
-��   ��   ������ node6_routing/             # Enforcement Router
-��   ��   ��   ������ enforcement_router.py
-��   ��   ������ node7_13f_holdings/        # Institutional Holdings
-��   ��   ��   ������ institutional_analyzer.py
-��   ��   ������ node8_13d_ownership/       # Beneficial Ownership
-��   ��   ��   ������ beneficial_ownership_tracker.py
-��   ��   ������ node9_8k_events/           # Material Events
-��   ��   ��   ������ material_event_correlator.py
-��   ��   ������ node10_form144/            # Restricted Sales
-��   ��   ��   ������ restricted_sale_monitor.py
-��   ��   ������ node11_network_mapper/     # Network Analysis
-��   ��   ��   ������ executive_network_analyzer.py
-��   ��   ������ node12_earnings_calls/     # Transcript NLP
-��   ��   ��   ������ transcript_analyzer.py
-��   ��   ������ node13_zscore/             # Bankruptcy Prediction
-��   ��   ��   ������ bankruptcy_predictor.py
-��   ��   ������ node14_fscore/             # Financial Strength
-��   ��   ��   ������ financial_strength_analyzer.py
-��   ��   ������ node15_market_correlation/ # Market Correlation
-��   ��       ������ market_correlation_engine.py
-��   ��
-��   ������ detection/                     # FRAUD DETECTION
-��   ��   ������ financial/
-��   ��   ��   ������ beneish_mscore.py      # 8-variable manipulation
-��   ��   ��   ������ benford_analysis.py    # First-digit testing
-��   ��   ������ ml/
-��   ��   ��   ������ deberta_contradiction.py # NLI detection
-��   ��   ��   ������ xgboost_fraud.py       # 35-feature classifier
-��   ��   ������ patterns/
-��   ��       ������ advanced_patterns.py   # 15 advanced patterns
-��   ��
-��   ������ forensics/                     # FORENSIC INTEGRATION
-��   ��   ������ docsgpt/                   # DocsGPT Integration
-��   ��   ��   ������ document_parser.py     # Multi-format parsing
-��   ��   ��   ������ vector_store.py        # FAISS semantic search
-��   ��   ������ subagents/                 # Claude Orchestration
-��   ��   ��   ������ orchestrator.py
-��   ��   ������ dual_agent.py              # OpenAI + Anthropic
-��   ��   ������ agent_sec_analyzer.py      # OpenAI agent
-��   ��   ������ anthropic_agent_analyzer.py # Anthropic agent
-��   ��   ������ openai_secondary_agent.py  # Fallback agent
-��   ��   ������ govinfo_api_client.py      # GovInfo API
-��   ��   ������ config_manager.py
-��   ��
-��   ������ integrations/                  # EXTERNAL DATA
-��       ������ sec_edgar/
-��       ��   ������ edgar_client.py        # SEC EDGAR API
-��       ������ market_data/               # Polygon.io (optional)
-��
-������ config/
-��   ������ secure_config.py               # Credentials
-��
-������ output/                            # Generated Reports
-��   ������ DOSSIER_*.json
-��   ������ FORENSIC_DOSSIER_*.md
-��
-������ archive_deprecated/                # Archived scripts
+JLAW/
+├── JLAW_UNIFIED.py              # Main deployment script (9-phase pipeline)
+├── README.md                     # System documentation
+├── requirements.txt              # Python dependencies
+├── .env.example                  # Environment template
+├── .gitignore                   
+└── pyproject.toml               # Project metadata
 ```
+
+### Source Code Organization (`src/`)
+
+```
+src/
+├── core/                         # Core execution engines
+│   ├── recursive_engine.py       # 15-node recursive orchestrator
+│   ├── linear_orchestrator.py    # 4-phase linear executor  
+│   ├── evidence_chain/           # Cryptographic evidence tracking
+│   │   ├── hash_service.py       # SHA-256/SHA3-512/BLAKE2b hashing
+│   │   ├── chain_validator.py    # Merkle tree validation
+│   │   └── rfc3161_client.py     # RFC 3161 timestamping
+│   └── custody/                  # Chain of custody
+│       └── custody.py            # FRE 902(13)/(14) compliant logging
+│
+├── nodes/                        # 15 forensic analysis nodes
+│   ├── __init__.py               # Unified exports for all nodes
+│   ├── node1_form4/              # Form 4 insider trading
+│   │   ├── form4_parser.py
+│   │   ├── short_swing_calc.py
+│   │   └── gift_pattern_detector.py
+│   ├── node2_def14a/             # DEF 14A executive compensation
+│   │   └── compensation_analyzer.py
+│   ├── node3_10q/                # 10-Q temporal consistency
+│   │   └── temporal_consistency_validator.py
+│   ├── node4_10k_sox/            # 10-K SOX certification
+│   │   └── sox_certification_analyzer.py
+│   ├── node5_irs/                # IRC §83 tax exposure
+│   │   └── irc83_tax_calculator.py
+│   ├── node6_routing/            # Enforcement routing (SEC/DOJ/IRS)
+│   │   └── enforcement_router.py
+│   ├── node7_13f_holdings/       # 13F-HR institutional holdings
+│   │   ├── institutional_analyzer.py
+│   │   ├── institutional_analyzer_v2.py
+│   │   └── sec_edgar_client.py
+│   ├── node8_13d_ownership/      # SC 13D/13G beneficial ownership
+│   │   ├── beneficial_ownership_tracker.py
+│   │   └── beneficial_ownership_tracker_v2.py
+│   ├── node9_8k_events/          # 8-K material events
+│   │   ├── material_event_correlator.py
+│   │   ├── material_event_correlator_v2.py
+│   │   └── market_data_client.py
+│   ├── node10_form144/           # Form 144 restricted sales
+│   │   ├── restricted_sale_monitor.py
+│   │   ├── restricted_sale_monitor_v2.py
+│   │   ├── tacking_calculator.py
+│   │   ├── affiliate_aggregator.py
+│   │   └── finra_parser.py
+│   ├── node11_network_mapper/    # Executive network analysis
+│   │   ├── executive_network_analyzer.py
+│   │   ├── executive_network_analyzer_v2.py
+│   │   ├── neo4j_client.py
+│   │   ├── network_metrics.py
+│   │   ├── temporal_network_analyzer.py
+│   │   └── def14a_advisor_extractor.py
+│   ├── node12_earnings_calls/    # Earnings call transcripts
+│   │   ├── transcript_analyzer.py
+│   │   ├── transcript_analyzer_v2.py
+│   │   ├── deberta_detector.py
+│   │   ├── cross_validator.py
+│   │   ├── contextual_hedging_analyzer.py
+│   │   ├── filing_narrative_comparator.py
+│   │   └── transcript_source_client.py
+│   ├── node13_zscore/            # Altman Z-Score bankruptcy
+│   │   ├── bankruptcy_predictor.py
+│   │   ├── bankruptcy_predictor_v2.py
+│   │   ├── altman_zscore_engine.py
+│   │   ├── ensemble_predictor.py
+│   │   ├── industry_calibration.py
+│   │   └── zscore_validator.py
+│   ├── node14_fscore/            # Piotroski F-Score strength
+│   │   ├── financial_strength_analyzer.py
+│   │   ├── financial_strength_analyzer_v2.py
+│   │   ├── piotroski_fscore_engine.py
+│   │   ├── piotroski_validator.py
+│   │   ├── sector_relative_fscore.py
+│   │   └── weighted_fscore.py
+│   ├── node15_market_correlation/ # Market correlation & anomalies
+│   │   ├── market_correlation_engine.py
+│   │   ├── market_correlation_engine_v2.py
+│   │   ├── market_anomaly_detector.py
+│   │   ├── isolation_forest.py
+│   │   ├── cross_security_correlator.py
+│   │   ├── intraday_event_analyzer.py
+│   │   └── polygon_websocket.py
+│   └── cross_node/               # Cross-node correlation analysis
+│       └── node_correlator.py
+│
+├── detection/                    # Fraud detection patterns (23 algorithms)
+│   ├── patterns/
+│   │   ├── advanced_patterns.py  # 15 core patterns
+│   │   ├── options_backdating_detector.py
+│   │   └── channel_stuffing_detector.py
+│   ├── financial/
+│   │   ├── beneish_mscore.py     # 8-variable M-Score
+│   │   └── benford_analysis.py   # First-digit testing
+│   ├── ml/
+│   │   ├── deberta_contradiction.py
+│   │   └── xgboost_fraud.py
+│   └── nlp/
+│       ├── contradiction_detector.py
+│       ├── financial_models.py
+│       └── hedging_detector.py
+│
+├── forensics/                    # Forensic analysis integration
+│   ├── dual_agent.py             # OpenAI + Anthropic coordinator
+│   ├── agent_sec_analyzer.py     # OpenAI Agent SDK
+│   ├── anthropic_agent_analyzer.py
+│   ├── config_manager.py
+│   ├── govinfo_api_client.py     # GovInfo API for statutes
+│   ├── docsgpt/                  # Document parsing
+│   │   ├── document_parser.py    # Multi-format parser (PDF/XBRL/HTML)
+│   │   └── vector_store.py       # FAISS semantic search
+│   └── subagents/                # Claude subagent orchestration
+│       └── orchestrator.py
+│
+├── reporting/                    # DOJ-level forensic reporting
+│   ├── doj_report_generator.py   # Main report generator
+│   ├── evidence_packager.py      # Merkle tree evidence packaging
+│   ├── chain_of_custody_logger.py
+│   ├── statutory_citation_engine.py
+│   ├── pdf_generator.py          # ReportLab PDF generation
+│   ├── court_pdf_generator.py    # FRE-compliant court documents
+│   ├── models.py                 # Data models
+│   └── constants.py              # Statutory references
+│
+├── integrations/                 # External data sources
+│   ├── sec_edgar/
+│   │   └── edgar_client.py       # SEC EDGAR API client
+│   └── market_data/              # Polygon.io (optional)
+│
+├── graph/                        # Graph analytics (Neo4j)
+│   └── graph_analytics.py        # PageRank, Louvain, centrality
+│
+├── internal/                     # Internal access-controlled modules
+│   └── whistleblower_bounty_estimator.py
+│
+├── database/                     # Database modules
+│
+└── infrastructure/               # Infrastructure utilities
+    ├── caching/
+    └── monitoring/
+```
+
+### Configuration (`config/`)
+
+```
+config/
+├── __init__.py
+├── secure_config.py              # Secure API key management
+└── fortified_nodes_config.py     # Node configuration
+```
+
+### Testing (`tests/`)
+
+```
+tests/
+├── test_module_imports.py        # Module verification
+├── test_15_node_integration.py
+├── test_doj_report_validation.py
+├── test_evidence_integrity.py
+├── test_final_patch.py
+├── test_nike_2019_baseline.py
+├── test_node2_compensation.py
+├── test_node_implementations.py
+├── test_recursive_engine_nodes.py
+├── core/
+│   ├── test_hash_service.py
+│   └── test_merkle_tree.py
+├── detection/
+│   ├── test_hedging_detector.py
+│   └── test_isolation_forest.py
+├── graph/
+│   └── test_graph_analytics.py
+├── integrations/
+├── nodes/
+│   ├── test_cross_node.py
+│   ├── test_node7_v2.py
+│   ├── test_node8_v2.py
+│   └── test_node9_v2.py
+└── validation/
+```
+
+### Claude Subagents (`.claude/agents/`)
+
+```
+.claude/agents/
+├── forensic/
+│   ├── forensic-financial-analyst.md
+│   ├── forensic-compliance-auditor.md
+│   ├── forensic-nlp-analyst.md
+│   ├── forensic-research-specialist.md
+│   └── security-auditor.md
+├── infrastructure/
+│   ├── database-administrator.md
+│   └── devops-engineer.md
+├── orchestration/
+│   ├── forensic-workflow-orchestrator.md
+│   └── multi-agent-coordinator.md
+└── development/
+    └── python-pro.md
+```
+
+### Output Directories
+
+```
+output/                           # Generated forensic reports
+├── DOSSIER_*.json
+└── FORENSIC_DOSSIER_*.md
+
+forensic_storage/                 # Evidence chain storage
+├── evidence_chain_*.json
+└── custody_log_*.json
+```
+
+**Total System:**
+- **Python Modules:** 135 in src/
+- **Analysis Nodes:** 15 (fully integrated)
+- **Detection Patterns:** 23 algorithms
+- **Claude Subagents:** 10 configurations
+```
+
 
 ---
 
