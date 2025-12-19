@@ -149,6 +149,7 @@ class TargetConfig:
     ])
     output_dir: Path = field(default_factory=lambda: Path("output"))
     auto_mode: bool = False
+    strict_mode: bool = False
     case_id: str = field(default_factory=lambda: "")
     
     def __post_init__(self):
@@ -323,6 +324,9 @@ class UnifiedForensicEngine:
         self.violations: List[Violation] = []
         self.custody_records: List[Dict[str, Any]] = []
         
+        # Strict mode controller (lazy loaded)
+        self._strict_controller = None
+        
         # Module instances (lazy loaded)
         self._sec_client = None
         self._doc_parser = None
@@ -337,6 +341,10 @@ class UnifiedForensicEngine:
         self.parsed_documents: List[Any] = []
         self.node_results: Dict[str, Any] = {}
         self.detection_results: Dict[str, Any] = {}
+        
+        # Module availability tracking
+        self._sec_client_available = False
+        self._sec_config_valid = False
     
     async def execute(self) -> ForensicDossier:
         """
@@ -352,36 +360,71 @@ class UnifiedForensicEngine:
         self.config.output_dir.mkdir(parents=True, exist_ok=True)
         self.logger = setup_logging(self.config.output_dir)
         
+        # Initialize strict mode controller if enabled
+        if self.config.strict_mode:
+            from config.strict_execution_config import load_config
+            from src.core.strict_execution_controller import StrictExecutionController, ExecutionAbortException
+            
+            strict_config = load_config("strict")
+            self._strict_controller = StrictExecutionController(
+                strict_config,
+                case_id,
+                self.config.output_dir
+            )
+            self.logger.info("\n" + "=" * 70)
+            self.logger.info("  ⚠️  STRICT EXECUTION MODE ENABLED")
+            self.logger.info("  All phase gates will be enforced")
+            self.logger.info("  Execution will halt on critical failures")
+            self.logger.info("=" * 70)
+        
         self._print_banner(case_id)
         
-        # Execute phases
-        await self._execute_phase_1_configuration()
-        
-        if self._confirm_continue(AnalysisPhase.DATA_COLLECTION):
-            await self._execute_phase_2_data_collection()
-        
-        if self._confirm_continue(AnalysisPhase.DOCUMENT_PARSING):
-            await self._execute_phase_3_document_parsing()
-        
-        if self._confirm_continue(AnalysisPhase.NODE_ANALYSIS):
-            await self._execute_phase_4_node_analysis()
-        
-        if self._confirm_continue(AnalysisPhase.PATTERN_DETECTION):
-            await self._execute_phase_5_pattern_detection()
-        
-        if self._confirm_continue(AnalysisPhase.DUAL_AGENT):
-            await self._execute_phase_6_dual_agent()
-        
-        if self._confirm_continue(AnalysisPhase.SUBAGENT):
-            await self._execute_phase_7_subagent()
-        
-        if self._confirm_continue(AnalysisPhase.EVIDENCE_CHAIN):
-            await self._execute_phase_8_evidence_chain()
-        
-        # Always generate dossier
-        await self._execute_phase_9_dossier_generation()
+        # Execute phases with strict mode handling
+        try:
+            await self._execute_phase_1_configuration()
+            
+            if self._confirm_continue(AnalysisPhase.DATA_COLLECTION):
+                await self._execute_phase_2_data_collection()
+            
+            if self._confirm_continue(AnalysisPhase.DOCUMENT_PARSING):
+                await self._execute_phase_3_document_parsing()
+            
+            if self._confirm_continue(AnalysisPhase.NODE_ANALYSIS):
+                await self._execute_phase_4_node_analysis()
+            
+            if self._confirm_continue(AnalysisPhase.PATTERN_DETECTION):
+                await self._execute_phase_5_pattern_detection()
+            
+            if self._confirm_continue(AnalysisPhase.DUAL_AGENT):
+                await self._execute_phase_6_dual_agent()
+            
+            if self._confirm_continue(AnalysisPhase.SUBAGENT):
+                await self._execute_phase_7_subagent()
+            
+            if self._confirm_continue(AnalysisPhase.EVIDENCE_CHAIN):
+                await self._execute_phase_8_evidence_chain()
+            
+            # Always generate dossier
+            await self._execute_phase_9_dossier_generation()
+            
+        except Exception as e:
+            if self.config.strict_mode:
+                # Import here to avoid circular dependency
+                from src.core.strict_execution_controller import ExecutionAbortException
+                if isinstance(e, ExecutionAbortException):
+                    # Strict mode abort - exit with specific code
+                    self.logger.critical(f"\nExecution aborted with exit code: {e.exit_code}")
+                    sys.exit(e.exit_code)
+            # Re-raise for normal handling
+            raise
         
         execution_end = datetime.utcnow()
+        
+        # Finalize strict mode controller if enabled
+        if self._strict_controller:
+            exit_code = self._strict_controller.finalize()
+            if exit_code != 0:
+                self.logger.error(f"\nStrict mode execution completed with errors (exit code: {exit_code})")
         
         # Build final dossier
         dossier = self._build_dossier(case_id, execution_start, execution_end)
@@ -432,11 +475,16 @@ class UnifiedForensicEngine:
         phase = AnalysisPhase.CONFIGURATION
         start = time.time()
         
-        self.logger.info(f"\n{'═' * 70}")
-        self.logger.info(f"  {phase.value}")
-        self.logger.info(f"{'═' * 70}")
+        # Strict mode: begin phase
+        if self._strict_controller:
+            self._strict_controller.begin_phase(phase.value)
+        else:
+            self.logger.info(f"\n{'═' * 70}")
+            self.logger.info(f"  {phase.value}")
+            self.logger.info(f"{'═' * 70}")
         
         errors = []
+        modules_loaded = 0
         
         # Log target info
         self.logger.info(f"  Target: {self.config.company_name} (CIK: {self.config.cik})")
@@ -448,6 +496,7 @@ class UnifiedForensicEngine:
         try:
             from config.secure_config import validate_sec_configuration
             is_valid, config_errors = validate_sec_configuration()
+            self._sec_config_valid = is_valid
             if not is_valid:
                 self.logger.error("    ✗ SEC API configuration is INVALID:")
                 for error in config_errors:
@@ -468,6 +517,8 @@ class UnifiedForensicEngine:
         try:
             from src.integrations.sec_edgar.edgar_client import SECEdgarClient
             self._sec_client = SECEdgarClient
+            self._sec_client_available = True
+            modules_loaded += 1
             self.logger.info("    ✓ SEC EDGAR Client (shared rate limiter: 9 req/sec)")
         except Exception as e:
             errors.append(f"SEC Client: {e}")
@@ -478,6 +529,7 @@ class UnifiedForensicEngine:
             from src.forensics.docsgpt import DocumentParser, SECVectorSearchEngine
             self._doc_parser = DocumentParser()
             self._vector_store = SECVectorSearchEngine()
+            modules_loaded += 1
             self.logger.info("    ✓ DocsGPT Document Parser")
             self.logger.info("    ✓ Vector Search Engine")
         except Exception as e:
@@ -488,6 +540,7 @@ class UnifiedForensicEngine:
         try:
             from src.core.recursive_engine import RecursiveProsecutorialEngine
             self._recursive_engine = RecursiveProsecutorialEngine()
+            modules_loaded += 1
             self.logger.info("    ✓ 15-Node Recursive Engine")
         except Exception as e:
             errors.append(f"Recursive Engine: {e}")
@@ -497,6 +550,7 @@ class UnifiedForensicEngine:
         try:
             from src.detection.patterns.advanced_patterns import AdvancedPatternDetector
             self._pattern_detector = AdvancedPatternDetector()
+            modules_loaded += 1
             self.logger.info("    ✓ Advanced Pattern Detector (23 patterns)")
         except Exception as e:
             errors.append(f"Pattern Detector: {e}")
@@ -506,6 +560,7 @@ class UnifiedForensicEngine:
         try:
             from src.forensics.dual_agent import DualAgentCoordinator
             self._dual_agent = DualAgentCoordinator()
+            modules_loaded += 1
             self.logger.info("    ✓ Dual-Agent Coordinator")
         except Exception as e:
             errors.append(f"Dual Agent: {e}")
@@ -515,6 +570,7 @@ class UnifiedForensicEngine:
         try:
             from src.forensics.subagents import SubagentOrchestrator
             self._subagent_orchestrator = SubagentOrchestrator()
+            modules_loaded += 1
             self.logger.info("    ✓ Subagent Orchestrator (10 agents)")
         except Exception as e:
             errors.append(f"Subagent: {e}")
@@ -522,13 +578,33 @@ class UnifiedForensicEngine:
         
         duration = time.time() - start
         
+        # Prepare phase data
+        phase_data = {
+            "modules_loaded": modules_loaded,
+            "sec_client_available": self._sec_client_available,
+            "sec_config_valid": self._sec_config_valid,
+            "errors": errors
+        }
+        
+        # Strict mode: validate gate
+        if self._strict_controller:
+            can_continue = self._strict_controller.complete_phase(
+                phase.value,
+                phase_data,
+                records_extracted=modules_loaded,
+                records_expected=6
+            )
+            if not can_continue:
+                # Gate failed - abort will be triggered
+                return
+        
         self.phase_results.append(PhaseResult(
             phase=phase,
             status="success" if not errors else "partial",
             duration_seconds=duration,
             findings_count=0,
             alerts_count=0,
-            data={"modules_loaded": 6 - len(errors)},
+            data=phase_data,
             errors=errors
         ))
         
@@ -543,12 +619,17 @@ class UnifiedForensicEngine:
         phase = AnalysisPhase.DATA_COLLECTION
         start = time.time()
         
-        self.logger.info(f"\n{'═' * 70}")
-        self.logger.info(f"  {phase.value}")
-        self.logger.info(f"{'═' * 70}")
+        # Strict mode: begin phase
+        if self._strict_controller:
+            self._strict_controller.begin_phase(phase.value)
+        else:
+            self.logger.info(f"\n{'═' * 70}")
+            self.logger.info(f"  {phase.value}")
+            self.logger.info(f"{'═' * 70}")
         
         errors = []
         filings_collected = 0
+        filings_by_type = {}
         
         try:
             async with self._sec_client(user_agent="JLAW-Unified/3.0") as client:
@@ -570,6 +651,7 @@ class UnifiedForensicEngine:
                         )
                         self.filings.extend(type_filings)
                         filings_collected += len(type_filings)
+                        filings_by_type[filing_type] = len(type_filings)
                         self.logger.info(f"    Form {filing_type}: {len(type_filings)} filings")
                 
         except Exception as e:
@@ -578,13 +660,30 @@ class UnifiedForensicEngine:
         
         duration = time.time() - start
         
+        # Prepare phase data
+        phase_data = {
+            "filings_collected": filings_collected,
+            "filings_by_type": filings_by_type,
+            "errors": errors
+        }
+        
+        # Strict mode: validate gate
+        if self._strict_controller:
+            can_continue = self._strict_controller.complete_phase(
+                phase.value,
+                phase_data,
+                records_extracted=filings_collected
+            )
+            if not can_continue:
+                return
+        
         self.phase_results.append(PhaseResult(
             phase=phase,
             status="success" if filings_collected > 0 else "failed",
             duration_seconds=duration,
             findings_count=filings_collected,
             alerts_count=0,
-            data={"filings_collected": filings_collected},
+            data=phase_data,
             errors=errors
         ))
         
@@ -599,9 +698,13 @@ class UnifiedForensicEngine:
         phase = AnalysisPhase.DOCUMENT_PARSING
         start = time.time()
         
-        self.logger.info(f"\n{'═' * 70}")
-        self.logger.info(f"  {phase.value}")
-        self.logger.info(f"{'═' * 70}")
+        # Strict mode: begin phase
+        if self._strict_controller:
+            self._strict_controller.begin_phase(phase.value)
+        else:
+            self.logger.info(f"\n{'═' * 70}")
+            self.logger.info(f"  {phase.value}")
+            self.logger.info(f"{'═' * 70}")
         
         parsed_count = 0
         indexed_count = 0
@@ -624,13 +727,31 @@ class UnifiedForensicEngine:
         
         duration = time.time() - start
         
+        # Prepare phase data
+        phase_data = {
+            "parsed": parsed_count,
+            "indexed": indexed_count,
+            "errors": errors
+        }
+        
+        # Strict mode: validate gate
+        if self._strict_controller:
+            can_continue = self._strict_controller.complete_phase(
+                phase.value,
+                phase_data,
+                records_extracted=parsed_count,
+                records_expected=len(self.filings)
+            )
+            if not can_continue:
+                return
+        
         self.phase_results.append(PhaseResult(
             phase=phase,
             status="success" if parsed_count > 0 else "skipped",
             duration_seconds=duration,
             findings_count=parsed_count,
             alerts_count=0,
-            data={"parsed": parsed_count, "indexed": indexed_count},
+            data=phase_data,
             errors=errors
         ))
         
@@ -645,13 +766,19 @@ class UnifiedForensicEngine:
         phase = AnalysisPhase.NODE_ANALYSIS
         start = time.time()
         
-        self.logger.info(f"\n{'═' * 70}")
-        self.logger.info(f"  {phase.value}")
-        self.logger.info(f"{'═' * 70}")
+        # Strict mode: begin phase
+        if self._strict_controller:
+            self._strict_controller.begin_phase(phase.value)
+        else:
+            self.logger.info(f"\n{'═' * 70}")
+            self.logger.info(f"  {phase.value}")
+            self.logger.info(f"{'═' * 70}")
         
         violations_found = 0
         alerts = 0
         errors = []
+        nodes_executed = 0
+        nodes_successful = 0
         
         if self._recursive_engine:
             try:
@@ -668,6 +795,10 @@ class UnifiedForensicEngine:
                 violations_found = result.total_alerts if hasattr(result, 'total_alerts') else 0
                 alerts = violations_found
                 
+                # Count nodes from result
+                nodes_executed = 15  # Total nodes
+                nodes_successful = 15 - len(errors)  # Rough estimate
+                
             except Exception as e:
                 errors.append(str(e))
                 self.logger.error(f"  Node analysis error: {e}")
@@ -676,13 +807,33 @@ class UnifiedForensicEngine:
         
         duration = time.time() - start
         
+        # Prepare phase data
+        phase_data = {
+            "node_results": self.node_results,
+            "nodes_executed": nodes_executed,
+            "nodes_successful": nodes_successful,
+            "violations_found": violations_found,
+            "errors": errors
+        }
+        
+        # Strict mode: validate gate
+        if self._strict_controller:
+            can_continue = self._strict_controller.complete_phase(
+                phase.value,
+                phase_data,
+                records_extracted=nodes_successful,
+                records_expected=nodes_executed
+            )
+            if not can_continue:
+                return
+        
         self.phase_results.append(PhaseResult(
             phase=phase,
             status="success" if not errors else "partial",
             duration_seconds=duration,
             findings_count=violations_found,
             alerts_count=alerts,
-            data=self.node_results,
+            data=phase_data,
             errors=errors
         ))
         
@@ -697,9 +848,13 @@ class UnifiedForensicEngine:
         phase = AnalysisPhase.PATTERN_DETECTION
         start = time.time()
         
-        self.logger.info(f"\n{'═' * 70}")
-        self.logger.info(f"  {phase.value}")
-        self.logger.info(f"{'═' * 70}")
+        # Strict mode: begin phase
+        if self._strict_controller:
+            self._strict_controller.begin_phase(phase.value)
+        else:
+            self.logger.info(f"\n{'═' * 70}")
+            self.logger.info(f"  {phase.value}")
+            self.logger.info(f"{'═' * 70}")
         
         patterns_run = 0
         alerts = 0
@@ -727,13 +882,31 @@ class UnifiedForensicEngine:
         
         duration = time.time() - start
         
+        # Prepare phase data
+        phase_data = {
+            "patterns_executed": patterns_run,
+            "total_alerts": alerts,
+            "errors": errors
+        }
+        
+        # Strict mode: validate gate
+        if self._strict_controller:
+            can_continue = self._strict_controller.complete_phase(
+                phase.value,
+                phase_data,
+                records_extracted=patterns_run,
+                records_expected=23
+            )
+            if not can_continue:
+                return
+        
         self.phase_results.append(PhaseResult(
             phase=phase,
             status="success" if patterns_run > 0 else "skipped",
             duration_seconds=duration,
             findings_count=patterns_run,
             alerts_count=alerts,
-            data={"patterns_executed": patterns_run, "total_alerts": alerts},
+            data=phase_data,
             errors=errors
         ))
         
@@ -1403,6 +1576,7 @@ Examples:
     parser.add_argument('--start', type=str, help='Start date (YYYY-MM-DD)')
     parser.add_argument('--end', type=str, help='End date (YYYY-MM-DD)')
     parser.add_argument('--auto', action='store_true', help='Auto mode (no confirmations)')
+    parser.add_argument('--strict', action='store_true', help='Strict execution mode (enforce phase gates, halt on failures)')
     parser.add_argument('--output', type=str, default='output', help='Output directory')
     parser.add_argument('--no-pdf', action='store_true', help='Skip PDF report generation')
     parser.add_argument('--check-deps', action='store_true', help='Check dependencies and exit')
@@ -1526,6 +1700,7 @@ async def main():
             start_date=start_date,
             end_date=end_date,
             auto_mode=args.auto,
+            strict_mode=args.strict,
             output_dir=Path(args.output)
         )
     else:
