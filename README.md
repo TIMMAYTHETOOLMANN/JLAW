@@ -553,6 +553,18 @@ JLAW2/
 
 ---
 
+
+## QUANTITATIVE SCORING ENGINES (ENHANCED)
+
+> **📖 Detailed Technical Reference**: [QUANTITATIVE_SCORING_REFERENCE.md](QUANTITATIVE_SCORING_REFERENCE.md)
+
+JLAW v4.1.1 introduces enhanced quantitative scoring engines with multi-model support, forensic evidence chains, and triple-hash integrity verification:
+
+- **Node 13**: Altman Z-Score (3 model variants: Original, Private, Non-Manufacturing)
+- **Node 14**: Piotroski F-Score (9-signal fundamental analysis with accruals quality detection)
+- **Node 15**: Market Correlation & Anomaly Detection (Polygon.io integration, Z-score volume analysis)
+- **Linear Orchestrator**: 4-phase systematic execution with dependency management and triple-hash evidence chain
+
 ## 23 DETECTION PATTERNS
 
 ### Financial Statement Fraud (1-4)
