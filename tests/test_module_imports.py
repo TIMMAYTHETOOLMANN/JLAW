@@ -6,6 +6,8 @@ Validates that all documented modules can be imported without errors.
 This test ensures the integrity of the module structure and proper __init__.py exports.
 """
 
+import glob
+import os
 import pytest
 
 
@@ -26,7 +28,6 @@ def test_node_modules():
     """Test all 15 node module files exist."""
     # Note: Full node imports require networkx, numpy, and other dependencies
     # This test verifies the module structure is in place
-    import os
     
     node_modules = [
         'src/nodes/node1_form4/form4_parser.py',
@@ -53,7 +54,6 @@ def test_node_modules():
     assert os.path.exists('src/nodes/__init__.py')
     for i in range(1, 16):
         node_dir = f'src/nodes/node{i}_*'
-        import glob
         matches = glob.glob(node_dir)
         assert len(matches) > 0, f"Node {i} directory not found"
 
@@ -77,7 +77,7 @@ def test_reporting_modules():
 
 def test_graph_modules():
     """Test graph analytics imports."""
-    from src.graph import graph_analytics
+    import src.graph.graph_analytics as graph_analytics
     
     assert graph_analytics is not None
 
