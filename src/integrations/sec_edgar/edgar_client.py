@@ -176,7 +176,8 @@ class SECEdgarClient:
     ARCHIVES_URL = "https://www.sec.gov/Archives/edgar/data"
     
     # Default User-Agent (MUST be customized for production)
-    DEFAULT_USER_AGENT = "JLAW-Forensics/2.0 (forensics@jlaw-system.org)"
+    # SEC requires format: <Company>/<Version> <Name> <email>
+    DEFAULT_USER_AGENT = "JLAW-Forensics/2.0 Timothy_Johnson forensics@jlaw-system.org"
     
     # Retry configuration for 429 errors
     MAX_RETRIES = 4
@@ -268,7 +269,15 @@ class SECEdgarClient:
                             )
                             return None
                     elif response.status == 403:
-                        logger.warning(f"SEC fetch forbidden (403): {url}")
+                        logger.error(
+                            f"SEC API access forbidden (403) for {url}. "
+                            f"This usually indicates:\n"
+                            f"  1. User-Agent header not compliant with SEC requirements\n"
+                            f"  2. IP address may be blocked\n"
+                            f"  3. User-Agent must include: Company Name + Contact Name + Valid Email\n"
+                            f"Current User-Agent: {self.user_agent}\n"
+                            f"SEC Requirement: '<Company> <Name> <email@example.com>'"
+                        )
                         return None
                     else:
                         logger.warning(f"SEC fetch failed: {url} -> HTTP {response.status}")

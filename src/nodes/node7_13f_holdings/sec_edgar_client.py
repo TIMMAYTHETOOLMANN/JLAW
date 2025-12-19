@@ -76,7 +76,7 @@ class SECEDGARClient:
     BASE_URL = "https://data.sec.gov"
     SUBMISSIONS_ENDPOINT = "/submissions/CIK{cik}.json"
     
-    def __init__(self, user_agent: str = "JLAW Forensic System contact@example.com"):
+    def __init__(self, user_agent: str = "JLAW-Forensics/2.0 Timothy_Johnson forensics@jlaw-system.org"):
         """
         Initialize SEC EDGAR client.
         
