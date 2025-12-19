@@ -176,7 +176,7 @@ class SECEdgarClient:
     ARCHIVES_URL = "https://www.sec.gov/Archives/edgar/data"
     
     # Default User-Agent (MUST be customized for production)
-    # SEC requires format: <Company> <Name> <email>
+    # SEC requires format: <Company>/<Version> <Name> <email>
     DEFAULT_USER_AGENT = "JLAW-Forensics/2.0 Timothy_Johnson forensics@jlaw-system.org"
     
     # Retry configuration for 429 errors
