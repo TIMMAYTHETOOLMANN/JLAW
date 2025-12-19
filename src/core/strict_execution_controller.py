@@ -195,19 +195,21 @@ class StrictExecutionController:
     
     def _get_exit_code_for_phase(self, phase_name: str) -> int:
         """Get appropriate exit code for phase failure."""
-        if "Configuration" in phase_name:
+        phase_lower = phase_name.lower()
+        
+        if "configuration" in phase_lower:
             return self.config.exit_code_configuration_failure
-        elif "Data Collection" in phase_name:
+        elif "data collection" in phase_lower:
             return self.config.exit_code_data_collection_failure
-        elif "Document Parsing" in phase_name:
+        elif "document parsing" in phase_lower or "docsgpt" in phase_lower:
             return self.config.exit_code_document_parsing_failure
-        elif "Node Analysis" in phase_name:
+        elif "node analysis" in phase_lower or "15-node" in phase_lower or "recursive" in phase_lower:
             return self.config.exit_code_node_execution_failure
-        elif "Pattern Detection" in phase_name:
+        elif "pattern detection" in phase_lower or "detection pattern" in phase_lower:
             return self.config.exit_code_pattern_detection_failure
-        elif "Evidence Chain" in phase_name:
+        elif "evidence chain" in phase_lower or "chain finalization" in phase_lower:
             return self.config.exit_code_evidence_chain_failure
-        elif "Dossier Generation" in phase_name:
+        elif "dossier generation" in phase_lower or "doj-grade" in phase_lower:
             return self.config.exit_code_dossier_generation_failure
         else:
             return 1  # Generic failure
