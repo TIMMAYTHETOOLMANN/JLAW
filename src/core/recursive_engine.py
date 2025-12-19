@@ -108,9 +108,9 @@ class RecursiveAnalysisResult:
         }
 
 
-class RecursiveProsecutorialEngineV2:
+class RecursiveProsecutorialEngine:
     """
-    Recursive Prosecutorial Engine V2.0
+    Recursive Prosecutorial Engine
     
     Full 15-node forensic analysis engine with recursive execution pattern.
     """
@@ -1161,5 +1161,5 @@ class RecursiveProsecutorialEngineV2:
         print(f"{'═' * 70}\n")
 
 
-# Backward compatibility alias
-RecursiveProsecutorialEngine = RecursiveProsecutorialEngineV2
+# Backward compatibility alias for V2
+RecursiveProsecutorialEngineV2 = RecursiveProsecutorialEngine

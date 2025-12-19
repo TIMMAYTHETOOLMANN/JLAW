@@ -83,16 +83,27 @@ from .node8_13d_ownership import BeneficialOwnershipTracker
 from .node9_8k_events import MaterialEventCorrelator
 
 # Node 10: Form 144 Restricted Sale Monitor
-# Note: Import errors in node10's finra_parser.py prevent full import
-# from .node10_form144 import RestrictedSaleMonitor, RestrictedSaleMonitorV2, TackingCalculator
+from .node10_form144 import (
+    RestrictedSaleMonitor,
+    RestrictedSaleMonitorV2,
+    TackingCalculator,
+    AffiliateVolumeAggregator
+)
 
 # Node 11: Executive Network Mapper
-# Note: Import errors in node11 prevent full import
-# from .node11_network_mapper import ExecutiveNetworkAnalyzer, ExecutiveNetworkAnalyzerV2, Neo4jGraphClient
+from .node11_network_mapper import (
+    ExecutiveNetworkAnalyzer,
+    ExecutiveNetworkAnalyzerV2,
+    Neo4jGraphClient,
+    MockNeo4jGraphClient
+)
 
-# Node 12: Earnings Call Transcript Analyzer  
-# Note: Import errors in node12 prevent full import
-# from .node12_earnings_calls import TranscriptAnalyzerV2, DeBERTaContradictionDetector, EarningsCallCrossValidator
+# Node 12: Earnings Call Transcript Analyzer
+from .node12_earnings_calls import (
+    TranscriptAnalyzerV2,
+    DeBERTaContradictionDetector,
+    EarningsCallCrossValidator
+)
 
 # Node 13: Z-Score Bankruptcy Predictor
 from .node13_zscore import BankruptcyPredictorV2, Node13OutputV2
@@ -167,20 +178,22 @@ __all__ = [
     # Node 9
     'MaterialEventCorrelator',
     
-    # Node 10 (imports disabled due to existing errors in finra_parser.py)
-    # 'RestrictedSaleMonitor',
-    # 'RestrictedSaleMonitorV2',
-    # 'TackingCalculator',
+    # Node 10
+    'RestrictedSaleMonitor',
+    'RestrictedSaleMonitorV2',
+    'TackingCalculator',
+    'AffiliateVolumeAggregator',
     
-    # Node 11 (imports disabled due to existing errors)
-    # 'ExecutiveNetworkAnalyzer',
-    # 'ExecutiveNetworkAnalyzerV2',
-    # 'Neo4jGraphClient',
+    # Node 11
+    'ExecutiveNetworkAnalyzer',
+    'ExecutiveNetworkAnalyzerV2',
+    'Neo4jGraphClient',
+    'MockNeo4jGraphClient',
     
-    # Node 12 (imports disabled due to existing errors)
-    # 'TranscriptAnalyzerV2',
-    # 'DeBERTaContradictionDetector',
-    # 'EarningsCallCrossValidator',
+    # Node 12
+    'TranscriptAnalyzerV2',
+    'DeBERTaContradictionDetector',
+    'EarningsCallCrossValidator',
     
     # Node 13
     'BankruptcyPredictorV2',

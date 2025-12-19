@@ -9,7 +9,7 @@ instead of passing empty arrays.
 import pytest
 from datetime import date, datetime
 from unittest.mock import Mock, AsyncMock, patch
-from src.core.recursive_engine import RecursiveProsecutorialEngineV2, NodeResult
+from src.core.recursive_engine import RecursiveProsecutorialEngine, NodeResult
 
 
 class TestRecursiveEngineNodes:
@@ -18,7 +18,7 @@ class TestRecursiveEngineNodes:
     @pytest.fixture
     def engine(self):
         """Create engine instance for testing."""
-        return RecursiveProsecutorialEngineV2(
+        return RecursiveProsecutorialEngine(
             sec_user_agent="Test/1.0",
             polygon_api_key=None
         )
