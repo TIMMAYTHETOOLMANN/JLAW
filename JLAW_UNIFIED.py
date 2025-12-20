@@ -493,6 +493,9 @@ class UnifiedForensicEngine:
         execution_start = datetime.utcnow()
         case_id = f"JLAW-{self.config.cik}-{execution_start.strftime('%Y%m%d%H%M%S')}"
         
+        # Set investigation type for metrics
+        self._metrics_collector.set_investigation_type(investigation_type)
+        
         # Setup output directory and logging
         self.config.output_dir.mkdir(parents=True, exist_ok=True)
         self.logger = setup_logging(self.config.output_dir)
@@ -622,6 +625,10 @@ class UnifiedForensicEngine:
         """Phase 1: Validate configuration and initialize modules."""
         phase = AnalysisPhase.CONFIGURATION
         start = time.time()
+        
+        # Start phase metrics
+        phase_name = "Phase 1: Configuration"
+        self._metrics_collector.start_phase(phase_name, phase_number=1, items_expected=10)
         
         # Strict mode: begin phase
         if self._strict_controller:
@@ -765,6 +772,14 @@ class UnifiedForensicEngine:
             if not can_continue:
                 # Gate failed - abort will be triggered
                 return
+        
+        # End phase metrics
+        self._metrics_collector.end_phase(
+            phase_name,
+            status="success" if not errors else "partial",
+            items_processed=modules_loaded,
+            errors=len(errors)
+        )
         
         self.phase_results.append(PhaseResult(
             phase=phase,
@@ -1010,6 +1025,10 @@ class UnifiedForensicEngine:
         phase = AnalysisPhase.NODE_ANALYSIS
         start = time.time()
         
+        # Start phase metrics
+        phase_name = "Phase 4: Node Analysis"
+        self._metrics_collector.start_phase(phase_name, phase_number=4, items_expected=15)
+        
         # Strict mode: begin phase
         if self._strict_controller:
             self._strict_controller.begin_phase(phase.value)
@@ -1077,6 +1096,14 @@ class UnifiedForensicEngine:
         
         duration = time.time() - start
         
+        # End phase metrics
+        self._metrics_collector.end_phase(
+            phase_name,
+            status="success" if not errors else "partial",
+            items_processed=nodes_successful,
+            errors=len(errors)
+        )
+        
         # Prepare phase data
         phase_data = {
             "node_results": self.node_results,
@@ -1116,6 +1143,12 @@ class UnifiedForensicEngine:
         phase = AnalysisPhase.NODE_ANALYSIS
         start = time.time()
         
+        # Start phase metrics
+        phase_name = "Phase 4: Node Analysis (Optimized)"
+        nodes_to_run = plan.required_nodes + plan.optional_nodes
+        self._metrics_collector.start_phase(phase_name, phase_number=4, items_expected=len(nodes_to_run))
+        self._metrics_collector.set_nodes_planned(len(nodes_to_run))
+        
         if self._strict_controller:
             self._strict_controller.begin_phase(phase.value)
         else:
@@ -1128,11 +1161,12 @@ class UnifiedForensicEngine:
         nodes_skipped = 0
         errors = []
         
-        # Combine required and optional nodes
-        nodes_to_run = plan.required_nodes + plan.optional_nodes
-        
         self.logger.info(f"  Running {len(nodes_to_run)}/15 nodes (optimized for {plan.investigation_type})")
         self.logger.info(f"  Skipping nodes: {plan.skipped_nodes}")
+        
+        # Mark skipped nodes in metrics
+        for node_id in plan.skipped_nodes:
+            self._metrics_collector.skip_node(node_id, reason="Not required for investigation type")
         
         if self._recursive_engine:
             try:
@@ -1144,12 +1178,17 @@ class UnifiedForensicEngine:
                         )
                         if should_skip:
                             self.logger.info(f"    ⏭ Node {node_id}: Skipped - {reason}")
+                            self._metrics_collector.skip_node(node_id, reason=reason)
                             nodes_skipped += 1
                             continue
                     
-                    # Execute node
+                    # Start node metrics
+                    self._metrics_collector.start_node(node_id)
+                    
+                    # Execute node with retry handler
                     try:
-                        result = await self._recursive_engine.run_single_node(
+                        result = await self._retry_handler.execute_async(
+                            self._recursive_engine.run_single_node,
                             node_id=node_id,
                             cik=self.config.cik,
                             company_name=self.config.company_name,
@@ -1163,12 +1202,28 @@ class UnifiedForensicEngine:
                         node_violations = result.get("violations", 0) or result.get("alerts", 0) or 0
                         violations_found += node_violations
                         
+                        # End node metrics successfully
+                        self._metrics_collector.end_node(
+                            node_id,
+                            status="success",
+                            findings_count=node_violations,
+                            api_calls=result.get("api_calls", 0)
+                        )
+                        
                         status = "✓" if node_violations == 0 else f"⚠ {node_violations} findings"
                         self.logger.info(f"    {status} Node {node_id}: Complete")
                         
                     except Exception as e:
                         errors.append(f"Node {node_id}: {e}")
                         self.logger.error(f"    ✗ Node {node_id}: {e}")
+                        
+                        # End node metrics with failure
+                        self._metrics_collector.end_node(
+                            node_id,
+                            status="failed",
+                            error_message=str(e),
+                            errors=1
+                        )
                 
             except Exception as e:
                 errors.append(str(e))
@@ -1200,6 +1255,14 @@ class UnifiedForensicEngine:
                 self.logger.warning(f"    ⚠ Cross-node correlation failed: {e}")
         
         duration = time.time() - start
+        
+        # End phase metrics
+        self._metrics_collector.end_phase(
+            phase_name,
+            status="success" if not errors else "partial",
+            items_processed=nodes_executed,
+            errors=len(errors)
+        )
         
         self.logger.info(f"\n  Phase 4 complete: {nodes_executed} nodes executed, {nodes_skipped} skipped, {violations_found} findings in {duration:.2f}s")
         
