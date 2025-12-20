@@ -991,6 +991,64 @@ class UnifiedForensicEngine:
                 
                 self.detection_results = results
                 
+                # ═══════════════════════════════════════════════════════════════
+                # DeBERTa Contradiction Detection Integration
+                # ═══════════════════════════════════════════════════════════════
+                if pattern_data.get("document_pairs"):
+                    try:
+                        from src.detection.ml.deberta_contradiction import ContradictionEngine
+                        
+                        self.logger.info("  Running DeBERTa contradiction detection...")
+                        deberta = ContradictionEngine()
+                        contradictions = []
+                        
+                        # Build claim pairs from document pairs
+                        claim_pairs = []
+                        for pair in pattern_data["document_pairs"]:
+                            text1 = pair.get("text1", "")
+                            text2 = pair.get("text2", "")
+                            if text1 and text2:
+                                claim_pairs.append((text1, text2, "doc1", "doc2"))
+                        
+                        if claim_pairs:
+                            contradiction_analysis = deberta.detect_contradictions(claim_pairs)
+                            if contradiction_analysis.contradictions_found > 0:
+                                contradictions = [c.to_dict() for c in contradiction_analysis.all_contradictions]
+                                self.detection_results["deberta_contradictions"] = contradictions
+                                alerts += len(contradictions)
+                                self.logger.info(f"    ✓ DeBERTa: {len(contradictions)} contradictions detected")
+                            else:
+                                self.logger.info("    ✓ DeBERTa: No contradictions detected")
+                    except Exception as e:
+                        errors.append(f"DeBERTa error: {e}")
+                        self.logger.warning(f"  DeBERTa detection error: {e}")
+                
+                # ═══════════════════════════════════════════════════════════════
+                # XGBoost Fraud Prediction Integration
+                # ═══════════════════════════════════════════════════════════════
+                if pattern_data.get("xgboost_features"):
+                    try:
+                        from src.detection.ml.xgboost_fraud import XGBoostFraudDetector, FraudFeatures
+                        
+                        self.logger.info("  Running XGBoost fraud prediction...")
+                        xgb = XGBoostFraudDetector()
+                        
+                        # Convert features dict to FraudFeatures object
+                        features_dict = pattern_data["xgboost_features"]
+                        if isinstance(features_dict, dict):
+                            features = FraudFeatures(**features_dict)
+                            prediction = xgb.predict(features)
+                            
+                            self.detection_results["xgboost_fraud"] = prediction.to_dict()
+                            self.logger.info(f"    ✓ XGBoost: Risk level {prediction.risk_level.value}, probability {prediction.probability:.4f}")
+                            
+                            # Count as alert if probability is significant
+                            if prediction.probability >= 0.5:
+                                alerts += 1
+                    except Exception as e:
+                        errors.append(f"XGBoost error: {e}")
+                        self.logger.warning(f"  XGBoost prediction error: {e}")
+                
             except Exception as e:
                 errors.append(str(e))
                 self.logger.error(f"  Pattern detection error: {e}")
