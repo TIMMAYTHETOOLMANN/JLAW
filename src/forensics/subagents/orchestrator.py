@@ -23,6 +23,8 @@ Usage:
 """
 
 import os
+import json
+import asyncio
 import logging
 from dataclasses import dataclass, field
 from datetime import datetime
@@ -31,6 +33,14 @@ from enum import Enum
 from pathlib import Path
 
 logger = logging.getLogger(__name__)
+
+# Try to import Anthropic client for Claude API
+try:
+    from anthropic import AsyncAnthropic
+    ANTHROPIC_AVAILABLE = True
+except ImportError:
+    ANTHROPIC_AVAILABLE = False
+    logger.warning("anthropic package not available. Install with: pip install anthropic")
 
 
 class AgentRole(Enum):
@@ -228,6 +238,18 @@ class SubagentOrchestrator:
         self.task_counter = 0
         self.workflow_counter = 0
         self._verify_agents()
+        
+        # Initialize Claude API client if available
+        self.claude_client = None
+        if ANTHROPIC_AVAILABLE:
+            api_key = os.getenv("ANTHROPIC_API_KEY")
+            if api_key:
+                self.claude_client = AsyncAnthropic(api_key=api_key)
+                logger.info("✅ Claude API client initialized")
+            else:
+                logger.warning("ANTHROPIC_API_KEY not set - using mock responses")
+        else:
+            logger.warning("Anthropic package not available - using mock responses")
     
     def _verify_agents(self):
         """Verify agent configuration files exist."""
@@ -434,42 +456,302 @@ class SubagentOrchestrator:
         content: str,
         metadata: Dict[str, Any]
     ) -> Dict[str, Any]:
-        """Execute NLP analysis task."""
-        # Placeholder for actual NLP agent execution
-        word_count = len(content.split())
+        """
+        Execute NLP analysis using Claude API.
         
-        return {
-            "word_count": word_count,
-            "entities_extracted": [],
-            "key_claims": [],
-            "sentiment": "neutral",
-            "anomalies": []
-        }
+        Invokes forensic-nlp-analyst to analyze document content.
+        """
+        # Prepare user message for Claude
+        user_message = f"""Analyze the following financial document content for forensic investigation:
+
+**Document Type:** {metadata.get('document_type', 'Unknown')}
+**Metadata:** {json.dumps(metadata, indent=2)}
+
+**Content (first 5000 chars):**
+{content[:5000]}
+
+Please provide:
+1. Key entities extracted (people, companies, dates, amounts)
+2. Key claims and statements
+3. Sentiment analysis
+4. Any anomalies or red flags detected
+
+Return your analysis in JSON format with keys: entities_extracted, key_claims, sentiment, anomalies"""
+
+        # Call Claude API asynchronously
+        try:
+            loop = asyncio.get_event_loop()
+        except RuntimeError:
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+        
+        result = loop.run_until_complete(
+            self._call_claude_agent(AgentRole.NLP_ANALYST, user_message)
+        )
+        
+        if result.get("status") == "success":
+            data = result.get("data", {})
+            return {
+                "word_count": len(content.split()),
+                "entities_extracted": data.get("entities_extracted", []),
+                "key_claims": data.get("key_claims", []),
+                "sentiment": data.get("sentiment", "neutral"),
+                "anomalies": data.get("anomalies", []),
+                "raw_response": result.get("raw_response", "")
+            }
+        else:
+            # Return mock data on error
+            return {
+                "word_count": len(content.split()),
+                "entities_extracted": [],
+                "key_claims": [],
+                "sentiment": "neutral",
+                "anomalies": [],
+                "error": result.get("error")
+            }
     
     def _execute_financial_analysis(
         self,
         nlp_findings: Dict[str, Any]
     ) -> Dict[str, Any]:
-        """Execute financial analysis task."""
-        return {
-            "mscore": None,
-            "zscore": None,
-            "benford_conforming": True,
-            "fraud_probability": 0.0,
-            "risk_indicators": []
-        }
+        """
+        Execute financial analysis using Claude API.
+        
+        Invokes forensic-financial-analyst to analyze financial data.
+        """
+        user_message = f"""Conduct forensic financial analysis based on the following NLP findings:
+
+**NLP Analysis Results:**
+{json.dumps(nlp_findings, indent=2)}
+
+Please analyze for:
+1. Beneish M-Score indicators (if financial data present)
+2. Altman Z-Score risk assessment
+3. Benford's Law conformity
+4. Overall fraud probability assessment
+5. Risk indicators and red flags
+
+Return your analysis in JSON format with keys: mscore, zscore, benford_conforming, fraud_probability, risk_indicators"""
+
+        try:
+            loop = asyncio.get_event_loop()
+        except RuntimeError:
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+        
+        result = loop.run_until_complete(
+            self._call_claude_agent(AgentRole.FINANCIAL_ANALYST, user_message)
+        )
+        
+        if result.get("status") == "success":
+            data = result.get("data", {})
+            return {
+                "mscore": data.get("mscore"),
+                "zscore": data.get("zscore"),
+                "benford_conforming": data.get("benford_conforming", True),
+                "fraud_probability": data.get("fraud_probability", 0.0),
+                "risk_indicators": data.get("risk_indicators", []),
+                "raw_response": result.get("raw_response", "")
+            }
+        else:
+            return {
+                "mscore": None,
+                "zscore": None,
+                "benford_conforming": True,
+                "fraud_probability": 0.0,
+                "risk_indicators": [],
+                "error": result.get("error")
+            }
     
     def _execute_compliance_check(
         self,
         findings: Dict[str, Any]
     ) -> Dict[str, Any]:
-        """Execute compliance check task."""
-        return {
-            "violations": [],
-            "applicable_statutes": [],
-            "penalty_estimate": 0,
-            "prosecution_elements": []
-        }
+        """
+        Execute compliance audit using Claude API.
+        
+        Invokes forensic-compliance-auditor to map findings to violations.
+        """
+        user_message = f"""Conduct forensic compliance audit based on the following investigation findings:
+
+**Investigation Findings:**
+{json.dumps(findings, indent=2)}
+
+Please analyze for:
+1. SEC regulation violations
+2. Applicable statutes and legal citations
+3. Estimated penalties
+4. Prosecution elements and evidence requirements
+
+Return your analysis in JSON format with keys: violations, applicable_statutes, penalty_estimate, prosecution_elements"""
+
+        try:
+            loop = asyncio.get_event_loop()
+        except RuntimeError:
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+        
+        result = loop.run_until_complete(
+            self._call_claude_agent(AgentRole.COMPLIANCE_AUDITOR, user_message)
+        )
+        
+        if result.get("status") == "success":
+            data = result.get("data", {})
+            return {
+                "violations": data.get("violations", []),
+                "applicable_statutes": data.get("applicable_statutes", []),
+                "penalty_estimate": data.get("penalty_estimate", 0),
+                "prosecution_elements": data.get("prosecution_elements", []),
+                "raw_response": result.get("raw_response", "")
+            }
+        else:
+            return {
+                "violations": [],
+                "applicable_statutes": [],
+                "penalty_estimate": 0,
+                "prosecution_elements": [],
+                "error": result.get("error")
+            }
+    
+    def _load_agent_prompt(self, agent: AgentRole) -> str:
+        """
+        Load agent system prompt from .claude/agents/ directory.
+        
+        Args:
+            agent: Agent role to load prompt for
+            
+        Returns:
+            System prompt string
+        """
+        agent_file = self._find_agent_file(agent)
+        
+        if agent_file and agent_file.exists():
+            try:
+                content = agent_file.read_text(encoding='utf-8')
+                
+                # Extract content after front matter (after second ---)
+                if '---' in content:
+                    parts = content.split('---', 2)
+                    if len(parts) >= 3:
+                        return parts[2].strip()
+                
+                return content
+            except Exception as e:
+                logger.error(f"Failed to load agent prompt from {agent_file}: {e}")
+        
+        # Fallback to generic prompt
+        return f"You are a forensic analyst specializing in {agent.value}. Provide detailed analysis."
+    
+    async def _call_claude_agent(
+        self,
+        agent: AgentRole,
+        user_message: str,
+        max_tokens: int = 4096
+    ) -> Dict[str, Any]:
+        """
+        Call Claude API with agent-specific system prompt.
+        
+        Args:
+            agent: Agent role to use
+            user_message: User message/task for the agent
+            max_tokens: Maximum tokens in response
+            
+        Returns:
+            Dictionary with response and metadata
+        """
+        if not self.claude_client:
+            logger.warning(f"Claude client not available, using mock response for {agent.value}")
+            return self._get_mock_response(agent)
+        
+        try:
+            # Load agent system prompt
+            system_prompt = self._load_agent_prompt(agent)
+            
+            # Call Claude API
+            response = await self.claude_client.messages.create(
+                model="claude-opus-4-20250514",  # Latest Opus model
+                system=system_prompt,
+                messages=[{
+                    "role": "user",
+                    "content": user_message
+                }],
+                max_tokens=max_tokens
+            )
+            
+            # Extract response text
+            response_text = response.content[0].text if response.content else ""
+            
+            # Try to parse as JSON if possible
+            try:
+                parsed = json.loads(response_text)
+                return {
+                    "status": "success",
+                    "data": parsed,
+                    "raw_response": response_text,
+                    "model": response.model,
+                    "usage": {
+                        "input_tokens": response.usage.input_tokens,
+                        "output_tokens": response.usage.output_tokens
+                    }
+                }
+            except json.JSONDecodeError:
+                # Not JSON, return as text
+                return {
+                    "status": "success",
+                    "data": {"response": response_text},
+                    "raw_response": response_text,
+                    "model": response.model,
+                    "usage": {
+                        "input_tokens": response.usage.input_tokens,
+                        "output_tokens": response.usage.output_tokens
+                    }
+                }
+        
+        except Exception as e:
+            logger.error(f"Claude API call failed for {agent.value}: {e}")
+            return {
+                "status": "error",
+                "error": str(e),
+                "data": self._get_mock_response(agent)
+            }
+    
+    def _get_mock_response(self, agent: AgentRole) -> Dict[str, Any]:
+        """
+        Get mock response for an agent (fallback when Claude API unavailable).
+        
+        Args:
+            agent: Agent role
+            
+        Returns:
+            Mock response dictionary
+        """
+        if agent == AgentRole.NLP_ANALYST:
+            return {
+                "entities_extracted": [],
+                "key_claims": [],
+                "sentiment": "neutral",
+                "anomalies": []
+            }
+        elif agent == AgentRole.FINANCIAL_ANALYST:
+            return {
+                "mscore": None,
+                "zscore": None,
+                "benford_conforming": True,
+                "fraud_probability": 0.0,
+                "risk_indicators": []
+            }
+        elif agent == AgentRole.COMPLIANCE_AUDITOR:
+            return {
+                "violations": [],
+                "applicable_statutes": [],
+                "penalty_estimate": 0,
+                "prosecution_elements": []
+            }
+        else:
+            return {
+                "status": "mock",
+                "message": f"Mock response for {agent.value}"
+            }
     
     def get_agent_status(self) -> Dict[str, Any]:
         """Get status of all available agents."""

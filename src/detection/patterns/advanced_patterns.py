@@ -610,5 +610,227 @@ class AdvancedPatternDetector:
                 data['volume_data']
             )
         
+        # ═══════════════════════════════════════════════════════════════════
+        # STANDALONE DETECTOR INTEGRATIONS (P2 Priority)
+        # ═══════════════════════════════════════════════════════════════════
+        
+        # Beneish M-Score (Earnings Manipulation Detection)
+        if 'financial_statements' in data:
+            try:
+                from src.detection.financial.beneish_mscore import BeneishMScoreCalculator
+                mscore_calc = BeneishMScoreCalculator()
+                
+                # Extract current and prior year data
+                current_year = data['financial_statements'].get('current_year', {})
+                prior_year = data['financial_statements'].get('prior_year', {})
+                
+                if current_year and prior_year:
+                    mscore_result = mscore_calc.calculate(current_year, prior_year)
+                    
+                    if mscore_result.manipulation_likely:
+                        alert = self._create_mscore_alert(mscore_result)
+                        results['beneish_mscore'] = [alert]
+                    else:
+                        results['beneish_mscore'] = []
+            except Exception as e:
+                logger.warning(f"Beneish M-Score detection failed: {e}")
+        
+        # Benford's Law Analysis
+        if 'financial_data' in data:
+            try:
+                from src.detection.financial.benford_analysis import BenfordAnalyzer
+                benford = BenfordAnalyzer()
+                
+                # Extract numeric values for analysis
+                numbers = data['financial_data']
+                if isinstance(numbers, list) and numbers:
+                    benford_result = benford.analyze(numbers)
+                    
+                    if benford_result.has_anomalies:
+                        alert = self._create_benford_alert(benford_result)
+                        results['benford_law'] = [alert]
+                    else:
+                        results['benford_law'] = []
+            except Exception as e:
+                logger.warning(f"Benford's Law analysis failed: {e}")
+        
+        # Options Backdating Detection
+        if 'form4_grants' in data and 'price_history' in data:
+            try:
+                from src.detection.patterns.options_backdating_detector import OptionsBackdatingDetector
+                backdating = OptionsBackdatingDetector()
+                
+                alerts = backdating.analyze_grants(
+                    data['form4_grants'],
+                    data['price_history']
+                )
+                results['options_backdating'] = alerts
+            except Exception as e:
+                logger.warning(f"Options backdating detection failed: {e}")
+        
+        # Channel Stuffing Detection
+        if 'quarterly_financials' in data:
+            try:
+                from src.detection.patterns.channel_stuffing_detector import ChannelStuffingDetector
+                stuffing = ChannelStuffingDetector()
+                
+                alerts = stuffing.analyze_quarters(data['quarterly_financials'])
+                results['channel_stuffing'] = alerts
+            except Exception as e:
+                logger.warning(f"Channel stuffing detection failed: {e}")
+        
+        # XGBoost Fraud Detection
+        if 'xgboost_features' in data:
+            try:
+                from src.detection.ml.xgboost_fraud import XGBoostFraudDetector
+                xgboost = XGBoostFraudDetector()
+                
+                predictions = xgboost.predict(data['xgboost_features'])
+                if predictions and any(p.get('fraud_probability', 0) > 0.7 for p in predictions):
+                    alert = self._create_xgboost_alert(predictions)
+                    results['xgboost_fraud'] = [alert]
+                else:
+                    results['xgboost_fraud'] = []
+            except Exception as e:
+                logger.warning(f"XGBoost fraud detection failed: {e}")
+        
+        # DeBERTa Contradiction Detection
+        if 'document_pairs' in data:
+            try:
+                from src.detection.ml.deberta_contradiction import DeBERTaContradictionEngine
+                deberta = DeBERTaContradictionEngine()
+                
+                contradictions = []
+                for pair in data['document_pairs']:
+                    result = deberta.detect_contradiction(
+                        pair.get('text1', ''),
+                        pair.get('text2', '')
+                    )
+                    if result.get('is_contradiction'):
+                        contradictions.append(result)
+                
+                if contradictions:
+                    alert = self._create_contradiction_alert(contradictions)
+                    results['deberta_contradiction'] = [alert]
+                else:
+                    results['deberta_contradiction'] = []
+            except Exception as e:
+                logger.warning(f"DeBERTa contradiction detection failed: {e}")
+        
         return results
+    
+    # ═══════════════════════════════════════════════════════════════════
+    # HELPER METHODS FOR STANDALONE DETECTOR ALERTS
+    # ═══════════════════════════════════════════════════════════════════
+    
+    def _create_mscore_alert(self, mscore_result) -> PatternAlert:
+        """Create alert from Beneish M-Score result."""
+        evidence_data = {
+            "mscore": mscore_result.mscore,
+            "interpretation": mscore_result.interpretation,
+            "variables": mscore_result.variables
+        }
+        
+        return PatternAlert(
+            pattern_name="Beneish M-Score Manipulation",
+            pattern_id="MSCORE-001",
+            description=f"Earnings manipulation detected: M-Score = {mscore_result.mscore:.3f} (threshold: -2.22)",
+            confidence=0.87,
+            severity=PatternSeverity.HIGH,
+            evidence=evidence_data,
+            risk_indicators=[
+                f"M-Score indicates {mscore_result.interpretation}",
+                "Threshold exceeded for earnings manipulation"
+            ],
+            regulatory_implications=[
+                "Potential violation of 15 U.S.C. § 78j(b) - Securities fraud",
+                "SOX Section 302 certification concerns"
+            ],
+            evidence_hash=self._compute_hash(evidence_data)
+        )
+    
+    def _create_benford_alert(self, benford_result) -> PatternAlert:
+        """Create alert from Benford's Law analysis result."""
+        evidence_data = {
+            "chi_squared": benford_result.chi_squared,
+            "p_value": benford_result.p_value,
+            "observed_distribution": benford_result.observed_distribution,
+            "deviations": benford_result.deviations
+        }
+        
+        return PatternAlert(
+            pattern_name="Benford's Law Violation",
+            pattern_id="BENFORD-001",
+            description=f"Financial data violates Benford's Law (χ² = {benford_result.chi_squared:.3f}, p = {benford_result.p_value:.4f})",
+            confidence=0.89,
+            severity=PatternSeverity.MEDIUM,
+            evidence=evidence_data,
+            risk_indicators=[
+                "Numeric distribution deviates from Benford's Law",
+                f"Chi-squared test: {benford_result.chi_squared:.3f}",
+                f"P-value: {benford_result.p_value:.4f}"
+            ],
+            regulatory_implications=[
+                "Potential data manipulation or fabrication",
+                "Financial statement accuracy concerns"
+            ],
+            evidence_hash=self._compute_hash(evidence_data)
+        )
+    
+    def _create_xgboost_alert(self, predictions) -> PatternAlert:
+        """Create alert from XGBoost fraud predictions."""
+        evidence_data = {
+            "predictions": predictions,
+            "max_probability": max(p.get('fraud_probability', 0) for p in predictions)
+        }
+        
+        return PatternAlert(
+            pattern_name="XGBoost Fraud Detection",
+            pattern_id="XGBOOST-001",
+            description=f"ML model detected high fraud probability: {evidence_data['max_probability']:.2%}",
+            confidence=0.92,
+            severity=PatternSeverity.HIGH,
+            evidence=evidence_data,
+            risk_indicators=[
+                f"Fraud probability: {evidence_data['max_probability']:.2%}",
+                "ML ensemble model indicates fraud signals"
+            ],
+            regulatory_implications=[
+                "High-risk fraud indicators detected",
+                "Recommended for enhanced scrutiny"
+            ],
+            evidence_hash=self._compute_hash(evidence_data)
+        )
+    
+    def _create_contradiction_alert(self, contradictions) -> PatternAlert:
+        """Create alert from DeBERTa contradiction detection."""
+        evidence_data = {
+            "contradiction_count": len(contradictions),
+            "contradictions": contradictions
+        }
+        
+        return PatternAlert(
+            pattern_name="Document Contradiction",
+            pattern_id="DEBERTA-001",
+            description=f"Detected {len(contradictions)} contradictions in document analysis",
+            confidence=0.92,
+            severity=PatternSeverity.MEDIUM,
+            evidence=evidence_data,
+            risk_indicators=[
+                f"{len(contradictions)} contradictions detected",
+                "DeBERTa NLI model high confidence"
+            ],
+            regulatory_implications=[
+                "Potential misrepresentation in filings",
+                "Document consistency concerns"
+            ],
+            evidence_hash=self._compute_hash(evidence_data)
+        )
+    
+    def _compute_hash(self, data: Dict[str, Any]) -> str:
+        """Compute SHA-256 hash of evidence data."""
+        import json
+        data_str = json.dumps(data, sort_keys=True, default=str)
+        return hashlib.sha256(data_str.encode()).hexdigest()
+
 

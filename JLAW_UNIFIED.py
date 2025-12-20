@@ -864,8 +864,55 @@ class UnifiedForensicEngine:
             try:
                 self.logger.info("  Running 23 detection patterns...")
                 
-                # Would pass actual data in production
-                results = self._pattern_detector.run_all_patterns({})
+                # Build pattern data from node results and collected data
+                pattern_data = {}
+                
+                # Extract transactions from Node 1 (Form 4) results
+                if "node1_form4" in self.node_results:
+                    node1_data = self.node_results["node1_form4"]
+                    pattern_data["transactions"] = node1_data.get("transactions", [])
+                    pattern_data["insider_trades"] = node1_data.get("trades", node1_data.get("transactions", []))
+                
+                # Add filings from Phase 2
+                if self.filings:
+                    pattern_data["filings"] = self.filings
+                
+                # Add document text from Phase 3 parsed documents
+                if self.parsed_documents:
+                    # Combine all parsed document text
+                    doc_texts = []
+                    for doc in self.parsed_documents:
+                        if hasattr(doc, 'text'):
+                            doc_texts.append(doc.text)
+                        elif isinstance(doc, dict) and 'text' in doc:
+                            doc_texts.append(doc['text'])
+                        elif isinstance(doc, str):
+                            doc_texts.append(doc)
+                    pattern_data["document_text"] = " ".join(doc_texts) if doc_texts else ""
+                    pattern_data["document_type"] = "10-K"  # Default or derive from filings
+                
+                # Extract Form 144 filings from Node 10 results
+                if "node10_form144" in self.node_results:
+                    node10_data = self.node_results["node10_form144"]
+                    pattern_data["form144_filings"] = node10_data.get("filings", [])
+                
+                # Extract volume data from Node 15 (Market Correlation) results
+                if "node15_market" in self.node_results:
+                    node15_data = self.node_results["node15_market"]
+                    pattern_data["volume_data"] = node15_data.get("volume_data", [])
+                
+                # Extract relationships from Node 11 (Network Analysis) results
+                if "node11_network" in self.node_results:
+                    node11_data = self.node_results["node11_network"]
+                    pattern_data["relationships"] = node11_data.get("relationships", {})
+                
+                # Add reporting company flag
+                pattern_data["is_reporting_company"] = True
+                
+                self.logger.info(f"  Pattern data keys: {list(pattern_data.keys())}")
+                
+                # NOW call with actual data
+                results = self._pattern_detector.run_all_patterns(pattern_data)
                 
                 for pattern_name, pattern_alerts in results.items():
                     patterns_run += 1
