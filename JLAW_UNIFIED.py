@@ -339,6 +339,7 @@ class UnifiedForensicEngine:
         self._dual_agent = None
         self._subagent_orchestrator = None
         self._node_correlator = None
+        self._intelligent_orchestrator = None
         
         # Collected data
         self.filings: List[Dict[str, Any]] = []
@@ -346,6 +347,9 @@ class UnifiedForensicEngine:
         self.node_results: Dict[str, Any] = {}
         self.detection_results: Dict[str, Any] = {}
         self.correlation_results: List[Dict[str, Any]] = []
+        
+        # Execution plan (for optimized execution)
+        self._execution_plan = None
         
         # Module availability tracking
         self._sec_client_available = False
@@ -421,6 +425,130 @@ class UnifiedForensicEngine:
                     self.logger.critical(f"\nExecution aborted with exit code: {e.exit_code}")
                     sys.exit(e.exit_code)
             # Re-raise for normal handling
+            raise
+        
+        execution_end = datetime.utcnow()
+        
+        # Finalize strict mode controller if enabled
+        if self._strict_controller:
+            exit_code = self._strict_controller.finalize()
+            if exit_code != 0:
+                self.logger.error(f"\nStrict mode execution completed with errors (exit code: {exit_code})")
+        
+        # Build final dossier
+        dossier = self._build_dossier(case_id, execution_start, execution_end)
+        
+        # Save outputs
+        await self._save_outputs(dossier)
+        
+        self._print_summary(dossier)
+        
+        return dossier
+    
+    async def execute_optimized(
+        self,
+        investigation_type: str = "comprehensive"
+    ) -> ForensicDossier:
+        """
+        Execute with intelligent node selection based on investigation type.
+        
+        Args:
+            investigation_type: One of "insider_trading", "financial_fraud", 
+                              "compliance", or "comprehensive"
+        
+        Returns:
+            ForensicDossier with optimized execution
+        """
+        # Import here to avoid circular dependency at module level
+        from src.core.intelligent_orchestrator import InvestigationType
+        
+        # Map string to enum
+        type_map = {
+            "insider_trading": InvestigationType.INSIDER_TRADING,
+            "financial_fraud": InvestigationType.FINANCIAL_FRAUD,
+            "compliance": InvestigationType.COMPLIANCE,
+            "comprehensive": InvestigationType.COMPREHENSIVE
+        }
+        inv_type = type_map.get(investigation_type.lower(), InvestigationType.COMPREHENSIVE)
+        
+        if not self._intelligent_orchestrator:
+            self.logger.warning("Intelligent Orchestrator not available - running comprehensive")
+            return await self.execute()
+        
+        execution_start = datetime.utcnow()
+        case_id = f"JLAW-{self.config.cik}-{execution_start.strftime('%Y%m%d%H%M%S')}"
+        
+        # Setup output directory and logging
+        self.config.output_dir.mkdir(parents=True, exist_ok=True)
+        self.logger = setup_logging(self.config.output_dir)
+        
+        # Initialize strict mode controller if enabled
+        if self.config.strict_mode:
+            from config.strict_execution_config import load_config
+            from src.core.strict_execution_controller import StrictExecutionController, ExecutionAbortException
+            
+            strict_config = load_config("strict")
+            self._strict_controller = StrictExecutionController(
+                strict_config,
+                case_id,
+                self.config.output_dir
+            )
+            self.logger.info("\n" + "=" * 70)
+            self.logger.info("  ⚠️  STRICT EXECUTION MODE ENABLED")
+            self.logger.info("=" * 70)
+        
+        # Execute phases
+        try:
+            # Phases 1-3 run normally to collect data
+            if self._confirm_continue(AnalysisPhase.CONFIGURATION):
+                await self._execute_phase_1_configuration()
+            
+            if self._confirm_continue(AnalysisPhase.DATA_COLLECTION):
+                await self._execute_phase_2_data_collection()
+            
+            if self._confirm_continue(AnalysisPhase.DOCUMENT_PARSING):
+                await self._execute_phase_3_document_parsing()
+            
+            # Create optimized execution plan AFTER data collection
+            plan = self._intelligent_orchestrator.create_execution_plan(
+                investigation_type=inv_type,
+                available_filings=self.filings,
+                resource_constraints={"max_nodes": 15}
+            )
+            
+            # Log execution plan
+            summary = self._intelligent_orchestrator.get_investigation_summary(plan)
+            self.logger.info(f"\n{summary}")
+            
+            # Store plan for reference
+            self._execution_plan = plan
+            
+            # Phase 4 with optimized node selection
+            if self._confirm_continue(AnalysisPhase.NODE_ANALYSIS):
+                await self._execute_phase_4_node_analysis_optimized(plan)
+            
+            # Continue with remaining phases normally
+            if self._confirm_continue(AnalysisPhase.PATTERN_DETECTION):
+                await self._execute_phase_5_pattern_detection()
+            
+            if self._confirm_continue(AnalysisPhase.DUAL_AGENT):
+                await self._execute_phase_6_dual_agent()
+            
+            if self._confirm_continue(AnalysisPhase.SUBAGENT):
+                await self._execute_phase_7_subagent()
+            
+            if self._confirm_continue(AnalysisPhase.EVIDENCE_CHAIN):
+                await self._execute_phase_8_evidence_chain()
+            
+            # Always generate dossier
+            await self._execute_phase_9_dossier_generation()
+            
+        except Exception as e:
+            if self.config.strict_mode:
+                from src.core.strict_execution_controller import ExecutionAbortException
+                if isinstance(e, ExecutionAbortException):
+                    self.logger.critical(f"\nExecution aborted with exit code: {e.exit_code}")
+                    sys.exit(e.exit_code)
             raise
         
         execution_end = datetime.utcnow()
@@ -590,6 +718,16 @@ class UnifiedForensicEngine:
         except Exception as e:
             errors.append(f"Subagent: {e}")
             self.logger.warning(f"    ✗ Subagent Orchestrator: {e}")
+        
+        # Intelligent Orchestrator
+        try:
+            from src.core.intelligent_orchestrator import IntelligentOrchestrator
+            self._intelligent_orchestrator = IntelligentOrchestrator()
+            modules_loaded += 1
+            self.logger.info("    ✓ Intelligent Orchestrator")
+        except Exception as e:
+            self._intelligent_orchestrator = None
+            self.logger.warning(f"    ✗ Intelligent Orchestrator: {e}")
         
         duration = time.time() - start
         
@@ -955,6 +1093,132 @@ class UnifiedForensicEngine:
         ))
         
         self.logger.info(f"\n  Phase 4 complete: {violations_found} findings in {duration:.2f}s")
+    
+    async def _execute_phase_4_node_analysis_optimized(self, plan):
+        """Phase 4 with intelligent node selection."""
+        from src.core.intelligent_orchestrator import ExecutionPlan
+        
+        phase = AnalysisPhase.NODE_ANALYSIS
+        start = time.time()
+        
+        if self._strict_controller:
+            self._strict_controller.begin_phase(phase.value)
+        else:
+            self.logger.info(f"\n{'═' * 70}")
+            self.logger.info(f"  {phase.value} (OPTIMIZED)")
+            self.logger.info(f"{'═' * 70}")
+        
+        violations_found = 0
+        nodes_executed = 0
+        nodes_skipped = 0
+        errors = []
+        
+        # Combine required and optional nodes
+        nodes_to_run = plan.required_nodes + plan.optional_nodes
+        
+        self.logger.info(f"  Running {len(nodes_to_run)}/15 nodes (optimized for {plan.investigation_type})")
+        self.logger.info(f"  Skipping nodes: {plan.skipped_nodes}")
+        
+        if self._recursive_engine:
+            try:
+                for node_id in sorted(nodes_to_run):
+                    # Check if we should skip based on prior results
+                    if self._intelligent_orchestrator:
+                        should_skip, reason = self._intelligent_orchestrator.should_skip_node(
+                            node_id, self.node_results
+                        )
+                        if should_skip:
+                            self.logger.info(f"    ⏭ Node {node_id}: Skipped - {reason}")
+                            nodes_skipped += 1
+                            continue
+                    
+                    # Execute node
+                    try:
+                        result = await self._recursive_engine.run_single_node(
+                            node_id=node_id,
+                            cik=self.config.cik,
+                            company_name=self.config.company_name,
+                            start_date=self.config.start_date,
+                            end_date=self.config.end_date
+                        )
+                        
+                        self.node_results[node_id] = result
+                        nodes_executed += 1
+                        
+                        node_violations = result.get("violations", 0) or result.get("alerts", 0) or 0
+                        violations_found += node_violations
+                        
+                        status = "✓" if node_violations == 0 else f"⚠ {node_violations} findings"
+                        self.logger.info(f"    {status} Node {node_id}: Complete")
+                        
+                    except Exception as e:
+                        errors.append(f"Node {node_id}: {e}")
+                        self.logger.error(f"    ✗ Node {node_id}: {e}")
+                
+            except Exception as e:
+                errors.append(str(e))
+                self.logger.error(f"  Node analysis error: {e}")
+        else:
+            self.logger.warning("  15-Node engine not available")
+        
+        # Run cross-node correlation
+        if self._node_correlator and self.node_results:
+            try:
+                self.logger.info("  Running cross-node correlation (10 patterns)...")
+                correlation_alerts = self._node_correlator.correlate_nodes(
+                    self.node_results,
+                    self.config.cik,
+                    self.config.company_name
+                )
+                
+                if correlation_alerts:
+                    self.correlation_results = correlation_alerts
+                    violations_found += len(correlation_alerts)
+                    self.logger.info(f"    ✓ Cross-node correlations: {len(correlation_alerts)} alerts")
+                    
+                    for alert in correlation_alerts:
+                        alert_dict = alert.to_dict() if hasattr(alert, 'to_dict') else alert
+                        pattern_name = alert_dict.get('alert_type', 'Unknown')
+                        severity = alert_dict.get('severity', 'Unknown')
+                        self.logger.info(f"      • {pattern_name}: {severity}")
+            except Exception as e:
+                self.logger.warning(f"    ⚠ Cross-node correlation failed: {e}")
+        
+        duration = time.time() - start
+        
+        self.logger.info(f"\n  Phase 4 complete: {nodes_executed} nodes executed, {nodes_skipped} skipped, {violations_found} findings in {duration:.2f}s")
+        
+        # Prepare phase data
+        phase_data = {
+            "node_results": self.node_results,
+            "nodes_executed": nodes_executed,
+            "nodes_skipped": nodes_skipped,
+            "nodes_successful": nodes_executed,
+            "violations_found": violations_found,
+            "errors": errors,
+            "optimization_percentage": plan.optimization_percentage
+        }
+        
+        # Strict mode: validate gate
+        if self._strict_controller:
+            can_continue = self._strict_controller.complete_phase(
+                phase.value,
+                phase_data,
+                records_extracted=nodes_executed,
+                records_expected=len(nodes_to_run)
+            )
+            if not can_continue:
+                return
+        
+        self.phase_results.append(PhaseResult(
+            phase=phase,
+            status="success" if not errors else "partial",
+            duration_seconds=duration,
+            findings_count=violations_found,
+            alerts_count=violations_found,
+            data=phase_data,
+            errors=errors
+        ))
     
     # ═══════════════════════════════════════════════════════════════════════════════════════════
     # PHASE 5: PATTERN DETECTION
@@ -1881,6 +2145,7 @@ Examples:
   python JLAW_UNIFIED.py --cik 320187 --year 2019     # CLI mode
   python JLAW_UNIFIED.py --cik 320187 --auto          # Full auto (no prompts)
   python JLAW_UNIFIED.py --company NIKE --year 2019   # Lookup by ticker
+  python JLAW_UNIFIED.py --cik 320187 --year 2019 --investigation insider_trading  # Optimized execution
 """
     )
     
@@ -1895,6 +2160,10 @@ Examples:
     parser.add_argument('--output', type=str, default='output', help='Output directory')
     parser.add_argument('--no-pdf', action='store_true', help='Skip PDF report generation')
     parser.add_argument('--check-deps', action='store_true', help='Check dependencies and exit')
+    parser.add_argument('--investigation', type=str, 
+                       choices=['insider_trading', 'financial_fraud', 'compliance', 'comprehensive'],
+                       default='comprehensive',
+                       help='Investigation type for optimized execution (default: comprehensive)')
     
     return parser.parse_args()
 
@@ -2024,7 +2293,14 @@ async def main():
     
     # Execute
     engine = UnifiedForensicEngine(config)
-    dossier = await engine.execute()
+    
+    # Use optimized execution if investigation type is specified
+    investigation_type = getattr(args, 'investigation', 'comprehensive')
+    if investigation_type != 'comprehensive':
+        print(f"\n🎯 Using optimized execution for: {investigation_type}")
+        dossier = await engine.execute_optimized(investigation_type=investigation_type)
+    else:
+        dossier = await engine.execute()
     
     return 0 if dossier.total_violations >= 0 else 1
 
