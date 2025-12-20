@@ -900,6 +900,9 @@ class UnifiedForensicEngine:
         if self._node_correlator and self.node_results:
             try:
                 self.logger.info("  Running cross-node correlation (10 patterns)...")
+                # Note: Using correlate_nodes() instead of correlate_all_patterns()
+                # because it properly handles company_cik and company_name parameters.
+                # correlate_all_patterns() is provided as an alternative API.
                 correlation_alerts = self._node_correlator.correlate_nodes(
                     self.node_results,
                     self.config.cik,
@@ -1151,7 +1154,7 @@ class UnifiedForensicEngine:
                             # Try to extract features from financial statements
                             try:
                                 features = xgb.extract_features(pattern_data["financial_statements"])
-                            except (AttributeError, Exception) as extract_err:
+                            except (AttributeError, KeyError, TypeError, ValueError) as extract_err:
                                 self.logger.debug(f"Feature extraction not available: {extract_err}")
                                 features = None
                         
