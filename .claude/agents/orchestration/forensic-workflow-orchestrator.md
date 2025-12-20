@@ -194,6 +194,65 @@ User Request (Whistleblower Exhibits)
 }
 ```
 
+### Strict Execution Mode Integration
+
+The orchestrator integrates with **Strict Execution Mode** for DOJ-grade quality assurance. See [STRICT_EXECUTION_MODE.md](../../../STRICT_EXECUTION_MODE.md) for complete documentation.
+
+**Quality Gates Now Programmatically Enforced in Strict Mode:**
+
+When using `python JLAW_UNIFIED.py --strict`, the following quality gates are **mandatory** and **automatically enforced**:
+
+| Phase | Gate | Enforcement | Exit Code on Failure |
+|-------|------|-------------|----------------------|
+| 1 | Configuration Valid | ✅ Automatic | 1 |
+| 2 | Sufficient Data Collected | ✅ Automatic | 2 |
+| 3 | Documents Parsed & Indexed | ✅ Automatic | 3 |
+| 4 | 80% Node Success Rate | ✅ Automatic | 4 |
+| 5 | Patterns Executed | ✅ Automatic | 5 |
+| 8 | Evidence Chain Integrity | ✅ Automatic | 6 |
+| 9 | Dossier Generated | ✅ Automatic | 7 |
+
+**Benefits:**
+- ✅ **No Silent Failures:** Execution halts immediately on critical failures
+- ✅ **Guaranteed Completeness:** All quality gates must pass or clear abort
+- ✅ **Audit Trail:** Complete JSON audit trail with all events and metrics
+- ✅ **Exit Codes:** Specific codes (1-7) enable automated error handling
+- ✅ **Evidence Preservation:** All collected data saved even on abort
+- ✅ **Remediation Guidance:** Abort reports include specific fix instructions
+
+**Manual Quality Gates (Still Performed by Orchestrator):**
+
+The following quality checks remain **orchestrator-managed** (not in strict mode gates):
+- Cross-agent consensus validation
+- Prosecution strength assessment
+- Regulatory routing recommendations
+- Exhibit quality review
+- Timeline consistency checks
+
+**Usage:**
+
+```bash
+# Standard orchestration (advisory gates)
+python JLAW_UNIFIED.py --cik 320187 --year 2019 --auto
+
+# Strict mode (enforced gates)
+python JLAW_UNIFIED.py --cik 320187 --year 2019 --strict --auto
+```
+
+**Abort Handling:**
+
+If a gate fails in strict mode:
+1. Execution halts at failed phase
+2. Abort report generated: `ABORT_REPORT_<timestamp>.txt`
+3. Audit trail saved: `audit_trail_<case_id>_<timestamp>.json`
+4. Evidence preserved in output directory
+5. Specific exit code returned (1-7)
+6. Remediation guidance provided
+
+**Troubleshooting:**
+
+See [docs/STRICT_MODE_TROUBLESHOOTING.md](../../../docs/STRICT_MODE_TROUBLESHOOTING.md) for detailed exit code remediation guides.
+
 ### Error Handling
 ```
 On Agent Failure:

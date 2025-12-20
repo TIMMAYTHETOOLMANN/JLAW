@@ -380,6 +380,181 @@ The pipeline executes in the **most logical investigative order**:
 
 ---
 
+## 🔒 STRICT EXECUTION MODE INTEGRATION
+
+**Enforce DOJ-Grade Quality Standards with Mandatory Phase Gates**
+
+Strict Execution Mode adds mandatory quality gates at critical phases to eliminate silent failures and ensure complete, actionable forensic dossiers.
+
+### Phase Gate Checkpoints in Pipeline
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                   STRICT EXECUTION MODE PHASE GATES                          │
+│                See STRICT_EXECUTION_MODE.md for details                      │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                              │
+│  PHASE 1: Configuration & Target Acquisition                               │
+│  └── ✓ GATE 1: SEC API config valid, 6+ modules loaded                     │
+│      └── Exit Code 1 on failure                                             │
+│                                                                              │
+│  PHASE 2: SEC EDGAR Data Collection                                        │
+│  └── ✓ GATE 2: Min 5 filings, per-type minimums met                        │
+│      └── Exit Code 2 on failure                                             │
+│                                                                              │
+│  PHASE 3: DocsGPT Document Parsing & Indexing                              │
+│  └── ✓ GATE 3: Min 1 parsed, 10 chunks indexed                             │
+│      └── Exit Code 3 on failure                                             │
+│                                                                              │
+│  PHASE 4: 15-Node Recursive Analysis                                       │
+│  └── ✓ GATE 4: 12/15 nodes successful, 80% rate                            │
+│      └── Exit Code 4 on failure                                             │
+│                                                                              │
+│  PHASE 5: Advanced Detection Patterns                                      │
+│  └── ✓ GATE 5: 20/23 patterns executed                                     │
+│      └── Exit Code 5 on failure                                             │
+│                                                                              │
+│  PHASE 8: Evidence Chain Finalization                                      │
+│  └── ✓ GATE 6: Custody records, hash computed                              │
+│      └── Exit Code 6 on failure                                             │
+│                                                                              │
+│  PHASE 9: DOJ-Grade Dossier Generation                                     │
+│  └── ✓ GATE 7: Report generated successfully                               │
+│      └── Exit Code 7 on failure                                             │
+│                                                                              │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+### Cascade Abort Protocol
+
+When a gate fails in strict mode:
+
+```
+GATE FAILURE DETECTED
+        │
+        ▼
+┌─────────────────────┐
+│ HALT EXECUTION      │  Immediate stop at failed phase
+└──────────┬──────────┘
+           │
+           ▼
+┌─────────────────────┐
+│ PRESERVE EVIDENCE   │  All collected data saved
+└──────────┬──────────┘
+           │
+           ▼
+┌─────────────────────┐
+│ GENERATE REPORTS    │  Abort report + Audit trail (JSON)
+└──────────┬──────────┘
+           │
+           ▼
+┌─────────────────────┐
+│ PARTIAL DOSSIER     │  Marked "INCOMPLETE - HALTED AT PHASE X"
+└──────────┬──────────┘
+           │
+           ▼
+┌─────────────────────┐
+│ EXIT WITH CODE 1-7  │  Specific code indicates failure type
+└─────────────────────┘
+```
+
+### Exit Codes Reference
+
+| Code | Phase | Meaning | Remediation Time |
+|------|-------|---------|------------------|
+| 0 | - | Complete success | N/A |
+| 1 | Phase 1 | Configuration failure | 5-15 min |
+| 2 | Phase 2 | Data collection failure | 10-30 min |
+| 3 | Phase 3 | Document parsing failure | 5-20 min |
+| 4 | Phase 4 | Node execution < 80% | 15-60 min |
+| 5 | Phase 5 | Pattern detection failure | 10-30 min |
+| 6 | Phase 8 | Evidence chain failure | 5-15 min |
+| 7 | Phase 9 | Dossier generation failure | 5-20 min |
+
+### Usage
+
+```bash
+# Standard mode (advisory warnings only)
+python JLAW_UNIFIED.py --cik 320187 --year 2019 --auto
+
+# Strict mode (mandatory gates, cascade abort)
+python JLAW_UNIFIED.py --cik 320187 --year 2019 --strict --auto
+
+# Check exit code
+echo $?  # Returns 0-7
+```
+
+### Execution Order with Gate Validation
+
+**Standard Mode Flow:**
+```
+Phase 1 → Phase 2 → Phase 3 → Phase 4 → Phase 5 → Phase 6 → Phase 7 → Phase 8 → Phase 9
+   ↓         ↓         ↓         ↓         ↓         ↓         ↓         ↓         ↓
+WARNING   WARNING   WARNING   WARNING   WARNING      -         -      WARNING   WARNING
+(continue)(continue)(continue)(continue)(continue)         (continue)(continue)
+```
+
+**Strict Mode Flow:**
+```
+Phase 1 → GATE 1 ✓ → Phase 2 → GATE 2 ✓ → Phase 3 → GATE 3 ✓ → Phase 4 → GATE 4 ✓
+                                    │
+                                    └── GATE FAILED (Exit Code 2)
+                                         ↓
+                                    HALT EXECUTION
+                                         ↓
+                                    PRESERVE EVIDENCE
+                                         ↓
+                                    GENERATE ABORT REPORT
+                                         ↓
+                                    PARTIAL DOSSIER (INCOMPLETE)
+                                         ↓
+                                    EXIT WITH CODE 2
+```
+
+### Audit Trail Output
+
+When strict mode executes (success or abort), an audit trail is saved:
+
+**File:** `output/CASE_<CIK>_<timestamp>/audit_trail_<case_id>_<timestamp>.json`
+
+**Contents:**
+- Complete event log (all phases, nodes, patterns)
+- Phase-by-phase metrics and timing
+- Gate validation results (PASS/FAIL)
+- Node execution status (15 nodes)
+- Pattern detection results (23 patterns)
+- Exit code and abort reason (if applicable)
+- Remediation guidance
+
+**Query Examples:**
+```bash
+# Get gate validation results
+cat audit_trail_*.json | jq '.phases | to_entries[] | {phase: .key, passed: .value.validation.passed}'
+
+# Get failed nodes
+cat audit_trail_*.json | jq '.nodes[] | select(.status == "failed")'
+
+# Get phase durations
+cat audit_trail_*.json | jq '.phases | to_entries[] | {phase: .key, duration: .value.duration_seconds}'
+```
+
+### Benefits
+
+✅ **Guaranteed Completeness:** All phases validated or clear abort  
+✅ **No Silent Failures:** Execution halts immediately on critical issues  
+✅ **Automated Quality Control:** CI/CD integration via exit codes  
+✅ **Evidence Preservation:** All data saved even on abort  
+✅ **Audit Trail:** Machine-readable JSON for case management  
+✅ **Troubleshooting:** Specific exit codes with remediation guidance  
+
+### Documentation
+
+- **Complete Guide:** [STRICT_EXECUTION_MODE.md](STRICT_EXECUTION_MODE.md)
+- **Troubleshooting:** [docs/STRICT_MODE_TROUBLESHOOTING.md](docs/STRICT_MODE_TROUBLESHOOTING.md)
+- **Validation Checklist:** [VALIDATION_CHECKLIST.md](VALIDATION_CHECKLIST.md)
+
+---
+
 ## 🎯 OUTPUT FILES
 
 ```
@@ -403,10 +578,15 @@ forensic_storage/
 | **SEC Filing Coverage** | Form 4, 10-K, 10-Q, 8-K, DEF 14A, 13F, 13D, 13G, Form 144, S-1/S-3/S-4/S-8, 424B, SC TO |
 | **Detection Accuracy** | 85-97% across 23 patterns |
 | **AI Providers** | OpenAI GPT-4 + Anthropic Claude (Dual validation) |
+| **Phase Gates** | 6 mandatory gates in strict mode |
+| **Exit Codes** | 8 codes (0-7) for automated error handling |
+| **Quality Enforcement** | Strict mode: 80% node success, 5+ filings, 10+ chunks |
 | **Evidence Integrity** | SHA-256 + SHA3-512 + RFC 3161 + Merkle Tree |
+| **Audit Trail** | Machine-readable JSON with complete execution history |
 | **Regulatory Routing** | SEC, DOJ, IRS automatic recommendation |
 | **Output Formats** | JSON, Markdown, PDF (Court-ready) |
 | **Execution Time** | ~2-10 minutes per company (varies by filing count) |
+| **Test Coverage** | 359 tests total (290 core + 69 strict mode) |
 
 ---
 
