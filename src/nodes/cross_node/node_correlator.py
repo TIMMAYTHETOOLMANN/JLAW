@@ -706,8 +706,8 @@ class NodeCorrelator:
         alerts = self._check_pattern(
             pattern, 
             node_data, 
-            company_cik=company_cik,
-            company_name=company_name
+            company_cik,
+            company_name
         )
         
         # Aggregate all alerts into single dict with multiple correlations
