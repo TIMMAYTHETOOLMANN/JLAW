@@ -183,7 +183,8 @@ class RFC3161Client:
         self,
         data: bytes,
         max_retries: int = 3,
-        fallback_authorities: Optional[list] = None
+        fallback_authorities: Optional[list] = None,
+        strict_mode: bool = True
     ) -> TimestampToken:
         """
         Get timestamp with automatic retry and fallback.
@@ -192,9 +193,14 @@ class RFC3161Client:
             data: Data to timestamp
             max_retries: Max retry attempts per authority
             fallback_authorities: List of backup TSAs to try
+            strict_mode: If True, raise exception on failure instead of using local timestamp.
+                        Default True for court-admissible evidence.
             
         Returns:
             TimestampToken from first successful TSA
+            
+        Raises:
+            RuntimeError: If strict_mode=True and all authorities fail
         """
         authorities = [self.authority]
         if fallback_authorities:
@@ -228,9 +234,15 @@ class RFC3161Client:
                 self.authority = original_authority
                 self.tsa_url = original_url
         
-        # All attempts failed, use local timestamp
-        logger.warning(f"All timestamp authorities failed: {last_error}")
-        return self.create_local_timestamp(data, "fallback_local")
+        # All attempts failed
+        if strict_mode:
+            raise RuntimeError(
+                f"All timestamp authorities failed after {max_retries} retries. "
+                f"Last error: {last_error}. Evidence chain cannot be court-admissible."
+            )
+        else:
+            logger.warning(f"All timestamp authorities failed: {last_error}")
+            return self.create_local_timestamp(data, "fallback_local")
     
     @staticmethod
     def create_local_timestamp(data: bytes, authority: str = "local") -> TimestampToken:

@@ -99,6 +99,9 @@ def setup_logging(output_dir: Path) -> logging.Logger:
 # DATA STRUCTURES
 # ═══════════════════════════════════════════════════════════════════════════════════════════════
 
+# Configuration Constants
+MAX_DOCUMENT_TEXT_LENGTH = 2000  # Maximum characters per document for DeBERTa analysis
+
 class AnalysisPhase(Enum):
     """Execution phases."""
     CONFIGURATION = "Phase 1: Configuration & Target Acquisition"
@@ -905,6 +908,73 @@ class UnifiedForensicEngine:
                 if "node11_network" in self.node_results:
                     node11_data = self.node_results["node11_network"]
                     pattern_data["relationships"] = node11_data.get("relationships", {})
+                
+                # Extract financial statements for M-Score and Benford analysis
+                if "node3_10q" in self.node_results and "node4_10k" in self.node_results:
+                    node3_data = self.node_results["node3_10q"]
+                    node4_data = self.node_results["node4_10k"]
+                    pattern_data["financial_statements"] = {
+                        "current_year": node4_data.get("financial_data", {}),
+                        "prior_year": node3_data.get("prior_period_data", {})
+                    }
+                    
+                    # Extract numeric values for Benford analysis
+                    financial_values = []
+                    for key, value in node4_data.get("financial_data", {}).items():
+                        if isinstance(value, (int, float)) and value > 0:
+                            financial_values.append(value)
+                    pattern_data["financial_data"] = financial_values
+                
+                # Extract Form 4 grants for options backdating
+                if "node1_form4" in self.node_results:
+                    node1_data = self.node_results["node1_form4"]
+                    pattern_data["form4_grants"] = node1_data.get("grants", [])
+                    # Also add price history if available
+                    if "price_history" in node1_data:
+                        pattern_data["price_history"] = node1_data.get("price_history", [])
+                
+                # Extract quarterly financials for channel stuffing
+                if "node3_10q" in self.node_results:
+                    node3_data = self.node_results["node3_10q"]
+                    pattern_data["quarterly_financials"] = node3_data.get("quarterly_data", [])
+                
+                # Extract XGBoost features if available from any node
+                for node_key, node_data in self.node_results.items():
+                    if "xgboost_features" in node_data:
+                        pattern_data["xgboost_features"] = node_data.get("xgboost_features", {})
+                        break
+                
+                # Extract document pairs for DeBERTa contradiction detection
+                if self.parsed_documents:
+                    document_pairs = []
+                    docs = list(self.parsed_documents.items()) if isinstance(self.parsed_documents, dict) else list(enumerate(self.parsed_documents))
+                    for i in range(len(docs) - 1):
+                        # Extract text content from documents
+                        text1 = ""
+                        text2 = ""
+                        
+                        if isinstance(docs[i][1], dict):
+                            text1 = docs[i][1].get("content", docs[i][1].get("text", ""))
+                        elif hasattr(docs[i][1], 'text'):
+                            text1 = docs[i][1].text
+                        elif isinstance(docs[i][1], str):
+                            text1 = docs[i][1]
+                        
+                        if isinstance(docs[i+1][1], dict):
+                            text2 = docs[i+1][1].get("content", docs[i+1][1].get("text", ""))
+                        elif hasattr(docs[i+1][1], 'text'):
+                            text2 = docs[i+1][1].text
+                        elif isinstance(docs[i+1][1], str):
+                            text2 = docs[i+1][1]
+                        
+                        if text1 and text2:
+                            document_pairs.append({
+                                "text1": text1[:MAX_DOCUMENT_TEXT_LENGTH],
+                                "text2": text2[:MAX_DOCUMENT_TEXT_LENGTH]
+                            })
+                    
+                    if document_pairs:
+                        pattern_data["document_pairs"] = document_pairs
                 
                 # Add reporting company flag
                 pattern_data["is_reporting_company"] = True

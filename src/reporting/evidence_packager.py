@@ -28,6 +28,7 @@ from .models import (
     ViolationEvidence,
     FilingAnalysisReport,
 )
+from src.core.evidence_chain.merkle_tree import EMPTY_LEAF_HASH
 from .constants import (
     ViolationType,
     SeverityTier,
@@ -174,9 +175,9 @@ class EvidencePackage:
         if len(hashes) == 1:
             return hashes[0]
         
-        # Ensure even number of hashes
+        # Ensure even number of hashes - RFC 6962 compliant padding
         if len(hashes) % 2 == 1:
-            hashes.append(hashes[-1])
+            hashes.append(EMPTY_LEAF_HASH)
         
         # Compute parent hashes
         parent_hashes = []

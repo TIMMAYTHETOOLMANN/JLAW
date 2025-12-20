@@ -11,6 +11,7 @@ from datetime import datetime
 from typing import List, Dict, Any, Optional
 
 from .hash_service import HashResult, HashService, EvidenceRecord
+from .merkle_tree import EMPTY_LEAF_HASH
 
 
 class MerkleTree:
@@ -29,7 +30,8 @@ class MerkleTree:
             return hashes[0]
         
         next_level = []
-        padded = hashes + [hashes[-1]] if len(hashes) % 2 else hashes
+        # RFC 6962 compliant padding - use SHA256('') empty string hash sentinel
+        padded = hashes + [EMPTY_LEAF_HASH] if len(hashes) % 2 else hashes
         
         for i in range(0, len(padded), 2):
             next_level.append(self._hash_pair(padded[i], padded[i+1]))
