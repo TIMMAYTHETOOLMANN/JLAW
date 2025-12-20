@@ -77,12 +77,18 @@ class PhaseMetrics:
     status: MetricStatus = MetricStatus.PENDING
     
     def to_dict(self) -> Dict[str, Any]:
+        # Handle edge case where no items were expected
+        if self.items_expected == 0:
+            completion_rate = 100.0 if self.items_processed == 0 else 0.0
+        else:
+            completion_rate = round(self.items_processed / self.items_expected * 100, 1)
+        
         return {
             "phase_name": self.phase_name,
             "phase_number": self.phase_number,
             "duration_seconds": round(self.duration_seconds, 3),
             "items_processed": self.items_processed,
-            "completion_rate": round(self.items_processed / max(self.items_expected, 1) * 100, 1),
+            "completion_rate": completion_rate,
             "status": self.status.value
         }
 
@@ -178,7 +184,7 @@ class MetricsCollector:
         
         collector.start_node(1, "Form 4 Parser")
         # ... do work ...
-        collector.end_node(1, status="success", findings=10)
+        collector.end_node(1, status="success", findings_count=10)
         
         metrics = collector.finalize()
         print(metrics.to_dict())
@@ -263,7 +269,16 @@ class MetricsCollector:
             phase.end_time = datetime.utcnow()
             phase.items_processed = items_processed
             phase.errors = errors
-            phase.status = MetricStatus.SUCCESS if status == "success" else MetricStatus.FAILED
+            
+            # Map status string to MetricStatus enum
+            if status == "success":
+                phase.status = MetricStatus.SUCCESS
+            elif status == "partial":
+                phase.status = MetricStatus.SUCCESS  # Treat partial as success
+            elif status == "skipped":
+                phase.status = MetricStatus.SKIPPED
+            else:
+                phase.status = MetricStatus.FAILED
             
             if phase_name in self._phase_start_times:
                 phase.duration_seconds = time.time() - self._phase_start_times[phase_name]
