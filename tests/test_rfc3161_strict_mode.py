@@ -248,9 +248,10 @@ class TestTimestampTokenVerification:
     
     def test_token_to_dict(self):
         """Test TimestampToken serialization."""
+        test_time = datetime(2024, 1, 15, 10, 30, 0)
         token = TimestampToken(
             token_data=b"token_data",
-            gen_time=datetime(2019, 3, 22, 10, 30, 0),
+            gen_time=test_time,
             hash_algorithm="SHA-256",
             message_imprint="abc123",
             authority="freetsa",
