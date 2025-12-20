@@ -716,12 +716,71 @@ class UnifiedForensicEngine:
         if self._doc_parser and self.filings:
             self.logger.info(f"  Parsing {len(self.filings)} filings...")
             
-            for filing in self.filings:
-                try:
-                    # Parse would happen here with actual content
-                    parsed_count += 1
-                except Exception as e:
-                    errors.append(f"Parse error: {e}")
+            try:
+                async with self._sec_client(user_agent="JLAW-Unified/3.0") as client:
+                    for filing in self.filings:
+                        try:
+                            # Fetch actual filing content from SEC EDGAR
+                            accession_number = filing.get("accessionNumber", "")
+                            filing_type = filing.get("form", "UNKNOWN")
+                            filing_date = filing.get("filingDate", "")
+                            primary_doc = filing.get("primaryDocument", "")
+                            
+                            if not accession_number or not primary_doc:
+                                continue
+                            
+                            self.logger.debug(f"  Fetching content for {filing_type} ({accession_number})")
+                            
+                            # Construct filing URL
+                            clean_accession = accession_number.replace("-", "")
+                            filing_url = f"https://www.sec.gov/Archives/edgar/data/{self.config.cik}/{clean_accession}/{primary_doc}"
+                            
+                            # Fetch the document content
+                            html_content = await client.fetch_url(filing_url)
+                            
+                            if html_content:
+                                # Parse with DocsGPT document parser
+                                from src.forensics.docsgpt.document_parser import SECFilingType
+                                from datetime import datetime
+                                
+                                filing_type_enum = self._map_filing_type(filing_type)
+                                filing_date_obj = datetime.fromisoformat(filing_date) if filing_date else datetime.utcnow()
+                                
+                                parsed_doc = self._doc_parser.parse_sec_filing(
+                                    html_content=html_content,
+                                    filing_type=filing_type_enum,
+                                    cik=self.config.cik,
+                                    accession_number=accession_number,
+                                    filing_date=filing_date_obj
+                                )
+                                
+                                # Store parsed document
+                                if not hasattr(self, 'parsed_documents'):
+                                    self.parsed_documents = []
+                                self.parsed_documents.append(parsed_doc)
+                                
+                                # Index documents in vector store for semantic search
+                                if self._vector_store:
+                                    chunks_data = [chunk.to_dict() for chunk in parsed_doc.chunks]
+                                    indexed = self._vector_store.index_filing(
+                                        chunks=chunks_data,
+                                        cik=self.config.cik,
+                                        accession_number=accession_number,
+                                        filing_type=filing_type,
+                                        filing_date=filing_date_obj
+                                    )
+                                    indexed_count += indexed
+                                
+                                parsed_count += 1
+                                self.logger.debug(f"    ✓ Parsed {filing_type}: {len(parsed_doc.chunks)} chunks")
+                        
+                        except Exception as e:
+                            errors.append(f"Parse error for {filing.get('accessionNumber', 'unknown')}: {e}")
+                            self.logger.warning(f"  Parse error: {e}")
+            
+            except Exception as e:
+                errors.append(f"Document parsing phase error: {e}")
+                self.logger.error(f"  Document parsing error: {e}")
             
             self.logger.info(f"    Parsed: {parsed_count} documents")
             self.logger.info(f"    Indexed: {indexed_count} chunks")
@@ -759,6 +818,23 @@ class UnifiedForensicEngine:
         ))
         
         self.logger.info(f"\n  Phase 3 complete in {duration:.2f}s")
+    
+    def _map_filing_type(self, filing_type_str: str):
+        """Map filing type string to SECFilingType enum."""
+        from src.forensics.docsgpt.document_parser import SECFilingType
+        
+        type_map = {
+            "4": SECFilingType.FORM_4,
+            "10-K": SECFilingType.FORM_10K,
+            "10-Q": SECFilingType.FORM_10Q,
+            "8-K": SECFilingType.FORM_8K,
+            "DEF 14A": SECFilingType.DEF_14A,
+            "13F-HR": SECFilingType.FORM_13F,
+            "SC 13D": SECFilingType.FORM_13D,
+            "SC 13G": SECFilingType.FORM_13G,
+            "144": SECFilingType.FORM_144
+        }
+        return type_map.get(filing_type_str, SECFilingType.UNKNOWN)
     
     # ═══════════════════════════════════════════════════════════════════════════════════════════
     # PHASE 4: 15-NODE ANALYSIS
@@ -990,6 +1066,64 @@ class UnifiedForensicEngine:
                     self.logger.info(f"    ✓ {pattern_name}: {len(pattern_alerts) if pattern_alerts else 0} alerts")
                 
                 self.detection_results = results
+                
+                # ═══════════════════════════════════════════════════════════════
+                # DeBERTa Contradiction Detection Integration
+                # ═══════════════════════════════════════════════════════════════
+                if pattern_data.get("document_pairs"):
+                    try:
+                        from src.detection.ml.deberta_contradiction import ContradictionEngine
+                        
+                        self.logger.info("  Running DeBERTa contradiction detection...")
+                        deberta = ContradictionEngine()
+                        contradictions = []
+                        
+                        # Build claim pairs from document pairs
+                        claim_pairs = []
+                        for pair in pattern_data["document_pairs"]:
+                            text1 = pair.get("text1", "")
+                            text2 = pair.get("text2", "")
+                            if text1 and text2:
+                                claim_pairs.append((text1, text2, "doc1", "doc2"))
+                        
+                        if claim_pairs:
+                            contradiction_analysis = deberta.detect_contradictions(claim_pairs)
+                            if contradiction_analysis.contradictions_found > 0:
+                                contradictions = [c.to_dict() for c in contradiction_analysis.all_contradictions]
+                                self.detection_results["deberta_contradictions"] = contradictions
+                                alerts += len(contradictions)
+                                self.logger.info(f"    ✓ DeBERTa: {len(contradictions)} contradictions detected")
+                            else:
+                                self.logger.info("    ✓ DeBERTa: No contradictions detected")
+                    except Exception as e:
+                        errors.append(f"DeBERTa error: {e}")
+                        self.logger.warning(f"  DeBERTa detection error: {e}")
+                
+                # ═══════════════════════════════════════════════════════════════
+                # XGBoost Fraud Prediction Integration
+                # ═══════════════════════════════════════════════════════════════
+                if pattern_data.get("xgboost_features"):
+                    try:
+                        from src.detection.ml.xgboost_fraud import XGBoostFraudDetector, FraudFeatures
+                        
+                        self.logger.info("  Running XGBoost fraud prediction...")
+                        xgb = XGBoostFraudDetector()
+                        
+                        # Convert features dict to FraudFeatures object
+                        features_dict = pattern_data["xgboost_features"]
+                        if isinstance(features_dict, dict):
+                            features = FraudFeatures(**features_dict)
+                            prediction = xgb.predict(features)
+                            
+                            self.detection_results["xgboost_fraud"] = prediction.to_dict()
+                            self.logger.info(f"    ✓ XGBoost: Risk level {prediction.risk_level.value}, probability {prediction.probability:.4f}")
+                            
+                            # Count as alert if probability is significant
+                            if prediction.probability >= 0.5:
+                                alerts += 1
+                    except Exception as e:
+                        errors.append(f"XGBoost error: {e}")
+                        self.logger.warning(f"  XGBoost prediction error: {e}")
                 
             except Exception as e:
                 errors.append(str(e))
