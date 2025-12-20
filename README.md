@@ -20,6 +20,9 @@ JLAW is a **DOJ-grade SEC filing forensic analysis platform** implementing a **1
 | Detection Patterns | 23 (85-97% accuracy) |
 | Claude Subagents | 10 |
 | Execution Phases | 9 |
+| Phase Gates | 6 |
+| Exit Codes | 8 (0-7) |
+| Strict Mode Tests | 69 |
 | SEC Form Coverage | 11 types |
 | AI Providers | 2 (OpenAI + Anthropic) |
 

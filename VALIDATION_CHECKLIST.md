@@ -4,6 +4,62 @@ This checklist ensures that generated reports meet DOJ-level quality standards u
 
 ---
 
+## Strict Execution Mode Pre-Flight Checks
+
+### When to Use Strict Mode
+
+✅ **Use `--strict` flag for:**
+- Production forensic investigations
+- DOJ/SEC referrals requiring evidence chain integrity
+- High-stakes compliance audits
+- Cases requiring guaranteed completeness
+- Automated CI/CD pipelines with quality gates
+
+❌ **Don't use strict mode for:**
+- Initial exploratory analysis
+- Development/testing
+- Data availability checks
+- Cases with known data gaps
+
+### Pre-Flight Configuration Validation
+
+Before running strict mode, verify configuration:
+
+```bash
+python -c "from config.secure_config import print_configuration_status; print_configuration_status()"
+```
+
+**Required:**
+- [ ] SEC_USER_AGENT configured with valid email
+- [ ] OPENAI_API_KEY configured
+- [ ] ANTHROPIC_API_KEY configured (for dual-agent validation)
+- [ ] Output directory exists and is writable
+- [ ] All dependencies installed: `pip install -r requirements.txt`
+
+**Optional (enhances analysis):**
+- [ ] GOVINFO_API_KEY configured (for statute enrichment)
+- [ ] POLYGON_API_KEY configured (for Node 15 market correlation)
+
+### Automated Gate Validation in Strict Mode
+
+When using `--strict` flag, the following items are **automatically enforced** via programmatic phase gates:
+
+| Phase | Gate | Auto-Enforced in Strict Mode | Exit Code on Failure |
+|-------|------|------------------------------|----------------------|
+| 1 | Configuration | ✅ SEC API config valid, 6+ modules loaded | 1 |
+| 2 | Data Collection | ✅ Min 5 filings, per-type minimums | 2 |
+| 3 | Document Parsing | ✅ Min 1 parsed, 10 chunks indexed | 3 |
+| 4 | Node Execution | ✅ 12/15 nodes successful, 80% rate | 4 |
+| 5 | Pattern Detection | ✅ 20/23 patterns executed | 5 |
+| 8 | Evidence Chain | ✅ Hash computed, custody records present | 6 |
+| 9 | Dossier Generation | ✅ Report generated successfully | 7 |
+
+**📖 See [STRICT_EXECUTION_MODE.md](STRICT_EXECUTION_MODE.md) for detailed gate requirements**
+
+**🔧 See [docs/STRICT_MODE_TROUBLESHOOTING.md](docs/STRICT_MODE_TROUBLESHOOTING.md) for failure remediation**
+
+---
+
 ## Pre-Generation Checks
 
 ### Environment Configuration
@@ -285,6 +341,83 @@ pytest tests/test_nike_2019_baseline.py -v
 _________________________________________________________________
 _________________________________________________________________
 _________________________________________________________________
+
+---
+
+## Using Strict Execution Mode for DOJ-Grade Analysis
+
+### Command
+
+```bash
+python JLAW_UNIFIED.py --cik 320187 --year 2019 --strict --auto
+```
+
+### Advantages
+
+- **Guaranteed Completeness**: All phase gates ensure minimum data requirements met
+- **Cascade Abort**: Execution halts on critical failures (no partial/incomplete results without markers)
+- **Audit Trail**: Complete JSON audit trail with all events, metrics, and timestamps
+- **Exit Codes**: Specific codes (1-7) indicate failure type for automated error handling
+- **Abort Reports**: Human-readable reports with remediation guidance
+- **Evidence Preservation**: All collected data saved even on abort
+
+### Monitoring Execution
+
+**Check real-time progress:**
+```bash
+tail -f output/CASE_*/audit_trail_*.json
+```
+
+**Review gate validations:**
+```bash
+cat output/CASE_*/audit_trail_*.json | jq '.phases | to_entries[] | {phase: .key, passed: .value.validation.passed}'
+```
+
+**Check if execution was aborted:**
+```bash
+cat output/CASE_*/audit_trail_*.json | jq '.summary.aborted'
+```
+
+### Handling Gate Failures
+
+If a gate fails:
+
+1. **Review the abort report:**
+   ```bash
+   cat output/CASE_*/ABORT_REPORT_*.txt
+   ```
+
+2. **Check specific failure reason:**
+   ```bash
+   cat output/CASE_*/audit_trail_*.json | jq '.summary.abort_reason'
+   ```
+
+3. **Follow remediation guidance** in abort report
+
+4. **Fix root cause** (see [docs/STRICT_MODE_TROUBLESHOOTING.md](docs/STRICT_MODE_TROUBLESHOOTING.md))
+
+5. **Re-run analysis** with corrected configuration
+
+### Quality Assurance Benefits
+
+**Automated Enforcement:**
+- ✅ Minimum filing counts enforced (no insufficient data)
+- ✅ Node execution threshold enforced (80% success rate required)
+- ✅ Pattern detection coverage enforced (20/23 minimum)
+- ✅ Evidence chain integrity enforced (hashes required)
+- ✅ Report generation enforced (no missing dossiers)
+
+**Eliminates Manual Checks:**
+- ❌ No need to manually verify filing counts
+- ❌ No need to manually check node success rates
+- ❌ No need to manually verify evidence hashes
+- ❌ No need to manually confirm report generation
+
+**Documentation:**
+- Complete audit trail for case management systems
+- Machine-readable JSON for automated processing
+- Human-readable abort reports for quick troubleshooting
+- Evidence chain for court admissibility
 
 ---
 

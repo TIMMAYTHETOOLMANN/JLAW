@@ -241,7 +241,160 @@ If you experience persistent issues accessing EDGAR:
 - [EDGAR Company Search](https://www.sec.gov/edgar/searchedgar/companysearch.html)
 - [CIK Lookup Tool](https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany)
 
+## Strict Execution Mode Considerations
+
+### Phase 1 Gate Validation
+
+When using **Strict Execution Mode** (`--strict` flag), the system validates SEC API configuration in Phase 1 before proceeding with analysis.
+
+**Requirements:**
+- `SEC_USER_AGENT` must be set with valid email
+- SEC EDGAR Client must initialize successfully
+- User-Agent must not contain placeholder values
+
+**Failure Behavior:**
+- If validation fails, execution aborts with **Exit Code 1**
+- Partial dossier created with "INCOMPLETE - CONFIGURATION FAILURE" marker
+- Abort report generated with remediation guidance
+- Audit trail saved with failure details
+
+### Exit Code 1: Configuration Failure
+
+When strict mode validation fails in Phase 1, you'll see:
+
+```bash
+$ python JLAW_UNIFIED.py --cik 320187 --year 2019 --strict --auto
+
+Phase 1: Configuration & Target Acquisition
+  ✗ Gate FAILED: SEC API configuration invalid
+  Reason: SEC_USER_AGENT contains placeholder value
+
+EXECUTION ABORTED
+Exit Code: 1
+```
+
+### Troubleshooting Strict Mode SEC Validation
+
+**Error: "SEC API configuration invalid"**
+
+1. Run configuration validation:
+   ```bash
+   python -c "from config.secure_config import print_configuration_status; print_configuration_status()"
+   ```
+
+2. Check for common issues:
+   - Missing SEC_USER_AGENT in .env
+   - Placeholder text like "YourProject" or "your-email"
+   - Email format invalid or missing
+   - User-Agent too short (< 15 characters)
+
+3. Fix and verify:
+   ```bash
+   # Set proper User-Agent
+   echo 'SEC_USER_AGENT="MyOrg/1.0 (contact@myorg.com)"' >> .env
+   
+   # Verify
+   python -c "from config.secure_config import print_configuration_status; print_configuration_status()"
+   
+   # Retry with strict mode
+   python JLAW_UNIFIED.py --cik 320187 --year 2019 --strict --auto
+   ```
+
+**Error: "Minimum modules not loaded"**
+
+1. Verify dependencies installed:
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+2. Check for import errors:
+   ```bash
+   python -c "from src.integrations.sec_edgar.edgar_client import SECEdgarClient; print('OK')"
+   ```
+
+3. Review Phase 1 logs for specific module failures
+
+### Phase 2 Gate Validation
+
+In Phase 2, strict mode validates that sufficient filings were collected:
+
+**Requirements:**
+- Minimum 5 total filings (strict mode default)
+- Per-type minimums if configured (e.g., 1 10-K, 3 10-Q)
+
+**Failure Behavior:**
+- Exit Code: **2** (Data collection failure)
+- All collected filings preserved
+- Abort report includes filing counts and recommendations
+
+**Common Causes:**
+- Invalid CIK number
+- Date range too narrow
+- SEC rate limiting (429 errors)
+- No filings available for that period
+
+**Solutions:**
+- Verify CIK is correct
+- Expand date range (e.g., 3-5 years instead of 1)
+- Wait 60 seconds if rate limited
+- Check SEC EDGAR filing availability
+
+### Using Mock Mode with Strict Mode
+
+For testing strict mode without real API calls:
+
+```bash
+# Set mock mode
+export SEC_MOCK_MODE=true
+
+# Run strict mode with mock data
+python JLAW_UNIFIED.py --cik 320187 --year 2019 --strict --auto
+```
+
+Mock mode in strict mode:
+- ✅ Tests gate validation logic
+- ✅ Tests exit code handling
+- ✅ Tests abort report generation
+- ✅ No SEC API calls made
+- ⚠️ Uses sample data (not real filings)
+
+### Best Practices for Strict Mode
+
+1. **Validate configuration first:**
+   ```bash
+   python -c "from config.secure_config import print_configuration_status; print_configuration_status()"
+   ```
+
+2. **Start with non-strict mode** for exploration:
+   ```bash
+   python JLAW_UNIFIED.py --cik 320187 --year 2019 --auto
+   ```
+
+3. **Use strict mode for production** investigations:
+   ```bash
+   python JLAW_UNIFIED.py --cik 320187 --year 2019 --strict --auto
+   ```
+
+4. **Review abort reports** when failures occur:
+   ```bash
+   cat output/CASE_*/ABORT_REPORT_*.txt
+   ```
+
+5. **Monitor audit trails** for detailed diagnostics:
+   ```bash
+   cat output/CASE_*/audit_trail_*.json | jq '.phases'
+   ```
+
+### See Also
+
+- [STRICT_EXECUTION_MODE.md](../STRICT_EXECUTION_MODE.md) - Complete strict mode documentation
+- [STRICT_MODE_TROUBLESHOOTING.md](STRICT_MODE_TROUBLESHOOTING.md) - Detailed troubleshooting guide
+- [VALIDATION_CHECKLIST.md](../VALIDATION_CHECKLIST.md) - Quality gate requirements
+
+---
+
 ## Version History
 
+- **v3.0** (2024-12-20): Added strict execution mode considerations
 - **v2.0** (2024-12-18): Added shared rate limiter, exponential backoff, mock mode
 - **v1.0** (2024): Initial SEC EDGAR integration
