@@ -30,7 +30,7 @@ class MerkleTree:
             return hashes[0]
         
         next_level = []
-        # RFC 6962 compliant padding - use cryptographic null sentinel
+        # RFC 6962 compliant padding - use SHA256('') empty string hash sentinel
         padded = hashes + [EMPTY_LEAF_HASH] if len(hashes) % 2 else hashes
         
         for i in range(0, len(padded), 2):

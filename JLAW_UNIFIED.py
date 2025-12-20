@@ -99,6 +99,9 @@ def setup_logging(output_dir: Path) -> logging.Logger:
 # DATA STRUCTURES
 # ═══════════════════════════════════════════════════════════════════════════════════════════════
 
+# Configuration Constants
+MAX_DOCUMENT_TEXT_LENGTH = 2000  # Maximum characters per document for DeBERTa analysis
+
 class AnalysisPhase(Enum):
     """Execution phases."""
     CONFIGURATION = "Phase 1: Configuration & Target Acquisition"
@@ -942,7 +945,7 @@ class UnifiedForensicEngine:
                         break
                 
                 # Extract document pairs for DeBERTa contradiction detection
-                if hasattr(self, 'parsed_documents') and self.parsed_documents:
+                if self.parsed_documents:
                     document_pairs = []
                     docs = list(self.parsed_documents.items()) if isinstance(self.parsed_documents, dict) else list(enumerate(self.parsed_documents))
                     for i in range(len(docs) - 1):
@@ -966,8 +969,8 @@ class UnifiedForensicEngine:
                         
                         if text1 and text2:
                             document_pairs.append({
-                                "text1": text1[:2000],  # Limit to 2000 chars for performance
-                                "text2": text2[:2000]
+                                "text1": text1[:MAX_DOCUMENT_TEXT_LENGTH],
+                                "text2": text2[:MAX_DOCUMENT_TEXT_LENGTH]
                             })
                     
                     if document_pairs:
