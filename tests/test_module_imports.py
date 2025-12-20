@@ -151,3 +151,36 @@ def test_internal_modules():
             acknowledge_internal_use=True
         )
         assert bounty_module is not None
+
+
+def test_monitoring_infrastructure():
+    """Test monitoring infrastructure imports."""
+    from src.infrastructure.monitoring import MetricsCollector, NodeMetrics, ExecutionMetrics, PhaseMetrics
+    from src.infrastructure.monitoring.metrics import MetricStatus
+    
+    assert MetricsCollector is not None
+    assert NodeMetrics is not None
+    assert ExecutionMetrics is not None
+    assert PhaseMetrics is not None
+    assert MetricStatus is not None
+
+
+def test_retry_handler():
+    """Test retry handler imports."""
+    from src.core.retry_handler import (
+        RetryHandler,
+        RetryConfig,
+        RetryExhausted,
+        with_retry,
+        NODE_RETRY_HANDLER,
+        API_RETRY_HANDLER,
+        SEC_EDGAR_RETRY_HANDLER
+    )
+    
+    assert RetryHandler is not None
+    assert RetryConfig is not None
+    assert RetryExhausted is not None
+    assert with_retry is not None
+    assert NODE_RETRY_HANDLER is not None
+    assert API_RETRY_HANDLER is not None
+    assert SEC_EDGAR_RETRY_HANDLER is not None
