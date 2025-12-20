@@ -338,12 +338,14 @@ class UnifiedForensicEngine:
         self._pattern_detector = None
         self._dual_agent = None
         self._subagent_orchestrator = None
+        self._node_correlator = None
         
         # Collected data
         self.filings: List[Dict[str, Any]] = []
         self.parsed_documents: List[Any] = []
         self.node_results: Dict[str, Any] = {}
         self.detection_results: Dict[str, Any] = {}
+        self.correlation_results: List[Dict[str, Any]] = []
         
         # Module availability tracking
         self._sec_client_available = False
@@ -558,6 +560,16 @@ class UnifiedForensicEngine:
         except Exception as e:
             errors.append(f"Pattern Detector: {e}")
             self.logger.warning(f"    ✗ Pattern Detector: {e}")
+        
+        # Node Correlator
+        try:
+            from src.nodes.cross_node.node_correlator import NodeCorrelator
+            self._node_correlator = NodeCorrelator()
+            modules_loaded += 1
+            self.logger.info("    ✓ Cross-Node Correlator (10 patterns)")
+        except Exception as e:
+            errors.append(f"Node Correlator: {e}")
+            self.logger.warning(f"    ✗ Node Correlator: {e}")
         
         # Dual Agent
         try:
@@ -884,6 +896,32 @@ class UnifiedForensicEngine:
         else:
             self.logger.warning("  15-Node engine not available")
         
+        # Run cross-node correlation with all 10 patterns
+        if self._node_correlator and self.node_results:
+            try:
+                self.logger.info("  Running cross-node correlation (10 patterns)...")
+                # Note: Using correlate_nodes() instead of correlate_all_patterns()
+                # because it properly handles company_cik and company_name parameters.
+                # correlate_all_patterns() is provided as an alternative API.
+                correlation_alerts = self._node_correlator.correlate_nodes(
+                    self.node_results,
+                    self.config.cik,
+                    self.config.company_name
+                )
+                
+                if correlation_alerts:
+                    self.correlation_results = correlation_alerts
+                    violations_found += len(correlation_alerts)
+                    self.logger.info(f"    ✓ Cross-node correlations: {len(correlation_alerts)} alerts")
+                    
+                    for alert in correlation_alerts:
+                        alert_dict = alert.to_dict() if hasattr(alert, 'to_dict') else alert
+                        pattern_name = alert_dict.get('alert_type', 'Unknown')
+                        severity = alert_dict.get('severity', 'Unknown')
+                        self.logger.info(f"      • {pattern_name}: {severity}")
+            except Exception as e:
+                self.logger.warning(f"    ⚠ Cross-node correlation failed: {e}")
+        
         duration = time.time() - start
         
         # Prepare phase data
@@ -1068,9 +1106,9 @@ class UnifiedForensicEngine:
                 self.detection_results = results
                 
                 # ═══════════════════════════════════════════════════════════════
-                # DeBERTa Contradiction Detection Integration
+                # DeBERTa Contradiction Detection Integration (91% accuracy)
                 # ═══════════════════════════════════════════════════════════════
-                if pattern_data.get("document_pairs"):
+                if pattern_data.get("document_pairs") and len(pattern_data.get("document_pairs", [])) > 0:
                     try:
                         from src.detection.ml.deberta_contradiction import ContradictionEngine
                         
@@ -1090,40 +1128,66 @@ class UnifiedForensicEngine:
                             contradiction_analysis = deberta.detect_contradictions(claim_pairs)
                             if contradiction_analysis.contradictions_found > 0:
                                 contradictions = [c.to_dict() for c in contradiction_analysis.all_contradictions]
-                                self.detection_results["deberta_contradictions"] = contradictions
+                                patterns_run += 1
                                 alerts += len(contradictions)
-                                self.logger.info(f"    ✓ DeBERTa: {len(contradictions)} contradictions detected")
+                                self.detection_results["deberta_contradictions"] = contradictions
+                                self.logger.info(f"    ✓ DeBERTa Contradictions: {len(contradictions)} detected")
                             else:
-                                self.logger.info("    ✓ DeBERTa: No contradictions detected")
+                                self.logger.info("    ℹ DeBERTa: No contradictions detected")
                     except Exception as e:
                         errors.append(f"DeBERTa error: {e}")
-                        self.logger.warning(f"  DeBERTa detection error: {e}")
+                        self.logger.warning(f"    ⚠ DeBERTa analysis failed: {e}")
                 
                 # ═══════════════════════════════════════════════════════════════
                 # XGBoost Fraud Prediction Integration
                 # ═══════════════════════════════════════════════════════════════
-                if pattern_data.get("xgboost_features"):
+                if pattern_data.get("xgboost_features") or pattern_data.get("financial_statements"):
                     try:
                         from src.detection.ml.xgboost_fraud import XGBoostFraudDetector, FraudFeatures
                         
                         self.logger.info("  Running XGBoost fraud prediction...")
                         xgb = XGBoostFraudDetector()
                         
-                        # Convert features dict to FraudFeatures object
-                        features_dict = pattern_data["xgboost_features"]
-                        if isinstance(features_dict, dict):
-                            features = FraudFeatures(**features_dict)
+                        # Build features from available data if not provided
+                        features = pattern_data.get("xgboost_features")
+                        if not features and pattern_data.get("financial_statements"):
+                            # Try to extract features from financial statements
+                            try:
+                                features = xgb.extract_features(pattern_data["financial_statements"])
+                            except (AttributeError, KeyError, TypeError, ValueError) as extract_err:
+                                self.logger.debug(f"Feature extraction not available: {extract_err}")
+                                features = None
+                        
+                        # Convert features dict to FraudFeatures object if needed
+                        if features and isinstance(features, dict):
+                            features = FraudFeatures(**features)
+                        
+                        # Check if model is loaded
+                        model_loaded = hasattr(xgb, 'model') and xgb.model is not None
+                        
+                        if features and model_loaded:
                             prediction = xgb.predict(features)
                             
-                            self.detection_results["xgboost_fraud"] = prediction.to_dict()
-                            self.logger.info(f"    ✓ XGBoost: Risk level {prediction.risk_level.value}, probability {prediction.probability:.4f}")
+                            high_risk = []
+                            if hasattr(prediction, 'probability'):
+                                if prediction.probability > 0.7:
+                                    high_risk.append(prediction)
+                                    
+                            predictions = [prediction] if hasattr(prediction, 'probability') else []
                             
-                            # Count as alert if probability is significant
-                            if prediction.probability >= 0.5:
-                                alerts += 1
+                            if high_risk:
+                                patterns_run += 1
+                                alerts += len(high_risk)
+                                self.detection_results["xgboost_fraud"] = [p.to_dict() if hasattr(p, 'to_dict') else p for p in predictions]
+                                self.logger.info(f"    ✓ XGBoost Fraud: {len(high_risk)} high-risk predictions")
+                            else:
+                                self.detection_results["xgboost_fraud"] = [prediction.to_dict() if hasattr(prediction, 'to_dict') else prediction]
+                                self.logger.info(f"    ℹ XGBoost: Risk level {prediction.risk_level.value if hasattr(prediction, 'risk_level') else 'N/A'}")
+                        else:
+                            self.logger.info("    ℹ XGBoost: No model loaded or features unavailable")
                     except Exception as e:
                         errors.append(f"XGBoost error: {e}")
-                        self.logger.warning(f"  XGBoost prediction error: {e}")
+                        self.logger.warning(f"    ⚠ XGBoost prediction failed: {e}")
                 
             except Exception as e:
                 errors.append(str(e))

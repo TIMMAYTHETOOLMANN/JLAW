@@ -647,6 +647,84 @@ class NodeCorrelator:
         
         return min(score, 1.0)
     
+    def correlate_all_patterns(self, node_results: Dict[int, Any]) -> List[Dict[str, Any]]:
+        """
+        Run all correlation patterns against node results.
+        
+        Args:
+            node_results: Dictionary mapping node IDs to their results
+            
+        Returns:
+            List of correlation alert dictionaries
+        """
+        alerts = []
+        
+        for pattern in self.CORRELATION_PATTERNS:
+            required_nodes = pattern["nodes"]
+            
+            # Check if all required nodes have results
+            if all(node_id in node_results for node_id in required_nodes):
+                result = self._check_correlation(pattern, node_results)
+                if result:
+                    alerts.append(result)
+        
+        return alerts
+    
+    def _check_correlation(self, pattern: Dict, node_results: Dict) -> Optional[Dict]:
+        """
+        Check a single correlation pattern.
+        
+        Args:
+            pattern: Pattern definition dict
+            node_results: Dictionary mapping node IDs to results
+            
+        Returns:
+            Alert dict if correlation detected, None otherwise
+        """
+        pattern_id = pattern["id"]
+        
+        # Extract company info from node results if available
+        company_cik = ""
+        company_name = ""
+        
+        # Try to extract from any available node result
+        for node_id, node_data in node_results.items():
+            if isinstance(node_data, dict):
+                company_cik = node_data.get("cik", node_data.get("company_cik", ""))
+                company_name = node_data.get("company_name", node_data.get("name", ""))
+                if company_cik or company_name:
+                    break
+        
+        # Convert node_results to format expected by _check_pattern
+        # Extract node data for this pattern
+        node_data = {}
+        for node_id in pattern["nodes"]:
+            if node_id in node_results:
+                node_data[node_id] = node_results[node_id]
+        
+        # Call existing pattern checker
+        alerts = self._check_pattern(
+            pattern, 
+            node_data, 
+            company_cik,
+            company_name
+        )
+        
+        # Aggregate all alerts into single dict with multiple correlations
+        if alerts:
+            # If multiple alerts, combine them
+            if len(alerts) > 1:
+                base_alert = alerts[0].to_dict() if hasattr(alerts[0], 'to_dict') else alerts[0]
+                base_alert['correlation_count'] = len(alerts)
+                base_alert['all_correlations'] = [
+                    a.to_dict() if hasattr(a, 'to_dict') else a for a in alerts
+                ]
+                return base_alert
+            else:
+                return alerts[0].to_dict() if hasattr(alerts[0], 'to_dict') else alerts[0]
+        
+        return None
+    
     def correlate_nodes(
         self,
         node_results: Dict[str, Any],
