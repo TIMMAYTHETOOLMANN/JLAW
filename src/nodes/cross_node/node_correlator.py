@@ -647,6 +647,64 @@ class NodeCorrelator:
         
         return min(score, 1.0)
     
+    def correlate_all_patterns(self, node_results: Dict[int, Any]) -> List[Dict[str, Any]]:
+        """
+        Run all correlation patterns against node results.
+        
+        Args:
+            node_results: Dictionary mapping node IDs to their results
+            
+        Returns:
+            List of correlation alert dictionaries
+        """
+        alerts = []
+        
+        for pattern in self.CORRELATION_PATTERNS:
+            required_nodes = pattern["nodes"]
+            
+            # Check if all required nodes have results
+            if all(node_id in node_results for node_id in required_nodes):
+                result = self._check_correlation(pattern, node_results)
+                if result:
+                    alerts.append(result)
+        
+        return alerts
+    
+    def _check_correlation(self, pattern: Dict, node_results: Dict) -> Optional[Dict]:
+        """
+        Check a single correlation pattern.
+        
+        Args:
+            pattern: Pattern definition dict
+            node_results: Dictionary mapping node IDs to results
+            
+        Returns:
+            Alert dict if correlation detected, None otherwise
+        """
+        pattern_id = pattern["id"]
+        
+        # Convert node_results to format expected by _check_pattern
+        # Extract node data for this pattern
+        node_data = {}
+        for node_id in pattern["nodes"]:
+            if node_id in node_results:
+                node_data[node_id] = node_results[node_id]
+        
+        # Call existing pattern checker
+        alerts = self._check_pattern(
+            pattern, 
+            node_data, 
+            company_cik="",  # Will be extracted from node results if needed
+            company_name=""  # Will be extracted from node results if needed
+        )
+        
+        # Convert CrossNodeAlert objects to dicts
+        if alerts:
+            # Return first alert as dict (or could aggregate all)
+            return alerts[0].to_dict() if hasattr(alerts[0], 'to_dict') else alerts[0]
+        
+        return None
+    
     def correlate_nodes(
         self,
         node_results: Dict[str, Any],
