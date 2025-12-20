@@ -12,7 +12,7 @@ Achieves 30-50% execution speedup for focused investigations.
 
 import logging
 from enum import Enum
-from typing import List, Dict, Any, Optional, Set
+from typing import List, Dict, Any, Optional, Set, Tuple
 from dataclasses import dataclass, field
 
 logger = logging.getLogger(__name__)
@@ -215,7 +215,7 @@ class IntelligentOrchestrator:
         self,
         node_id: int,
         prior_results: Dict[int, Any]
-    ) -> tuple[bool, str]:
+    ) -> Tuple[bool, str]:
         """
         Determine if a node should be skipped based on prior results.
         
