@@ -37,7 +37,12 @@ python JLAW_UNIFIED.py --cik 320187 --company "NIKE, Inc." --year 2019
 
 # Full auto execution (no confirmations)
 python JLAW_UNIFIED.py --cik 320187 --year 2019 --auto
+
+# Strict execution mode (DOJ-grade with mandatory phase gates)
+python JLAW_UNIFIED.py --cik 320187 --year 2019 --strict --auto
 ```
+
+**🔒 NEW: Strict Execution Mode** - See [STRICT_EXECUTION_MODE.md](STRICT_EXECUTION_MODE.md) for DOJ-grade forensic protocols with mandatory phase gates, cascade abort, and specific exit codes.
 
 ### Common CIK Numbers
 | Company | Ticker | CIK |
@@ -116,19 +121,50 @@ SEC_RAISE_ON_FINAL_FAILURE=false      # Graceful degradation
 
 ---
 
+## 🔒 STRICT EXECUTION MODE (NEW)
+
+**DOJ-Grade Forensic Protocols with Mandatory Phase Gates**
+
+Eliminates silent failures and ensures complete, actionable forensic dossiers through:
+
+- **Mandatory Phase Gates**: Each phase validated against data contracts
+- **Cascade Abort Protocol**: Execution halts on critical failures with evidence preservation
+- **Specific Exit Codes**: 7 unique codes for different failure types (1-7)
+- **Comprehensive Audit Trail**: Machine-readable JSON with complete execution history
+- **Abort Reports**: Human-readable reports with remediation guidance
+
+**Usage:**
+```bash
+python JLAW_UNIFIED.py --cik 320187 --year 2019 --strict --auto
+```
+
+**Exit Codes:**
+- `0` - Complete success
+- `1` - Configuration failure
+- `2` - Data collection failure (no filings)
+- `3` - Document parsing failure
+- `4` - Node execution below threshold
+- `5` - Pattern detection failure
+- `6` - Evidence chain integrity failure
+- `7` - Dossier generation failure
+
+**📖 Full Documentation:** [STRICT_EXECUTION_MODE.md](STRICT_EXECUTION_MODE.md)
+
+---
+
 ## 9-PHASE EXECUTION PIPELINE
 
-| Phase | Name | Modules | Output |
-|-------|------|---------|--------|
-| 1 | Configuration | All module initialization | Module status report |
-| 2 | Data Collection | `sec_edgar/edgar_client.py` | SEC filings list |
-| 3 | Document Parsing | `docsgpt/document_parser.py`, `vector_store.py` | Parsed chunks, embeddings |
-| 4 | Node Analysis | 15 nodes in `src/nodes/` | Violations, alerts |
-| 5 | Pattern Detection | `advanced_patterns.py` + financial detectors | 23 pattern results |
-| 6 | Dual-Agent | `dual_agent.py`, OpenAI + Anthropic | AI cross-validation |
-| 7 | Subagent | `subagents/orchestrator.py` | Multi-agent results |
-| 8 | Evidence Chain | `evidence_chain/`, `custody/` | SHA-256 hashes, custody |
-| 9 | Dossier Generation | Report compiler | `FORENSIC_DOSSIER.md` + `.json` |
+| Phase | Name | Modules | Output | Gate Requirement (Strict Mode) |
+|-------|------|---------|--------|---------------------------------|
+| 1 | Configuration | All module initialization | Module status report | 6 modules loaded, SEC config valid |
+| 2 | Data Collection | `sec_edgar/edgar_client.py` | SEC filings list | Min 5 filings, per-type minimums |
+| 3 | Document Parsing | `docsgpt/document_parser.py`, `vector_store.py` | Parsed chunks, embeddings | Min 1 parsed, 10 chunks indexed |
+| 4 | Node Analysis | 15 nodes in `src/nodes/` | Violations, alerts | 12/15 nodes successful, 80% rate |
+| 5 | Pattern Detection | `advanced_patterns.py` + financial detectors | 23 pattern results | 20/23 patterns executed |
+| 6 | Dual-Agent | `dual_agent.py`, OpenAI + Anthropic | AI cross-validation | Optional validation |
+| 7 | Subagent | `subagents/orchestrator.py` | Multi-agent results | Optional orchestration |
+| 8 | Evidence Chain | `evidence_chain/`, `custody/` | SHA-256 hashes, custody | Hash computed, custody records |
+| 9 | Dossier Generation | Report compiler | `FORENSIC_DOSSIER.md` + `.json` | Report generated successfully |
 
 ---
 
