@@ -238,6 +238,65 @@ for anomaly in result.anomalies:
 
 **Module**: `src/core/linear_orchestrator.py`
 
+The Linear Execution Orchestrator manages the sequential execution of all 15 forensic analysis nodes across 4 phases with dependency-aware ordering, error handling, and evidence chain generation.
+
+### Strict Execution Mode Integration
+
+The orchestrator integrates with **Strict Execution Mode** (see [STRICT_EXECUTION_MODE.md](../STRICT_EXECUTION_MODE.md)) to enforce mandatory quality gates:
+
+**Phase 4 Gate: 15-Node Recursive Analysis**
+- **Requirement:** Minimum 12 of 15 nodes successful
+- **Requirement:** Minimum 80% success rate
+- **Requirement:** Node results data present
+- **Validation:** Automatic in strict mode
+- **Exit Code:** 4 on failure
+
+**How Phase Gates Validate Node Execution:**
+
+1. **Node Success Tracking**
+   - Each node execution tracked with NodeStatus enum
+   - Status: PENDING → RUNNING → COMPLETED/FAILED/SKIPPED
+   - Success count incremented only for COMPLETED nodes
+
+2. **Success Rate Calculation**
+   ```python
+   success_rate = (successful_nodes / total_nodes) * 100
+   # Must be >= 80% in strict mode (12 out of 15 nodes)
+   ```
+
+3. **Gate Validation**
+   - After Phase 4 completes, gate validator checks:
+     - `successful_nodes >= min_nodes_successful` (12)
+     - `success_rate >= min_node_success_rate` (80%)
+     - Node results data structure present
+
+4. **Cascade Abort on Failure**
+   - If < 80% success rate, execution aborts
+   - Exit code 4 returned
+   - Abort report generated with:
+     - Which nodes failed
+     - Failure reasons
+     - Remediation guidance
+   - Audit trail saved with node-by-node status
+
+**Benefits:**
+- ✅ Guarantees minimum data quality for prosecution
+- ✅ Prevents incomplete analysis from proceeding
+- ✅ Provides clear failure diagnostics
+- ✅ Enables automated quality control in CI/CD
+
+**Usage:**
+```bash
+# Standard mode (advisory only)
+python JLAW_UNIFIED.py --cik 320187 --year 2019 --auto
+
+# Strict mode (enforces 80% node success)
+python JLAW_UNIFIED.py --cik 320187 --year 2019 --strict --auto
+```
+
+**Troubleshooting Node Failures:**
+See [docs/STRICT_MODE_TROUBLESHOOTING.md](../docs/STRICT_MODE_TROUBLESHOOTING.md) for Exit Code 4 remediation.
+
 ### 4-Phase Execution Pipeline
 
 **Phase 1: Core SEC Filing Analysis (Nodes 1-6)**

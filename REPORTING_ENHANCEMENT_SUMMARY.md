@@ -31,6 +31,45 @@ This document provides a comprehensive guide to the DOJ-level forensic reporting
 ✅ **Chain of Custody** - Cryptographically verified evidence chain with SHA-256 hashing  
 ✅ **Zero Breaking Changes** - All enhancements additive and backward compatible  
 ✅ **Comprehensive Documentation** - Full implementation guide included  
+✅ **Strict Execution Mode** - Mandatory phase gates ensure evidence chain requirements met
+
+### Strict Mode Integration
+
+**Strict Execution Mode** (see [STRICT_EXECUTION_MODE.md](../STRICT_EXECUTION_MODE.md)) ensures all evidence chain requirements are met through mandatory phase gates:
+
+**Phase 8 Gate: Evidence Chain Finalization**
+- **Requirement:** Custody records present (> 0)
+- **Requirement:** Evidence chain hash computed (SHA-256)
+- **Validation:** Automatic enforcement in strict mode
+- **Exit Code:** 6 on failure
+
+**Benefits for Reporting:**
+- ✅ Guarantees all evidence is properly hashed before report generation
+- ✅ Ensures chain of custody records are complete
+- ✅ Validates evidence integrity before dossier creation
+- ✅ Prevents incomplete reports from being generated
+- ✅ Provides audit trail for court admissibility
+
+**Phase 9 Gate: DOJ-Grade Dossier Generation**
+- **Requirement:** Report generation successful
+- **Validation:** Automatic enforcement in strict mode
+- **Exit Code:** 7 on failure
+
+**Reporting Prerequisites Validated:**
+1. All evidence properly hashed and preserved
+2. Chain of custody records complete
+3. Violation data present with statutory citations
+4. Dual-agent consensus tracked (if enabled)
+5. Financial impact calculations complete
+6. Regulatory routing recommendations generated
+
+**Usage:**
+```bash
+# Strict mode ensures all reporting prerequisites met
+python JLAW_UNIFIED.py --cik 320187 --year 2019 --strict --auto
+```
+
+**Troubleshooting:** See [docs/STRICT_MODE_TROUBLESHOOTING.md](../docs/STRICT_MODE_TROUBLESHOOTING.md) for exit code 6 and 7 failures.  
 
 ### Key Deliverables
 
