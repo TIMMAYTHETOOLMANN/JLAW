@@ -37,6 +37,7 @@ import hashlib
 import logging
 import argparse
 import time
+import uuid
 from pathlib import Path
 from datetime import datetime, date
 from typing import List, Dict, Any, Optional, Tuple
@@ -47,6 +48,10 @@ from enum import Enum
 # Add project root to path
 PROJECT_ROOT = Path(__file__).parent
 sys.path.insert(0, str(PROJECT_ROOT))
+
+# Import monitoring and retry infrastructure
+from src.infrastructure.monitoring.metrics import MetricsCollector
+from src.core.retry_handler import RetryHandler, RetryConfig, with_retry, NODE_RETRY_HANDLER
 
 
 # ═══════════════════════════════════════════════════════════════════════════════════════════════
@@ -326,6 +331,16 @@ class UnifiedForensicEngine:
         self.phase_results: List[PhaseResult] = []
         self.violations: List[Violation] = []
         self.custody_records: List[Dict[str, Any]] = []
+        
+        # Initialize metrics collector
+        self._metrics_collector = MetricsCollector(
+            execution_id=f"JLAW-{uuid.uuid4().hex[:8].upper()}",
+            cik=self.config.cik,
+            company_name=self.config.company_name
+        )
+        
+        # Initialize retry handler
+        self._retry_handler = NODE_RETRY_HANDLER
         
         # Strict mode controller (lazy loaded)
         self._strict_controller = None
@@ -1868,13 +1883,22 @@ class UnifiedForensicEngine:
         
         duration = time.time() - start
         
+        # Finalize metrics
+        metrics = self._metrics_collector.finalize()
+        
+        # Log summary
+        self.logger.info(f"\n{self._metrics_collector.get_summary()}")
+        
         self.phase_results.append(PhaseResult(
             phase=phase,
             status="success",
             duration_seconds=duration,
             findings_count=len(generated_reports),
             alerts_count=0,
-            data={"generated_reports": generated_reports}
+            data={
+                "generated_reports": generated_reports,
+                "execution_metrics": metrics.to_dict()
+            }
         ))
         
         self.logger.info(f"\n  Phase 9 complete in {duration:.2f}s ({len(generated_reports)} reports generated)")
