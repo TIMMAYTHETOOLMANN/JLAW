@@ -56,8 +56,6 @@ class MerkleProof:
             "proof_directions": self.proof_directions,
             "root_hash": self.root_hash
         }
-            "root_hash": self.root_hash
-        }
 
 
 class MerkleTree:
