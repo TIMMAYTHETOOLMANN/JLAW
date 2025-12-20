@@ -96,23 +96,46 @@ class RFC3161Client:
     
     async def timestamp(self, data: bytes) -> TimestampToken:
         """
-        Get RFC 3161 timestamp for data.
+        Get RFC 3161 timestamp for data - REQUIRES network authority.
         
         Args:
             data: Data to timestamp
             
         Returns:
             TimestampToken with cryptographic proof of existence
+            
+        Raises:
+            RuntimeError: If RFC 3161 library not available or local authority used
         """
-        if self.authority == "local" or not RFC3161NG_AVAILABLE:
-            return self.create_local_timestamp(data, self.authority)
+        # Enforce network-only timestamps for court-admissible evidence
+        if not RFC3161NG_AVAILABLE:
+            raise RuntimeError(
+                "RFC 3161 library required for court-admissible timestamps. "
+                "Install rfc3161ng: pip install rfc3161ng"
+            )
         
+        if self.authority == "local":
+            raise RuntimeError(
+                "Local timestamps are NOT court-admissible. "
+                "Configure network timestamp authority (freetsa or digicert)."
+            )
+        
+        # Only proceed with network timestamps
         try:
-            return await self._get_remote_timestamp(data)
+            result = await self._get_remote_timestamp(data)
+            
+            # Verify the timestamp was obtained successfully
+            if not result or not result.token_data:
+                raise RuntimeError("Timestamp verification failed - empty token received")
+            
+            return result
+            
         except Exception as e:
-            logger.error(f"Timestamp request failed: {e}")
-            # Fallback to local timestamp
-            return self.create_local_timestamp(data, f"{self.authority}_fallback_local")
+            logger.error(f"Network timestamp request failed: {e}")
+            # NO FALLBACK - fail explicitly to maintain chain integrity
+            raise RuntimeError(
+                f"Failed to obtain court-admissible timestamp from {self.authority}: {e}"
+            ) from e
     
     async def _get_remote_timestamp(self, data: bytes) -> TimestampToken:
         """Get timestamp from remote TSA."""

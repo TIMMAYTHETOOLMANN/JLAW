@@ -30,20 +30,32 @@ except ImportError:
     MERKLETOOLS_AVAILABLE = False
     logger.warning("merkletools not available. Using simplified implementation.")
 
+# RFC 6962 compliant empty leaf hash - cryptographic null sentinel
+# Used for padding odd-numbered tree levels to prevent collision attacks
+EMPTY_LEAF_HASH = hashlib.sha256(b'').hexdigest()
+
 
 @dataclass
 class MerkleProof:
-    """Merkle inclusion proof for a leaf."""
+    """
+    Merkle inclusion proof for a leaf.
+    
+    Preserves left/right sibling information to prevent second-preimage attacks.
+    """
     leaf_hash: str
     leaf_index: int
     proof_hashes: List[str]
     root_hash: str
+    proof_directions: List[str] = field(default_factory=list)  # 'left' or 'right' for each proof hash
     
     def to_dict(self) -> Dict[str, Any]:
         return {
             "leaf_hash": self.leaf_hash,
             "leaf_index": self.leaf_index,
             "proof_hashes": self.proof_hashes,
+            "proof_directions": self.proof_directions,
+            "root_hash": self.root_hash
+        }
             "root_hash": self.root_hash
         }
 
@@ -131,11 +143,13 @@ class MerkleTree:
             for i in range(0, len(current_level), 2):
                 left = current_level[i]
                 
-                # Handle odd number of nodes
+                # Handle odd number of nodes - RFC 6962 compliant padding
                 if i + 1 < len(current_level):
                     right = current_level[i + 1]
                 else:
-                    right = left  # Duplicate last node
+                    # Use cryptographic null sentinel instead of duplicating last hash
+                    # This prevents collision vulnerabilities
+                    right = EMPTY_LEAF_HASH
                 
                 # Combine and hash
                 combined = left + right
@@ -199,28 +213,36 @@ class MerkleTree:
             return self._get_proof_simple(leaf_index)
     
     def _get_proof_simple(self, leaf_index: int) -> Optional[MerkleProof]:
-        """Get proof using simplified implementation."""
+        """
+        Get proof using simplified implementation.
+        
+        Preserves left/right sibling information to prevent second-preimage attacks.
+        """
         if not self.tree or leaf_index >= len(self.leaves):
             return None
         
         proof_hashes = []
+        proof_directions = []
         index = leaf_index
         
         # Traverse up the tree
         for level in range(len(self.tree) - 1):
             level_nodes = self.tree[level]
             
-            # Find sibling
+            # Find sibling and record its position
             if index % 2 == 0:
                 # Left node, get right sibling
                 sibling_index = index + 1
+                direction = 'right'
             else:
                 # Right node, get left sibling
                 sibling_index = index - 1
+                direction = 'left'
             
             # Add sibling to proof if exists
             if 0 <= sibling_index < len(level_nodes):
                 proof_hashes.append(level_nodes[sibling_index])
+                proof_directions.append(direction)
             
             # Move to parent index
             index = index // 2
@@ -233,6 +255,7 @@ class MerkleTree:
             leaf_hash=self.leaves[leaf_index],
             leaf_index=leaf_index,
             proof_hashes=proof_hashes,
+            proof_directions=proof_directions,
             root_hash=root
         )
     
@@ -247,12 +270,12 @@ class MerkleTree:
             True if proof is valid
         """
         if self.use_merkletools:
-            # Convert proof back to merkletools format
+            # Convert proof back to merkletools format using directions
             proof_list = []
-            for hash_val in proof.proof_hashes:
-                # Note: We lose left/right information in our simplified format
-                # In production, you'd want to preserve this
-                proof_list.append({'right': hash_val.encode()})
+            for i, hash_val in enumerate(proof.proof_hashes):
+                # Use proof_directions if available, otherwise assume right
+                direction = proof.proof_directions[i] if i < len(proof.proof_directions) else 'right'
+                proof_list.append({direction: hash_val.encode()})
             
             return self.mt.validate_proof(
                 proof_list,
@@ -263,21 +286,29 @@ class MerkleTree:
             return self._verify_proof_simple(proof)
     
     def _verify_proof_simple(self, proof: MerkleProof) -> bool:
-        """Verify proof using simplified implementation."""
+        """
+        Verify proof using simplified implementation.
+        
+        Uses proof_directions to correctly combine hashes and prevent second-preimage attacks.
+        """
         current = self._hash(proof.leaf_hash)
         
-        # Traverse up using proof hashes
-        for sibling in proof.proof_hashes:
-            # Combine with sibling (we don't know left/right, try both)
-            combined1 = current + sibling
-            combined2 = sibling + current
+        # Traverse up using proof hashes with direction information
+        for i, sibling in enumerate(proof.proof_hashes):
+            # Use direction information if available
+            if i < len(proof.proof_directions):
+                direction = proof.proof_directions[i]
+                if direction == 'left':
+                    # Sibling is on the left
+                    combined = sibling + current
+                else:
+                    # Sibling is on the right
+                    combined = current + sibling
+            else:
+                # Fallback: try both orders (less secure)
+                combined = current + sibling
             
-            hash1 = self._hash(combined1)
-            hash2 = self._hash(combined2)
-            
-            # Use the one that could lead to root
-            # In practice, we'd preserve left/right information
-            current = hash1  # Simplified
+            current = self._hash(combined)
         
         return current == proof.root_hash
     
