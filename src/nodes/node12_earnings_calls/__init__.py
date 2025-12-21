@@ -1,5 +1,6 @@
 """Node 12: Earnings Call Transcript Analyzer."""
 
+from .transcript_analyzer import EarningsCallAnalyzer  # V1 for backward compatibility
 from .transcript_analyzer_v2 import (
     TranscriptAnalyzerV2,
     TranscriptAlertV2,
@@ -21,6 +22,7 @@ from .cross_validator import (
 )
 
 __all__ = [
+    'EarningsCallAnalyzer',  # V1 export for backward compatibility
     'TranscriptAnalyzerV2',
     'TranscriptAlertV2',
     'Node12OutputV2',

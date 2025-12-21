@@ -100,19 +100,20 @@ from .node11_network_mapper import (
 
 # Node 12: Earnings Call Transcript Analyzer
 from .node12_earnings_calls import (
+    EarningsCallAnalyzer,  # V1 for backward compatibility
     TranscriptAnalyzerV2,
     DeBERTaContradictionDetector,
     EarningsCallCrossValidator
 )
 
 # Node 13: Z-Score Bankruptcy Predictor
-from .node13_zscore import BankruptcyPredictorV2, Node13OutputV2
+from .node13_zscore import BankruptcyPredictor, BankruptcyPredictorV2, Node13OutputV2
 
 # Node 14: F-Score Financial Strength Analyzer
-from .node14_fscore import FinancialStrengthAnalyzerV2, Node14OutputV2
+from .node14_fscore import FinancialStrengthAnalyzer, FinancialStrengthAnalyzerV2, Node14OutputV2
 
 # Node 15: Market Correlation Engine
-from .node15_market_correlation import MarketCorrelationEngineV2, Node15OutputV2
+from .node15_market_correlation import MarketCorrelationEngine, MarketCorrelationEngineV2, Node15OutputV2
 
 # Cross-Node Integration
 from .cross_node import NodeCorrelator, CrossNodeAlert, UnifiedForensicAnalysis
@@ -191,19 +192,23 @@ __all__ = [
     'MockNeo4jGraphClient',
     
     # Node 12
+    'EarningsCallAnalyzer',  # V1 for backward compatibility
     'TranscriptAnalyzerV2',
     'DeBERTaContradictionDetector',
     'EarningsCallCrossValidator',
     
     # Node 13
+    'BankruptcyPredictor',  # V1 for backward compatibility
     'BankruptcyPredictorV2',
     'Node13OutputV2',
     
     # Node 14
+    'FinancialStrengthAnalyzer',  # V1 for backward compatibility
     'FinancialStrengthAnalyzerV2',
     'Node14OutputV2',
     
     # Node 15
+    'MarketCorrelationEngine',  # V1 for backward compatibility
     'MarketCorrelationEngineV2',
     'Node15OutputV2',
     
