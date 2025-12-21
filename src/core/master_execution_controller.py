@@ -66,6 +66,9 @@ from enum import Enum
 
 logger = logging.getLogger(__name__)
 
+# Configuration constants
+MAX_DOCUMENTS_TO_PARSE = 10  # Limit for initial document parsing in Phase 3
+
 
 # ═══════════════════════════════════════════════════════════════════════════
 # EXECUTION PHASES
@@ -366,8 +369,37 @@ class MasterExecutionController:
             # Load keys
             keys = load_all_keys()
             logger.info("✓ API keys loaded")
-            
-            # Validate SEC configuration
+        except ImportError as e:
+            errors.append(f"Configuration module import error: {str(e)}")
+            logger.error(f"✗ Failed to import configuration module: {e}")
+            # Return early if critical configuration module is missing
+            phase_duration = time.time() - phase_start
+            result = PhaseResult(
+                phase=ExecutionPhase.CONFIGURATION,
+                success=False,
+                duration_seconds=phase_duration,
+                items_processed=0,
+                errors=errors,
+                data={}
+            )
+            self.phase_results.append(result)
+            raise Exception("Critical configuration module missing")
+        except Exception as e:
+            errors.append(f"Configuration error: {str(e)}")
+            logger.error(f"✗ Configuration error: {e}", exc_info=True)
+            phase_duration = time.time() - phase_start
+            result = PhaseResult(
+                phase=ExecutionPhase.CONFIGURATION,
+                success=False,
+                duration_seconds=phase_duration,
+                items_processed=0,
+                errors=errors,
+                data={}
+            )
+            self.phase_results.append(result)
+            raise
+        
+        try:
             sec_valid, sec_msg = validate_sec_configuration()
             if not sec_valid:
                 errors.append(f"SEC configuration invalid: {sec_msg}")
@@ -541,7 +573,7 @@ class MasterExecutionController:
             
             # Simulate document parsing
             parsed_count = 0
-            for filing in self.filings[:10]:  # Limit for performance
+            for filing in self.filings[:MAX_DOCUMENTS_TO_PARSE]:  # Limit for performance
                 try:
                     # In a full implementation, this would parse the actual filing
                     self.parsed_documents.append({

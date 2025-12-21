@@ -150,10 +150,10 @@ class RecursiveProsecutorialEngine:
         self.enforcement_router = EnforcementRouter()
         
         # Phase 2 nodes - USE V2 VERSIONS for Nodes 7-12
-        from src.nodes.node7_13f_holdings import InstitutionalHoldingsAnalyzerV2
-        from src.nodes.node8_13d_ownership import BeneficialOwnershipTrackerV2
-        from src.nodes.node9_8k_events import MaterialEventCorrelatorV2
         from src.nodes import (
+            InstitutionalHoldingsAnalyzerV2,
+            BeneficialOwnershipTrackerV2,
+            MaterialEventCorrelatorV2,
             RestrictedSaleMonitorV2,
             ExecutiveNetworkAnalyzerV2,
             TranscriptAnalyzerV2

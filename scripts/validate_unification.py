@@ -232,13 +232,18 @@ def validate_nodes_functional(result: ValidationResult):
     print("  4. NODE FUNCTIONALITY")
     print("=" * 80)
     
-    nodes = {
+    # Nodes 1-6 use V1 (original) versions
+    nodes_v1 = {
         'Node 1': ('src.nodes.node1_form4.form4_parser', 'Form4Parser'),
         'Node 2': ('src.nodes.node2_def14a', 'DEF14ACompensationAnalyzer'),
         'Node 3': ('src.nodes.node3_10q', 'TemporalConsistencyValidator'),
         'Node 4': ('src.nodes.node4_10k_sox', 'SOXCertificationAnalyzer'),
         'Node 5': ('src.nodes.node5_irs', 'IRC83TaxCalculator'),
         'Node 6': ('src.nodes.node6_routing.enforcement_router', 'EnforcementRouter'),
+    }
+    
+    # Nodes 7-15 use V2 versions
+    nodes_v2 = {
         'Node 7': ('src.nodes.node7_13f_holdings', 'InstitutionalHoldingsAnalyzerV2'),
         'Node 8': ('src.nodes.node8_13d_ownership', 'BeneficialOwnershipTrackerV2'),
         'Node 9': ('src.nodes.node9_8k_events', 'MaterialEventCorrelatorV2'),
@@ -250,7 +255,8 @@ def validate_nodes_functional(result: ValidationResult):
         'Node 15': ('src.nodes.node15_market_correlation', 'MarketCorrelationEngineV2'),
     }
     
-    for node_name, (module_path, class_name) in nodes.items():
+    # Validate V1 nodes
+    for node_name, (module_path, class_name) in nodes_v1.items():
         try:
             module = importlib.import_module(module_path)
             if hasattr(module, class_name):
@@ -265,6 +271,23 @@ def validate_nodes_functional(result: ValidationResult):
                 result.fail_test(f"{node_name} - {class_name} is functional", "Class not found")
         except Exception as e:
             result.fail_test(f"{node_name} - {class_name} is functional", str(e))
+    
+    # Validate V2 nodes
+    for node_name, (module_path, class_name) in nodes_v2.items():
+        try:
+            module = importlib.import_module(module_path)
+            if hasattr(module, class_name):
+                # Try to instantiate (basic functionality check)
+                cls = getattr(module, class_name)
+                # Check if it's a class
+                if inspect.isclass(cls):
+                    result.pass_test(f"{node_name} - {class_name} is functional (V2)")
+                else:
+                    result.fail_test(f"{node_name} - {class_name} is functional (V2)", "Not a class")
+            else:
+                result.fail_test(f"{node_name} - {class_name} is functional (V2)", "Class not found")
+        except Exception as e:
+            result.fail_test(f"{node_name} - {class_name} is functional (V2)", str(e))
 
 
 def validate_detection_algorithms(result: ValidationResult):
