@@ -150,11 +150,14 @@ class RecursiveProsecutorialEngine:
         self.enforcement_router = EnforcementRouter()
         
         # Phase 2 nodes
-        from src.nodes.node7_13f_holdings.institutional_analyzer import InstitutionalHoldingsAnalyzer
-        from src.nodes.node8_13d_ownership.beneficial_ownership_tracker import BeneficialOwnershipTracker
-        from src.nodes.node9_8k_events.material_event_correlator import MaterialEventCorrelator
-        from src.nodes.node10_form144.restricted_sale_monitor import RestrictedSaleMonitor
-        from src.nodes.node11_network_mapper.executive_network_analyzer import ExecutiveNetworkAnalyzer
+        from src.nodes import (
+            InstitutionalHoldingsAnalyzer,
+            BeneficialOwnershipTracker,
+            MaterialEventCorrelator,
+            RestrictedSaleMonitor,
+            ExecutiveNetworkAnalyzer
+        )
+        # Node 12 only exports V2, but we need V1 interface
         from src.nodes.node12_earnings_calls.transcript_analyzer import EarningsCallAnalyzer
         
         self.node7_institutional = InstitutionalHoldingsAnalyzer()
@@ -164,14 +167,14 @@ class RecursiveProsecutorialEngine:
         self.node11_network = ExecutiveNetworkAnalyzer()
         self.node12_transcripts = EarningsCallAnalyzer()
         
-        # Phase 3 nodes
+        # Phase 3 nodes - only V2 exported, need V1 interface  
         from src.nodes.node13_zscore.bankruptcy_predictor import BankruptcyPredictor
         from src.nodes.node14_fscore.financial_strength_analyzer import FinancialStrengthAnalyzer
         
         self.node13_zscore = BankruptcyPredictor()
         self.node14_fscore = FinancialStrengthAnalyzer()
         
-        # Phase 4 nodes
+        # Phase 4 nodes - only V2 exported, need V1 interface
         from src.nodes.node15_market_correlation.market_correlation_engine import MarketCorrelationEngine
         
         self.node15_market = MarketCorrelationEngine(self.polygon_api_key)
