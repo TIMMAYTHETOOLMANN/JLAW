@@ -201,7 +201,7 @@ class TestDOJReportGenerator:
         )
         
         # Read generated report
-        with open(outputs['markdown'], 'r') as f:
+        with open(outputs['markdown'], 'r', encoding='utf-8') as f:
             content = f.read()
         
         # Check for required sections
@@ -237,7 +237,7 @@ class TestDOJReportGenerator:
             output_formats=['markdown']
         )
         
-        with open(outputs['markdown'], 'r') as f:
+        with open(outputs['markdown'], 'r', encoding='utf-8') as f:
             content = f.read()
         
         # Check violation details

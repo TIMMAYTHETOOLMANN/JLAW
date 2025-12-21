@@ -161,7 +161,8 @@ GICS_SECTORS = [
 # Node 15: Market Correlation Configuration
 # ============================================
 # Polygon.io WebSocket
-POLYGON_API_KEY = "${POLYGON_API_KEY}"
+import os
+POLYGON_API_KEY = os.environ.get("POLYGON_API_KEY", "")
 POLYGON_WEBSOCKET_URL = "wss://socket.polygon.io/stocks"
 POLYGON_WEBSOCKET_RECONNECT_DELAY = 5  # Seconds
 

@@ -694,7 +694,10 @@ class UnifiedForensicEngine:
         # 15-Node Engine
         try:
             from src.core.recursive_engine import RecursiveProsecutorialEngine
-            self._recursive_engine = RecursiveProsecutorialEngine()
+            import os
+            self._recursive_engine = RecursiveProsecutorialEngine(
+                polygon_api_key=os.environ.get('POLYGON_API_KEY')
+            )
             modules_loaded += 1
             self.logger.info("    ✓ 15-Node Recursive Engine")
         except Exception as e:

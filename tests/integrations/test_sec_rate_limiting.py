@@ -310,7 +310,15 @@ class TestClientInitialization:
     
     def test_client_checks_sec_edgar_user_agent_env(self):
         """Test that client checks SEC_EDGAR_USER_AGENT environment variable."""
-        with patch.dict(os.environ, {'SEC_EDGAR_USER_AGENT': 'Edgar/1.0 (edgar@test.com)'}):
+        # Clear both potential env vars to ensure clean test
+        env_override = {
+            'SEC_EDGAR_USER_AGENT': 'Edgar/1.0 (edgar@test.com)',
+            'SEC_USER_AGENT': ''
+        }
+        with patch.dict(os.environ, env_override, clear=False):
+            # Also need to clear the cached env var by creating fresh client
+            os.environ['SEC_EDGAR_USER_AGENT'] = 'Edgar/1.0 (edgar@test.com)'
+            os.environ.pop('SEC_USER_AGENT', None)
             client = SECEdgarClient()
             assert client.user_agent == 'Edgar/1.0 (edgar@test.com)'
 

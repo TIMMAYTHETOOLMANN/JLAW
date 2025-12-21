@@ -204,7 +204,7 @@ def validate_recursive_engine_v2_imports(result: ValidationResult):
         return
     
     # Read file and check for V2 imports
-    with open(engine_path, 'r') as f:
+    with open(engine_path, 'r', encoding='utf-8') as f:
         content = f.read()
     
     v2_classes = [

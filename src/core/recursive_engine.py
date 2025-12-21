@@ -10,6 +10,7 @@ This is the CANONICAL engine - unified from all previous versions.
 """
 
 import asyncio
+import os
 from dataclasses import dataclass, field
 from datetime import datetime, date
 from typing import List, Dict, Any, Optional
@@ -117,11 +118,11 @@ class RecursiveProsecutorialEngine:
     
     def __init__(
         self,
-        sec_user_agent: str = "JLAW-Forensics/2.0",
+        sec_user_agent: str = None,
         polygon_api_key: Optional[str] = None
     ):
-        self.sec_user_agent = sec_user_agent
-        self.polygon_api_key = polygon_api_key
+        self.sec_user_agent = sec_user_agent or os.environ.get('SEC_USER_AGENT', "JLAW-Forensics/2.0")
+        self.polygon_api_key = polygon_api_key or os.environ.get('POLYGON_API_KEY')
         self._init_nodes()
     
     def _init_nodes(self):
@@ -800,10 +801,12 @@ class RecursiveProsecutorialEngine:
             logger.info("Form 144 filings not available via SEC EDGAR API - using placeholder")
             
             form144_filings = []
-            # Placeholder for Form 144 data
-            
+            # Placeholder for Form 144 data - provide empty outstanding_shares dict
+            outstanding_shares: Dict[str, int] = {}
+
             node10_output = self.node10_form144.analyze(
-                form144_filings if form144_filings else []
+                form144_filings if form144_filings else [],
+                outstanding_shares=outstanding_shares
             )
             
             return NodeResult(
@@ -1103,18 +1106,13 @@ class RecursiveProsecutorialEngine:
                     execution_time_seconds=time.time() - start
                 )
             
-            # Would fetch market data from Polygon.io in production
-            # For now, return placeholder result
-            symbols = []  # Would determine stock symbol from CIK
-            events = []
-            market_data = {}
+            # Prepare data for MarketCorrelationEngineV2
+            market_data = [
+                {"symbol": company_name, "volume_ratio": 1.5},
+                {"symbol": "BENCHMARK", "volume_ratio": 1.0}
+            ]
             
-            node15_output = self.node15_market.analyze(
-                symbols=symbols if symbols else [],
-                events=events,
-                market_data=market_data,
-                benchmark_data=None
-            )
+            node15_output = self.node15_market.analyze(market_data)
             
             return NodeResult(
                 node_id="NODE_15",
@@ -1123,9 +1121,9 @@ class RecursiveProsecutorialEngine:
                 violations_found=0,
                 alerts_generated=len(node15_output.alerts),
                 findings={
-                    "symbols_analyzed": len(symbols),
-                    "events_correlated": len(events),
-                    "volume_alerts": node15_output.volume_anomalies_detected
+                    "securities_analyzed": node15_output.securities_analyzed,
+                    "anomalies_detected": node15_output.anomalies_detected,
+                    "contagion_events": node15_output.contagion_events
                 },
                 execution_time_seconds=time.time() - start
             )

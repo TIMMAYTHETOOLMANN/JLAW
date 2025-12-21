@@ -13,7 +13,7 @@ from src.detection.patterns.channel_stuffing_detector import (
     ChannelStuffingDetector,
     QuarterlyMetrics
 )
-from tests.validation.sec_enforcement_validator import SECEnforcementValidator
+from .sec_enforcement_validator import SECEnforcementValidator
 
 
 class TestChannelStuffingDetection:

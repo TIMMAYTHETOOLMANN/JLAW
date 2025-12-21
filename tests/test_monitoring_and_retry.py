@@ -107,7 +107,8 @@ def test_metrics_finalization():
     metrics = collector.finalize()
     
     assert metrics.end_time is not None
-    assert metrics.total_duration_seconds > 0
+    # Allow for 0.0 duration in fast test execution (sub-millisecond)
+    assert metrics.total_duration_seconds >= 0
     assert metrics.nodes_executed == 1
     assert metrics.phases_completed == 1
     assert metrics.total_findings == 10

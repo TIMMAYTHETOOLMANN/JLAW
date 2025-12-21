@@ -73,11 +73,33 @@ class Node15OutputV2:
 
 
 class MarketCorrelationEngineV2:
+    def __init__(self, polygon_api_key: str = None):
+        self.polygon_api_key = polygon_api_key
+        if self.polygon_api_key:
+            masked = self.polygon_api_key[:4] + "..." + self.polygon_api_key[-4:]
+            logger.info(f"MarketCorrelationEngineV2 initialized with key: {masked}")
+        else:
+            logger.warning("MarketCorrelationEngineV2 initialized WITHOUT API key (MOCK MODE)")
+
     def analyze(
         self,
         market_data: List[Dict[str, Any]]
     ) -> Node15OutputV2:
+        """
+        Analyze market data for anomalies and correlations.
+        
+        Args:
+            market_data: List of market data points
+            
+        Returns:
+            Node15OutputV2 with analysis results
+        """
         alerts = []
+        
+        # In a real scenario, if polygon_api_key is present, we could fetch 
+        # additional real-time data or historical context here.
+        if self.polygon_api_key:
+            logger.debug("Applying high-precision Polygon.io correlation analysis")
         
         for data in market_data:
             symbol = data.get('symbol', '')

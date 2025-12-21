@@ -19,7 +19,7 @@ Expected: Significant deviation in expense line items
 
 import pytest
 from src.detection.financial.benford_analysis import BenfordAnalyzer, ConformityLevel
-from tests.validation.sec_enforcement_validator import SECEnforcementValidator
+from .sec_enforcement_validator import SECEnforcementValidator
 
 
 class TestWorldComBenfordFixed:
