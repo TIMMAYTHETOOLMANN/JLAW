@@ -74,13 +74,13 @@ from .node5_irs import (
 from .node6_routing.enforcement_router import EnforcementRouter
 
 # Node 7: 13F-HR Institutional Holdings
-from .node7_13f_holdings import InstitutionalHoldingsAnalyzer
+from .node7_13f_holdings import InstitutionalHoldingsAnalyzer, InstitutionalHoldingsAnalyzerV2
 
 # Node 8: 13D/13G Beneficial Ownership
-from .node8_13d_ownership import BeneficialOwnershipTracker
+from .node8_13d_ownership import BeneficialOwnershipTracker, BeneficialOwnershipTrackerV2
 
 # Node 9: 8-K Material Event Correlator
-from .node9_8k_events import MaterialEventCorrelator
+from .node9_8k_events import MaterialEventCorrelator, MaterialEventCorrelatorV2
 
 # Node 10: Form 144 Restricted Sale Monitor
 from .node10_form144 import (
@@ -172,12 +172,15 @@ __all__ = [
     
     # Node 7
     'InstitutionalHoldingsAnalyzer',
+    'InstitutionalHoldingsAnalyzerV2',
     
     # Node 8
     'BeneficialOwnershipTracker',
+    'BeneficialOwnershipTrackerV2',
     
     # Node 9
     'MaterialEventCorrelator',
+    'MaterialEventCorrelatorV2',
     
     # Node 10
     'RestrictedSaleMonitor',

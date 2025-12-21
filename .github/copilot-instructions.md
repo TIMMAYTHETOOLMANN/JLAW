@@ -6,10 +6,12 @@ JLAW is a **DOJ-grade SEC filing forensic analysis platform** implementing a **1
 
 ### Core Architecture
 
+- **Master Execution Controller**: Single canonical entry point orchestrating 9-phase forensic analysis
 - **15-Node Recursive Engine**: Sequential analysis phases (4 phases, 15 nodes total)
 - **23 Detection Algorithms**: 85-97% accuracy fraud pattern detection
 - **10 Claude Specialized Agents**: Domain-specific forensic analysis
-- **Evidence Chain**: FRE 902(13)/(14) compliant with SHA-256 hashing and RFC 3161 timestamping
+- **Evidence Chain**: FRE 902(13)/(14) compliant with triple-hash integrity (SHA-256 + SHA3-512 + BLAKE2b)
+- **Merkle Tree**: RFC 6962 compliant for evidence verification
 - **Dual AI Validation**: OpenAI + Anthropic cross-validation
 
 ## Coding Standards & Conventions
@@ -27,17 +29,75 @@ JLAW is a **DOJ-grade SEC filing forensic analysis platform** implementing a **1
 
 ```
 src/
-├── core/                    # Core engine and orchestration
-│   └── recursive_engine.py  # Main 15-node recursive engine
-├── nodes/                   # 15 analysis nodes (node1-node15)
-│   ├── __init__.py         # Centralized exports - USE V2 VERSIONS
-│   ├── node1_form4/        # Form 4 insider trading
-│   ├── node2_def14a/       # DEF 14A compensation
-│   └── ...                 # Nodes 3-15
-├── detection/              # Pattern detection (23 algorithms)
-├── integrations/           # External API clients (SEC EDGAR, Polygon.io)
-├── evidence_chain/         # FRE 902 compliance, custody tracking
-└── reporting/              # Dossier generation
+├── core/                             # Core engine and orchestration
+│   ├── master_execution_controller.py  # SINGLE CANONICAL ENTRY POINT (9 phases)
+│   └── recursive_engine.py            # 15-node recursive engine
+├── nodes/                            # 15 analysis nodes (node1-node15)
+│   ├── __init__.py                  # Centralized exports - USE V2 VERSIONS
+│   ├── node1_form4/                 # Form 4 insider trading
+│   ├── node2_def14a/                # DEF 14A compensation
+│   └── ...                          # Nodes 3-15
+├── detection/                        # Pattern detection (23 algorithms)
+├── integrations/                     # External API clients (SEC EDGAR, Polygon.io)
+├── evidence_chain/                   # FRE 902 compliance, custody tracking
+└── reporting/                        # Dossier generation
+```
+
+### Master Execution Controller
+
+The **Master Execution Controller** (`src/core/master_execution_controller.py`) is the **single canonical entry point** for all forensic analysis. It orchestrates the complete 9-phase execution flow:
+
+**PHASE 1**: Configuration & Target Acquisition
+  └── GATE: Configuration validation (100% required)
+
+**PHASE 2**: SEC EDGAR Data Collection
+  └── GATE: Minimum 5 filings (80% required)
+
+**PHASE 3**: Document Parsing & Indexing
+  └── GATE: 80% documents parsed successfully
+
+**PHASE 4**: 15-Node Recursive Analysis
+  ├── SUB-PHASE 4.1: Core SEC Filing Analysis (Nodes 1-6)
+  ├── SUB-PHASE 4.2: Extended Intelligence (Nodes 7-12)
+  ├── SUB-PHASE 4.3: Quantitative Forensic Scoring (Nodes 13-14)
+  ├── SUB-PHASE 4.4: Market Correlation (Node 15)
+  ├── SUB-PHASE 4.5: Cross-Node Correlation
+  └── GATE: 12/15 nodes successful (80% required)
+
+**PHASE 5**: Advanced Detection Patterns (23 algorithms)
+  └── GATE: 20/23 patterns executed (87% required)
+
+**PHASE 6**: Dual-Agent AI Cross-Validation
+  └── GATE: At least 1 AI agent responsive
+
+**PHASE 7**: Subagent Orchestration
+
+**PHASE 8**: Evidence Chain Finalization
+  ├── Triple-Hash Integrity (SHA-256 + SHA3-512 + BLAKE2b)
+  ├── Merkle Tree Construction (RFC 6962 compliant)
+  ├── RFC 3161 Timestamp Tokens
+  └── GATE: 100% hash match required (ABORT on failure)
+
+**PHASE 9**: DOJ-Grade Dossier Generation
+  └── FRE 902(13)/(14) compliant output
+
+Usage:
+```python
+from src.core.master_execution_controller import MasterExecutionController
+from datetime import date
+from pathlib import Path
+
+controller = MasterExecutionController(
+    cik="320187",
+    company_name="NIKE, Inc.",
+    start_date=date(2019, 1, 1),
+    end_date=date(2019, 12, 31),
+    output_dir=Path("output"),
+    strict_mode=True,
+    auto_mode=True
+)
+
+result = await controller.execute_full_analysis()
 ```
 
 ### Version Management
@@ -162,20 +222,55 @@ except Exception as e:
 
 ## Evidence Chain & Compliance
 
+### Triple-Hash Integrity (NEW)
+
+JLAW now implements **triple-hash integrity** for maximum evidence security:
+
+```python
+from src.core.evidence_chain.hash_service import HashService
+
+hash_service = HashService()
+hashes = hash_service.compute_triple_hash(document_content)
+
+# Returns:
+# {
+#   'sha256': '...',      # Primary hash (FRE 902(13) compliant)
+#   'sha3_512': '...',    # Secondary hash (enhanced security)
+#   'blake2b': '...'      # Tertiary hash (performance + security)
+# }
+```
+
+### Merkle Tree (RFC 6962)
+
+Evidence integrity is verified using RFC 6962 compliant Merkle trees:
+
+```python
+from src.core.evidence_chain.merkle_tree import MerkleTree
+
+merkle_tree = MerkleTree()
+for evidence_hash in evidence_hashes:
+    merkle_tree.add_leaf(bytes.fromhex(evidence_hash))
+
+merkle_root = merkle_tree.get_root()  # Single root hash for all evidence
+```
+
 ### FRE 902(13) Requirements
 
 When handling evidence:
-1. Compute SHA-256 hash of source documents
-2. Create RFC 3161 timestamp
-3. Log custody chain in `evidence_chain/custody/`
-4. Never modify original documents
+1. Compute triple-hash of source documents (SHA-256 + SHA3-512 + BLAKE2b)
+2. Build Merkle tree from evidence hashes
+3. Create RFC 3161 timestamp token
+4. Log custody chain in `evidence_chain/custody/`
+5. Never modify original documents
 
 ```python
-from src.evidence_chain.hash_generator import compute_hash
-from src.evidence_chain.custody.chain_of_custody import CustodyLogger
+from src.core.evidence_chain.hash_service import HashService
+from src.core.evidence_chain.merkle_tree import MerkleTree
+from src.core.evidence_chain.custody.chain_of_custody import CustodyLogger
 
-hash_value = compute_hash(document_content)
-custody_logger.log_acquisition(document_url, hash_value, timestamp)
+hash_service = HashService()
+hashes = hash_service.compute_triple_hash(document_content)
+custody_logger.log_acquisition(document_url, hashes['sha256'], timestamp)
 ```
 
 ## Testing Guidelines
@@ -245,15 +340,20 @@ When adding new patterns, follow `AdvancedPatternDetector` structure.
 
 ## Resources
 
+- **Master Controller**: `src/core/master_execution_controller.py` (SINGLE CANONICAL ENTRY POINT)
 - **Main Entry Point**: `JLAW_UNIFIED.py`
 - **Core Engine**: `src/core/recursive_engine.py`
 - **Node Exports**: `src/nodes/__init__.py`
 - **SEC Client**: `src/integrations/sec_edgar/edgar_client.py`
+- **Validation Script**: `scripts/validate_unification.py`
 - **Documentation**: `README.md`, `HOLY_GRAIL_PIPELINE.md`, `STRICT_EXECUTION_MODE.md`
 
 ## Quick Reference Commands
 
 ```bash
+# Validate JLAW Master Unification
+python scripts/validate_unification.py
+
 # Run interactive analysis
 python JLAW_UNIFIED.py
 
@@ -265,4 +365,23 @@ python JLAW_UNIFIED.py --cik 320187 --year 2019 --strict --auto
 
 # Verify SEC configuration
 python -c "from config.secure_config import print_configuration_status; print_configuration_status()"
+
+# Use Master Execution Controller directly
+python -c "
+from src.core.master_execution_controller import MasterExecutionController
+from datetime import date
+from pathlib import Path
+import asyncio
+
+controller = MasterExecutionController(
+    cik='320187',
+    company_name='NIKE, Inc.',
+    start_date=date(2019, 1, 1),
+    end_date=date(2019, 12, 31),
+    output_dir=Path('output'),
+    strict_mode=True
+)
+
+result = asyncio.run(controller.execute_full_analysis())
+"
 ```

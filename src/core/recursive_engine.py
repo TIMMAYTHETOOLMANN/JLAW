@@ -149,33 +149,33 @@ class RecursiveProsecutorialEngine:
         self.node5_irc83 = IRC83TaxCalculator()
         self.enforcement_router = EnforcementRouter()
         
-        # Phase 2 nodes
+        # Phase 2 nodes - USE V2 VERSIONS for Nodes 7-12
         from src.nodes import (
-            InstitutionalHoldingsAnalyzer,
-            BeneficialOwnershipTracker,
-            MaterialEventCorrelator,
-            RestrictedSaleMonitor,
-            ExecutiveNetworkAnalyzer,
-            EarningsCallAnalyzer
+            InstitutionalHoldingsAnalyzerV2,
+            BeneficialOwnershipTrackerV2,
+            MaterialEventCorrelatorV2,
+            RestrictedSaleMonitorV2,
+            ExecutiveNetworkAnalyzerV2,
+            TranscriptAnalyzerV2
         )
         
-        self.node7_institutional = InstitutionalHoldingsAnalyzer()
-        self.node8_ownership = BeneficialOwnershipTracker()
-        self.node9_events = MaterialEventCorrelator()
-        self.node10_form144 = RestrictedSaleMonitor()
-        self.node11_network = ExecutiveNetworkAnalyzer()
-        self.node12_transcripts = EarningsCallAnalyzer()
+        self.node7_institutional = InstitutionalHoldingsAnalyzerV2()
+        self.node8_ownership = BeneficialOwnershipTrackerV2()
+        self.node9_events = MaterialEventCorrelatorV2()
+        self.node10_form144 = RestrictedSaleMonitorV2()
+        self.node11_network = ExecutiveNetworkAnalyzerV2()
+        self.node12_transcripts = TranscriptAnalyzerV2()
         
-        # Phase 3 nodes
-        from src.nodes import BankruptcyPredictor, FinancialStrengthAnalyzer
+        # Phase 3 nodes - USE V2 VERSIONS for Nodes 13-14
+        from src.nodes import BankruptcyPredictorV2, FinancialStrengthAnalyzerV2
         
-        self.node13_zscore = BankruptcyPredictor()
-        self.node14_fscore = FinancialStrengthAnalyzer()
+        self.node13_zscore = BankruptcyPredictorV2()
+        self.node14_fscore = FinancialStrengthAnalyzerV2()
         
-        # Phase 4 nodes
-        from src.nodes import MarketCorrelationEngine
+        # Phase 4 nodes - USE V2 VERSION for Node 15
+        from src.nodes import MarketCorrelationEngineV2
         
-        self.node15_market = MarketCorrelationEngine(self.polygon_api_key)
+        self.node15_market = MarketCorrelationEngineV2(self.polygon_api_key)
         
         # Detection modules
         # Core pattern detector (15 patterns)
