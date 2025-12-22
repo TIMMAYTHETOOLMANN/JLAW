@@ -184,6 +184,57 @@ class DOJReportGenerator:
         total_damages_max = sum(v.damage_estimate.civil_maximum for v in all_violations)
         total_disgorgement = sum(v.damage_estimate.disgorgement_estimate for v in all_violations)
         
+        # NEW: Calculate whistleblower bounty if applicable
+        whistleblower_section = None
+        if total_damages_max > 1_000_000:  # SEC minimum threshold for awards
+            try:
+                from src.internal.whistleblower_bounty_estimator import WhistleblowerBountyEstimator
+                
+                estimator = WhistleblowerBountyEstimator()
+                
+                # Convert violations to format expected by estimator
+                violations_for_estimate = [
+                    {
+                        'type': v.violation_type,
+                        'severity': v.severity.value.lower()
+                    }
+                    for v in all_violations
+                ]
+                
+                # Get bounty estimate
+                bounty_estimate = estimator.estimate_bounty(
+                    violations=violations_for_estimate,
+                    company_market_cap=None,  # Would need to fetch from market data
+                    prior_enforcement_history=False
+                )
+                
+                # Store for report inclusion (but don't serialize the BountyEstimate object)
+                whistleblower_section = {
+                    'estimated_sanctions_min': float(bounty_estimate.estimated_sanctions_min),
+                    'estimated_sanctions_max': float(bounty_estimate.estimated_sanctions_max),
+                    'award_percentage_range': f"{int(bounty_estimate.bounty_percentage_min * 100)}-{int(bounty_estimate.bounty_percentage_max * 100)}%",
+                    'award_range_low': float(bounty_estimate.bounty_amount_min),
+                    'award_range_high': float(bounty_estimate.bounty_amount_max),
+                    'violation_count': bounty_estimate.violation_count,
+                    'critical_violations': bounty_estimate.critical_violations,
+                    'confidence_level': bounty_estimate.confidence_level,
+                    'basis': bounty_estimate.basis,
+                    'eligibility_notes': (
+                        "Eligible for SEC whistleblower award under Dodd-Frank Act Section 922 "
+                        "(15 USC §78u-6) if voluntary, original information leads to successful enforcement. "
+                        "Award range: 10-30% of monetary sanctions exceeding $1,000,000."
+                    )
+                }
+                
+                logger.info(
+                    f"Whistleblower bounty estimated: "
+                    f"${bounty_estimate.bounty_amount_min:,.0f} - ${bounty_estimate.bounty_amount_max:,.0f}"
+                )
+                
+            except Exception as e:
+                logger.warning(f"Failed to estimate whistleblower bounty: {e}")
+                whistleblower_section = None
+        
         # Referral recommendations
         has_critical = violations_by_severity.get('CRITICAL', 0) > 0
         has_high = violations_by_severity.get('HIGH', 0) > 0
@@ -202,7 +253,7 @@ class DOJReportGenerator:
         start_date = min(dates) if dates else ""
         end_date = max(dates) if dates else ""
         
-        return ForensicReportSummary(
+        summary = ForensicReportSummary(
             case_id=case_id,
             company_name=company_name,
             cik=cik,
@@ -226,6 +277,13 @@ class DOJReportGenerator:
             evidence_items_count=len(chain_of_custody),
             chain_of_custody_verified=all(r.verification_status == 'verified' for r in chain_of_custody),
         )
+        
+        # NEW: Attach whistleblower section as metadata (not part of ForensicReportSummary dataclass)
+        if whistleblower_section:
+            # Store as custom attribute for later use in report generation
+            setattr(summary, '_whistleblower_section', whistleblower_section)
+        
+        return summary
     
     def _generate_markdown_report(
         self,
@@ -313,6 +371,36 @@ class DOJReportGenerator:
             f"| Disgorgement Estimate | ${summary.total_disgorgement:,.2f} |",
             f"| Criminal Referrals | {summary.criminal_referral_count} |",
             "",
+        ])
+        
+        # NEW: Include Whistleblower Bounty Section if applicable
+        whistleblower_section = getattr(summary, '_whistleblower_section', None)
+        if whistleblower_section:
+            lines.extend([
+                "### Whistleblower Award Estimate",
+                "",
+                "**INTERNAL USE ONLY - NOT FOR PUBLIC DISCLOSURE**",
+                "",
+                "| Metric | Value |",
+                "|--------|-------|",
+                f"| Estimated Sanctions (Min) | ${whistleblower_section['estimated_sanctions_min']:,.0f} |",
+                f"| Estimated Sanctions (Max) | ${whistleblower_section['estimated_sanctions_max']:,.0f} |",
+                f"| Award Percentage Range | {whistleblower_section['award_percentage_range']} |",
+                f"| Award Range (Low) | ${whistleblower_section['award_range_low']:,.0f} |",
+                f"| Award Range (High) | ${whistleblower_section['award_range_high']:,.0f} |",
+                f"| Violation Count | {whistleblower_section['violation_count']} ({whistleblower_section['critical_violations']} critical) |",
+                f"| Confidence Level | {whistleblower_section['confidence_level'].upper()} |",
+                "",
+                "**Legal Basis:**",
+                f"- {whistleblower_section['eligibility_notes']}",
+                "",
+                "**Note:** This estimate is for internal forensic analysis only and should not be disclosed",
+                "to prevent gaming the whistleblower program. Actual awards are determined by the SEC",
+                "Office of the Whistleblower based on statutory factors under 15 USC §78u-6(c)(1).",
+                "",
+            ])
+        
+        lines.extend([
             "### Regulatory Routing",
             "",
             "| Agency | Referral Recommended |",
