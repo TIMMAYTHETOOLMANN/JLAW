@@ -54,6 +54,7 @@ Legal Framework:
 
 import asyncio
 import logging
+import os
 import sys
 import time
 import hashlib
@@ -945,9 +946,42 @@ class MasterExecutionController:
             merkle_root = self._merkle_tree.get_root()
             logger.info(f"✓ Merkle root: {merkle_root.hex()[:32]}...")
             
-            # RFC 3161 timestamping (optional)
+            # RFC 3161 timestamping (optional but recommended for FRE 902(13)/(14))
             logger.info("→ RFC 3161 timestamp token...")
-            logger.info("✓ Timestamp token skipped (optional)")
+            timestamp_token = None
+            timestamp_authority = "local"  # Default to local (non-court-admissible)
+            
+            try:
+                from src.core.evidence_chain.rfc3161_client import RFC3161Client
+                
+                # Check for RFC 3161 configuration
+                rfc3161_authority = os.getenv("RFC3161_AUTHORITY", "local")
+                
+                if rfc3161_authority != "local":
+                    logger.info(f"  → Using RFC 3161 authority: {rfc3161_authority}")
+                    rfc3161_client = RFC3161Client(authority=rfc3161_authority)
+                    
+                    # Timestamp the Merkle root
+                    timestamp_token = await rfc3161_client.timestamp(merkle_root)
+                    timestamp_authority = rfc3161_authority
+                    
+                    logger.info(f"✓ RFC 3161 timestamp obtained from {rfc3161_authority}")
+                    logger.info(f"  Timestamp: {timestamp_token.gen_time.isoformat()}")
+                    logger.info(f"  Message imprint: {timestamp_token.message_imprint[:32]}...")
+                    
+                    # Store timestamp for evidence package
+                    self._timestamp_token = timestamp_token
+                else:
+                    logger.info("✓ RFC 3161 timestamping skipped (authority=local)")
+                    logger.info("  Note: Set RFC3161_AUTHORITY env var (freetsa/digicert) for court-admissible timestamps")
+                    
+            except ImportError as e:
+                logger.warning(f"  ⚠ RFC 3161 client not available: {e}")
+                logger.info("  Install rfc3161ng for court-admissible timestamps: pip install rfc3161ng")
+            except RuntimeError as e:
+                logger.warning(f"  ⚠ RFC 3161 timestamping failed: {e}")
+            except Exception as e:
+                logger.warning(f"  ⚠ RFC 3161 timestamping error: {e}", exc_info=True)
             
         except Exception as e:
             errors.append(f"Evidence chain error: {str(e)}")
@@ -1104,12 +1138,23 @@ class MasterExecutionController:
     
     def _build_evidence_chain_summary(self) -> Dict[str, Any]:
         """Build evidence chain summary."""
-        return {
+        summary = {
             "total_evidence_items": len(self.node_results),
             "merkle_root": self._get_merkle_root(),
             "hash_algorithm": "SHA-256 + SHA3-512 + BLAKE2b",
             "compliance": "FRE 902(13)/(14)"
         }
+        
+        # Add RFC 3161 timestamp if available
+        if hasattr(self, '_timestamp_token') and self._timestamp_token:
+            summary["rfc3161_timestamp"] = {
+                "authority": self._timestamp_token.authority,
+                "gen_time": self._timestamp_token.gen_time.isoformat(),
+                "message_imprint": self._timestamp_token.message_imprint,
+                "hash_algorithm": self._timestamp_token.hash_algorithm
+            }
+        
+        return summary
     
     def _get_merkle_root(self) -> str:
         """Get Merkle tree root hash."""
