@@ -1879,7 +1879,7 @@ class UnifiedForensicEngine:
                 cik=self.config.cik,
                 filing_reports=filing_reports,
                 chain_of_custody=chain_records,
-                output_formats=['markdown', 'json']
+                output_formats=['markdown', 'json', 'court_pdf']
             )
             
             for fmt, path in doj_outputs.items():
