@@ -16,6 +16,7 @@ from datetime import datetime, date
 from typing import List, Dict, Any, Optional
 import logging
 import time
+import uuid
 
 logger = logging.getLogger(__name__)
 
@@ -119,10 +120,26 @@ class RecursiveProsecutorialEngine:
     def __init__(
         self,
         sec_user_agent: str = None,
-        polygon_api_key: Optional[str] = None
+        polygon_api_key: Optional[str] = None,
+        config: Optional[Dict[str, Any]] = None
     ):
         self.sec_user_agent = sec_user_agent or os.environ.get('SEC_USER_AGENT', "JLAW-Forensics/2.0")
         self.polygon_api_key = polygon_api_key or os.environ.get('POLYGON_API_KEY')
+        self.config = config or {}
+        
+        # NEW: Initialize database connection for persistence
+        self.db = None
+        if self.config.get('enable_persistence', False):
+            try:
+                from src.database.timescaledb_client import TimescaleDBClient
+                self.db = TimescaleDBClient()
+                logger.info("TimescaleDB persistence enabled")
+            except Exception as e:
+                logger.warning(f"TimescaleDB unavailable: {e}")
+        
+        # Generate unique execution ID for tracking
+        self.execution_id = str(uuid.uuid4())
+        
         self._init_nodes()
     
     def _init_nodes(self):
@@ -400,7 +417,7 @@ class RecursiveProsecutorialEngine:
                     parsed = self.form4_parser.parse_xml(xml, filing.accession_number, filing.filing_date)
                     violations += len(parsed.late_transactions)
             
-            return NodeResult(
+            result = NodeResult(
                 node_id="NODE_1",
                 node_name="Form 4 Analysis",
                 status="success",
@@ -409,13 +426,23 @@ class RecursiveProsecutorialEngine:
                 findings={"filings_processed": len(filings)},
                 execution_time_seconds=time.time() - start
             )
+            
+            # NEW: Persist result to database
+            await self._persist_node_result(cik, result)
+            
+            return result
         except Exception as e:
-            return NodeResult(
+            result = NodeResult(
                 node_id="NODE_1", node_name="Form 4 Analysis",
                 status="error", violations_found=0, alerts_generated=0,
                 findings={}, execution_time_seconds=time.time() - start,
                 error_message=str(e)
             )
+            
+            # NEW: Persist error result to database
+            await self._persist_node_result(cik, result)
+            
+            return result
     
     async def _execute_node2(
         self, sec_client, cik: str, start_date: date, end_date: date, company_name: str
@@ -1161,6 +1188,26 @@ class RecursiveProsecutorialEngine:
         elif violations > 0:
             return "MODERATE - Civil enforcement recommended"
         return "INSUFFICIENT - No actionable violations"
+    
+    async def _persist_node_result(self, cik: str, result: NodeResult):
+        """
+        Persist node result to TimescaleDB if enabled.
+        
+        Args:
+            cik: Company CIK number
+            result: Node execution result
+        """
+        if self.db:
+            try:
+                await self.db.store_node_result(
+                    cik=cik,
+                    node_id=result.node_id,
+                    result=result.to_dict(),
+                    execution_id=self.execution_id,
+                    timestamp=datetime.utcnow()
+                )
+            except Exception as e:
+                logger.warning(f"Failed to persist {result.node_id} result: {e}")
     
     def _print_header(self, company: str, cik: str, case_id: str):
         """Print analysis header."""
