@@ -461,45 +461,130 @@ class NodeCorrelator:
         company_cik: str,
         company_name: str,
         node1_output: Optional[Any] = None,
+        node2_output: Optional[Any] = None,
+        node3_output: Optional[Any] = None,
+        node4_output: Optional[Any] = None,
+        node5_output: Optional[Any] = None,
+        node6_output: Optional[Any] = None,
         node7_output: Optional[Any] = None,
         node8_output: Optional[Any] = None,
         node9_output: Optional[Any] = None,
+        node10_output: Optional[Any] = None,
+        node11_output: Optional[Any] = None,
+        node12_output: Optional[Any] = None,
+        node13_output: Optional[Any] = None,
+        node14_output: Optional[Any] = None,
+        node15_output: Optional[Any] = None,
         analysis_start: Optional[date] = None,
         analysis_end: Optional[date] = None
     ) -> UnifiedForensicAnalysis:
         """
-        Generate complete unified forensic analysis across all nodes.
+        Generate complete unified forensic analysis across all 15 nodes.
         
         Args:
             company_cik: Company CIK
             company_name: Company name
-            node1_output: Optional Node 1 output
-            node7_output: Optional Node 7 output
-            node8_output: Optional Node 8 output
-            node9_output: Optional Node 9 output
+            node1_output: Optional Node 1 output (Form 4 Insider Trading)
+            node2_output: Optional Node 2 output (DEF 14A Compensation)
+            node3_output: Optional Node 3 output (10-Q Temporal Consistency)
+            node4_output: Optional Node 4 output (10-K SOX Certification)
+            node5_output: Optional Node 5 output (IRC §83 Tax Exposure)
+            node6_output: Optional Node 6 output (Enforcement Routing)
+            node7_output: Optional Node 7 output (13F Institutional Holdings)
+            node8_output: Optional Node 8 output (13D/G Beneficial Ownership)
+            node9_output: Optional Node 9 output (8-K Material Events)
+            node10_output: Optional Node 10 output (Form 144 Restricted Sales)
+            node11_output: Optional Node 11 output (Executive Network Mapping)
+            node12_output: Optional Node 12 output (Earnings Call Transcripts)
+            node13_output: Optional Node 13 output (Z-Score Bankruptcy Prediction)
+            node14_output: Optional Node 14 output (F-Score Financial Strength)
+            node15_output: Optional Node 15 output (Market Correlation)
             analysis_start: Analysis period start
             analysis_end: Analysis period end
             
         Returns:
-            UnifiedForensicAnalysis
+            UnifiedForensicAnalysis with all 15 nodes correlated
         """
         logger.info(f"Generating unified analysis for {company_name} (CIK: {company_cik})")
         
-        # Generate cross-node alerts
+        # Generate cross-node alerts using all 15 nodes
         cross_alerts = []
         
+        # Build node results dictionary for correlation analysis
+        # Extract findings from NodeResult objects if needed
+        def extract_findings(node_output):
+            """Extract findings from NodeResult or return as-is."""
+            if node_output is None:
+                return None
+            if hasattr(node_output, 'findings'):
+                return node_output.findings
+            return node_output
+        
+        node_results = {}
+        if node1_output:
+            node_results['node1_form4'] = extract_findings(node1_output)
+        if node2_output:
+            node_results['node2_compensation'] = extract_findings(node2_output)
+        if node3_output:
+            node_results['node3_10q'] = extract_findings(node3_output)
+        if node4_output:
+            node_results['node4_10k'] = extract_findings(node4_output)
+        if node5_output:
+            node_results['node5_proxy'] = extract_findings(node5_output)
+        if node6_output:
+            node_results['node6_enforcement'] = extract_findings(node6_output)
+        if node7_output:
+            node_results['node7_13f'] = extract_findings(node7_output)
+        if node8_output:
+            node_results['node8_13d'] = extract_findings(node8_output)
+        if node9_output:
+            node_results['node9_8k'] = extract_findings(node9_output)
+        if node10_output:
+            node_results['node10_form144'] = extract_findings(node10_output)
+        if node11_output:
+            node_results['node11_network'] = extract_findings(node11_output)
+        if node12_output:
+            node_results['node12_earnings'] = extract_findings(node12_output)
+        if node13_output:
+            node_results['node13_zscore'] = extract_findings(node13_output)
+        if node14_output:
+            node_results['node14_fscore'] = extract_findings(node14_output)
+        if node15_output:
+            node_results['node15_market'] = extract_findings(node15_output)
+        
+        # Run all 10 correlation patterns across available nodes
+        if node_results:
+            logger.info(f"Running correlation analysis on {len(node_results)} nodes")
+            cross_alerts = self.correlate_nodes(node_results, company_cik, company_name)
+            logger.info(f"Found {len(cross_alerts)} correlation alerts across all nodes")
+        
+        # Legacy correlation methods (for backward compatibility with non-NodeResult outputs)
         # Node 7 ↔ Node 8 correlation
         if node7_output and node8_output:
-            cross_alerts.extend(self.correlate_node7_node8(node7_output, node8_output))
+            try:
+                legacy_alerts = self.correlate_node7_node8(node7_output, node8_output)
+                # Add only if not already in cross_alerts
+                for alert in legacy_alerts:
+                    if alert not in cross_alerts:
+                        cross_alerts.append(alert)
+            except Exception as e:
+                logger.debug(f"Legacy Node 7/8 correlation skipped: {e}")
         
         # Node 9 ↔ All correlation
         if node9_output:
-            cross_alerts.extend(self.correlate_node9_all(
-                node9_output,
-                node1_trades=None,  # Would need to extract from node1_output
-                node7_output=node7_output,
-                node8_output=node8_output
-            ))
+            try:
+                legacy_alerts = self.correlate_node9_all(
+                    node9_output,
+                    node1_trades=None,  # Would need to extract from node1_output
+                    node7_output=node7_output,
+                    node8_output=node8_output
+                )
+                # Add only if not already in cross_alerts
+                for alert in legacy_alerts:
+                    if alert not in cross_alerts:
+                        cross_alerts.append(alert)
+            except Exception as e:
+                logger.debug(f"Legacy Node 9 correlation skipped: {e}")
         
         # Calculate overall risk score
         risk_score = self._calculate_overall_risk_score(

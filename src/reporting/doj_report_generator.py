@@ -91,7 +91,7 @@ class DOJReportGenerator:
             filing_reports: List of per-filing analysis reports
             chain_of_custody: Evidence chain of custody records
             subagent_findings: Optional specialized subagent findings
-            output_formats: Output formats to generate ('markdown', 'json', 'html')
+            output_formats: Output formats to generate ('markdown', 'json', 'html', 'court_pdf')
             
         Returns:
             Dict mapping format names to output file paths
@@ -136,6 +136,18 @@ class DOJReportGenerator:
             )
             outputs['html'] = html_path
             logger.info(f"Generated HTML report: {html_path}")
+        
+        if 'court_pdf' in output_formats:
+            try:
+                court_pdf_path = self._generate_court_pdf_report(
+                    case_id, company_name, cik, summary,
+                    filing_reports, chain_of_custody
+                )
+                outputs['court_pdf'] = court_pdf_path
+                logger.info(f"Generated Court PDF report: {court_pdf_path}")
+            except Exception as e:
+                logger.error(f"Failed to generate Court PDF: {e}", exc_info=True)
+                logger.warning("Court PDF generation failed - continuing with other formats")
         
         return outputs
     
@@ -870,3 +882,153 @@ def create_violation_evidence(
         detected_by=agent_source,
         evidence_hash=evidence_hash,
     )
+    
+    def _generate_court_pdf_report(
+        self,
+        case_id: str,
+        company_name: str,
+        cik: str,
+        summary: ForensicReportSummary,
+        filing_reports: List[FilingAnalysisReport],
+        chain_of_custody: List[ChainOfCustodyRecord]
+    ) -> Path:
+        """
+        Generate FRE 902(13)/(14) compliant court PDF report.
+        
+        Args:
+            case_id: Case identifier
+            company_name: Company name
+            cik: Company CIK
+            summary: Report summary
+            filing_reports: Filing analysis reports
+            chain_of_custody: Evidence chain records
+            
+        Returns:
+            Path to generated court PDF
+        """
+        try:
+            from .court_pdf_generator import (
+                CourtPDFGenerator, CaseCaption, ViolationDetail,
+                EvidenceItem, Exhibit
+            )
+            from datetime import date
+        except ImportError as e:
+            logger.error(f"Failed to import court PDF generator: {e}")
+            raise ImportError(
+                "Court PDF generator not available. "
+                "Install reportlab with: pip install reportlab"
+            ) from e
+        
+        # Create case caption
+        case_caption = CaseCaption(
+            plaintiff="United States Securities and Exchange Commission",
+            defendant=company_name,
+            court_name="UNITED STATES DISTRICT COURT",
+            case_number=case_id,
+            case_title=f"SEC v. {company_name}",
+            filing_date=date.today()
+        )
+        
+        # Build executive summary from report summary
+        executive_summary = f"""
+EXECUTIVE SUMMARY
+
+Target: {company_name} (CIK: {cik})
+Case ID: {case_id}
+Analysis Period: {summary.analysis_period}
+
+FINDINGS SUMMARY:
+- Total Violations: {summary.total_violations}
+- Critical Violations: {summary.critical_violations}
+- High Severity: {summary.high_violations}
+- Medium Severity: {summary.medium_violations}
+- Low Severity: {summary.low_violations}
+
+FILINGS ANALYZED: {summary.total_filings_analyzed}
+
+PROSECUTORIAL RECOMMENDATION:
+{summary.prosecution_recommendation}
+
+ESTIMATED PENALTIES:
+- Civil Minimum: ${summary.estimated_civil_penalties_min:,.2f}
+- Civil Maximum: ${summary.estimated_civil_penalties_max:,.2f}
+- Criminal Exposure: {"Yes" if summary.criminal_exposure else "No"}
+"""
+        
+        # Convert violations to court format
+        violations = []
+        violation_counter = 1
+        
+        for filing_report in filing_reports:
+            for violation in filing_report.violations:
+                # Build statutory citation
+                statutory_citation = ""
+                if violation.statutory_reference:
+                    statutory_citation = f"{violation.statutory_reference.statute_title} § {violation.statutory_reference.section}"
+                
+                # Build evidence references
+                evidence_refs = []
+                if violation.document_url:
+                    evidence_refs.append(f"Filing: {violation.filing_accession}")
+                if violation.evidence_hash:
+                    evidence_refs.append(f"Evidence Hash: {violation.evidence_hash[:16]}...")
+                
+                # Add quotes as evidence
+                if violation.exact_quotes:
+                    for quote in violation.exact_quotes[:3]:  # Limit to 3 quotes
+                        evidence_refs.append(f"Quote: \"{quote.text[:100]}...\"")
+                
+                violations.append(ViolationDetail(
+                    violation_id=f"V{violation_counter:03d}",
+                    violation_type=violation.violation_type,
+                    statutory_citation=statutory_citation,
+                    description=violation.description,
+                    evidence_references=evidence_refs,
+                    severity=violation.severity.value if hasattr(violation.severity, 'value') else str(violation.severity),
+                    recommended_penalty=f"${violation.damage_estimate.civil_penalty_min:,.0f} - ${violation.damage_estimate.civil_penalty_max:,.0f}" if violation.damage_estimate else None
+                ))
+                violation_counter += 1
+        
+        # Convert evidence chain to court format
+        evidence_items = []
+        for custody_record in chain_of_custody:
+            evidence_items.append(EvidenceItem(
+                item_id=f"E{len(evidence_items) + 1:03d}",
+                description=custody_record.document_url or custody_record.document_type,
+                sha256_hash=custody_record.hash_value,
+                sha3_512_hash=None,  # Would extract from custody_record if available
+                rfc3161_timestamp=None,  # Would extract from custody_record if available
+                collection_date=custody_record.timestamp,
+                custodian="SEC EDGAR API"
+            ))
+        
+        # Create exhibits (one per filing)
+        exhibits = []
+        for i, filing_report in enumerate(filing_reports[:10], 1):  # Limit to 10 exhibits
+            exhibits.append(Exhibit(
+                exhibit_id=str(i),
+                exhibit_type="Plaintiff",
+                description=f"SEC Filing Analysis - {filing_report.filing_type}",
+                bates_number=f"JLAW{i:06d}",
+                file_path=None,
+                content=f"Analysis of {filing_report.filing_type} filing (Accession: {filing_report.filing_accession})",
+                page_count=1
+            ))
+        
+        # Generate court PDF
+        generator = CourtPDFGenerator(output_dir=str(self.output_dir / "court_pdfs"))
+        
+        court_pdf_path = generator.generate_report(
+            case_caption=case_caption,
+            executive_summary=executive_summary,
+            violations=violations,
+            evidence_chain=evidence_items,
+            exhibits=exhibits,
+            bates_prefix="JLAW",
+            watermark=None,  # Could add "CONFIDENTIAL" or "DRAFT"
+            certifying_person="JLAW Forensic Analysis System"
+        )
+        
+        logger.info(f"Generated court PDF with {len(violations)} violations, {len(evidence_items)} evidence items, {len(exhibits)} exhibits")
+        return court_pdf_path
+

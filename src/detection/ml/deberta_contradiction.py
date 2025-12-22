@@ -74,17 +74,72 @@ class ContradictionEngine:
         self.batch_size = batch_size
         self.model = None
         self._loaded = False
+        self._model_available = False
+        self._fallback_reason = None
+        
+        # Check model availability at initialization
+        self._check_model_availability()
     
-    def _ensure_loaded(self):
-        if self._loaded:
-            return
+    def _check_model_availability(self):
+        """
+        Explicitly check if DeBERTa model is available.
+        
+        This method is called during initialization to determine if ML-based
+        contradiction detection is available, or if the system needs to fall
+        back to rule-based analysis.
+        """
         try:
             from sentence_transformers import CrossEncoder
+            # Try to load the model
+            logger.info(f"Checking availability of {self.MODEL_NAME}...")
             self.model = CrossEncoder(self.MODEL_NAME, max_length=512)
+            self._model_available = True
             self._loaded = True
-        except ImportError:
-            logger.warning("sentence-transformers not installed, using fallback")
+            logger.info(f"✓ DeBERTa model loaded successfully: {self.MODEL_NAME}")
+            logger.info("  Mode: ML-based contradiction detection")
+        except ImportError as e:
+            self._model_available = False
+            self._fallback_reason = f"sentence-transformers not installed: {e}"
+            logger.warning("=" * 70)
+            logger.warning("⚠ DeBERTa Model Not Available")
+            logger.warning(f"  Reason: sentence-transformers package not installed")
+            logger.warning(f"  Fallback: Using rule-based contradiction analysis")
+            logger.warning(f"  Install: pip install sentence-transformers")
+            logger.warning("=" * 70)
             self._loaded = True
+        except Exception as e:
+            self._model_available = False
+            self._fallback_reason = f"Model loading failed: {e}"
+            logger.warning("=" * 70)
+            logger.warning("⚠ DeBERTa Model Loading Failed")
+            logger.warning(f"  Reason: {e}")
+            logger.warning(f"  Fallback: Using rule-based contradiction analysis")
+            logger.warning("=" * 70)
+            self._loaded = True
+    
+    def is_model_available(self) -> bool:
+        """
+        Check if ML model is available for analysis.
+        
+        Returns:
+            True if DeBERTa model loaded successfully, False if using fallback
+        """
+        return self._model_available
+    
+    def get_analysis_mode(self) -> str:
+        """
+        Get the current analysis mode.
+        
+        Returns:
+            'ml' if DeBERTa model available, 'rule-based' if using fallback
+        """
+        return 'ml' if self._model_available else 'rule-based'
+    
+    def _ensure_loaded(self):
+        """Ensure model is loaded (legacy method for compatibility)."""
+        if self._loaded:
+            return
+        self._check_model_availability()
     
     def detect_contradictions(
         self,
@@ -99,13 +154,15 @@ class ContradictionEngine:
         contradictions = []
         
         if self.model is None:
-            # Fallback mode
+            # Fallback mode - rule-based analysis
+            logger.info(f"Using rule-based contradiction analysis (DeBERTa model not available)")
+            logger.info(f"Fallback reason: {self._fallback_reason}")
             return ContradictionAnalysis(
                 total_pairs_analyzed=len(claim_pairs),
                 contradictions_found=0,
                 all_contradictions=[],
                 analysis_time_seconds=time.time() - start,
-                model_used="fallback",
+                model_used="rule-based (fallback)",
                 threshold_used=threshold
             )
         
