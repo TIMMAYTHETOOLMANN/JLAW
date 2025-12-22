@@ -70,19 +70,56 @@ class DeBERTaContradictionDetector:
         self.model_name = model_name
         self.threshold = threshold
         self.logger = logger
+        self.mock_mode = True
+        self._model_available = False
         
+        # Explicitly check model availability
         if TRANSFORMERS_AVAILABLE:
             try:
+                self.logger.info(f"Loading DeBERTa model: {model_name}...")
                 self.tokenizer = AutoTokenizer.from_pretrained(model_name)
                 self.model = AutoModelForSequenceClassification.from_pretrained(model_name)
                 self.model.eval()
                 self.mock_mode = False
-                self.logger.info(f"Loaded DeBERTa model: {model_name}")
+                self._model_available = True
+                self.logger.info(f"✓ DeBERTa model loaded successfully")
+                self.logger.info(f"  Mode: ML-based contradiction detection")
             except Exception as e:
-                self.logger.warning(f"Could not load model: {e}. Using mock mode.")
+                self.logger.warning("=" * 70)
+                self.logger.warning("⚠ DeBERTa Model Loading Failed")
+                self.logger.warning(f"  Model: {model_name}")
+                self.logger.warning(f"  Reason: {e}")
+                self.logger.warning(f"  Fallback: Using mock/rule-based analysis")
+                self.logger.warning("=" * 70)
                 self.mock_mode = True
+                self._model_available = False
         else:
+            self.logger.warning("=" * 70)
+            self.logger.warning("⚠ DeBERTa Model Not Available")
+            self.logger.warning(f"  Reason: transformers/torch not installed")
+            self.logger.warning(f"  Fallback: Using mock/rule-based analysis")
+            self.logger.warning(f"  Install: pip install transformers torch")
+            self.logger.warning("=" * 70)
             self.mock_mode = True
+            self._model_available = False
+    
+    def is_model_available(self) -> bool:
+        """
+        Check if ML model is available for analysis.
+        
+        Returns:
+            True if DeBERTa model loaded successfully, False if using mock mode
+        """
+        return self._model_available
+    
+    def get_analysis_mode(self) -> str:
+        """
+        Get the current analysis mode.
+        
+        Returns:
+            'ml' if DeBERTa model available, 'mock' if using fallback
+        """
+        return 'ml' if self._model_available else 'mock'
     
     def detect_contradiction(
         self,
