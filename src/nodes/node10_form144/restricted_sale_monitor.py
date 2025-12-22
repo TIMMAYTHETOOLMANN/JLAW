@@ -21,6 +21,14 @@ from typing import List, Dict, Any, Optional
 from enum import Enum
 import hashlib
 import logging
+import warnings
+
+warnings.warn(
+    f"{__name__} (V1) is deprecated and will be removed in a future release. "
+    f"Use {__name__}_v2 instead.",
+    DeprecationWarning,
+    stacklevel=2
+)
 
 logger = logging.getLogger(__name__)
 
