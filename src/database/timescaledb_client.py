@@ -429,3 +429,82 @@ class TimescaleDBClient:
         
         except Exception as e:
             logger.error(f"Delete failed: {e}")
+    
+    async def store_node_result(
+        self,
+        cik: str,
+        node_id: str,
+        result: Dict[str, Any],
+        execution_id: str,
+        timestamp: datetime
+    ):
+        """
+        Store node execution result in database.
+        
+        Args:
+            cik: Company CIK number
+            node_id: Node identifier (NODE_1, NODE_2, etc.)
+            result: Node execution result dictionary
+            execution_id: Unique execution identifier
+            timestamp: Execution timestamp
+        """
+        if self.mock_mode:
+            logger.debug(f"Mock mode: Would store {node_id} result for CIK {cik}")
+            return
+        
+        # Create table if not exists
+        create_table_sql = """
+        CREATE TABLE IF NOT EXISTS node_results (
+            time TIMESTAMPTZ NOT NULL,
+            execution_id TEXT NOT NULL,
+            cik TEXT NOT NULL,
+            node_id TEXT NOT NULL,
+            status TEXT,
+            violations_found INT,
+            alerts_generated INT,
+            execution_time DOUBLE PRECISION,
+            findings JSONB,
+            error_message TEXT,
+            PRIMARY KEY (time, execution_id, node_id)
+        );
+        """
+        
+        insert_sql = """
+        INSERT INTO node_results (
+            time, execution_id, cik, node_id, status,
+            violations_found, alerts_generated, execution_time,
+            findings, error_message
+        )
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+        ON CONFLICT (time, execution_id, node_id) DO UPDATE SET
+            status = EXCLUDED.status,
+            violations_found = EXCLUDED.violations_found,
+            alerts_generated = EXCLUDED.alerts_generated,
+            execution_time = EXCLUDED.execution_time,
+            findings = EXCLUDED.findings,
+            error_message = EXCLUDED.error_message
+        """
+        
+        try:
+            async with self.pool.acquire() as conn:
+                # Ensure table exists
+                await conn.execute(create_table_sql)
+                
+                # Insert result
+                await conn.execute(
+                    insert_sql,
+                    timestamp,
+                    execution_id,
+                    cik,
+                    node_id,
+                    result.get('status', 'unknown'),
+                    result.get('violations_found', 0),
+                    result.get('alerts_generated', 0),
+                    result.get('execution_time_seconds', 0.0),
+                    json.dumps(result.get('findings', {})),
+                    result.get('error_message')
+                )
+                logger.debug(f"Stored {node_id} result for execution {execution_id}")
+        
+        except Exception as e:
+            logger.error(f"Failed to store node result: {e}")

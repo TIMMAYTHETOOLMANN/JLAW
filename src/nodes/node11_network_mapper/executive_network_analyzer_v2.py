@@ -144,6 +144,15 @@ class ExecutiveNetworkAnalyzerV2:
         self.advisor_extractor = DEF14AAdvisorExtractor()
         self.temporal_analyzer = TemporalNetworkAnalyzer()
         
+        # NEW: Initialize GraphAnalytics for advanced graph algorithms
+        try:
+            from src.graph.graph_analytics import GraphAnalytics
+            self.graph_analytics = GraphAnalytics()
+            logger.info("GraphAnalytics initialized successfully")
+        except Exception as e:
+            logger.warning(f"GraphAnalytics unavailable, using fallback: {e}")
+            self.graph_analytics = None
+        
         self.logger = logger
     
     def analyze(
@@ -232,6 +241,129 @@ class ExecutiveNetworkAnalyzerV2:
             temporal_snapshots=temporal_snapshots,
             network_changes=network_changes
         )
+    
+    def analyze_with_advanced_metrics(
+        self,
+        executives: List[Dict[str, Any]],
+        companies: List[Dict[str, Any]],
+        relationships: List[Dict[str, Any]]
+    ) -> Dict[str, Any]:
+        """
+        Enhanced analysis using GraphAnalytics for advanced graph metrics.
+        
+        This method provides:
+        - Betweenness centrality (identifies key connectors/brokers)
+        - Community detection (identifies clusters and cliques)
+        - Key connector identification
+        - Board clustering analysis
+        
+        Args:
+            executives: List of executive records
+            companies: List of company records
+            relationships: List of relationships
+            
+        Returns:
+            Dictionary with advanced graph metrics
+        """
+        if not self.graph_analytics:
+            logger.warning("GraphAnalytics not available, returning empty metrics")
+            return {
+                "centrality": {},
+                "communities": [],
+                "key_connectors": [],
+                "board_clusters": {},
+                "available": False
+            }
+        
+        # Build NetworkX graph
+        graph = self._build_network_graph(executives, companies, relationships)
+        
+        try:
+            # Compute betweenness centrality (who are the bridges?)
+            centrality_results = self.graph_analytics.calculate_betweenness_centrality()
+            centrality_dict = dict(centrality_results) if centrality_results else {}
+            
+            # Detect communities (who are the cliques?)
+            communities = self.graph_analytics.detect_communities()
+            
+            # Find key connectors (who links different groups?)
+            # Use betweenness centrality to identify connectors
+            key_connectors = [
+                {"name": name, "score": score}
+                for name, score in sorted(
+                    centrality_dict.items(),
+                    key=lambda x: x[1],
+                    reverse=True
+                )[:10]  # Top 10 connectors
+            ]
+            
+            # Identify board clusters
+            board_clusters = self._identify_board_clusters(graph, communities)
+            
+            return {
+                "centrality": centrality_dict,
+                "communities": [c.to_dict() for c in communities] if communities else [],
+                "key_connectors": key_connectors,
+                "board_clusters": board_clusters,
+                "available": True,
+                "metrics_computed": {
+                    "betweenness_centrality_count": len(centrality_dict),
+                    "communities_detected": len(communities) if communities else 0,
+                    "key_connectors_identified": len(key_connectors)
+                }
+            }
+        
+        except Exception as e:
+            logger.error(f"Advanced metrics calculation failed: {e}", exc_info=True)
+            return {
+                "centrality": {},
+                "communities": [],
+                "key_connectors": [],
+                "board_clusters": {},
+                "available": False,
+                "error": str(e)
+            }
+    
+    def _identify_board_clusters(
+        self,
+        graph: nx.DiGraph,
+        communities: List[Any]
+    ) -> Dict[str, Any]:
+        """
+        Identify board clusters from community detection results.
+        
+        Args:
+            graph: NetworkX graph
+            communities: Detected communities
+            
+        Returns:
+            Dictionary with board cluster information
+        """
+        if not communities:
+            return {}
+        
+        clusters = {}
+        for idx, community in enumerate(communities):
+            # Extract board members and companies in this community
+            board_members = []
+            companies_in_cluster = []
+            
+            for member in community.members:
+                if member in graph.nodes:
+                    node_type = graph.nodes[member].get('type')
+                    if node_type == 'executive':
+                        board_members.append(member)
+                    elif node_type == 'company':
+                        companies_in_cluster.append(member)
+            
+            clusters[f"cluster_{idx}"] = {
+                "board_members": board_members,
+                "companies": companies_in_cluster,
+                "size": community.size,
+                "companies_set": list(community.companies) if hasattr(community, 'companies') else companies_in_cluster
+            }
+        
+        return clusters
     
     def _build_network_graph(
         self,
