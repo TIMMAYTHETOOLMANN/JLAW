@@ -293,21 +293,6 @@ class RecursiveProsecutorialEngine:
             node12_result = await self._execute_node12(sec_client, cik, start_date, end_date, node9_result)
             phase2_results.append(node12_result)
             
-            # Cross-Node Correlation (after Phase 2)
-            print("\n🔗 Cross-Node Correlation Analysis")
-            try:
-                correlation_start = time.time()
-                # Generate unified cross-node analysis
-                correlation_analysis = self.node_correlator.generate_unified_analysis(
-                    cik=cik,
-                    company_name=company_name
-                )
-                correlation_time = time.time() - correlation_start
-                print(f"  ✓ Cross-node correlation completed ({len(correlation_analysis.cross_node_alerts)} alerts)")
-            except Exception as e:
-                print(f"  ⚠ Cross-node correlation failed: {str(e)}")
-                logger.warning(f"Cross-node correlation failed: {e}")
-            
             # PHASE 3
             print("\n⚡ PHASE 3: Financial Health (Nodes 13-14)")
             
@@ -328,6 +313,39 @@ class RecursiveProsecutorialEngine:
             print("  → Node 15: Market Correlation")
             node15_result = await self._execute_node15(cik, company_name)
             phase4_results.append(node15_result)
+            
+            # Cross-Node Correlation (after all nodes complete)
+            print("\n🔗 Cross-Node Correlation Analysis (All 15 Nodes)")
+            try:
+                correlation_start = time.time()
+                # Generate unified cross-node analysis with all 15 nodes
+                correlation_analysis = self.node_correlator.generate_unified_analysis(
+                    company_cik=cik,
+                    company_name=company_name,
+                    node1_output=node1_result,
+                    node2_output=node2_result,
+                    node3_output=node3_result,
+                    node4_output=node4_result,
+                    node5_output=node5_result,
+                    node6_output=None,  # Node 6 is a placeholder
+                    node7_output=node7_result,
+                    node8_output=node8_result,
+                    node9_output=node9_result,
+                    node10_output=node10_result,
+                    node11_output=node11_result,
+                    node12_output=node12_result,
+                    node13_output=node13_result,
+                    node14_output=node14_result,
+                    node15_output=node15_result,
+                    analysis_start=start_date,
+                    analysis_end=end_date
+                )
+                correlation_time = time.time() - correlation_start
+                print(f"  ✓ Cross-node correlation completed ({len(correlation_analysis.cross_node_alerts)} alerts, {correlation_time:.2f}s)")
+                logger.info(f"Cross-node correlation found {len(correlation_analysis.cross_node_alerts)} alerts across all 15 nodes")
+            except Exception as e:
+                print(f"  ⚠ Cross-node correlation failed: {str(e)}")
+                logger.warning(f"Cross-node correlation failed: {e}", exc_info=True)
         
         execution_end = datetime.utcnow()
         total_time = (execution_end - execution_start).total_seconds()
