@@ -6,10 +6,15 @@ import sys
 import os
 import importlib
 import platform
-import psutil
 from pathlib import Path
 from typing import List, Tuple, Dict, Optional
 from dataclasses import dataclass
+
+try:
+    import psutil
+    HAS_PSUTIL = True
+except ImportError:
+    HAS_PSUTIL = False
 
 
 @dataclass
@@ -228,6 +233,13 @@ class EnvironmentValidator:
         Returns:
             Validation result with resource details
         """
+        if not HAS_PSUTIL:
+            return EnvironmentValidationResult(
+                passed=True,  # Don't fail if psutil not available
+                message="System resource check skipped (psutil not installed)",
+                details={'psutil_available': False}
+            )
+        
         try:
             # RAM
             ram_gb = psutil.virtual_memory().total / (1024 ** 3)
