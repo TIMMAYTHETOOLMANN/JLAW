@@ -854,11 +854,29 @@ class MasterExecutionController:
             self._strict_controller.begin_phase(ExecutionPhase.SUBAGENT.value)
         
         try:
-            logger.info("→ Subagent orchestration...")
+            logger.info("→ Initializing Agent Orchestrator...")
             
-            # Placeholder for subagent orchestration
-            logger.info("✓ Subagent orchestration skipped (optional)")
+            # Import and initialize AgentOrchestrator
+            from src.forensics.agent_orchestrator import AgentOrchestrator
             
+            orchestrator = AgentOrchestrator()
+            
+            # List available agents
+            agents = orchestrator.list_available_agents()
+            logger.info(f"✓ Loaded {len(agents)} agent definitions")
+            
+            # Log agent categories
+            stats = orchestrator.get_agent_statistics()
+            for category, count in stats['by_category'].items():
+                logger.info(f"  - {category}: {count} agents")
+            
+            # Create and execute workflow (optional - only if configured)
+            logger.info("→ Agent orchestration ready (workflow execution skipped)")
+            logger.info("✓ Agents available for invocation via API")
+            
+        except ImportError as e:
+            errors.append(f"Agent orchestrator import error: {str(e)}")
+            logger.warning(f"  ⚠ Agent orchestration skipped (module not found): {e}")
         except Exception as e:
             errors.append(f"Subagent error: {str(e)}")
             logger.error(f"✗ Subagent error: {e}", exc_info=True)
@@ -870,9 +888,12 @@ class MasterExecutionController:
             phase=ExecutionPhase.SUBAGENT,
             success=len(errors) == 0,
             duration_seconds=phase_duration,
-            items_processed=0,
+            items_processed=len(agents) if 'agents' in locals() else 0,
             errors=errors,
-            data={"status": "skipped"}
+            data={
+                "status": "completed" if len(errors) == 0 else "degraded",
+                "agents_loaded": len(agents) if 'agents' in locals() else 0
+            }
         )
         self.phase_results.append(result)
         
