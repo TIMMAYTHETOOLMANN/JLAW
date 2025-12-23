@@ -11,6 +11,7 @@ Critical for court-admissible forensic output with complete legal citations.
 
 import asyncio
 import logging
+import re
 from typing import List, Dict, Any, Optional
 from dataclasses import dataclass
 
@@ -226,9 +227,91 @@ class AdvancedStatuteIntegrator:
         Returns:
             Dictionary with statute details
         """
-        # TODO: Implement actual GovInfo API query
-        # For now, return structured fallback based on common SEC statutes
+        # Try to fetch from GovInfo API if client is available
+        if self.govinfo_client:
+            try:
+                logger.info(f"Fetching statute details from GovInfo API: {statute_citation}")
+                
+                # Parse citation to determine collection (USCODE vs CFR)
+                is_uscode = "U.S.C." in statute_citation or "USC" in statute_citation
+                is_cfr = "CFR" in statute_citation
+                
+                if is_uscode:
+                    # Extract title and section from citation (e.g., "15 U.S.C. § 78j(b)")
+                    title_match = re.search(r'(\d+)\s+U\.S\.C\.', statute_citation)
+                    section_match = re.search(r'§\s*(\d+[a-z]?)', statute_citation)
+                    
+                    if title_match and section_match:
+                        title = int(title_match.group(1))
+                        section = section_match.group(1)
+                        
+                        # Search for the specific section in USCODE
+                        search_query = f"title:{title} section:{section}"
+                        results = await self.govinfo_client.search(
+                            query=search_query,
+                            collections=["USCODE"],
+                            page_size=5
+                        )
+                        
+                        if results and len(results) > 0:
+                            # Get the first result
+                            result = results[0]
+                            
+                            # Fetch package details
+                            package_id = result.get('packageId', '')
+                            if package_id:
+                                package_details = await self.govinfo_client.get_package_summary(package_id)
+                                
+                                return {
+                                    "citation": statute_citation,
+                                    "title": package_details.get('title', f"U.S. Code Title {title}"),
+                                    "summary": package_details.get('summary', ''),
+                                    "full_text": package_details.get('fullText', '')[:500] + "..." if package_details.get('fullText') else '',
+                                    "penalties": self._extract_penalties(package_details.get('fullText', '')),
+                                    "severity": "CRITICAL" if "criminal" in package_details.get('fullText', '').lower() else "HIGH",
+                                    "govinfo_url": result.get('resultLink', f'https://www.govinfo.gov/app/details/USCODE')
+                                }
+                
+                elif is_cfr:
+                    # Extract title and part from CFR citation (e.g., "17 CFR § 240.10b-5")
+                    cfr_match = re.search(r'(\d+)\s+CFR\s+§\s*(\d+\.\d+[a-z]?-\d+)', statute_citation)
+                    
+                    if cfr_match:
+                        cfr_title = int(cfr_match.group(1))
+                        cfr_section = cfr_match.group(2)
+                        
+                        # Search CFR
+                        search_query = f"title:{cfr_title} section:{cfr_section}"
+                        results = await self.govinfo_client.search(
+                            query=search_query,
+                            collections=["CFR"],
+                            page_size=5
+                        )
+                        
+                        if results and len(results) > 0:
+                            result = results[0]
+                            package_id = result.get('packageId', '')
+                            
+                            if package_id:
+                                package_details = await self.govinfo_client.get_package_summary(package_id)
+                                
+                                return {
+                                    "citation": statute_citation,
+                                    "title": package_details.get('title', f"CFR Title {cfr_title}"),
+                                    "summary": package_details.get('summary', ''),
+                                    "full_text": package_details.get('fullText', '')[:500] + "..." if package_details.get('fullText') else '',
+                                    "penalties": "Regulatory penalties apply",
+                                    "severity": "HIGH",
+                                    "govinfo_url": result.get('resultLink', f'https://www.govinfo.gov/app/details/CFR')
+                                }
+                
+                logger.debug(f"GovInfo API search returned no results for {statute_citation}")
+                
+            except Exception as e:
+                logger.warning(f"GovInfo API error for {statute_citation}: {e}")
+                # Fall through to fallback
         
+        # Fallback to static database if API unavailable or failed
         statute_database = {
             "15 U.S.C. § 78j(b)": {
                 "citation": "15 U.S.C. § 78j(b)",
@@ -275,6 +358,37 @@ class AdvancedStatuteIntegrator:
             "govinfo_url": "https://www.govinfo.gov/"
         }
     
+    def _extract_penalties(self, full_text: str) -> str:
+        """Extract penalty information from statute text."""
+        if not full_text:
+            return "Statutory penalties apply"
+        
+        # Look for penalty keywords
+        text_lower = full_text.lower()
+        penalties = []
+        
+        if "imprisonment" in text_lower:
+            import re
+            years_match = re.search(r'(\d+)\s+years?.*imprisonment', text_lower)
+            if years_match:
+                penalties.append(f"Up to {years_match.group(1)} years imprisonment")
+        
+        if "fine" in text_lower:
+            import re
+            fine_match = re.search(r'\$?([\d,]+)\s*(million|thousand)?.*fine', text_lower)
+            if fine_match:
+                amount = fine_match.group(1)
+                unit = fine_match.group(2) or ""
+                penalties.append(f"Fine up to ${amount} {unit}")
+        
+        if "civil penalty" in text_lower or "civil penalties" in text_lower:
+            penalties.append("Civil penalties")
+        
+        if "disgorgement" in text_lower:
+            penalties.append("Disgorgement of ill-gotten gains")
+        
+        return "; ".join(penalties) if penalties else "Statutory penalties apply"
+    
     async def _fetch_related_statutes(self, statute_citation: str) -> List[Dict[str, Any]]:
         """
         Fetch related statutes from GovInfo API.
@@ -285,8 +399,60 @@ class AdvancedStatuteIntegrator:
         Returns:
             List of related statute dictionaries
         """
-        # TODO: Implement actual GovInfo API query for related statutes
+        # Try to fetch from GovInfo API if client is available
+        if self.govinfo_client:
+            try:
+                logger.info(f"Fetching related statutes from GovInfo API: {statute_citation}")
+                
+                # Parse citation to get package ID
+                is_uscode = "U.S.C." in statute_citation or "USC" in statute_citation
+                
+                if is_uscode:
+                    # Extract title and section
+                    title_match = re.search(r'(\d+)\s+U\.S\.C\.', statute_citation)
+                    section_match = re.search(r'§\s*(\d+[a-z]?)', statute_citation)
+                    
+                    if title_match and section_match:
+                        title = int(title_match.group(1))
+                        section = section_match.group(1)
+                        
+                        # Search for the statute
+                        search_query = f"title:{title} section:{section}"
+                        results = await self.govinfo_client.search(
+                            query=search_query,
+                            collections=["USCODE"],
+                            page_size=1
+                        )
+                        
+                        if results and len(results) > 0:
+                            package_id = results[0].get('packageId', '')
+                            
+                            if package_id:
+                                # Get related documents
+                                try:
+                                    related = await self.govinfo_client.get_related_documents(package_id)
+                                    
+                                    related_statutes = []
+                                    for rel in related[:5]:  # Limit to 5 related statutes
+                                        related_statutes.append({
+                                            "citation": rel.get('packageId', ''),
+                                            "summary": rel.get('title', ''),
+                                            "govinfo_url": f"https://www.govinfo.gov/app/details/{rel.get('packageId', '')}"
+                                        })
+                                    
+                                    if related_statutes:
+                                        logger.info(f"Found {len(related_statutes)} related statutes via GovInfo API")
+                                        return related_statutes
+                                except Exception as e:
+                                    logger.debug(f"Related documents API error: {e}")
+                
+                logger.debug(f"No related statutes found via GovInfo API for {statute_citation}")
+                
+            except Exception as e:
+                logger.warning(f"GovInfo API error fetching related statutes: {e}")
+                # Fall through to fallback
         
+        # Fallback to static mapping
         related_map = {
             "15 U.S.C. § 78j(b)": [
                 {
@@ -318,8 +484,63 @@ class AdvancedStatuteIntegrator:
         Returns:
             List of CFR regulation dictionaries
         """
-        # TODO: Implement actual GovInfo API query for CFR regulations
+        # Try to fetch from GovInfo API if client is available
+        if self.govinfo_client:
+            try:
+                logger.info(f"Fetching CFR regulations from GovInfo API: {statute_citation}")
+                
+                # Extract keywords from statute citation for CFR search
+                is_uscode = "U.S.C." in statute_citation or "USC" in statute_citation
+                
+                if is_uscode:
+                    # Extract title number
+                    title_match = re.search(r'(\d+)\s+U\.S\.C\.', statute_citation)
+                    section_match = re.search(r'§\s*(\d+[a-z]?)', statute_citation)
+                    
+                    if title_match:
+                        usc_title = int(title_match.group(1))
+                        
+                        # Map USC titles to CFR titles
+                        # Title 15 USC (Securities) -> Title 17 CFR (SEC Rules)
+                        cfr_title_map = {
+                            15: 17,  # Securities laws -> SEC regulations
+                            26: 26,  # Tax laws -> Treasury regulations
+                            18: 28,  # Criminal laws -> DOJ regulations
+                        }
+                        
+                        cfr_title = cfr_title_map.get(usc_title)
+                        
+                        if cfr_title:
+                            # Search CFR for regulations implementing this statute
+                            search_query = f"USC {usc_title}"
+                            results = await self.govinfo_client.search(
+                                query=search_query,
+                                collections=["CFR"],
+                                page_size=10
+                            )
+                            
+                            if results:
+                                cfr_regulations = []
+                                for result in results[:5]:  # Limit to 5 regulations
+                                    package_id = result.get('packageId', '')
+                                    
+                                    cfr_regulations.append({
+                                        "citation": self._extract_cfr_citation(package_id, result.get('title', '')),
+                                        "full_text": result.get('title', '')[:200] + "...",
+                                        "govinfo_url": result.get('resultLink', f'https://www.govinfo.gov/app/details/{package_id}')
+                                    })
+                                
+                                if cfr_regulations:
+                                    logger.info(f"Found {len(cfr_regulations)} CFR regulations via GovInfo API")
+                                    return cfr_regulations
+                
+                logger.debug(f"No CFR regulations found via GovInfo API for {statute_citation}")
+                
+            except Exception as e:
+                logger.warning(f"GovInfo API error fetching CFR regulations: {e}")
+                # Fall through to fallback
         
+        # Fallback to static mapping
         cfr_map = {
             "15 U.S.C. § 78j(b)": [
                 {
@@ -335,6 +556,20 @@ class AdvancedStatuteIntegrator:
                 return cfr_map[key]
         
         return []
+    
+    def _extract_cfr_citation(self, package_id: str, title: str) -> str:
+        """Extract CFR citation from package ID or title."""
+        # Try to extract from package ID (e.g., "CFR-2023-title17-vol4-sec240-10b-5")
+        cfr_match = re.search(r'title(\d+).*?sec([\d-]+[a-z]?)', package_id)
+        if cfr_match:
+            return f"{cfr_match.group(1)} CFR § {cfr_match.group(2).replace('-', '.')}"
+        
+        # Try to extract from title
+        title_match = re.search(r'(\d+)\s+CFR\s+[§]?\s*([\d.]+)', title)
+        if title_match:
+            return f"{title_match.group(1)} CFR § {title_match.group(2)}"
+        
+        return package_id
     
     def _get_statute_of_limitations(self, statute_citation: str) -> Dict[str, Any]:
         """
