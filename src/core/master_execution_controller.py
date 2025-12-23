@@ -241,6 +241,7 @@ class MasterExecutionController:
         self.phase_results: List[PhaseResult] = []
         self.node_results: Dict[str, NodeResult] = {}
         self.detection_results: Dict[str, Any] = {}
+        self.ai_validation_results: Dict[str, Any] = {}  # AI cross-validation results
         self.filings: List[Dict[str, Any]] = []
         self.parsed_documents: List[Any] = []
         self.violations: List[Dict[str, Any]] = []
@@ -402,6 +403,39 @@ class MasterExecutionController:
         
         # Default to comprehensive
         return InvestigationType.COMPREHENSIVE
+    
+    def _should_cross_validate(self) -> bool:
+        """
+        Determine if AI cross-validation should be performed for pattern detection.
+        
+        Returns:
+            True if cross-validation should run, False otherwise
+        """
+        # Check if detection results exist
+        if not self.detection_results:
+            return False
+        
+        # Check if any patterns were executed
+        patterns_executed = self.detection_results.get("patterns_executed", 0)
+        if patterns_executed == 0:
+            return False
+        
+        # Check if any patterns had findings
+        patterns_with_findings = self.detection_results.get("patterns_with_findings", 0)
+        if patterns_with_findings == 0:
+            logger.info("  ℹ No pattern findings to cross-validate")
+            return False
+        
+        # AI cross-validation is enabled by default for pattern detection
+        # Can be disabled by setting environment variable
+        import os
+        disable_ai_validation = os.getenv("JLAW_DISABLE_AI_VALIDATION", "false").lower() == "true"
+        
+        if disable_ai_validation:
+            logger.info("  ℹ AI cross-validation disabled via environment variable")
+            return False
+        
+        return True
     
     # ═══════════════════════════════════════════════════════════════════════
     # PHASE 1: CONFIGURATION & TARGET ACQUISITION
@@ -1000,6 +1034,101 @@ class MasterExecutionController:
                 "findings": nlp_findings,
                 "nlp_detection_active": True
             }
+            
+            # ═══════════════════════════════════════════════════════════════
+            # AI CROSS-VALIDATION FOR HIGH/CRITICAL SEVERITY PATTERNS
+            # ═══════════════════════════════════════════════════════════════
+            
+            # Check if AI cross-validation should run
+            if self._should_cross_validate():
+                logger.info("\n→ Initiating AI Cross-Validation for HIGH/CRITICAL patterns...")
+                
+                try:
+                    # Initialize DualAgentCoordinator
+                    from src.forensics.dual_agent import DualAgentCoordinator
+                    dual_agent = DualAgentCoordinator()
+                    
+                    # Check if dual agents are available
+                    availability = dual_agent.availability()
+                    if not (availability.get("openai") and availability.get("anthropic")):
+                        logger.warning(
+                            "  ⚠ Dual agents not fully available, skipping AI cross-validation"
+                        )
+                        logger.warning(f"  Availability: {availability}")
+                    else:
+                        # Prepare pattern results for cross-validation
+                        # Convert NLP findings to pattern format
+                        pattern_results_for_validation = []
+                        
+                        for finding in nlp_findings:
+                            # Determine severity based on findings count
+                            if finding.get("contradictions_found", 0) > 3:
+                                severity = "CRITICAL"
+                            elif finding.get("negative_sentiment_count", 0) > 2:
+                                severity = "HIGH"
+                            elif finding.get("high_hedging_count", 0) > 2:
+                                severity = "HIGH"
+                            else:
+                                severity = "MEDIUM"
+                            
+                            pattern_results_for_validation.append({
+                                "pattern_name": finding.get("algorithm", "Unknown"),
+                                "score": finding.get("average_hedging_density", 
+                                                     finding.get("negative_sentiment_count", 0.5)),
+                                "confidence": 0.85,  # Default confidence for NLP patterns
+                                "severity": severity,
+                                "evidence": finding.get("details", {})
+                            })
+                        
+                        # Run batch cross-validation
+                        if pattern_results_for_validation:
+                            from src.detection.patterns.advanced_patterns import (
+                                batch_cross_validate_patterns
+                            )
+                            
+                            validation_result = await batch_cross_validate_patterns(
+                                pattern_results=pattern_results_for_validation,
+                                dual_agent=dual_agent,
+                                severity_filter=["HIGH", "CRITICAL"]
+                            )
+                            
+                            # Store validation results
+                            self.ai_validation_results = validation_result
+                            
+                            # Log validation summary
+                            logger.info(
+                                f"✓ AI Cross-Validation Complete: "
+                                f"{validation_result.get('validated_count', 0)} validated, "
+                                f"{validation_result.get('rejected_count', 0)} rejected, "
+                                f"{validation_result.get('uncertain_count', 0)} uncertain"
+                            )
+                            logger.info(
+                                f"  Average AI Confidence: "
+                                f"{validation_result.get('average_ai_confidence', 0):.1f}%"
+                            )
+                            logger.info(
+                                f"  High Confidence Findings: "
+                                f"{validation_result.get('high_confidence_count', 0)}"
+                            )
+                        else:
+                            logger.info("  ⚠ No patterns available for AI cross-validation")
+                            self.ai_validation_results = {
+                                "status": "skipped",
+                                "reason": "No HIGH/CRITICAL patterns found"
+                            }
+                
+                except Exception as e:
+                    logger.warning(f"  ⚠ AI cross-validation error: {e}")
+                    self.ai_validation_results = {
+                        "status": "error",
+                        "error": str(e)
+                    }
+            else:
+                logger.info("  ℹ AI cross-validation skipped (not enabled or no patterns)")
+                self.ai_validation_results = {
+                    "status": "skipped",
+                    "reason": "Cross-validation not enabled"
+                }
             
         except Exception as e:
             errors.append(f"Pattern detection error: {str(e)}")
