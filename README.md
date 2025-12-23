@@ -148,7 +148,192 @@ SEC_RAISE_ON_FINAL_FAILURE=false      # Graceful degradation
 
 ---
 
-## 🔒 STRICT EXECUTION MODE (NEW)
+## ✨ NEW ENHANCEMENTS (December 2025)
+
+### 🎯 Execution Strategy Selection
+
+JLAW now features a **7-tier orchestration hierarchy** with automatic strategy selection:
+
+**TRIAGE Mode** (5-10 minutes):
+- Uses `IntelligentOrchestrator` for selective node execution
+- Executes only 5-7 critical nodes based on investigation type
+- Perfect for rapid initial assessment
+```bash
+python JLAW_UNIFIED.py --cik 320187 --year 2019 --strategy triage --auto
+```
+
+**STANDARD Mode** (15-30 minutes):
+- Uses `MasterExecutionController` with optimization
+- All 15 nodes with cross-correlation
+- Comprehensive analysis for standard investigations
+```bash
+python JLAW_UNIFIED.py --cik 320187 --year 2019 --strategy standard --auto
+```
+
+**DOJ_REFERRAL Mode** (30-60 minutes):
+- Uses `ForensicMetaOrchestrator` for exhaustive analysis
+- All 15 nodes with parallel execution
+- Maximum evidence chain integrity for prosecutorial referrals
+```bash
+python JLAW_UNIFIED.py --cik 320187 --year 2019 --strategy doj_referral --auto
+```
+
+**Investigation Type Optimization** (30-50% speedup):
+```bash
+# Insider trading investigation (Nodes 1, 7, 8, 10, 11, 15)
+python JLAW_UNIFIED.py --cik 320187 --year 2019 --type insider_trading --auto
+
+# Financial fraud investigation (Nodes 2, 3, 4, 5, 13, 14)
+python JLAW_UNIFIED.py --cik 320187 --year 2019 --type financial_fraud --auto
+
+# Compliance investigation (Nodes 3, 4, 9)
+python JLAW_UNIFIED.py --cik 320187 --year 2019 --type compliance --auto
+```
+
+📖 **Architecture Details**: [docs/adr/ADR-001-Orchestration-Hierarchy-Design.md](docs/adr/ADR-001-Orchestration-Hierarchy-Design.md)
+
+---
+
+### 🔄 Daemon Mode - Continuous Monitoring
+
+Run JLAW as a background daemon with scheduled investigations:
+
+**Features:**
+- Cron-like scheduling for periodic analysis
+- Watchlist monitoring for specific companies
+- Event-driven triggers (new filings, insider trades)
+- Automated report generation
+- Alert notifications via webhook
+
+**Usage:**
+```bash
+# Start daemon with watchlist
+python JLAW_UNIFIED.py --daemon \
+  --watchlist watchlist.json \
+  --schedule "0 9 * * MON" \
+  --alert-webhook https://hooks.slack.com/...
+```
+
+**Watchlist Format** (`watchlist.json`):
+```json
+{
+  "entities": [
+    {
+      "cik": "320187",
+      "name": "NIKE, Inc.",
+      "frequency": "weekly",
+      "alert_on": ["insider_trade", "material_event"]
+    },
+    {
+      "cik": "1045810",
+      "name": "NVIDIA Corporation",
+      "frequency": "monthly",
+      "alert_on": ["new_filing", "fraud_pattern"]
+    }
+  ]
+}
+```
+
+📖 **Implementation**: `src/core/autonomous_executor.py`, `src/core/scheduler.py`
+
+---
+
+### 📊 Batch Processing - Multi-Company Analysis
+
+Analyze multiple companies in parallel with industry-wide correlation:
+
+**Features:**
+- Parallel execution with resource limits (semaphore)
+- Comparative peer analysis
+- Industry-wide pattern detection
+- Sector risk scoring and heatmaps
+- Cross-company correlation analysis
+
+**Usage:**
+```bash
+# Create CIK list file
+cat > cik_list.txt << EOF
+320187  # NIKE
+1045810 # NVIDIA
+789019  # Microsoft
+320193  # Apple
+EOF
+
+# Run batch analysis
+python JLAW_UNIFIED.py --batch cik_list.txt \
+  --max-concurrent 5 \
+  --industry-analysis \
+  --auto
+```
+
+**Output:**
+- Individual dossiers per company
+- Comparative analysis report
+- Industry pattern heatmap
+- Sector risk assessment
+
+📖 **Implementation**: `src/core/batch_forensic_orchestrator.py`
+
+---
+
+### 🚨 Multi-Channel Alerting System
+
+Real-time alerts for critical violations via Slack, Email, or SMS:
+
+**Features:**
+- Rule-based alert routing
+- Multiple channels (Slack, Email, SMS)
+- Async delivery with retry
+- Alert deduplication
+- Rate limiting per channel
+
+**Configuration** (`alerts.yaml`):
+```yaml
+rules:
+  - name: "Critical Section 16(b) Violation"
+    condition: "violation_type == '16(b)' AND severity == 'critical'"
+    channels: ["slack", "email"]
+    enabled: true
+  
+  - name: "Material Insider Trade Before Earnings"
+    condition: "source == 'CORR_001' AND confidence > 0.9"
+    channels: ["sms", "slack", "email"]
+    enabled: true
+```
+
+**Supported Channels:**
+- **Slack**: Webhook integration with rich formatting
+- **Email**: SMTP with HTML formatting
+- **SMS**: Twilio integration for critical alerts
+
+**Usage:**
+```bash
+# Copy example configuration
+cp alerts.yaml.example alerts.yaml
+
+# Edit with your credentials
+nano alerts.yaml
+
+# Alerts are automatically sent when violations detected
+```
+
+📖 **Implementation**: `src/alerting/alert_manager.py`, `src/alerting/channels/`
+
+---
+
+### 📚 Architecture Decision Records (ADRs)
+
+Complete documentation of key architectural decisions:
+
+- **ADR-001**: [Orchestration Hierarchy Design](docs/adr/ADR-001-Orchestration-Hierarchy-Design.md) - 7-tier orchestration hierarchy
+- **ADR-002**: [Evidence Chain Architecture](docs/adr/ADR-002-Evidence-Chain-Architecture.md) - Triple-hash + Merkle tree
+- **ADR-003**: [Node Execution Strategy](docs/adr/ADR-003-Node-Execution-Strategy.md) - Intelligent node selection
+
+📖 **Template**: [docs/adr/ADR-TEMPLATE.md](docs/adr/ADR-TEMPLATE.md)
+
+---
+
+## 🔒 STRICT EXECUTION MODE
 
 **DOJ-Grade Forensic Protocols with Mandatory Phase Gates**
 
