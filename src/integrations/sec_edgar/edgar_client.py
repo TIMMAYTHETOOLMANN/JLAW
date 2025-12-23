@@ -157,7 +157,7 @@ _SHARED_RATE_LIMITER = RateLimiter(requests_per_second=9.0)
 
 class SECEdgarClient:
     """
-    SEC EDGAR API Client with rate limiting and retry logic.
+    SEC EDGAR API Client with rate limiting, retry logic, and circuit breaker protection.
     
     Implements all required endpoints for forensic analysis:
     - Company submissions history
@@ -168,6 +168,7 @@ class SECEdgarClient:
     Features:
     - Shared rate limiter across all instances (9 req/sec)
     - Exponential backoff for 429 (rate limit) errors
+    - Circuit breaker for fault tolerance (failure_threshold=5, recovery_timeout=60s)
     - Mock mode for testing without API access
     - User-Agent validation
     """
@@ -187,7 +188,8 @@ class SECEdgarClient:
         self,
         user_agent: Optional[str] = None,
         requests_per_second: float = 9.0,
-        mock_mode: bool = False
+        mock_mode: bool = False,
+        enable_circuit_breaker: bool = True
     ):
         """
         Initialize SEC EDGAR client.
@@ -196,6 +198,7 @@ class SECEdgarClient:
             user_agent: Contact information for SEC (required, must include email)
             requests_per_second: Rate limit (ignored - shared limiter uses 9 req/sec)
             mock_mode: If True, return mock data instead of making real API calls
+            enable_circuit_breaker: If True, enable circuit breaker protection (default: True)
         """
         # Check for mock mode from environment
         self.mock_mode = mock_mode or os.environ.get('SEC_MOCK_MODE', '').lower() in ('true', '1', 'yes')
@@ -208,6 +211,21 @@ class SECEdgarClient:
         
         # Use the shared global rate limiter (singleton)
         self.rate_limiter = _SHARED_RATE_LIMITER
+        
+        # Initialize circuit breaker for fault tolerance
+        self.enable_circuit_breaker = enable_circuit_breaker
+        if self.enable_circuit_breaker:
+            from src.core.circuit_breaker import CircuitBreaker
+            self.circuit_breaker = CircuitBreaker(
+                failure_threshold=5,
+                recovery_timeout=60.0,
+                success_threshold=3,
+                expected_exception=Exception,
+                name="SEC_EDGAR_API"
+            )
+            logger.debug("Circuit breaker enabled for SEC EDGAR API (threshold=5, timeout=60s)")
+        else:
+            self.circuit_breaker = None
         
         self.session: Optional[aiohttp.ClientSession] = None
         
@@ -231,7 +249,7 @@ class SECEdgarClient:
     
     async def _fetch(self, url: str) -> Optional[str]:
         """
-        Fetch URL with rate limiting and exponential backoff for 429 errors.
+        Fetch URL with rate limiting, circuit breaker protection, and exponential backoff for 429 errors.
         
         Args:
             url: URL to fetch
@@ -244,6 +262,32 @@ class SECEdgarClient:
             logger.debug(f"Mock mode: simulating fetch for {url}")
             return self._get_mock_response(url)
         
+        # If circuit breaker is enabled, wrap the fetch call
+        if self.circuit_breaker:
+            try:
+                return await self.circuit_breaker.call(self._fetch_with_retry, url)
+            except Exception as e:
+                # Circuit breaker open or other error
+                from src.core.circuit_breaker import CircuitBreakerOpenError
+                if isinstance(e, CircuitBreakerOpenError):
+                    logger.error(f"Circuit breaker OPEN for SEC API - failing fast for {url}")
+                else:
+                    logger.error(f"SEC fetch error (circuit breaker): {url} -> {e}")
+                return None
+        else:
+            # No circuit breaker - call directly
+            return await self._fetch_with_retry(url)
+    
+    async def _fetch_with_retry(self, url: str) -> Optional[str]:
+        """
+        Internal fetch method with retry logic (called by circuit breaker).
+        
+        Args:
+            url: URL to fetch
+            
+        Returns:
+            Response text or raises exception on failure
+        """
         # Retry loop with exponential backoff
         for attempt in range(self.MAX_RETRIES):
             await self.rate_limiter.acquire()
@@ -263,13 +307,14 @@ class SECEdgarClient:
                             await asyncio.sleep(delay)
                             continue
                         else:
-                            logger.error(
+                            error_msg = (
                                 f"SEC API rate limit (429) - max retries exceeded for {url}. "
                                 f"Consider reducing request rate or checking User-Agent configuration."
                             )
-                            return None
+                            logger.error(error_msg)
+                            raise Exception(error_msg)
                     elif response.status == 403:
-                        logger.error(
+                        error_msg = (
                             f"SEC API access forbidden (403) for {url}. "
                             f"This usually indicates:\n"
                             f"  1. User-Agent header not compliant with SEC requirements\n"
@@ -278,18 +323,23 @@ class SECEdgarClient:
                             f"Current User-Agent: {self.user_agent}\n"
                             f"SEC Requirement: '<Company> <Name> <email@example.com>'"
                         )
-                        return None
+                        logger.error(error_msg)
+                        raise Exception(error_msg)
                     else:
-                        logger.warning(f"SEC fetch failed: {url} -> HTTP {response.status}")
-                        return None
+                        error_msg = f"SEC fetch failed: {url} -> HTTP {response.status}"
+                        logger.warning(error_msg)
+                        raise Exception(error_msg)
             except asyncio.TimeoutError:
-                logger.warning(f"SEC fetch timeout: {url}")
-                return None
+                error_msg = f"SEC fetch timeout: {url}"
+                logger.warning(error_msg)
+                if attempt == self.MAX_RETRIES - 1:
+                    raise Exception(error_msg)
             except Exception as e:
-                logger.error(f"SEC fetch error: {url} -> {e}")
-                return None
+                if attempt == self.MAX_RETRIES - 1:
+                    logger.error(f"SEC fetch error: {url} -> {e}")
+                    raise
         
-        return None
+        raise Exception(f"SEC fetch failed after {self.MAX_RETRIES} retries: {url}")
     
     def _get_mock_response(self, url: str) -> str:
         """
