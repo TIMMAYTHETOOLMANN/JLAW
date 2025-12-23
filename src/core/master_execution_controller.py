@@ -72,6 +72,15 @@ MAX_DOCUMENTS_TO_PARSE = 10  # Limit for initial document parsing in Phase 3
 
 
 # ═══════════════════════════════════════════════════════════════════════════
+# EXCEPTIONS
+# ═══════════════════════════════════════════════════════════════════════════
+
+class EvidenceChainIntegrityError(Exception):
+    """Raised when evidence chain validation fails in strict mode."""
+    pass
+
+
+# ═══════════════════════════════════════════════════════════════════════════
 # EXECUTION PHASES
 # ═══════════════════════════════════════════════════════════════════════════
 
@@ -1442,6 +1451,70 @@ class MasterExecutionController:
             
             merkle_root = self._merkle_tree.get_root()
             logger.info(f"✓ Merkle root: {merkle_root.hex()[:32]}...")
+            
+            # Evidence Chain Validation (NEW)
+            logger.info("→ Validating evidence chain integrity...")
+            try:
+                from src.core.evidence_chain.chain_validator import ChainValidator
+                from src.core.evidence_chain.hash_service import EvidenceRecord, HashService
+                
+                chain_validator = ChainValidator()
+                
+                # Build evidence records for validation
+                evidence_records = []
+                for i, (node_id, node_result) in enumerate(self.node_results.items()):
+                    evidence_data = json.dumps(node_result.to_dict(), sort_keys=True).encode()
+                    content_hash = HashService.compute_hash(evidence_data)
+                    
+                    # Get previous record hash for chain linking
+                    previous_hash = evidence_records[-1].get_chain_hash() if evidence_records else None
+                    
+                    record = EvidenceRecord(
+                        id=node_id,
+                        document_type="node_result",
+                        content_hash=content_hash,
+                        previous_record_hash=previous_hash,
+                        metadata={
+                            "node_name": node_result.node_name,
+                            "status": node_result.status,
+                            "violations": node_result.violations_found
+                        }
+                    )
+                    evidence_records.append(record)
+                
+                # Validate the chain
+                validation_result = chain_validator.validate_chain(evidence_records)
+                
+                logger.info(f"✓ Evidence chain validation: {'PASSED' if validation_result.is_valid else 'FAILED'}")
+                logger.info(f"  Total records: {validation_result.total_records}")
+                logger.info(f"  Validated records: {validation_result.validated_records}")
+                if validation_result.merkle_root:
+                    logger.info(f"  Merkle root: {validation_result.merkle_root[:32]}...")
+                
+                # Store validation result
+                self._chain_validation_result = validation_result
+                
+                # Strict mode enforcement
+                if not validation_result.is_valid and self.strict_mode:
+                    error_msg = (
+                        f"Evidence chain validation failed: "
+                        f"{validation_result.validated_records}/{validation_result.total_records} records valid"
+                    )
+                    logger.error(f"✗ {error_msg}")
+                    raise EvidenceChainIntegrityError(error_msg)
+                elif not validation_result.is_valid:
+                    logger.warning(f"⚠ Evidence chain validation failed (non-strict mode)")
+                    errors.append(f"Chain validation: {validation_result.validated_records}/{validation_result.total_records} valid")
+                    
+            except ImportError as e:
+                logger.warning(f"  ⚠ ChainValidator not available: {e}")
+                logger.info("  Evidence chain validation skipped")
+            except EvidenceChainIntegrityError:
+                raise  # Re-raise integrity errors
+            except Exception as e:
+                logger.warning(f"  ⚠ Evidence chain validation error: {e}", exc_info=True)
+                if self.strict_mode:
+                    raise
             
             # RFC 3161 timestamping (optional but recommended for FRE 902(13)/(14))
             logger.info("→ RFC 3161 timestamp token...")
