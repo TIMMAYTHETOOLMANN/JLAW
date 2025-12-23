@@ -1,6 +1,40 @@
 """
-Linear Execution Orchestrator - Master 15-Node Forensic Analysis Framework
-==========================================================================
+Linear Execution Orchestrator - DEPRECATED
+==========================================
+
+.. deprecated:: 4.1.1
+    This module is deprecated. Use :mod:`src.core.master_execution_controller` 
+    or :mod:`src.core.recursive_engine` instead.
+
+This module provided a simplified 4-phase linear execution model for forensic
+analysis. It has been superseded by:
+
+1. **MasterExecutionController** - Full 9-phase DOJ-grade execution with:
+   - Intelligent optimization via IntelligentOrchestrator
+   - Strict gate validation
+   - Evidence chain integrity
+   - Auto-registered agents
+
+2. **RecursiveProsecutorialEngine** - 15-node recursive analysis with:
+   - Cross-node correlation
+   - Dependency-aware execution
+   - V2 node variants
+
+3. **ForensicMetaOrchestrator** - Parallel agent execution with:
+   - Dynamic agent spawning
+   - Circuit breaker protection
+   - Conflict resolution
+
+Migration Timeline:
+- v4.2.0: Deprecation warnings added (current)
+- v5.0.0: Module will be removed
+
+For migration assistance, see:
+- docs/MIGRATION_LINEAR_TO_MASTER.md
+- LinearExecutionOrchestrator.create_migrated_controller()
+
+Original Documentation:
+-----------------------
 
 Implements systematic 4-phase linear execution pipeline for complete forensic
 analysis with dependency-aware node execution and triple-hash evidence chain.
@@ -24,12 +58,46 @@ from dataclasses import dataclass, field
 from datetime import datetime, date
 from typing import Dict, Any, List, Optional, Set
 from enum import Enum
+from pathlib import Path
 import hashlib
 import json
 import logging
 import asyncio
+import warnings
+import tempfile
 
 logger = logging.getLogger(__name__)
+
+# Deprecation notice
+_DEPRECATION_MESSAGE = """
+LinearExecutionOrchestrator is deprecated and will be removed in a future version.
+
+Migration Guide:
+- For standard investigations: Use MasterExecutionController with enable_optimization=False
+- For optimized investigations: Use MasterExecutionController with enable_optimization=True
+- For advanced parallel execution: Use ForensicMetaOrchestrator
+
+The RecursiveProsecutorialEngine provides superior cross-node correlation and is the
+recommended replacement for all use cases.
+
+Example migration:
+    # OLD (deprecated):
+    from src.core.linear_orchestrator import LinearExecutionOrchestrator
+    orchestrator = LinearExecutionOrchestrator()
+    result = await orchestrator.execute(cik, company_name, start_date, end_date)
+    
+    # NEW (recommended):
+    from src.core.master_execution_controller import MasterExecutionController
+    controller = MasterExecutionController(
+        cik=cik,
+        company_name=company_name,
+        start_date=start_date,
+        end_date=end_date,
+        output_dir=output_dir,
+        enable_optimization=True
+    )
+    result = await controller.execute_full_analysis()
+"""
 
 
 class ExecutionPhase(Enum):
@@ -279,6 +347,26 @@ class ForensicAnalysisResult:
 
 class LinearExecutionOrchestrator:
     """
+    Linear Execution Orchestrator - DEPRECATED
+    
+    .. deprecated::
+        This class is deprecated. Use MasterExecutionController or 
+        RecursiveProsecutorialEngine instead.
+    
+    This orchestrator provides a simplified 4-phase execution model:
+    - Phase 1: Core SEC Filing Analysis (Nodes 1-6)
+    - Phase 2: Extended Intelligence Gathering (Nodes 7-12)
+    - Phase 3: Quantitative Forensic Scoring (Nodes 13-15)
+    - Phase 4: Cross-Node Correlation & Evidence Synthesis
+    
+    For new implementations, use:
+    - MasterExecutionController for full 9-phase DOJ-grade analysis
+    - RecursiveProsecutorialEngine for recursive 15-node analysis
+    - ForensicMetaOrchestrator for parallel agent execution
+    
+    Original Documentation:
+    -----------------------
+    
     Master linear execution controller for 15-node forensic analysis.
     
     Implements dependency-aware execution with 4-phase pipeline:
@@ -328,21 +416,165 @@ class LinearExecutionOrchestrator:
     
     def __init__(
         self,
-        sec_user_agent: str,
+        sec_user_agent: str = "",
         polygon_api_key: Optional[str] = None
     ):
         """
-        Initialize orchestrator.
+        Initialize LinearExecutionOrchestrator.
+        
+        .. deprecated::
+            Use MasterExecutionController instead.
         
         Args:
             sec_user_agent: SEC EDGAR API user agent
             polygon_api_key: Polygon.io API key (optional)
         """
-        self.sec_user_agent = sec_user_agent
+        warnings.warn(
+            "LinearExecutionOrchestrator is deprecated. "
+            "Use MasterExecutionController or RecursiveProsecutorialEngine instead. "
+            "See deprecation notice for migration guide.",
+            DeprecationWarning,
+            stacklevel=2
+        )
+        
+        logger.warning("=" * 70)
+        logger.warning("  DEPRECATION WARNING: LinearExecutionOrchestrator")
+        logger.warning("=" * 70)
+        logger.warning("  This orchestrator is deprecated and will be removed.")
+        logger.warning("  Please migrate to MasterExecutionController.")
+        logger.warning("=" * 70)
+        
+        self.sec_user_agent = sec_user_agent or ""
         self.polygon_api_key = polygon_api_key
         
         # Node execution results (populated during execution)
         self.node_results: Dict[int, NodeExecutionResult] = {}
+    
+    @classmethod
+    def create_migrated_controller(
+        cls,
+        cik: str,
+        company_name: str,
+        start_date: date,
+        end_date: date,
+        output_dir: Optional[Path] = None,
+        **kwargs
+    ) -> 'MasterExecutionController':
+        """
+        Create a MasterExecutionController as replacement for LinearExecutionOrchestrator.
+        
+        This is a migration helper to ease the transition from LinearExecutionOrchestrator
+        to MasterExecutionController.
+        
+        Args:
+            cik: Company CIK number
+            company_name: Company name
+            start_date: Analysis start date
+            end_date: Analysis end date
+            output_dir: Output directory (optional, will create temp if not provided)
+            **kwargs: Additional arguments passed to MasterExecutionController
+            
+        Returns:
+            MasterExecutionController instance configured for linear-style execution
+            
+        Example:
+            # Instead of:
+            # orchestrator = LinearExecutionOrchestrator()
+            
+            # Use:
+            controller = LinearExecutionOrchestrator.create_migrated_controller(
+                cik="320187",
+                company_name="Test Corp",
+                start_date=date(2019, 1, 1),
+                end_date=date(2019, 12, 31)
+            )
+            result = await controller.execute_full_analysis()
+        """
+        warnings.warn(
+            "Using migration helper. Please update your code to use "
+            "MasterExecutionController directly.",
+            DeprecationWarning,
+            stacklevel=2
+        )
+        
+        from .master_execution_controller import MasterExecutionController
+        
+        if output_dir is None:
+            output_dir = Path(tempfile.mkdtemp(prefix=f"jlaw_{cik}_"))
+        
+        return MasterExecutionController(
+            cik=cik,
+            company_name=company_name,
+            start_date=start_date,
+            end_date=end_date,
+            output_dir=output_dir,
+            strict_mode=False,  # Linear mode was not strict
+            auto_mode=True,
+            enable_optimization=False,  # Run all nodes like linear did
+            **kwargs
+        )
+    
+    async def execute(
+        self,
+        cik: str,
+        company_name: str,
+        start_date: date,
+        end_date: date,
+        output_dir: Optional[Path] = None
+    ) -> Dict[str, Any]:
+        """
+        Execute linear orchestration (DEPRECATED - wraps MasterExecutionController).
+        
+        .. deprecated::
+            This method is deprecated. Use MasterExecutionController.execute_full_analysis() instead.
+        
+        This method now internally delegates to MasterExecutionController for
+        backwards compatibility. New code should use MasterExecutionController directly.
+        
+        Args:
+            cik: Company CIK number
+            company_name: Company name
+            start_date: Analysis start date
+            end_date: Analysis end date
+            output_dir: Output directory
+            
+        Returns:
+            Analysis results dictionary
+        """
+        warnings.warn(
+            "LinearExecutionOrchestrator.execute() is deprecated. "
+            "Use MasterExecutionController.execute_full_analysis() instead.",
+            DeprecationWarning,
+            stacklevel=2
+        )
+        
+        logger.info("Delegating to MasterExecutionController for backwards compatibility...")
+        
+        controller = self.create_migrated_controller(
+            cik=cik,
+            company_name=company_name,
+            start_date=start_date,
+            end_date=end_date,
+            output_dir=output_dir
+        )
+        
+        result = await controller.execute_full_analysis()
+        
+        # Convert to dictionary format for backwards compatibility
+        return {
+            "cik": result.cik,
+            "company_name": result.company_name,
+            "analysis_start": result.analysis_start.isoformat(),
+            "analysis_end": result.analysis_end.isoformat(),
+            "phase_results": [p.to_dict() if hasattr(p, 'to_dict') else str(p) for p in result.phase_results],
+            "node_results": {k: v.to_dict() if hasattr(v, 'to_dict') else str(v) for k, v in result.node_results.items()},
+            "total_violations": result.total_violations,
+            "total_alerts": result.total_alerts,
+            "dossier_path": result.dossier_path,
+            "merkle_root": result.merkle_root,
+            "_migrated_from": "LinearExecutionOrchestrator",
+            "_migration_notice": "This result was produced by MasterExecutionController"
+        }
     
     async def execute_analysis(
         self,
