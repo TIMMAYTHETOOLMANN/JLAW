@@ -1560,6 +1560,88 @@ class UnifiedForensicEngine:
             if not can_continue:
                 return
         
+        # ═══════════════════════════════════════════════════════════════
+        # ALERTING SYSTEM ACTIVATION
+        # ═══════════════════════════════════════════════════════════════
+        
+        # Activate alerting system for critical violations
+        if alerts > 0:
+            try:
+                from src.alerting.alert_manager import AlertManager, Alert, AlertSeverity
+                
+                # Check if alerts.yaml exists
+                alerts_config_path = PROJECT_ROOT / "alerts.yaml"
+                if alerts_config_path.exists():
+                    alert_manager = AlertManager(config_path=alerts_config_path)
+                else:
+                    # Use default configuration (no config file)
+                    alert_manager = AlertManager()
+                    self.logger.info("  ℹ Using default alert configuration (no alerts.yaml found)")
+                
+                # Convert violations to alerts
+                critical_violations = [v for v in self.violations if v.severity == "CRITICAL"]
+                high_violations = [v for v in self.violations if v.severity == "HIGH"]
+                
+                alerts_sent = 0
+                
+                # Send alerts for critical violations
+                for violation in critical_violations:
+                    alert = Alert(
+                        title=f"CRITICAL: {violation.violation_type}",
+                        message=violation.description,
+                        severity=AlertSeverity.CRITICAL,
+                        source="JLAW-PatternDetection",
+                        metadata={
+                            "case_id": self.config.case_id,
+                            "company_name": self.config.company_name,
+                            "cik": self.config.cik,
+                            "violation_id": violation.violation_id,
+                            "statutory_reference": violation.statutory_reference,
+                            "estimated_penalty": violation.estimated_penalty
+                        }
+                    )
+                    
+                    try:
+                        # Try to send alert (may fail if channels not configured)
+                        result = await alert_manager.send_alert(alert)
+                        if result:
+                            alerts_sent += 1
+                    except Exception as e:
+                        self.logger.debug(f"Alert send failed: {e}")
+                
+                # Send summary alert for high severity violations if many found
+                if len(high_violations) >= 3:
+                    summary_alert = Alert(
+                        title=f"Multiple High-Severity Violations Detected",
+                        message=f"{len(high_violations)} high-severity violations found in {self.config.company_name}",
+                        severity=AlertSeverity.WARNING,
+                        source="JLAW-PatternDetection",
+                        metadata={
+                            "case_id": self.config.case_id,
+                            "company_name": self.config.company_name,
+                            "cik": self.config.cik,
+                            "high_violations": len(high_violations),
+                            "critical_violations": len(critical_violations)
+                        }
+                    )
+                    
+                    try:
+                        await alert_manager.send_alert(summary_alert)
+                    except Exception as e:
+                        self.logger.debug(f"Summary alert send failed: {e}")
+                
+                if alerts_sent > 0:
+                    self.logger.info(f"  ✓ Alerting system dispatched {alerts_sent} alert(s)")
+                else:
+                    self.logger.info("  ℹ Alerting system active (no channels configured or alerts not sent)")
+                    
+            except ImportError as e:
+                self.logger.debug(f"  ⚠ Alerting system not available: {e}")
+            except Exception as e:
+                self.logger.warning(f"  ⚠ Alerting system error: {e}")
+        else:
+            self.logger.info("  ℹ No alerts to dispatch (no violations detected)")
+        
         self.phase_results.append(PhaseResult(
             phase=phase,
             status="success" if patterns_run > 0 else "skipped",
