@@ -866,110 +866,6 @@ class DOJReportGenerator:
         
         with open(output_path, 'w', encoding='utf-8') as f:
             f.write(html)
-
-
-def create_violation_evidence(
-    violation_id: str,
-    violation_type: str,
-    severity: str,
-    citation: str,
-    description: str,
-    document_url: str,
-    filing_accession: str,
-    filing_date: str,
-    quote_text: Optional[str] = None,
-    detected_by: str = "pattern"
-) -> ViolationEvidence:
-    """
-    Factory function to create ViolationEvidence from analysis results.
-    
-    This helper simplifies creation of ViolationEvidence objects
-    from the various analysis outputs.
-    """
-    # Map severity string to enum
-    severity_map = {
-        "CRITICAL": SeverityLevel.CRITICAL,
-        "HIGH": SeverityLevel.HIGH,
-        "MEDIUM": SeverityLevel.MEDIUM,
-        "LOW": SeverityLevel.LOW,
-    }
-    severity_level = severity_map.get(severity.upper(), SeverityLevel.MEDIUM)
-    
-    # Map detected_by to enum
-    source_map = {
-        "openai": AgentSource.OPENAI,
-        "anthropic": AgentSource.ANTHROPIC,
-        "both": AgentSource.BOTH,
-        "pattern": AgentSource.PATTERN,
-        "node": AgentSource.NODE,
-    }
-    agent_source = source_map.get(detected_by.lower(), AgentSource.PATTERN)
-    
-    # Create statutory reference
-    statutory_ref = StatutoryReference(
-        citation=citation,
-        title="",
-        summary="",
-    )
-    
-    # Create exact quote if provided
-    exact_quotes = []
-    if quote_text:
-        exact_quotes.append(ExactQuote(
-            quote_text=quote_text,
-            document_url=document_url,
-            document_section="",
-        ))
-    
-    # Determine prosecutorial merit based on severity
-    merit_map = {
-        SeverityLevel.CRITICAL: ProsecutorialMerit.STRONG,
-        SeverityLevel.HIGH: ProsecutorialMerit.STRONG,
-        SeverityLevel.MEDIUM: ProsecutorialMerit.MODERATE,
-        SeverityLevel.LOW: ProsecutorialMerit.WEAK,
-    }
-    merit = merit_map.get(severity_level, ProsecutorialMerit.MODERATE)
-    
-    # Create damage estimate
-    damage_multipliers = {
-        SeverityLevel.CRITICAL: (500000, 2000000, 1000000, True, 20),
-        SeverityLevel.HIGH: (100000, 500000, 250000, False, 0),
-        SeverityLevel.MEDIUM: (50000, 100000, 75000, False, 0),
-        SeverityLevel.LOW: (10000, 50000, 25000, False, 0),
-    }
-    min_d, max_d, disg, crim, years = damage_multipliers.get(
-        severity_level, (50000, 100000, 75000, False, 0)
-    )
-    
-    damage_estimate = DamageEstimate(
-        civil_minimum=min_d,
-        civil_maximum=max_d,
-        disgorgement_estimate=disg,
-        criminal_exposure=crim,
-        prison_years_maximum=years,
-        calculation_methodology="Severity-based estimation"
-    )
-    
-    # Generate evidence hash
-    evidence_data = f"{violation_id}{violation_type}{description}{document_url}"
-    evidence_hash = hashlib.sha256(evidence_data.encode()).hexdigest()
-    
-    return ViolationEvidence(
-        violation_id=violation_id,
-        violation_type=violation_type,
-        severity=severity_level,
-        statutory_reference=statutory_ref,
-        description=description,
-        exact_quotes=exact_quotes,
-        document_url=document_url,
-        document_section="",
-        filing_accession=filing_accession,
-        filing_date=filing_date,
-        prosecutorial_merit=merit,
-        damage_estimate=damage_estimate,
-        detected_by=agent_source,
-        evidence_hash=evidence_hash,
-    )
     
     def _generate_court_pdf_report(
         self,
@@ -1119,4 +1015,108 @@ ESTIMATED PENALTIES:
         
         logger.info(f"Generated court PDF with {len(violations)} violations, {len(evidence_items)} evidence items, {len(exhibits)} exhibits")
         return court_pdf_path
+
+
+def create_violation_evidence(
+    violation_id: str,
+    violation_type: str,
+    severity: str,
+    citation: str,
+    description: str,
+    document_url: str,
+    filing_accession: str,
+    filing_date: str,
+    quote_text: Optional[str] = None,
+    detected_by: str = "pattern"
+) -> ViolationEvidence:
+    """
+    Factory function to create ViolationEvidence from analysis results.
+    
+    This helper simplifies creation of ViolationEvidence objects
+    from the various analysis outputs.
+    """
+    # Map severity string to enum
+    severity_map = {
+        "CRITICAL": SeverityLevel.CRITICAL,
+        "HIGH": SeverityLevel.HIGH,
+        "MEDIUM": SeverityLevel.MEDIUM,
+        "LOW": SeverityLevel.LOW,
+    }
+    severity_level = severity_map.get(severity.upper(), SeverityLevel.MEDIUM)
+    
+    # Map detected_by to enum
+    source_map = {
+        "openai": AgentSource.OPENAI,
+        "anthropic": AgentSource.ANTHROPIC,
+        "both": AgentSource.BOTH,
+        "pattern": AgentSource.PATTERN,
+        "node": AgentSource.NODE,
+    }
+    agent_source = source_map.get(detected_by.lower(), AgentSource.PATTERN)
+    
+    # Create statutory reference
+    statutory_ref = StatutoryReference(
+        citation=citation,
+        title="",
+        summary="",
+    )
+    
+    # Create exact quote if provided
+    exact_quotes = []
+    if quote_text:
+        exact_quotes.append(ExactQuote(
+            quote_text=quote_text,
+            document_url=document_url,
+            document_section="",
+        ))
+    
+    # Determine prosecutorial merit based on severity
+    merit_map = {
+        SeverityLevel.CRITICAL: ProsecutorialMerit.STRONG,
+        SeverityLevel.HIGH: ProsecutorialMerit.STRONG,
+        SeverityLevel.MEDIUM: ProsecutorialMerit.MODERATE,
+        SeverityLevel.LOW: ProsecutorialMerit.WEAK,
+    }
+    merit = merit_map.get(severity_level, ProsecutorialMerit.MODERATE)
+    
+    # Create damage estimate
+    damage_multipliers = {
+        SeverityLevel.CRITICAL: (500000, 2000000, 1000000, True, 20),
+        SeverityLevel.HIGH: (100000, 500000, 250000, False, 0),
+        SeverityLevel.MEDIUM: (50000, 100000, 75000, False, 0),
+        SeverityLevel.LOW: (10000, 50000, 25000, False, 0),
+    }
+    min_d, max_d, disg, crim, years = damage_multipliers.get(
+        severity_level, (50000, 100000, 75000, False, 0)
+    )
+    
+    damage_estimate = DamageEstimate(
+        civil_minimum=min_d,
+        civil_maximum=max_d,
+        disgorgement_estimate=disg,
+        criminal_exposure=crim,
+        prison_years_maximum=years,
+        calculation_methodology="Severity-based estimation"
+    )
+    
+    # Generate evidence hash
+    evidence_data = f"{violation_id}{violation_type}{description}{document_url}"
+    evidence_hash = hashlib.sha256(evidence_data.encode()).hexdigest()
+    
+    return ViolationEvidence(
+        violation_id=violation_id,
+        violation_type=violation_type,
+        severity=severity_level,
+        statutory_reference=statutory_ref,
+        description=description,
+        exact_quotes=exact_quotes,
+        document_url=document_url,
+        document_section="",
+        filing_accession=filing_accession,
+        filing_date=filing_date,
+        prosecutorial_merit=merit,
+        damage_estimate=damage_estimate,
+        detected_by=agent_source,
+        evidence_hash=evidence_hash,
+    )
 
