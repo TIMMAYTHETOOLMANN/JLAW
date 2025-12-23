@@ -1329,20 +1329,28 @@ Initial Confidence: {verification_request['confidence']}
                     anthropic_status = dual_result.get('anthropic', {}).get('status', 'SKIP')
                     
                     # Calculate scores based on dual-agent analysis
+                    # Score calculation: each violation adds 0.1, capped at 1.0
+                    # Threshold of 0.5 indicates meaningful detection (5+ violations)
                     openai_score = 0.0
                     claude_score = 0.0
                     
+                    VIOLATION_SCORE_INCREMENT = 0.1  # Each violation adds 0.1 to score
+                    BASELINE_SCORE = 0.5  # Default score when no violations found
+                    
                     if openai_status == 'success':
                         openai_violations = dual_result.get('openai', {}).get('violations', [])
-                        openai_score = len(openai_violations) * 0.1 if openai_violations else 0.5
+                        openai_score = min(len(openai_violations) * VIOLATION_SCORE_INCREMENT, 1.0) if openai_violations else BASELINE_SCORE
                         
                     if anthropic_status == 'success':
                         anthropic_violations = dual_result.get('anthropic', {}).get('violations', [])
-                        claude_score = len(anthropic_violations) * 0.1 if anthropic_violations else 0.5
+                        claude_score = min(len(anthropic_violations) * VIOLATION_SCORE_INCREMENT, 1.0) if anthropic_violations else BASELINE_SCORE
                     
                     # Determine consensus
+                    # Consensus threshold: 0.5 means both agents must detect meaningful violations
+                    # or have positive overlap in their findings
+                    CONSENSUS_THRESHOLD = 0.5
                     consensus_overlap = dual_result.get('consensus', {}).get('overlap', 0)
-                    consensus = consensus_overlap > 0 or (openai_score > 0.5 and claude_score > 0.5)
+                    consensus = consensus_overlap > 0 or (openai_score > CONSENSUS_THRESHOLD and claude_score > CONSENSUS_THRESHOLD)
                     
                     verification_result = {
                         "consensus": consensus,
