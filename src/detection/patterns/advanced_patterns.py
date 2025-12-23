@@ -834,3 +834,418 @@ class AdvancedPatternDetector:
         return hashlib.sha256(data_str.encode()).hexdigest()
 
 
+# ═══════════════════════════════════════════════════════════════════════════
+# AI CROSS-VALIDATION FOR PATTERN DETECTION
+# ═══════════════════════════════════════════════════════════════════════════
+
+
+async def cross_validate_pattern_with_ai(
+    pattern_name: str,
+    score: float,
+    evidence: Dict[str, Any],
+    dual_agent: Any,  # DualAgentCoordinator type
+    threshold: float = 0.7
+) -> Dict[str, Any]:
+    """
+    Cross-validate quantitative pattern detection with AI reasoning.
+    
+    Takes a quantitative fraud detection score and validates it using
+    dual AI agents (OpenAI + Anthropic) to provide human-like reasoning.
+    
+    Args:
+        pattern_name: Name of the detection pattern (e.g., "Beneish M-Score")
+        score: Quantitative score from pattern detection
+        evidence: Dictionary of evidence supporting the detection
+        dual_agent: DualAgentCoordinator instance for AI validation
+        threshold: Minimum AI confidence threshold for validation (default 0.7)
+    
+    Returns:
+        Dictionary with:
+        - ai_confidence: Average confidence from both agents (0-100)
+        - validation_status: "validated", "rejected", or "uncertain"
+        - reasoning: Combined reasoning from both agents
+        - supporting_factors: List of factors supporting the finding
+        - contradicting_factors: List of factors contradicting the finding
+        - recommendations: Action recommendations from agents
+        - openai_analysis: Raw OpenAI agent response
+        - anthropic_analysis: Raw Anthropic agent response
+    """
+    logger.info(f"  → AI Cross-Validating: {pattern_name} (score: {score})")
+    
+    # Build validation prompt with pattern details and evidence
+    validation_prompt = f"""
+# Pattern Detection Cross-Validation Request
+
+## Pattern Details
+- **Pattern Name**: {pattern_name}
+- **Quantitative Score**: {score}
+- **Detection Threshold**: {threshold}
+
+## Evidence
+{_format_evidence_for_prompt(evidence)}
+
+## Validation Task
+Please analyze this quantitative fraud detection result and provide:
+1. Your confidence level (0-100%) in this finding
+2. Supporting factors that validate the detection
+3. Contradicting factors that might invalidate it
+4. Your overall assessment: VALIDATED, REJECTED, or UNCERTAIN
+5. Recommendations for further investigation
+
+Be thorough and consider both quantitative evidence and qualitative context.
+"""
+    
+    try:
+        # Call dual agent for cross-validation
+        context = {
+            "pattern_name": pattern_name,
+            "score": score,
+            "validation_type": "pattern_detection"
+        }
+        
+        ai_result = await dual_agent.analyze_text(
+            text=validation_prompt,
+            context=context
+        )
+        
+        # Extract validation data from both agents
+        openai_data = ai_result.get("openai", {})
+        anthropic_data = ai_result.get("anthropic", {})
+        
+        # Parse confidence levels from agent responses
+        openai_confidence = _extract_confidence(openai_data)
+        anthropic_confidence = _extract_confidence(anthropic_data)
+        
+        # Calculate combined confidence
+        if openai_confidence is not None and anthropic_confidence is not None:
+            combined_confidence = (openai_confidence + anthropic_confidence) / 2
+        elif openai_confidence is not None:
+            combined_confidence = openai_confidence
+        elif anthropic_confidence is not None:
+            combined_confidence = anthropic_confidence
+        else:
+            combined_confidence = 0.0
+        
+        # Determine validation status based on confidence
+        if combined_confidence >= threshold * 100:
+            validation_status = "validated"
+        elif combined_confidence < 40:
+            validation_status = "rejected"
+        else:
+            validation_status = "uncertain"
+        
+        # Extract reasoning and factors
+        supporting_factors = _extract_supporting_factors(openai_data, anthropic_data)
+        contradicting_factors = _extract_contradicting_factors(openai_data, anthropic_data)
+        reasoning = _merge_reasoning(openai_data, anthropic_data)
+        recommendations = _extract_recommendations(openai_data, anthropic_data)
+        
+        return {
+            "pattern_name": pattern_name,
+            "quantitative_score": score,
+            "ai_confidence": round(combined_confidence, 2),
+            "validation_status": validation_status,
+            "reasoning": reasoning,
+            "supporting_factors": supporting_factors,
+            "contradicting_factors": contradicting_factors,
+            "recommendations": recommendations,
+            "openai_analysis": {
+                "confidence": openai_confidence,
+                "status": openai_data.get("status", "unknown")
+            },
+            "anthropic_analysis": {
+                "confidence": anthropic_confidence,
+                "status": anthropic_data.get("status", "unknown")
+            },
+            "consensus": ai_result.get("consensus", {}),
+            "cross_validation_timestamp": datetime.utcnow().isoformat()
+        }
+        
+    except Exception as e:
+        logger.error(f"    ✗ AI cross-validation error for {pattern_name}: {e}")
+        return {
+            "pattern_name": pattern_name,
+            "quantitative_score": score,
+            "ai_confidence": 0.0,
+            "validation_status": "error",
+            "reasoning": f"Cross-validation failed: {str(e)}",
+            "supporting_factors": [],
+            "contradicting_factors": [],
+            "recommendations": ["Manual review required due to validation error"],
+            "error": str(e)
+        }
+
+
+async def batch_cross_validate_patterns(
+    pattern_results: List[Dict[str, Any]],
+    dual_agent: Any,  # DualAgentCoordinator type
+    severity_filter: Optional[List[str]] = None
+) -> Dict[str, Any]:
+    """
+    Batch cross-validate multiple pattern detection results.
+    Only validates HIGH and CRITICAL severity patterns by default.
+    
+    Args:
+        pattern_results: List of pattern detection results to validate
+        dual_agent: DualAgentCoordinator instance for AI validation
+        severity_filter: List of severity levels to validate (default: ["HIGH", "CRITICAL"])
+    
+    Returns:
+        Dictionary with:
+        - validated_patterns: List of validated pattern results
+        - total_patterns: Total number of patterns processed
+        - validated_count: Number of patterns validated by AI
+        - rejected_count: Number of patterns rejected by AI
+        - uncertain_count: Number of patterns with uncertain validation
+        - average_ai_confidence: Average AI confidence across all validations
+        - high_confidence_findings: Patterns with AI confidence > 85%
+    """
+    if severity_filter is None:
+        severity_filter = ["HIGH", "CRITICAL"]
+    
+    logger.info(f"→ Batch AI Cross-Validation: {len(pattern_results)} patterns")
+    logger.info(f"  Filtering for severities: {', '.join(severity_filter)}")
+    
+    # Filter patterns by severity
+    patterns_to_validate = []
+    for pattern in pattern_results:
+        severity = pattern.get("severity", "LOW")
+        if isinstance(severity, PatternSeverity):
+            severity = severity.value
+        
+        if severity in severity_filter:
+            patterns_to_validate.append(pattern)
+    
+    logger.info(f"  → {len(patterns_to_validate)} patterns match severity filter")
+    
+    # Validate each pattern
+    validated_patterns = []
+    validated_count = 0
+    rejected_count = 0
+    uncertain_count = 0
+    total_confidence = 0.0
+    
+    for pattern in patterns_to_validate:
+        try:
+            # Extract pattern details
+            pattern_name = pattern.get("pattern_name", "Unknown Pattern")
+            score = pattern.get("score", pattern.get("confidence", 0.0))
+            evidence = pattern.get("evidence", {})
+            
+            # Cross-validate with AI
+            validation_result = await cross_validate_pattern_with_ai(
+                pattern_name=pattern_name,
+                score=score,
+                evidence=evidence,
+                dual_agent=dual_agent
+            )
+            
+            # Add validation to pattern result
+            pattern_with_validation = {
+                **pattern,
+                "ai_validation": validation_result
+            }
+            validated_patterns.append(pattern_with_validation)
+            
+            # Update counters
+            status = validation_result.get("validation_status", "error")
+            if status == "validated":
+                validated_count += 1
+            elif status == "rejected":
+                rejected_count += 1
+            elif status == "uncertain":
+                uncertain_count += 1
+            
+            confidence = validation_result.get("ai_confidence", 0.0)
+            total_confidence += confidence
+            
+        except Exception as e:
+            logger.warning(f"  ⚠ Error validating pattern {pattern.get('pattern_name')}: {e}")
+            validated_patterns.append({
+                **pattern,
+                "ai_validation": {
+                    "validation_status": "error",
+                    "error": str(e)
+                }
+            })
+    
+    # Calculate statistics
+    average_confidence = (
+        total_confidence / len(patterns_to_validate)
+        if patterns_to_validate else 0.0
+    )
+    
+    # Find high-confidence findings (>85% AI confidence)
+    high_confidence_findings = [
+        p for p in validated_patterns
+        if p.get("ai_validation", {}).get("ai_confidence", 0) > 85
+    ]
+    
+    result = {
+        "validated_patterns": validated_patterns,
+        "total_patterns": len(pattern_results),
+        "patterns_evaluated": len(patterns_to_validate),
+        "validated_count": validated_count,
+        "rejected_count": rejected_count,
+        "uncertain_count": uncertain_count,
+        "average_ai_confidence": round(average_confidence, 2),
+        "high_confidence_findings": high_confidence_findings,
+        "high_confidence_count": len(high_confidence_findings),
+        "severity_filter": severity_filter,
+        "batch_timestamp": datetime.utcnow().isoformat()
+    }
+    
+    logger.info(f"✓ Batch validation complete:")
+    logger.info(f"  - Validated: {validated_count}")
+    logger.info(f"  - Rejected: {rejected_count}")
+    logger.info(f"  - Uncertain: {uncertain_count}")
+    logger.info(f"  - Avg Confidence: {average_confidence:.1f}%")
+    logger.info(f"  - High Confidence: {len(high_confidence_findings)}")
+    
+    return result
+
+
+# ═══════════════════════════════════════════════════════════════════════════
+# HELPER FUNCTIONS FOR AI CROSS-VALIDATION
+# ═══════════════════════════════════════════════════════════════════════════
+
+
+def _format_evidence_for_prompt(evidence: Dict[str, Any]) -> str:
+    """Format evidence dictionary as readable text for AI prompt."""
+    lines = []
+    for key, value in evidence.items():
+        if isinstance(value, (list, dict)):
+            import json
+            value_str = json.dumps(value, indent=2)
+        else:
+            value_str = str(value)
+        lines.append(f"- **{key}**: {value_str}")
+    return "\n".join(lines) if lines else "No evidence provided"
+
+
+def _extract_confidence(agent_data: Dict[str, Any]) -> Optional[float]:
+    """Extract confidence percentage from agent response."""
+    if agent_data.get("status") not in ["success", "OK"]:
+        return None
+    
+    # Try to extract confidence from violations
+    violations = agent_data.get("violations", [])
+    if violations:
+        # Average confidence from all violations
+        confidences = []
+        for v in violations:
+            if isinstance(v, dict):
+                conf = v.get("confidence", v.get("confidence_score"))
+                if conf is not None:
+                    # Convert to percentage if needed
+                    conf_float = float(conf)
+                    if conf_float <= 1.0:
+                        conf_float *= 100
+                    confidences.append(conf_float)
+        
+        if confidences:
+            return sum(confidences) / len(confidences)
+    
+    # Default to 50% if agent responded but no confidence found
+    return 50.0
+
+
+def _extract_supporting_factors(
+    openai_data: Dict[str, Any],
+    anthropic_data: Dict[str, Any]
+) -> List[str]:
+    """Extract supporting factors from both agents."""
+    factors = []
+    
+    for agent_data in [openai_data, anthropic_data]:
+        violations = agent_data.get("violations", [])
+        for v in violations:
+            if isinstance(v, dict):
+                # Extract description or reason
+                desc = v.get("description") or v.get("reason") or v.get("finding")
+                if desc and desc not in factors:
+                    factors.append(str(desc))
+    
+    return factors[:5]  # Top 5 factors
+
+
+def _extract_contradicting_factors(
+    openai_data: Dict[str, Any],
+    anthropic_data: Dict[str, Any]
+) -> List[str]:
+    """Extract contradicting factors from agent analysis."""
+    factors = []
+    
+    # Look for disagreements between agents
+    consensus = {}
+    if "consensus" in openai_data:
+        consensus = openai_data["consensus"]
+    
+    openai_only = consensus.get("openai_only", 0)
+    anthropic_only = consensus.get("anthropic_only", 0)
+    
+    if openai_only > 0:
+        factors.append(f"OpenAI found {openai_only} unique violations not confirmed by Anthropic")
+    
+    if anthropic_only > 0:
+        factors.append(f"Anthropic found {anthropic_only} unique violations not confirmed by OpenAI")
+    
+    return factors
+
+
+def _merge_reasoning(
+    openai_data: Dict[str, Any],
+    anthropic_data: Dict[str, Any]
+) -> str:
+    """Merge reasoning from both agents into cohesive summary."""
+    reasoning_parts = []
+    
+    # OpenAI reasoning
+    if openai_data.get("status") in ["success", "OK"]:
+        violations = openai_data.get("violations", [])
+        if violations:
+            reasoning_parts.append(
+                f"OpenAI Agent: Identified {len(violations)} potential violations."
+            )
+    
+    # Anthropic reasoning
+    if anthropic_data.get("status") in ["success", "OK"]:
+        violations = anthropic_data.get("violations", [])
+        if violations:
+            reasoning_parts.append(
+                f"Anthropic Agent: Identified {len(violations)} potential violations."
+            )
+    
+    if not reasoning_parts:
+        return "Both agents provided analysis with no clear violations identified."
+    
+    return " ".join(reasoning_parts)
+
+
+def _extract_recommendations(
+    openai_data: Dict[str, Any],
+    anthropic_data: Dict[str, Any]
+) -> List[str]:
+    """Extract action recommendations from agent responses."""
+    recommendations = []
+    
+    # Extract from violations
+    for agent_data in [openai_data, anthropic_data]:
+        violations = agent_data.get("violations", [])
+        for v in violations:
+            if isinstance(v, dict):
+                rec = v.get("recommendation") or v.get("action")
+                if rec and rec not in recommendations:
+                    recommendations.append(str(rec))
+    
+    # Default recommendations if none found
+    if not recommendations:
+        recommendations = [
+            "Review quantitative metrics in detail",
+            "Verify evidence chain integrity",
+            "Consider manual investigative follow-up"
+        ]
+    
+    return recommendations[:3]  # Top 3 recommendations
+
+
