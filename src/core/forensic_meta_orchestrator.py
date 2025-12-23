@@ -183,7 +183,8 @@ class ForensicMetaOrchestrator:
     def __init__(
         self,
         enable_circuit_breakers: bool = True,
-        default_timeout: float = 300.0
+        default_timeout: float = 300.0,
+        auto_register_agents: bool = True
     ):
         """
         Initialize meta-orchestrator.
@@ -191,6 +192,7 @@ class ForensicMetaOrchestrator:
         Args:
             enable_circuit_breakers: Enable circuit breaker protection
             default_timeout: Default timeout for agent execution (seconds)
+            auto_register_agents: Automatically register default agents
         """
         self.enable_circuit_breakers = enable_circuit_breakers
         self.default_timeout = default_timeout
@@ -205,6 +207,17 @@ class ForensicMetaOrchestrator:
         self._execution_history: List[InvestigationResult] = []
         
         logger.info(f"ForensicMetaOrchestrator initialized (circuit_breakers={'enabled' if enable_circuit_breakers else 'disabled'})")
+        
+        # Auto-register default agents
+        if auto_register_agents:
+            try:
+                from .agent_registry import register_default_agents
+                agent_count = register_default_agents(self)
+                logger.info(f"✓ Auto-registered {agent_count} default agents")
+            except ImportError as e:
+                logger.warning(f"Agent registry not available: {e}")
+            except Exception as e:
+                logger.warning(f"Failed to auto-register agents: {e}")
     
     def register_agent(
         self,
@@ -240,12 +253,11 @@ class ForensicMetaOrchestrator:
         self._agents[name] = (config, handler)
         
         # Register circuit breaker if needed
+        # Note: Circuit breaker registration is deferred to first use to avoid
+        # requiring an event loop during initialization
         if config.requires_circuit_breaker and self._circuit_breakers:
-            asyncio.create_task(self._circuit_breakers.register(
-                name=f"agent_{name}",
-                failure_threshold=3,
-                recovery_timeout=60.0
-            ))
+            # Circuit breaker will be registered on-demand during first execution
+            pass
         
         logger.info(f"Registered agent: {name} (type={agent_type.value}, priority={priority.value})")
     
@@ -462,6 +474,14 @@ class ForensicMetaOrchestrator:
                 breaker = None
                 if config.requires_circuit_breaker and self._circuit_breakers:
                     breaker = self._circuit_breakers.get(f"agent_{config.name}")
+                    # Register circuit breaker on-demand if not already registered
+                    if breaker is None:
+                        await self._circuit_breakers.register(
+                            name=f"agent_{config.name}",
+                            failure_threshold=3,
+                            recovery_timeout=60.0
+                        )
+                        breaker = self._circuit_breakers.get(f"agent_{config.name}")
                 
                 # Execute with timeout
                 if breaker:
