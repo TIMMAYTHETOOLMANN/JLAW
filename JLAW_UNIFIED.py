@@ -2255,6 +2255,40 @@ Examples:
                        default='comprehensive',
                        help='Investigation type for optimized execution (default: comprehensive)')
     
+    # Enhancement 2: Strategy and type selection
+    parser.add_argument('--strategy', 
+                       choices=['triage', 'standard', 'doj_referral'],
+                       default='standard',
+                       help='Execution strategy: triage (5-10min), standard (15-30min), doj_referral (30-60min)')
+    
+    parser.add_argument('--type',
+                       choices=['insider_trading', 'financial_fraud', 'compliance', 'comprehensive'],
+                       default='comprehensive',
+                       help='Investigation type for optimized node selection (alias for --investigation)')
+    
+    # Enhancement 4: Daemon mode flags
+    parser.add_argument('--daemon', action='store_true',
+                       help='Run in daemon mode for continuous monitoring')
+    
+    parser.add_argument('--watchlist', type=str,
+                       help='Path to watchlist JSON file for daemon mode')
+    
+    parser.add_argument('--schedule', type=str,
+                       help='Cron-like schedule string (e.g., "0 9 * * MON") for daemon mode')
+    
+    parser.add_argument('--alert-webhook', type=str,
+                       help='Webhook URL for alerts (Slack, Discord, etc.)')
+    
+    # Enhancement 5: Batch processing flags
+    parser.add_argument('--batch', type=str,
+                       help='Path to file containing list of CIKs for batch processing')
+    
+    parser.add_argument('--max-concurrent', type=int, default=5,
+                       help='Maximum concurrent investigations for batch processing (default: 5)')
+    
+    parser.add_argument('--industry-analysis', action='store_true',
+                       help='Enable cross-company correlation and industry analysis for batch mode')
+    
     return parser.parse_args()
 
 
@@ -2349,6 +2383,102 @@ async def main():
             print(f"\n✗ Demo analysis failed: {e}")
             return 1
     
+    # ═══════════════════════════════════════════════════════════════════════
+    # Enhancement 4: DAEMON MODE - Continuous monitoring
+    # ═══════════════════════════════════════════════════════════════════════
+    if args.daemon:
+        print("\n🔄 Starting DAEMON MODE - Continuous Monitoring")
+        print("=" * 70)
+        
+        try:
+            from src.core.autonomous_executor import AutonomousForensicExecutor
+            
+            # Initialize autonomous executor
+            executor = AutonomousForensicExecutor(
+                output_dir=args.output,
+                check_interval_seconds=300  # Check every 5 minutes
+            )
+            
+            # Load watchlist if provided
+            if args.watchlist:
+                with open(args.watchlist, 'r') as f:
+                    watchlist_data = json.load(f)
+                
+                for entity in watchlist_data.get("entities", []):
+                    executor.schedule_investigation(
+                        cik=entity["cik"],
+                        company_name=entity.get("name", f"CIK-{entity['cik']}"),
+                        frequency=entity.get("frequency", "weekly")
+                    )
+                    print(f"  ✓ Added to watchlist: {entity['cik']} ({entity.get('frequency', 'weekly')})")
+            
+            # Start daemon
+            print("\n  Starting autonomous executor...")
+            print("  Press Ctrl+C to stop\n")
+            await executor.start()
+            
+            return 0
+            
+        except ImportError as e:
+            print(f"\n✗ Error: Autonomous executor not available: {e}")
+            return 1
+        except FileNotFoundError:
+            print(f"\n✗ Error: Watchlist file not found: {args.watchlist}")
+            return 1
+        except Exception as e:
+            print(f"\n✗ Daemon mode failed: {e}")
+            return 1
+    
+    # ═══════════════════════════════════════════════════════════════════════
+    # Enhancement 5: BATCH MODE - Multi-company analysis
+    # ═══════════════════════════════════════════════════════════════════════
+    if args.batch:
+        print("\n📊 Starting BATCH MODE - Multi-Company Analysis")
+        print("=" * 70)
+        
+        try:
+            from src.core.batch_forensic_orchestrator import BatchForensicOrchestrator
+            
+            # Load CIK list
+            with open(args.batch, 'r') as f:
+                cik_list = [line.strip() for line in f if line.strip() and not line.startswith('#')]
+            
+            print(f"  Loaded {len(cik_list)} companies for analysis")
+            print(f"  Max concurrent: {args.max_concurrent}")
+            print(f"  Industry analysis: {'ENABLED' if args.industry_analysis else 'DISABLED'}")
+            
+            # Initialize batch orchestrator
+            batch_orchestrator = BatchForensicOrchestrator(
+                output_dir=Path(args.output),
+                max_concurrent=args.max_concurrent
+            )
+            
+            # Execute batch analysis
+            batch_result = await batch_orchestrator.execute_batch(
+                cik_list=cik_list,
+                start_date=date(args.year, 1, 1) if args.year else date(2019, 1, 1),
+                end_date=date(args.year, 12, 31) if args.year else date(2019, 12, 31),
+                industry_analysis=args.industry_analysis
+            )
+            
+            print("\n✓ Batch analysis complete!")
+            print(f"  Companies analyzed: {batch_result.companies_analyzed}")
+            print(f"  Total violations: {batch_result.total_violations}")
+            print(f"  Reports generated: {batch_result.reports_generated}")
+            
+            return 0
+            
+        except ImportError as e:
+            print(f"\n✗ Error: Batch orchestrator not available: {e}")
+            print("  Implementation required for batch mode")
+            return 1
+        except FileNotFoundError:
+            print(f"\n✗ Error: Batch file not found: {args.batch}")
+            return 1
+        except Exception as e:
+            print(f"\n✗ Batch mode failed: {e}")
+            return 1
+    
     # Build configuration
     if args.cik or args.company:
         # CLI mode
@@ -2381,11 +2511,57 @@ async def main():
         # Interactive mode
         config = interactive_config()
     
-    # Execute
+    # ═══════════════════════════════════════════════════════════════════════
+    # Enhancement 1: USE SUPREME ORCHESTRATOR when --strategy is specified
+    # ═══════════════════════════════════════════════════════════════════════
+    if hasattr(args, 'strategy') and args.strategy != 'standard':
+        print(f"\n🎯 Using SupremeOrchestrator with {args.strategy.upper()} strategy")
+        print("=" * 70)
+        
+        try:
+            from src.core.supreme_orchestrator import SupremeOrchestrator, ExecutionStrategy
+            
+            # Initialize Supreme Orchestrator
+            supreme = SupremeOrchestrator()
+            
+            # Execute with selected strategy
+            result = await supreme.auto_execute(
+                cik=config.cik,
+                company_name=config.company_name,
+                start_date=config.start_date,
+                end_date=config.end_date,
+                output_dir=config.output_dir,
+                priority=args.strategy,
+                sec_user_agent=os.environ.get('SEC_USER_AGENT'),
+                polygon_api_key=os.environ.get('POLYGON_API_KEY')
+            )
+            
+            # Print summary
+            print("\n" + "=" * 70)
+            print("  SUPREME ORCHESTRATOR - EXECUTION COMPLETE")
+            print("=" * 70)
+            print(f"  Strategy: {result.strategy.orchestrator_name}")
+            print(f"  Priority: {result.priority.value.upper()}")
+            print(f"  Duration: {(result.execution_end - result.execution_start).total_seconds():.1f}s")
+            print(f"  Violations: {result.total_violations}")
+            print(f"  Alerts: {result.total_alerts}")
+            print(f"  Success: {'✓ YES' if result.success else '✗ NO'}")
+            print("=" * 70)
+            
+            return 0 if result.success else 1
+            
+        except ImportError as e:
+            print(f"\n⚠ Warning: SupremeOrchestrator not available: {e}")
+            print("  Falling back to UnifiedForensicEngine")
+        except Exception as e:
+            print(f"\n✗ SupremeOrchestrator error: {e}")
+            print("  Falling back to UnifiedForensicEngine")
+    
+    # Execute with UnifiedForensicEngine (original behavior)
     engine = UnifiedForensicEngine(config)
     
     # Use optimized execution if investigation type is specified
-    investigation_type = getattr(args, 'investigation', 'comprehensive')
+    investigation_type = getattr(args, 'type', None) or getattr(args, 'investigation', 'comprehensive')
     if investigation_type != 'comprehensive':
         print(f"\n🎯 Using optimized execution for: {investigation_type}")
         dossier = await engine.execute_optimized(investigation_type=investigation_type)

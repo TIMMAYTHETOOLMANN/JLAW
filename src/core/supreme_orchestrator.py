@@ -83,6 +83,30 @@ class ExecutionStrategy:
     optimization_level: str
     description: str
     
+    @staticmethod
+    def from_string(strategy_name: str) -> InvestigationPriority:
+        """
+        Convert strategy string to InvestigationPriority enum.
+        
+        Args:
+            strategy_name: Strategy name ("triage", "standard", "doj_referral")
+        
+        Returns:
+            InvestigationPriority enum value
+        """
+        strategy_map = {
+            "triage": InvestigationPriority.TRIAGE,
+            "standard": InvestigationPriority.STANDARD,
+            "doj_referral": InvestigationPriority.DOJ_REFERRAL,
+        }
+        
+        normalized = strategy_name.lower().strip()
+        if normalized not in strategy_map:
+            logger.warning(f"Unknown strategy '{strategy_name}', defaulting to STANDARD")
+            return InvestigationPriority.STANDARD
+        
+        return strategy_map[normalized]
+    
     def to_dict(self) -> Dict[str, Any]:
         """Convert to dictionary."""
         return {

@@ -1,0 +1,131 @@
+# ============================================================
+# JLAW Alert Configuration
+# ============================================================
+#
+# This file defines alert rules and channel configurations
+# for the JLAW forensic analysis system.
+#
+# Alert Rules:
+#   - name: Human-readable rule name
+#   - condition: Python expression to evaluate
+#   - channels: List of channels to send alerts to
+#   - severity_threshold: Minimum severity to trigger (optional)
+#   - enabled: Whether rule is active (default: true)
+#
+# Available variables in conditions:
+#   - severity: Alert severity level
+#   - source: Source of the alert (e.g., "Node1-Form4")
+#   - violation_type: Type of violation detected
+#   - confidence: Confidence score (0.0-1.0)
+#   - All fields from alert.metadata
+#
+# ============================================================
+
+rules:
+  # Critical Section 16(b) violations
+  - name: "Critical Section 16(b) Violation"
+    condition: "violation_type == '16(b)' AND severity == 'critical'"
+    channels: ["slack", "email"]
+    severity_threshold: "critical"
+    enabled: true
+  
+  # Material insider trades before earnings
+  - name: "Material Insider Trade Before Earnings"
+    condition: "source == 'CORR_001' AND confidence > 0.9"
+    channels: ["sms", "slack", "email"]
+    severity_threshold: "critical"
+    enabled: true
+  
+  # High-risk financial fraud patterns
+  - name: "Financial Fraud Pattern Detected"
+    condition: "violation_type == 'fraud' AND severity == 'critical'"
+    channels: ["slack", "email"]
+    severity_threshold: "error"
+    enabled: true
+  
+  # SOX certification violations
+  - name: "SOX Certification Violation"
+    condition: "violation_type == 'sox' AND severity == 'critical'"
+    channels: ["email"]
+    severity_threshold: "critical"
+    enabled: true
+  
+  # Earnings manipulation (M-Score)
+  - name: "Earnings Manipulation Alert"
+    condition: "source == 'Node4-MScore' AND confidence > 0.8"
+    channels: ["slack", "email"]
+    severity_threshold: "warning"
+    enabled: true
+  
+  # Bankruptcy risk (Z-Score)
+  - name: "Bankruptcy Risk Alert"
+    condition: "source == 'Node13-ZScore' AND severity == 'critical'"
+    channels: ["email"]
+    severity_threshold: "warning"
+    enabled: true
+  
+  # IRC §83 tax exposure
+  - name: "Tax Exposure Alert"
+    condition: "violation_type == 'irc83' AND severity == 'error'"
+    channels: ["email"]
+    severity_threshold: "error"
+    enabled: true
+  
+  # Catch-all for critical alerts
+  - name: "All Critical Alerts"
+    condition: "severity == 'critical'"
+    channels: ["slack"]
+    severity_threshold: "critical"
+    enabled: true
+
+# ============================================================
+# Channel Configurations
+# ============================================================
+
+# Slack webhook
+slack:
+  webhook_url: "${SLACK_WEBHOOK_URL}"  # Set via environment variable
+
+# Email (SMTP)
+email:
+  smtp_host: "smtp.gmail.com"
+  smtp_port: 587
+  username: "${EMAIL_USERNAME}"  # Set via environment variable
+  password: "${EMAIL_PASSWORD}"  # Set via environment variable
+  from_email: "${EMAIL_FROM}"    # Set via environment variable
+  to_emails:
+    - "${EMAIL_TO_1}"            # Set via environment variable
+    - "${EMAIL_TO_2}"            # Set via environment variable (optional)
+  use_tls: true
+
+# SMS (Twilio)
+sms:
+  account_sid: "${TWILIO_ACCOUNT_SID}"  # Set via environment variable
+  auth_token: "${TWILIO_AUTH_TOKEN}"    # Set via environment variable
+  from_phone: "${TWILIO_FROM_PHONE}"    # Set via environment variable
+  to_phones:
+    - "${TWILIO_TO_PHONE_1}"            # Set via environment variable
+    - "${TWILIO_TO_PHONE_2}"            # Set via environment variable (optional)
+
+# ============================================================
+# Global Settings
+# ============================================================
+
+settings:
+  # Enable alert deduplication (prevent duplicate alerts within time window)
+  deduplication_enabled: true
+  deduplication_window_seconds: 300  # 5 minutes
+  
+  # Rate limiting per channel (max alerts per hour)
+  rate_limits:
+    slack: 50
+    email: 20
+    sms: 10
+  
+  # Retry settings for failed deliveries
+  retry_enabled: true
+  max_retries: 3
+  retry_delay_seconds: 60
+  
+  # Alert queue size (max pending alerts)
+  max_queue_size: 1000
