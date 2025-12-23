@@ -1947,6 +1947,125 @@ class UnifiedForensicEngine:
         except Exception as e:
             self.logger.error(f"  ✗ PDF generation failed: {e}")
         
+        # ═══════════════════════════════════════════════════════════════
+        # CHAIN OF CUSTODY LOG EXPORT
+        # ═══════════════════════════════════════════════════════════════
+        
+        try:
+            from src.reporting.chain_of_custody_logger import ChainOfCustodyLogger
+            
+            # Create logger and export chain of custody log
+            custody_logger = ChainOfCustodyLogger(output_dir=str(self.config.output_dir / "custody"))
+            
+            # If we have custody records, add them to chains
+            if self.custody_records:
+                # Create a chain for this case
+                chain_id = custody_logger.create_chain(
+                    case_id=self.config.case_id,
+                    description=f"Forensic analysis of {self.config.company_name}"
+                )
+                
+                # Persist the chain
+                custody_log_path = custody_logger.persist_chain(chain_id)
+                self.logger.info(f"  ✓ Chain of custody log exported: {custody_log_path}")
+                generated_reports.append(str(custody_log_path))
+            else:
+                self.logger.info("  ℹ No custody records to export")
+                
+        except ImportError as e:
+            self.logger.warning(f"  ⚠ Chain of custody export skipped: {e}")
+        except Exception as e:
+            self.logger.error(f"  ✗ Chain of custody export failed: {e}")
+        
+        # ═══════════════════════════════════════════════════════════════
+        # EVIDENCE PACKAGE CREATION
+        # ═══════════════════════════════════════════════════════════════
+        
+        try:
+            from src.reporting.evidence_packager import EvidencePackager
+            
+            # Create evidence packager
+            packager = EvidencePackager(output_dir=str(self.config.output_dir / "evidence"))
+            
+            if self.violations:
+                # Create package from violations
+                package = packager.create_package_from_violations(
+                    violations=self.violations,
+                    case_id=self.config.case_id,
+                    company_name=self.config.company_name,
+                    cik=self.config.cik
+                )
+                
+                # Export package in JSON format
+                json_path = packager.export_package_json(package, filename=f"evidence_package_{self.config.case_id}.json")
+                self.logger.info(f"  ✓ Evidence package (JSON) created: {json_path}")
+                generated_reports.append(str(json_path))
+                
+                # Export package in Markdown format
+                md_path = packager.export_package_markdown(package, filename=f"evidence_package_{self.config.case_id}.md")
+                self.logger.info(f"  ✓ Evidence package (Markdown) created: {md_path}")
+                generated_reports.append(str(md_path))
+            else:
+                self.logger.info("  ℹ No violations to package")
+                
+        except ImportError as e:
+            self.logger.warning(f"  ⚠ Evidence packaging skipped: {e}")
+        except Exception as e:
+            self.logger.error(f"  ✗ Evidence packaging failed: {e}")
+        
+        # ═══════════════════════════════════════════════════════════════
+        # STATUTORY CITATION INDEX
+        # ═══════════════════════════════════════════════════════════════
+        
+        try:
+            from src.reporting.statutory_citation_engine import StatutoryCitationEngine
+            
+            # Create citation engine
+            govinfo_api_key = os.getenv("GOVINFO_API_KEY", "DEMO_KEY")
+            citation_engine = StatutoryCitationEngine(govinfo_api_key=govinfo_api_key)
+            
+            if self.violations:
+                # Extract unique citations from violations
+                citations = set()
+                for violation in self.violations:
+                    if hasattr(violation, 'statutory_reference') and violation.statutory_reference:
+                        citations.add(violation.statutory_reference)
+                    if hasattr(violation, 'regulatory_citations') and violation.regulatory_citations:
+                        for citation in violation.regulatory_citations:
+                            if citation:
+                                citations.add(citation)
+                
+                if citations:
+                    # Create citation index file
+                    index_path = self.config.output_dir / f"statutory_citations_{self.config.case_id}.md"
+                    
+                    with open(index_path, 'w', encoding='utf-8') as f:
+                        f.write(f"# Statutory Citation Index\n\n")
+                        f.write(f"**Case ID:** {self.config.case_id}\n")
+                        f.write(f"**Company:** {self.config.company_name}\n")
+                        f.write(f"**CIK:** {self.config.cik}\n")
+                        f.write(f"**Generated:** {datetime.now().isoformat()}\n\n")
+                        f.write(f"---\n\n")
+                        
+                        for citation in sorted(citations):
+                            f.write(f"## {citation}\n\n")
+                            f.write(f"Referenced in violations related to this case.\n\n")
+                        
+                        f.write(f"\n---\n\n")
+                        f.write(f"Total unique citations: {len(citations)}\n")
+                    
+                    self.logger.info(f"  ✓ Statutory citation index created: {index_path}")
+                    generated_reports.append(str(index_path))
+                else:
+                    self.logger.info("  ℹ No statutory citations to index")
+            else:
+                self.logger.info("  ℹ No violations with citations to index")
+                
+        except ImportError as e:
+            self.logger.warning(f"  ⚠ Statutory citation indexing skipped: {e}")
+        except Exception as e:
+            self.logger.error(f"  ✗ Statutory citation indexing failed: {e}")
+        
         duration = time.time() - start
         
         # Finalize metrics
