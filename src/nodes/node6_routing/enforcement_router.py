@@ -452,3 +452,421 @@ class EnforcementRouter:
         
         return " | ".join(parts)
 
+
+@dataclass
+class AggregatedRoutingReport:
+    """Comprehensive routing analysis across all nodes."""
+    case_id: str
+    company_name: str
+    cik: str
+    total_violations: int
+    violations_by_type: Dict[str, int]
+    violations_by_severity: Dict[str, int]
+    primary_agencies: List[EnforcementAgency]
+    secondary_agencies: List[EnforcementAgency]
+    total_estimated_penalties: float
+    criminal_referrals: int
+    max_criminal_exposure_years: int
+    prosecution_likelihood: str  # "High", "Medium", "Low"
+    recommended_actions: List[str]
+    routing_details: List[EnforcementRouting]
+    
+    def to_dict(self) -> Dict[str, Any]:
+        """Convert to dictionary."""
+        return {
+            "case_id": self.case_id,
+            "company_name": self.company_name,
+            "cik": self.cik,
+            "total_violations": self.total_violations,
+            "violations_by_type": self.violations_by_type,
+            "violations_by_severity": self.violations_by_severity,
+            "primary_agencies": [a.value for a in self.primary_agencies],
+            "secondary_agencies": [a.value for a in self.secondary_agencies],
+            "total_estimated_penalties": self.total_estimated_penalties,
+            "criminal_referrals": self.criminal_referrals,
+            "max_criminal_exposure_years": self.max_criminal_exposure_years,
+            "prosecution_likelihood": self.prosecution_likelihood,
+            "recommended_actions": self.recommended_actions,
+            "routing_details": [r.to_dict() for r in self.routing_details]
+        }
+
+
+class IntelligentEnforcementRouter:
+    """
+    Intelligent enforcement router that analyzes violations across all 15 nodes.
+    
+    Aggregates violations from all forensic analysis nodes and determines
+    optimal enforcement routing with jurisdiction analysis and prosecution
+    likelihood estimation.
+    
+    Features:
+    - Multi-node violation aggregation
+    - Jurisdiction determination (SEC/DOJ/IRS/FinCEN/CFTC/State AGs)
+    - Pattern-based severity escalation
+    - Prosecution likelihood scoring
+    - Coordinated multi-agency routing
+    
+    Usage:
+        router = IntelligentEnforcementRouter()
+        report = router.analyze_and_route(
+            case_id="CASE-2019-001",
+            company_name="NIKE, Inc.",
+            cik="320187",
+            node_results=all_node_results
+        )
+    """
+    
+    def __init__(self):
+        self.base_router = EnforcementRouter()
+        self.logger = logging.getLogger(__name__)
+    
+    def analyze_and_route(
+        self,
+        case_id: str,
+        company_name: str,
+        cik: str,
+        node_results: List[Dict[str, Any]]
+    ) -> AggregatedRoutingReport:
+        """
+        Analyze violations across all nodes and generate routing report.
+        
+        Args:
+            case_id: Unique case identifier
+            company_name: Target company name
+            cik: SEC CIK number
+            node_results: Results from all 15 forensic analysis nodes
+            
+        Returns:
+            AggregatedRoutingReport with comprehensive routing analysis
+        """
+        self.logger.info(f"Analyzing violations for enforcement routing: {company_name}")
+        
+        # Extract all violations from node results
+        all_violations = self._extract_violations(node_results)
+        
+        if not all_violations:
+            self.logger.warning("No violations found - generating empty report")
+            return self._create_empty_report(case_id, company_name, cik)
+        
+        # Route each violation
+        routing_details = []
+        for violation in all_violations:
+            routing = self._route_single_violation(violation)
+            if routing:
+                routing_details.append(routing)
+        
+        # Aggregate results
+        violations_by_type = self._count_by_type(all_violations)
+        violations_by_severity = self._count_by_severity(all_violations)
+        
+        # Determine agencies
+        primary_agencies = self._extract_primary_agencies(routing_details)
+        secondary_agencies = self._extract_secondary_agencies(routing_details)
+        
+        # Calculate totals
+        total_penalties = sum(r.estimated_civil_penalty for r in routing_details)
+        criminal_referrals = sum(1 for r in routing_details if r.criminal_referral_recommended)
+        max_criminal_years = max(
+            (r.criminal_exposure_years for r in routing_details),
+            default=0
+        )
+        
+        # Estimate prosecution likelihood
+        prosecution_likelihood = self._estimate_prosecution_likelihood(
+            total_violations=len(all_violations),
+            criminal_referrals=criminal_referrals,
+            total_damages=total_penalties,
+            violations_by_type=violations_by_type
+        )
+        
+        # Generate recommendations
+        recommended_actions = self._generate_recommendations(
+            routing_details,
+            prosecution_likelihood,
+            criminal_referrals
+        )
+        
+        return AggregatedRoutingReport(
+            case_id=case_id,
+            company_name=company_name,
+            cik=cik,
+            total_violations=len(all_violations),
+            violations_by_type=violations_by_type,
+            violations_by_severity=violations_by_severity,
+            primary_agencies=primary_agencies,
+            secondary_agencies=secondary_agencies,
+            total_estimated_penalties=total_penalties,
+            criminal_referrals=criminal_referrals,
+            max_criminal_exposure_years=max_criminal_years,
+            prosecution_likelihood=prosecution_likelihood,
+            recommended_actions=recommended_actions,
+            routing_details=routing_details
+        )
+    
+    def _extract_violations(
+        self,
+        node_results: List[Dict[str, Any]]
+    ) -> List[Dict[str, Any]]:
+        """Extract all violations from node results."""
+        violations = []
+        
+        for node_result in node_results:
+            node_id = node_result.get('node_id', 'unknown')
+            node_violations = node_result.get('violations', [])
+            
+            # Add node context to each violation
+            for violation in node_violations:
+                if isinstance(violation, dict):
+                    violation['source_node'] = node_id
+                    violations.append(violation)
+        
+        return violations
+    
+    def _route_single_violation(
+        self,
+        violation: Dict[str, Any]
+    ) -> Optional[EnforcementRouting]:
+        """Route a single violation using base router."""
+        try:
+            # Map violation to ViolationType
+            violation_type = self._map_violation_type(violation)
+            
+            # Extract violation details
+            estimated_damages = violation.get('estimated_damages', 0)
+            severity = violation.get('severity', 'MEDIUM')
+            scienter = violation.get('scienter_evidence', False) or severity == 'CRITICAL'
+            pattern = violation.get('pattern_of_conduct', False)
+            
+            # Route using base router
+            routing = self.base_router.route_violation(
+                violation_type=violation_type,
+                estimated_damages=estimated_damages,
+                scienter_evidence=scienter,
+                pattern_of_conduct=pattern,
+                public_company=True
+            )
+            
+            return routing
+            
+        except Exception as e:
+            self.logger.warning(f"Failed to route violation: {e}")
+            return None
+    
+    def _map_violation_type(self, violation: Dict[str, Any]) -> ViolationType:
+        """Map violation description to ViolationType enum."""
+        description = violation.get('violation_type', '').lower()
+        
+        # Mapping logic
+        if 'insider trading' in description or '10b-5' in description:
+            return ViolationType.INSIDER_TRADING
+        elif 'disclosure' in description or '8-k' in description:
+            return ViolationType.DISCLOSURE_VIOLATION
+        elif '16(b)' in description or 'short-swing' in description:
+            return ViolationType.SHORT_SWING_PROFIT
+        elif '16(a)' in description or 'late filing' in description:
+            return ViolationType.LATE_FILING
+        elif 'sox 302' in description:
+            return ViolationType.SOX_302_CERTIFICATION
+        elif 'sox 404' in description:
+            return ViolationType.SOX_404_CONTROLS
+        elif 'sox 906' in description:
+            return ViolationType.SOX_906_CERTIFICATION
+        elif 'irc' in description or 'tax' in description:
+            return ViolationType.IRC_83_VIOLATION
+        elif 'beneficial ownership' in description or '13d' in description or '13g' in description:
+            return ViolationType.BENEFICIAL_OWNERSHIP
+        elif 'market manipulation' in description:
+            return ViolationType.MARKET_MANIPULATION
+        elif 'proxy' in description or 'def 14a' in description:
+            return ViolationType.PROXY_VIOLATION
+        else:
+            return ViolationType.SECURITIES_FRAUD  # Default
+    
+    def _count_by_type(
+        self,
+        violations: List[Dict[str, Any]]
+    ) -> Dict[str, int]:
+        """Count violations by type."""
+        counts = {}
+        for violation in violations:
+            vtype = violation.get('violation_type', 'Unknown')
+            counts[vtype] = counts.get(vtype, 0) + 1
+        return counts
+    
+    def _count_by_severity(
+        self,
+        violations: List[Dict[str, Any]]
+    ) -> Dict[str, int]:
+        """Count violations by severity."""
+        counts = {'CRITICAL': 0, 'HIGH': 0, 'MEDIUM': 0, 'LOW': 0}
+        for violation in violations:
+            severity = violation.get('severity', 'MEDIUM')
+            if severity in counts:
+                counts[severity] += 1
+        return counts
+    
+    def _extract_primary_agencies(
+        self,
+        routing_details: List[EnforcementRouting]
+    ) -> List[EnforcementAgency]:
+        """Extract unique primary agencies."""
+        agencies = set()
+        for routing in routing_details:
+            agencies.add(routing.primary_agency)
+        return list(agencies)
+    
+    def _extract_secondary_agencies(
+        self,
+        routing_details: List[EnforcementRouting]
+    ) -> List[EnforcementAgency]:
+        """Extract unique secondary agencies."""
+        agencies = set()
+        for routing in routing_details:
+            agencies.update(routing.secondary_agencies)
+        return list(agencies)
+    
+    def _estimate_prosecution_likelihood(
+        self,
+        total_violations: int,
+        criminal_referrals: int,
+        total_damages: float,
+        violations_by_type: Dict[str, int]
+    ) -> str:
+        """
+        Estimate prosecution likelihood based on violation profile.
+        
+        Scoring factors:
+        - Number of violations (more = higher likelihood)
+        - Criminal referrals (presence increases likelihood)
+        - Total estimated damages (higher = higher likelihood)
+        - Violation types (certain types more likely to prosecute)
+        
+        Returns:
+            "High", "Medium", or "Low"
+        """
+        score = 0
+        
+        # Factor 1: Volume of violations
+        if total_violations >= 10:
+            score += 3
+        elif total_violations >= 5:
+            score += 2
+        elif total_violations >= 2:
+            score += 1
+        
+        # Factor 2: Criminal referrals
+        if criminal_referrals >= 3:
+            score += 4
+        elif criminal_referrals >= 1:
+            score += 2
+        
+        # Factor 3: Estimated damages
+        if total_damages >= 10000000:  # $10M+
+            score += 4
+        elif total_damages >= 1000000:  # $1M+
+            score += 3
+        elif total_damages >= 100000:  # $100K+
+            score += 1
+        
+        # Factor 4: High-profile violation types
+        high_profile_types = [
+            'insider trading', 'securities fraud', 'sox 906',
+            'market manipulation', 'wire fraud'
+        ]
+        
+        for vtype, count in violations_by_type.items():
+            if any(hp in vtype.lower() for hp in high_profile_types):
+                score += count
+        
+        # Classification
+        if score >= 8:
+            return "High"
+        elif score >= 4:
+            return "Medium"
+        else:
+            return "Low"
+    
+    def _generate_recommendations(
+        self,
+        routing_details: List[EnforcementRouting],
+        prosecution_likelihood: str,
+        criminal_referrals: int
+    ) -> List[str]:
+        """Generate action recommendations based on routing analysis."""
+        recommendations = []
+        
+        # Always recommend documentation
+        recommendations.append(
+            "Compile comprehensive evidence package with FRE 902(13)/(14) compliance"
+        )
+        
+        # Criminal referral recommendations
+        if criminal_referrals > 0:
+            recommendations.append(
+                f"Prepare {criminal_referrals} criminal referral(s) to DOJ with scienter documentation"
+            )
+        
+        # Prosecution likelihood recommendations
+        if prosecution_likelihood == "High":
+            recommendations.append(
+                "HIGH PRIORITY: Expedite enforcement referral - strong prosecution indicators"
+            )
+            recommendations.append(
+                "Coordinate with SEC Division of Enforcement and DOJ for parallel proceedings"
+            )
+        elif prosecution_likelihood == "Medium":
+            recommendations.append(
+                "Standard enforcement referral process - monitor for additional evidence"
+            )
+        else:
+            recommendations.append(
+                "Consider civil administrative proceedings before criminal referral"
+            )
+        
+        # Agency-specific recommendations
+        agencies = set()
+        for routing in routing_details:
+            agencies.add(routing.primary_agency)
+            agencies.update(routing.secondary_agencies)
+        
+        if EnforcementAgency.SEC_ENFORCEMENT in agencies:
+            recommendations.append(
+                "File SEC enforcement referral via TCR system with Wells notice consideration"
+            )
+        
+        if EnforcementAgency.DOJ_SECURITIES in agencies:
+            recommendations.append(
+                "Coordinate with DOJ Fraud Section for potential criminal prosecution"
+            )
+        
+        if EnforcementAgency.IRS_CI in agencies:
+            recommendations.append(
+                "Submit IRS Form 3949-A for tax violation investigation"
+            )
+        
+        return recommendations
+    
+    def _create_empty_report(
+        self,
+        case_id: str,
+        company_name: str,
+        cik: str
+    ) -> AggregatedRoutingReport:
+        """Create empty report when no violations found."""
+        return AggregatedRoutingReport(
+            case_id=case_id,
+            company_name=company_name,
+            cik=cik,
+            total_violations=0,
+            violations_by_type={},
+            violations_by_severity={},
+            primary_agencies=[],
+            secondary_agencies=[],
+            total_estimated_penalties=0.0,
+            criminal_referrals=0,
+            max_criminal_exposure_years=0,
+            prosecution_likelihood="N/A",
+            recommended_actions=["No violations detected - no enforcement action required"],
+            routing_details=[]
+        )
+
