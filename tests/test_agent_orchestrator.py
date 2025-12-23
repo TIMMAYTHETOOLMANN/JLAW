@@ -140,24 +140,27 @@ def test_integration_with_subagent_orchestrator():
 
 
 def test_master_controller_phase_7():
-    """Test that Phase 7 in master controller uses AgentOrchestrator."""
+    """Test that Phase 7 in master controller uses SubagentOrchestrator for auto-triggering."""
     import inspect
     from src.core.master_execution_controller import MasterExecutionController
     
     # Check that _execute_phase_7_subagent exists
     assert hasattr(MasterExecutionController, '_execute_phase_7_subagent')
     
-    # Check that AgentOrchestrator is referenced in the method
+    # Check that SubagentOrchestrator is referenced in the method
     method = MasterExecutionController._execute_phase_7_subagent
     source = inspect.getsource(method)
     
-    assert 'AgentOrchestrator' in source, \
-        "Phase 7 doesn't use AgentOrchestrator"
+    assert 'SubagentOrchestrator' in source, \
+        "Phase 7 doesn't use SubagentOrchestrator"
     
-    assert 'list_available_agents' in source, \
-        "Phase 7 doesn't call list_available_agents"
+    assert 'auto_orchestrate' in source, \
+        "Phase 7 doesn't call auto_orchestrate method"
     
-    print("✓ Master controller Phase 7 integrated with AgentOrchestrator")
+    assert 'all_violations' in source, \
+        "Phase 7 doesn't collect violations for auto-orchestration"
+    
+    print("✓ Master controller Phase 7 integrated with SubagentOrchestrator auto-triggering")
 
 
 if __name__ == "__main__":

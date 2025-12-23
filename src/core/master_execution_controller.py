@@ -1182,9 +1182,10 @@ class MasterExecutionController:
     # ═══════════════════════════════════════════════════════════════════════
     
     async def _execute_phase_7_subagent(self):
-        """Execute Phase 7: Subagent Orchestration."""
+        """Execute Phase 7: Subagent Orchestration with auto-triggering."""
         phase_start = time.time()
         errors = []
+        subagent_results = {}
         
         logger.info("\n" + "=" * 80)
         logger.info(f"  {ExecutionPhase.SUBAGENT.value}")
@@ -1194,29 +1195,52 @@ class MasterExecutionController:
             self._strict_controller.begin_phase(ExecutionPhase.SUBAGENT.value)
         
         try:
-            logger.info("→ Initializing Agent Orchestrator...")
+            # Collect violations from all nodes for auto-orchestration
+            all_violations = []
+            for node_id, node_result in self.node_results.items():
+                if hasattr(node_result, 'findings') and node_result.findings:
+                    violations = node_result.findings.get('violations', [])
+                    if isinstance(violations, list):
+                        for v in violations:
+                            if isinstance(v, dict):
+                                v['source_node'] = node_id
+                                all_violations.append(v)
             
-            # Import and initialize AgentOrchestrator
-            from src.forensics.agent_orchestrator import AgentOrchestrator
+            logger.info(f"→ Collected {len(all_violations)} violations for subagent analysis")
             
-            orchestrator = AgentOrchestrator()
-            
-            # List available agents
-            agents = orchestrator.list_available_agents()
-            logger.info(f"✓ Loaded {len(agents)} agent definitions")
-            
-            # Log agent categories
-            stats = orchestrator.get_agent_statistics()
-            for category, count in stats['by_category'].items():
-                logger.info(f"  - {category}: {count} agents")
-            
-            # Create and execute workflow (optional - only if configured)
-            logger.info("→ Agent orchestration ready (workflow execution skipped)")
-            logger.info("✓ Agents available for invocation via API")
+            if all_violations:
+                # Import and use SubagentOrchestrator with auto-orchestration
+                from src.forensics.subagents.orchestrator import SubagentOrchestrator
+                
+                orchestrator = SubagentOrchestrator()
+                
+                # Auto-orchestrate based on violations
+                context = {
+                    "cik": self.cik,
+                    "company_name": self.company_name,
+                    "case_id": self.case_id,
+                    "analysis_period": {
+                        "start": str(self.start_date),
+                        "end": str(self.end_date)
+                    }
+                }
+                
+                subagent_results = await orchestrator.auto_orchestrate(
+                    violations=all_violations,
+                    context=context,
+                    parallel=True
+                )
+                
+                logger.info(f"✓ Auto-orchestrated {len(subagent_results.get('agents_spawned', []))} agents")
+                logger.info(f"  Combined findings: {len(subagent_results.get('combined_findings', []))}")
+                
+            else:
+                logger.info("→ No violations detected, skipping subagent orchestration")
+                subagent_results = {"status": "skipped", "reason": "no_violations"}
             
         except ImportError as e:
-            errors.append(f"Agent orchestrator import error: {str(e)}")
-            logger.warning(f"  ⚠ Agent orchestration skipped (module not found): {e}")
+            errors.append(f"Subagent orchestrator import error: {str(e)}")
+            logger.warning(f"  ⚠ Subagent orchestration skipped: {e}")
         except Exception as e:
             errors.append(f"Subagent error: {str(e)}")
             logger.error(f"✗ Subagent error: {e}", exc_info=True)
@@ -1228,14 +1252,19 @@ class MasterExecutionController:
             phase=ExecutionPhase.SUBAGENT,
             success=len(errors) == 0,
             duration_seconds=phase_duration,
-            items_processed=len(agents) if 'agents' in locals() else 0,
+            items_processed=len(subagent_results.get('agents_spawned', [])),
             errors=errors,
             data={
-                "status": "completed" if len(errors) == 0 else "degraded",
-                "agents_loaded": len(agents) if 'agents' in locals() else 0
+                "status": subagent_results.get("status", "unknown"),
+                "agents_spawned": subagent_results.get("agents_spawned", []),
+                "violations_analyzed": subagent_results.get("violations_analyzed", 0),
+                "combined_findings_count": len(subagent_results.get("combined_findings", []))
             }
         )
         self.phase_results.append(result)
+        
+        # Store subagent results for dossier generation
+        self.subagent_results = subagent_results
         
         logger.info(f"✓ Phase 7 completed in {phase_duration:.2f}s")
     

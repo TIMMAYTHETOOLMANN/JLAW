@@ -28,7 +28,7 @@ import asyncio
 import logging
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import List, Dict, Any, Optional
+from typing import List, Dict, Any, Optional, Set
 from enum import Enum
 from pathlib import Path
 
@@ -43,6 +43,110 @@ except ImportError:
     logger.warning("anthropic package not available. Install with: pip install anthropic")
 
 
+# ═══════════════════════════════════════════════════════════════════════════
+# VIOLATION-TO-AGENT MAPPING
+# ═══════════════════════════════════════════════════════════════════════════
+
+VIOLATION_TO_AGENT_MAP: Dict[str, List[str]] = {
+    "insider_trading": [
+        "forensic-financial-analyst",
+        "forensic-research-specialist"
+    ],
+    "late_form4": [
+        "forensic-compliance-auditor",
+        "forensic-research-specialist"
+    ],
+    "zero_dollar_transaction": [
+        "forensic-financial-analyst",
+        "forensic-compliance-auditor"
+    ],
+    "accounting_fraud": [
+        "forensic-nlp-analyst",
+        "forensic-financial-analyst",
+        "forensic-compliance-auditor"
+    ],
+    "sox_certification": [
+        "forensic-compliance-auditor",
+        "security-auditor"
+    ],
+    "sox_violation": [
+        "forensic-compliance-auditor",
+        "security-auditor"
+    ],
+    "executive_compensation": [
+        "forensic-financial-analyst",
+        "forensic-compliance-auditor"
+    ],
+    "excessive_severance": [
+        "forensic-financial-analyst",
+        "forensic-compliance-auditor"
+    ],
+    "material_misstatement": [
+        "forensic-nlp-analyst",
+        "forensic-financial-analyst"
+    ],
+    "revenue_recognition": [
+        "forensic-financial-analyst",
+        "forensic-compliance-auditor"
+    ],
+    "options_backdating": [
+        "forensic-financial-analyst",
+        "forensic-research-specialist",
+        "forensic-compliance-auditor"
+    ],
+    "channel_stuffing": [
+        "forensic-financial-analyst",
+        "forensic-nlp-analyst"
+    ],
+    "beneficial_ownership": [
+        "forensic-research-specialist",
+        "forensic-compliance-auditor"
+    ],
+    "material_event": [
+        "forensic-nlp-analyst",
+        "forensic-research-specialist"
+    ],
+    "financial_distress": [
+        "forensic-financial-analyst"
+    ],
+    "bankruptcy_risk": [
+        "forensic-financial-analyst"
+    ]
+}
+
+
+def get_agents_for_violation_types(violation_types: List[str]) -> Set[str]:
+    """
+    Get relevant Claude subagents for given violation types.
+    
+    Args:
+        violation_types: List of violation type strings
+        
+    Returns:
+        Set of agent names to invoke
+    """
+    required_agents: Set[str] = set()
+    
+    for vtype in violation_types:
+        # Normalize violation type
+        vtype_normalized = vtype.lower().replace(" ", "_").replace("-", "_")
+        
+        # Direct match
+        if vtype_normalized in VIOLATION_TO_AGENT_MAP:
+            required_agents.update(VIOLATION_TO_AGENT_MAP[vtype_normalized])
+        else:
+            # Partial match
+            for key, agents in VIOLATION_TO_AGENT_MAP.items():
+                if key in vtype_normalized or vtype_normalized in key:
+                    required_agents.update(agents)
+    
+    # Always include compliance auditor for any violation
+    if required_agents:
+        required_agents.add("forensic-compliance-auditor")
+    
+    return required_agents
+
+
 class AgentRole(Enum):
     """Available specialized agent roles."""
     FINANCIAL_ANALYST = "forensic-financial-analyst"
@@ -54,7 +158,7 @@ class AgentRole(Enum):
     DATABASE_ADMIN = "database-administrator"
     DEVOPS_ENGINEER = "devops-engineer"
     PYTHON_PRO = "python-pro"
-    MULTI_AGENT_COORDINATOR = "multi-agent-coordinator"
+    COORDINATOR = "multi-agent-coordinator"
 
 
 class TaskStatus(Enum):
@@ -780,4 +884,331 @@ Return your analysis in JSON format with keys: violations, applicable_statutes, 
                 return md_file
         
         return None
+    
+    # ═══════════════════════════════════════════════════════════════════════
+    # AUTO-ORCHESTRATION METHODS
+    # ═══════════════════════════════════════════════════════════════════════
+    
+    async def auto_orchestrate(
+        self,
+        violations: List[Dict[str, Any]],
+        context: Optional[Dict[str, Any]] = None,
+        parallel: bool = True
+    ) -> Dict[str, Any]:
+        """
+        Automatically spawn relevant Claude subagents based on violation types.
+        
+        This method analyzes the violation types and automatically selects
+        and invokes the appropriate specialized agents for forensic analysis.
+        
+        Args:
+            violations: List of violation dictionaries with 'type' or 'violation_type' key
+            context: Optional additional context for agents (filings, CIK, etc.)
+            parallel: Execute agents in parallel (True) or sequentially (False)
+            
+        Returns:
+            Aggregated results from all spawned agents including:
+            - status: Overall status
+            - agents_spawned: List of agent names invoked
+            - violations_analyzed: Number of violations processed
+            - agent_results: Results from each agent
+            - combined_findings: Merged findings from all agents
+            - errors: Any errors encountered
+            
+        Example:
+            orchestrator = SubagentOrchestrator()
+            violations = [
+                {"type": "insider_trading", "confidence": 0.92},
+                {"type": "late_form4", "days_late": 5}
+            ]
+            result = await orchestrator.auto_orchestrate(violations)
+        """
+        if not violations:
+            logger.warning("No violations provided for auto-orchestration")
+            return {
+                "status": "no_violations",
+                "agents_spawned": [],
+                "violations_analyzed": 0,
+                "agent_results": {},
+                "combined_findings": [],
+                "errors": []
+            }
+        
+        # Extract violation types
+        violation_types = []
+        for v in violations:
+            vtype = v.get('type') or v.get('violation_type') or v.get('violation_class', '')
+            if vtype:
+                violation_types.append(vtype)
+        
+        # Determine required agents
+        required_agents = get_agents_for_violation_types(violation_types)
+        
+        if not required_agents:
+            logger.warning(f"No matching agents found for violation types: {violation_types}")
+            # Default to compliance auditor for unknown violations
+            required_agents = {"forensic-compliance-auditor"}
+        
+        logger.info(f"Auto-orchestrating {len(required_agents)} agents for {len(violations)} violations")
+        logger.info(f"  Violation types: {violation_types}")
+        logger.info(f"  Selected agents: {required_agents}")
+        
+        # Prepare context
+        full_context = {
+            "violations": violations,
+            "violation_types": violation_types,
+            "violation_count": len(violations),
+            **(context or {})
+        }
+        
+        # Spawn agents
+        if parallel:
+            results = await self._spawn_agents_parallel(required_agents, violations, full_context)
+        else:
+            results = await self._spawn_agents_sequential(required_agents, violations, full_context)
+        
+        # Aggregate results
+        aggregated = {
+            "status": "completed",
+            "agents_spawned": list(required_agents),
+            "violations_analyzed": len(violations),
+            "agent_results": {},
+            "combined_findings": [],
+            "combined_recommendations": [],
+            "severity_summary": {},
+            "errors": []
+        }
+        
+        for agent_name, result in results.items():
+            if isinstance(result, Exception):
+                aggregated["errors"].append({
+                    "agent": agent_name,
+                    "error": str(result)
+                })
+            else:
+                aggregated["agent_results"][agent_name] = result
+                
+                # Extract findings
+                if isinstance(result, dict):
+                    if "findings" in result:
+                        findings = result["findings"]
+                        if isinstance(findings, list):
+                            aggregated["combined_findings"].extend(findings)
+                        elif isinstance(findings, dict):
+                            aggregated["combined_findings"].append(findings)
+                    
+                    if "recommendations" in result:
+                        recs = result["recommendations"]
+                        if isinstance(recs, list):
+                            aggregated["combined_recommendations"].extend(recs)
+                    
+                    if "severity" in result:
+                        severity = result["severity"]
+                        aggregated["severity_summary"][agent_name] = severity
+        
+        # Determine overall status
+        if aggregated["errors"]:
+            if len(aggregated["errors"]) == len(required_agents):
+                aggregated["status"] = "failed"
+            else:
+                aggregated["status"] = "partial_success"
+        
+        logger.info(f"Auto-orchestration complete: {len(aggregated['agent_results'])} agents succeeded, {len(aggregated['errors'])} failed")
+        
+        return aggregated
+    
+    async def _spawn_agents_parallel(
+        self,
+        agent_names: Set[str],
+        violations: List[Dict[str, Any]],
+        context: Dict[str, Any]
+    ) -> Dict[str, Any]:
+        """Spawn multiple agents in parallel."""
+        tasks = {}
+        for agent_name in agent_names:
+            task = self._spawn_single_agent(agent_name, violations, context)
+            tasks[agent_name] = task
+        
+        # Execute all tasks
+        results = {}
+        task_list = list(tasks.items())
+        
+        gathered = await asyncio.gather(
+            *[t for _, t in task_list],
+            return_exceptions=True
+        )
+        
+        for (agent_name, _), result in zip(task_list, gathered):
+            results[agent_name] = result
+        
+        return results
+    
+    async def _spawn_agents_sequential(
+        self,
+        agent_names: Set[str],
+        violations: List[Dict[str, Any]],
+        context: Dict[str, Any]
+    ) -> Dict[str, Any]:
+        """Spawn agents sequentially."""
+        results = {}
+        for agent_name in agent_names:
+            try:
+                result = await self._spawn_single_agent(agent_name, violations, context)
+                results[agent_name] = result
+            except Exception as e:
+                results[agent_name] = e
+        return results
+    
+    async def _spawn_single_agent(
+        self,
+        agent_name: str,
+        violations: List[Dict[str, Any]],
+        context: Dict[str, Any]
+    ) -> Dict[str, Any]:
+        """
+        Spawn a single agent to analyze violations.
+        
+        Args:
+            agent_name: Name of the agent (e.g., "forensic-financial-analyst")
+            violations: List of violations to analyze
+            context: Additional context
+            
+        Returns:
+            Agent analysis results
+        """
+        # Map agent name to AgentRole
+        agent_role_map = {
+            "forensic-financial-analyst": AgentRole.FINANCIAL_ANALYST,
+            "forensic-nlp-analyst": AgentRole.NLP_ANALYST,
+            "forensic-compliance-auditor": AgentRole.COMPLIANCE_AUDITOR,
+            "forensic-research-specialist": AgentRole.RESEARCH_SPECIALIST,
+            "security-auditor": AgentRole.SECURITY_AUDITOR,
+            "forensic-workflow-orchestrator": AgentRole.WORKFLOW_ORCHESTRATOR,
+            "multi-agent-coordinator": AgentRole.COORDINATOR,
+        }
+        
+        role = agent_role_map.get(agent_name)
+        if not role:
+            logger.warning(f"Unknown agent: {agent_name}, using generic handler")
+            return {"status": "unknown_agent", "agent": agent_name}
+        
+        # Build comprehensive prompt
+        prompt = self._build_agent_prompt(agent_name, violations, context)
+        
+        # Call Claude API with agent-specific system prompt
+        try:
+            result = await self._call_claude_agent(role, prompt)
+            
+            if result.get("status") == "success":
+                return {
+                    "status": "success",
+                    "agent": agent_name,
+                    "findings": result.get("data", {}),
+                    "raw_response": result.get("raw_response", ""),
+                    "model": result.get("model", ""),
+                    "usage": result.get("usage", {})
+                }
+            else:
+                return {
+                    "status": "error",
+                    "agent": agent_name,
+                    "error": result.get("error", "Unknown error"),
+                    "data": result.get("data", {})
+                }
+                
+        except Exception as e:
+            logger.error(f"Failed to spawn agent {agent_name}: {e}")
+            raise
+    
+    def _build_agent_prompt(
+        self,
+        agent_name: str,
+        violations: List[Dict[str, Any]],
+        context: Dict[str, Any]
+    ) -> str:
+        """Build agent-specific prompt for violation analysis."""
+        
+        # Agent-specific instructions
+        agent_instructions = {
+            "forensic-financial-analyst": """
+Analyze these violations from a quantitative financial perspective:
+1. Calculate potential monetary damages
+2. Assess financial statement impact
+3. Identify related financial anomalies
+4. Compute relevant scores (M-Score, Z-Score if applicable)
+5. Provide damage estimates with confidence levels
+""",
+            "forensic-nlp-analyst": """
+Analyze these violations using NLP techniques:
+1. Extract key entities (people, companies, dates, amounts)
+2. Identify contradictions or inconsistencies in statements
+3. Detect sentiment anomalies in related documents
+4. Flag linguistic patterns indicative of deception
+5. Cross-reference claims across documents
+""",
+            "forensic-compliance-auditor": """
+Analyze these violations for regulatory compliance:
+1. Map each violation to specific statutes (15 USC, 17 CFR, etc.)
+2. Identify applicable SEC rules and regulations
+3. Assess prosecution elements and evidence requirements
+4. Estimate potential penalties and sanctions
+5. Recommend enforcement referral pathway (SEC, DOJ, IRS)
+""",
+            "forensic-research-specialist": """
+Conduct deep research on these violations:
+1. Research historical precedents for similar violations
+2. Identify related enforcement actions
+3. Find supporting evidence from public sources
+4. Document chain of custody requirements
+5. Compile comprehensive evidence dossier
+""",
+            "security-auditor": """
+Analyze security and integrity aspects of these violations:
+1. Verify evidence chain integrity
+2. Assess document authenticity indicators
+3. Check for tampering or manipulation signs
+4. Validate timestamps and metadata
+5. Ensure forensic preservation standards
+"""
+        }
+        
+        instructions = agent_instructions.get(agent_name, "Provide detailed forensic analysis of these violations.")
+        
+        prompt = f"""
+You are a specialized forensic analyst. Analyze the following violations detected in SEC filings.
+
+{instructions}
+
+## Violations to Analyze:
+{json.dumps(violations, indent=2)}
+
+## Context:
+{json.dumps(context, indent=2)}
+
+## Required Output Format:
+Provide your analysis in JSON format with the following structure:
+{{
+    "severity": "CRITICAL|HIGH|MEDIUM|LOW",
+    "findings": [
+        {{
+            "violation_ref": "reference to original violation",
+            "analysis": "your detailed analysis",
+            "evidence_quality": "strong|moderate|weak",
+            "confidence": 0.0-1.0
+        }}
+    ],
+    "recommendations": [
+        "specific actionable recommendation"
+    ],
+    "regulatory_citations": ["applicable statutes"],
+    "estimated_damages": {{
+        "min": 0,
+        "max": 0,
+        "currency": "USD"
+    }},
+    "prosecution_merit": "HIGH|MODERATE|LOW",
+    "additional_investigation_needed": ["areas requiring further investigation"]
+}}
+"""
+        return prompt
 
