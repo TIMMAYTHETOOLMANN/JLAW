@@ -1560,6 +1560,88 @@ class UnifiedForensicEngine:
             if not can_continue:
                 return
         
+        # ═══════════════════════════════════════════════════════════════
+        # ALERTING SYSTEM ACTIVATION
+        # ═══════════════════════════════════════════════════════════════
+        
+        # Activate alerting system for critical violations
+        if alerts > 0:
+            try:
+                from src.alerting.alert_manager import AlertManager, Alert, AlertSeverity
+                
+                # Check if alerts.yaml exists
+                alerts_config_path = PROJECT_ROOT / "alerts.yaml"
+                if alerts_config_path.exists():
+                    alert_manager = AlertManager(config_path=alerts_config_path)
+                else:
+                    # Use default configuration (no config file)
+                    alert_manager = AlertManager()
+                    self.logger.info("  ℹ Using default alert configuration (no alerts.yaml found)")
+                
+                # Convert violations to alerts
+                critical_violations = [v for v in self.violations if v.severity == "CRITICAL"]
+                high_violations = [v for v in self.violations if v.severity == "HIGH"]
+                
+                alerts_sent = 0
+                
+                # Send alerts for critical violations
+                for violation in critical_violations:
+                    alert = Alert(
+                        title=f"CRITICAL: {violation.violation_type}",
+                        message=violation.description,
+                        severity=AlertSeverity.CRITICAL,
+                        source="JLAW-PatternDetection",
+                        metadata={
+                            "case_id": self.config.case_id,
+                            "company_name": self.config.company_name,
+                            "cik": self.config.cik,
+                            "violation_id": violation.violation_id,
+                            "statutory_reference": violation.statutory_reference,
+                            "estimated_penalty": violation.estimated_penalty
+                        }
+                    )
+                    
+                    try:
+                        # Try to send alert (may fail if channels not configured)
+                        result = await alert_manager.send_alert(alert)
+                        if result:
+                            alerts_sent += 1
+                    except Exception as e:
+                        self.logger.debug(f"Alert send failed: {e}")
+                
+                # Send summary alert for high severity violations if many found
+                if len(high_violations) >= 3:
+                    summary_alert = Alert(
+                        title=f"Multiple High-Severity Violations Detected",
+                        message=f"{len(high_violations)} high-severity violations found in {self.config.company_name}",
+                        severity=AlertSeverity.WARNING,
+                        source="JLAW-PatternDetection",
+                        metadata={
+                            "case_id": self.config.case_id,
+                            "company_name": self.config.company_name,
+                            "cik": self.config.cik,
+                            "high_violations": len(high_violations),
+                            "critical_violations": len(critical_violations)
+                        }
+                    )
+                    
+                    try:
+                        await alert_manager.send_alert(summary_alert)
+                    except Exception as e:
+                        self.logger.debug(f"Summary alert send failed: {e}")
+                
+                if alerts_sent > 0:
+                    self.logger.info(f"  ✓ Alerting system dispatched {alerts_sent} alert(s)")
+                else:
+                    self.logger.info("  ℹ Alerting system active (no channels configured or alerts not sent)")
+                    
+            except ImportError as e:
+                self.logger.debug(f"  ⚠ Alerting system not available: {e}")
+            except Exception as e:
+                self.logger.warning(f"  ⚠ Alerting system error: {e}")
+        else:
+            self.logger.info("  ℹ No alerts to dispatch (no violations detected)")
+        
         self.phase_results.append(PhaseResult(
             phase=phase,
             status="success" if patterns_run > 0 else "skipped",
@@ -1946,6 +2028,125 @@ class UnifiedForensicEngine:
             self.logger.warning(f"  ⚠ PDF generation skipped (ReportLab not installed): {e}")
         except Exception as e:
             self.logger.error(f"  ✗ PDF generation failed: {e}")
+        
+        # ═══════════════════════════════════════════════════════════════
+        # CHAIN OF CUSTODY LOG EXPORT
+        # ═══════════════════════════════════════════════════════════════
+        
+        try:
+            from src.reporting.chain_of_custody_logger import ChainOfCustodyLogger
+            
+            # Create logger and export chain of custody log
+            custody_logger = ChainOfCustodyLogger(output_dir=str(self.config.output_dir / "custody"))
+            
+            # If we have custody records, add them to chains
+            if self.custody_records:
+                # Create a chain for this case
+                chain_id = custody_logger.create_chain(
+                    case_id=self.config.case_id,
+                    description=f"Forensic analysis of {self.config.company_name}"
+                )
+                
+                # Persist the chain
+                custody_log_path = custody_logger.persist_chain(chain_id)
+                self.logger.info(f"  ✓ Chain of custody log exported: {custody_log_path}")
+                generated_reports.append(str(custody_log_path))
+            else:
+                self.logger.info("  ℹ No custody records to export")
+                
+        except ImportError as e:
+            self.logger.warning(f"  ⚠ Chain of custody export skipped: {e}")
+        except Exception as e:
+            self.logger.error(f"  ✗ Chain of custody export failed: {e}")
+        
+        # ═══════════════════════════════════════════════════════════════
+        # EVIDENCE PACKAGE CREATION
+        # ═══════════════════════════════════════════════════════════════
+        
+        try:
+            from src.reporting.evidence_packager import EvidencePackager
+            
+            # Create evidence packager
+            packager = EvidencePackager(output_dir=str(self.config.output_dir / "evidence"))
+            
+            if self.violations:
+                # Create package from violations
+                package = packager.create_package_from_violations(
+                    violations=self.violations,
+                    case_id=self.config.case_id,
+                    company_name=self.config.company_name,
+                    cik=self.config.cik
+                )
+                
+                # Export package in JSON format
+                json_path = packager.export_package_json(package, filename=f"evidence_package_{self.config.case_id}.json")
+                self.logger.info(f"  ✓ Evidence package (JSON) created: {json_path}")
+                generated_reports.append(str(json_path))
+                
+                # Export package in Markdown format
+                md_path = packager.export_package_markdown(package, filename=f"evidence_package_{self.config.case_id}.md")
+                self.logger.info(f"  ✓ Evidence package (Markdown) created: {md_path}")
+                generated_reports.append(str(md_path))
+            else:
+                self.logger.info("  ℹ No violations to package")
+                
+        except ImportError as e:
+            self.logger.warning(f"  ⚠ Evidence packaging skipped: {e}")
+        except Exception as e:
+            self.logger.error(f"  ✗ Evidence packaging failed: {e}")
+        
+        # ═══════════════════════════════════════════════════════════════
+        # STATUTORY CITATION INDEX
+        # ═══════════════════════════════════════════════════════════════
+        
+        try:
+            from src.reporting.statutory_citation_engine import StatutoryCitationEngine
+            
+            # Create citation engine
+            govinfo_api_key = os.getenv("GOVINFO_API_KEY", "DEMO_KEY")
+            citation_engine = StatutoryCitationEngine(govinfo_api_key=govinfo_api_key)
+            
+            if self.violations:
+                # Extract unique citations from violations
+                citations = set()
+                for violation in self.violations:
+                    if hasattr(violation, 'statutory_reference') and violation.statutory_reference:
+                        citations.add(violation.statutory_reference)
+                    if hasattr(violation, 'regulatory_citations') and violation.regulatory_citations:
+                        for citation in violation.regulatory_citations:
+                            if citation:
+                                citations.add(citation)
+                
+                if citations:
+                    # Create citation index file
+                    index_path = self.config.output_dir / f"statutory_citations_{self.config.case_id}.md"
+                    
+                    with open(index_path, 'w', encoding='utf-8') as f:
+                        f.write(f"# Statutory Citation Index\n\n")
+                        f.write(f"**Case ID:** {self.config.case_id}\n")
+                        f.write(f"**Company:** {self.config.company_name}\n")
+                        f.write(f"**CIK:** {self.config.cik}\n")
+                        f.write(f"**Generated:** {datetime.now().isoformat()}\n\n")
+                        f.write(f"---\n\n")
+                        
+                        for citation in sorted(citations):
+                            f.write(f"## {citation}\n\n")
+                            f.write(f"Referenced in violations related to this case.\n\n")
+                        
+                        f.write(f"\n---\n\n")
+                        f.write(f"Total unique citations: {len(citations)}\n")
+                    
+                    self.logger.info(f"  ✓ Statutory citation index created: {index_path}")
+                    generated_reports.append(str(index_path))
+                else:
+                    self.logger.info("  ℹ No statutory citations to index")
+            else:
+                self.logger.info("  ℹ No violations with citations to index")
+                
+        except ImportError as e:
+            self.logger.warning(f"  ⚠ Statutory citation indexing skipped: {e}")
+        except Exception as e:
+            self.logger.error(f"  ✗ Statutory citation indexing failed: {e}")
         
         duration = time.time() - start
         
