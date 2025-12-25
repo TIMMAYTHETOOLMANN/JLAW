@@ -4,6 +4,7 @@ SEC EDGAR Client for 13F-HR Filings
 
 Fetches and parses 13F-HR institutional holdings filings from SEC EDGAR API.
 Complies with SEC rate limiting (10 requests/second).
+Uses shared rate limiter from src.integrations.sec_edgar.rate_limiter.
 
 SEC Reference: https://www.sec.gov/edgar/sec-api-documentation
 """
@@ -15,7 +16,9 @@ from typing import List, Dict, Optional, Any
 from dataclasses import dataclass
 import xml.etree.ElementTree as ET
 import aiohttp
-from aiolimiter import AsyncLimiter
+
+# Import shared rate limiter from central module
+from src.integrations.sec_edgar.rate_limiter import get_shared_rate_limiter
 
 logger = logging.getLogger(__name__)
 
@@ -84,8 +87,8 @@ class SECEDGARClient:
             user_agent: Required SEC user agent string
         """
         self.user_agent = user_agent
-        # SEC rate limit: 10 requests per second
-        self.rate_limiter = AsyncLimiter(10, 1.0)
+        # Use shared rate limiter (singleton) to coordinate with all other SEC API clients
+        self.rate_limiter = get_shared_rate_limiter()
         self.session: Optional[aiohttp.ClientSession] = None
     
     async def __aenter__(self):

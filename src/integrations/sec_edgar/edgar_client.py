@@ -294,17 +294,9 @@ class SECEdgarClient:
         - SEC sometimes returns HTML-rendered pages instead of raw XML for Form 4 filings
         - This causes parsing failures in Form4Parser
         - Now detects HTML responses for .xml URLs and returns None to trigger fallback logic
-    async def _fetch_with_retry(self, url: str) -> Optional[str]:
-        """
-        Internal fetch method with retry logic (called by circuit breaker).
-        
-        CRITICAL FIX (Dec 2024): Added HTML detection for XML URLs
-        - SEC sometimes returns HTML-rendered pages instead of raw XML for Form 4 filings
-        - This causes parsing failures in Form4Parser
-        - Now detects HTML responses for .xml URLs and returns None to trigger fallback logic
         
         Enhanced with:
-        - Exponential backoff with jitter (1s → 2s → 4s → 8s → max 60s)
+        - Exponential backoff with jitter (1s -> 2s -> 4s -> 8s -> max 60s)
         - 403 cooldown activation (60-second pause)
         
         Args:
@@ -338,7 +330,7 @@ class SECEdgarClient:
                     elif response.status == 429:
                         # Rate limited - use exponential backoff with jitter
                         if attempt < self.MAX_RETRIES - 1:
-                            # Exponential backoff: 1s → 2s → 4s → 8s (capped at 60s)
+                            # Exponential backoff: 1s -> 2s -> 4s -> 8s (capped at 60s)
                             delay = min(self.RETRY_BASE_DELAY * (2 ** attempt), self.RETRY_MAX_DELAY)
                             # Add jitter (0-25% of delay)
                             jitter = random.uniform(0, delay * 0.25)
