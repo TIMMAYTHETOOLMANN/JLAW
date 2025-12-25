@@ -17,15 +17,10 @@ sys.path.insert(0, str(PROJECT_ROOT))
 # Import COMPANY_LOOKUP from JLAW_UNIFIED.py (single source of truth)
 try:
     from JLAW_UNIFIED import COMPANY_LOOKUP
-except ImportError:
-    # Fallback for testing if JLAW_UNIFIED.py has import issues
-    print("Warning: Could not import COMPANY_LOOKUP from JLAW_UNIFIED.py")
-    COMPANY_LOOKUP = {
-        "NIKE": ("320187", "NIKE, Inc."),
-        "NKE": ("320187", "NIKE, Inc."),
-        "APPLE": ("320193", "Apple Inc."),
-        "AAPL": ("320193", "Apple Inc."),
-    }
+except ImportError as e:
+    print(f"ERROR: Could not import COMPANY_LOOKUP from JLAW_UNIFIED.py: {e}")
+    print("This script must be run from the JLAW root directory.")
+    sys.exit(1)
 
 def verify_company_lookup():
     """Verify company lookup works for common cases."""

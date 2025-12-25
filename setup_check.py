@@ -58,12 +58,15 @@ def check_dependencies():
     print("=" * 70)
     
     # Map package names to their import names
+    # These are critical dependencies for basic JLAW operation
     critical_deps = {
-        "aiohttp": "aiohttp",
-        "pandas": "pandas",
-        "numpy": "numpy",
-        "psutil": "psutil",
-        "python-dotenv": "dotenv",  # Package name vs import name
+        "aiohttp": "aiohttp",           # SEC API client
+        "pandas": "pandas",              # Data analysis
+        "numpy": "numpy",                # Numerical computing
+        "psutil": "psutil",              # System monitoring
+        "python-dotenv": "dotenv",       # Environment configuration
+        "beautifulsoup4": "bs4",         # HTML/XML parsing (SEC filings)
+        "aiolimiter": "aiolimiter",      # Rate limiting for SEC API
     }
     
     missing = []

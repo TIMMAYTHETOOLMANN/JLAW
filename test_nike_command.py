@@ -7,6 +7,7 @@ This script tests the complete command workflow:
 """
 
 import sys
+import os
 import subprocess
 import re
 from pathlib import Path
@@ -14,13 +15,10 @@ from pathlib import Path
 # Import COMPANY_LOOKUP from JLAW_UNIFIED.py (single source of truth)
 try:
     from JLAW_UNIFIED import COMPANY_LOOKUP
-except ImportError:
-    # Fallback for testing if JLAW_UNIFIED.py has import issues
-    print("Warning: Could not import COMPANY_LOOKUP from JLAW_UNIFIED.py")
-    COMPANY_LOOKUP = {
-        "NIKE": ("320187", "NIKE, Inc."),
-        "NKE": ("320187", "NIKE, Inc."),
-    }
+except ImportError as e:
+    print(f"ERROR: Could not import COMPANY_LOOKUP from JLAW_UNIFIED.py: {e}")
+    print("This script must be run from the JLAW root directory.")
+    sys.exit(1)
 
 def test_command_parsing():
     """Test that command-line arguments are parsed correctly."""
@@ -95,8 +93,12 @@ def test_actual_execution():
         print("\n✗ SKIP: .env file not found (required for execution)")
         return None
     
+    # Configurable timeout (can be set via environment variable)
+    # Increased default to 30 seconds to account for slower systems
+    timeout_seconds = int(os.environ.get('JLAW_TEST_TIMEOUT', '30'))
+    
     print("\nExecuting: python JLAW_UNIFIED.py --cik 320187 --company \"NIKE\" --year 2019 --auto")
-    print("(Testing Phase 1 configuration only with timeout)")
+    print(f"(Testing Phase 1 configuration only with {timeout_seconds}s timeout)")
     
     try:
         # Run with Python's built-in timeout (cross-platform)
@@ -106,7 +108,7 @@ def test_actual_execution():
              "--cik", "320187", "--company", "NIKE", "--year", "2019", "--auto"],
             capture_output=True,
             text=True,
-            timeout=15  # 15 second timeout (cross-platform)
+            timeout=timeout_seconds
         )
         
         output = result.stdout + result.stderr
