@@ -30,16 +30,34 @@ JLAW is a **DOJ-grade SEC filing forensic analysis platform** implementing a **1
 
 ## QUICK START
 
+### Setup Verification
+
+Before running JLAW, verify your setup:
+
+```bash
+# Check dependencies and configuration
+python setup_check.py
+
+# Verify company lookup functionality
+python verify_command.py
+```
+
 ### Single Deployment Script
 ```bash
 # Interactive mode (recommended)
 python JLAW_UNIFIED.py
 
-# CLI mode with parameters
+# CLI mode with parameters (company name or ticker auto-lookup)
+python JLAW_UNIFIED.py --cik 320187 --company "NIKE" --year 2019 --auto
+
+# CLI mode with full company name
 python JLAW_UNIFIED.py --cik 320187 --company "NIKE, Inc." --year 2019
 
 # Full auto execution (no confirmations)
 python JLAW_UNIFIED.py --cik 320187 --year 2019 --auto
+
+# Use ticker symbol (auto-lookup to full name)
+python JLAW_UNIFIED.py --company "NKE" --year 2019 --auto
 
 # Strict execution mode (DOJ-grade with mandatory phase gates)
 python JLAW_UNIFIED.py --cik 320187 --year 2019 --strict --auto
@@ -71,18 +89,23 @@ python JLAW_UNIFIED.py --batch cik_list.txt \
 
 **🎯 Execution Strategies** - See [docs/adr/ADR-001-Orchestration-Hierarchy-Design.md](docs/adr/ADR-001-Orchestration-Hierarchy-Design.md) for details on the 7-tier orchestration hierarchy.
 
-### Common CIK Numbers
-| Company | Ticker | CIK |
-|---------|--------|-----|
-| Nike | NKE | 320187 |
-| Apple | AAPL | 320193 |
-| Microsoft | MSFT | 789019 |
-| Tesla | TSLA | 1318605 |
-| Amazon | AMZN | 1018724 |
-| Meta | META | 1326801 |
-| Google | GOOGL | 1652044 |
-| Netflix | NFLX | 1065280 |
-| Nvidia | NVDA | 1045810 |
+### Common Companies (Auto-Lookup)
+
+JLAW includes built-in company lookup for common stocks. Use company name or ticker symbol:
+
+| Company | Ticker | CIK | Usage |
+|---------|--------|-----|-------|
+| Nike | NKE | 320187 | `--company "NIKE"` or `--company "NKE"` |
+| Apple | AAPL | 320193 | `--company "APPLE"` or `--company "AAPL"` |
+| Microsoft | MSFT | 789019 | `--company "MICROSOFT"` or `--company "MSFT"` |
+| Tesla | TSLA | 1318605 | `--company "TESLA"` or `--company "TSLA"` |
+| Amazon | AMZN | 1018724 | `--company "AMAZON"` or `--company "AMZN"` |
+| Meta | META | 1326801 | `--company "META"` |
+| Google | GOOGL | 1652044 | `--company "GOOGLE"` or `--company "GOOGL"` |
+| Netflix | NFLX | 1065280 | `--company "NETFLIX"` or `--company "NFLX"` |
+| Nvidia | NVDA | 1045810 | `--company "NVIDIA"` or `--company "NVDA"` |
+
+**Note:** Company lookup is case-insensitive. `--company "nike"` works the same as `--company "NIKE"`.
 
 ### SEC API Configuration
 
