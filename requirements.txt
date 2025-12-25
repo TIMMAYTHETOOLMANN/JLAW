@@ -1,205 +1,29 @@
-# ============================================
-# PRODUCTION SEC FORENSIC ANALYSIS SYSTEM v4.0
-# ============================================
-
-# Core dependencies
-aiohttp>=3.9.0
-aiofiles>=23.2.1
-httpx>=0.27.0  # HTTP client with async support
-requests>=2.31.0  # HTTP library
-# Pin to pre-2.0 to avoid ABI mismatches observed in environment
-numpy==1.26.4
-pandas>=2.0.0
-scikit-learn>=1.3.0
-polars>=0.20.0  # High-performance data processing
-
-# Rate Limiting & Retry
-aiolimiter>=1.1.0  # Async rate limiting for SEC API
-tenacity>=8.2.0    # Retry with exponential backoff
-
-# SEC Filing Acquisition Enhancement (Production-Grade)
-edgartools>=1.0.0  # Production-ready SEC EDGAR library
-ixbrlparse>=1.0.0  # XBRL inline parsing
-instructor>=1.0.0  # Structured AI outputs
-
-# AWS
-boto3>=1.28.0
-botocore>=1.31.0
-
-# Azure
-azure-storage-blob>=12.19.0
-
-# ML/NLP
-torch>=2.0.0
-transformers>=4.30.0
-scipy>=1.10.0
-joblib>=1.3.0
-
-# Benford's Law Analysis
-# External benford library removed (not available on PyPI). Use internal analyzer implementation.
-
-# Security & Evidence Chains
-cryptography>=41.0.0
-
-# Utilities
-python-dateutil>=2.8.2
-pytz>=2023.3
-python-dotenv>=1.0.0
-structlog>=24.1.0  # Structured logging for forensics
-
-# Document Parsing (SEC Extraction Enhancement)
-beautifulsoup4>=4.12.0
-lxml>=5.0.0  # XML/HTML parsing
-xmltodict>=0.13.0  # XML to dict conversion
-html2text>=2020.1.16
-pdfplumber>=0.10.0
-pytesseract>=0.3.10
-Pillow>=10.0.0
-python-magic>=0.4.27
-chardet>=5.2.0
-
-# ============================================
-# JLAW Document Parsing Enhancement v4.1.0
-# ============================================
-
-# === XBRL PARSING (CRITICAL FOR M-SCORE/Z-SCORE) ===
-arelle-release>=2.3.0
-
-# === DOCX PARSING ===
-python-docx>=1.1.0
-
-# === XLSX PARSING ===
-# openpyxl>=3.1.5  # Already present above
-
-# === PDF PARSING (Enhanced) ===
-# pdfplumber>=0.10.0  # Already present above
-PyMuPDF>=1.23.0
-
-# === OCR ===
-# pytesseract>=0.3.10  # Already present above
-# Pillow>=10.0.0  # Already present above
-
-# === XML/HTML ===
-# beautifulsoup4>=4.12.0  # Already present above
-# lxml>=5.0.0  # Already present above
-# xmltodict>=0.13.0  # Already present above
-
-# Data Validation
-pydantic>=2.5.0  # Data validation and settings
-
-# Advanced Forensic Analytics (Module 1)
-networkx>=3.0
-sentence-transformers>=2.2.0
-spacy>=3.7.0  # NLP processing
-nltk>=3.8.0  # Natural Language Toolkit
-
-# Financial Analysis
-benford-py>=0.5.0  # Benford's Law analysis (0.6.0 doesn't exist on PyPI)
-scipy>=1.11.0
-
-# NIST Integrated Compliance Analyzer (Module 2)
-xgboost>=2.0.0
-redis>=5.0.0
-
-# ============================================
-# Fortified Nodes 10-15 Dependencies
-# ============================================
-
-# Node 11: Network Analysis (Neo4j Integration)
-neo4j>=5.15.0  # Neo4j Python driver for graph database
-
-# Node 12: Earnings Call Analysis (DeBERTa)
-# transformers>=4.30.0 already included above
-# torch>=2.0.0 already included above
-
-# Node 15: Market Correlation (WebSocket + ML)
-websockets>=12.0  # WebSocket client for Polygon.io real-time data
-# scikit-learn>=1.3.0 already included above for Isolation Forest
-
-# Blueprint Integration Enhancements
-optuna>=3.0.0  # Bayesian optimization for XGBoost
-imbalanced-learn>=0.10.0  # SMOTE-ENN for class imbalance
-
-# Advanced AI Agents (Dual-Agent System)
-anthropic>=0.40.0
-openai>=1.0.0
-
-# GovInfo API Integration
 requests>=2.31.0
-aiohttp>=3.9.0
-
-# ============================================
-# DocsGPT Integration Dependencies
-# ============================================
-
-# Vector Store
-faiss-cpu>=1.9.0
-tiktoken>=0.8.0
-
-# Document Parsing (DocsGPT Enhanced)
-docx2txt>=0.8
-python-pptx>=1.0.2
-openpyxl>=3.1.5
-ebooklib>=0.18
-pypdf>=5.0.0
-
-# LangChain Integration
-langchain>=0.3.0
-langchain-community>=0.3.0
-langchain-openai>=0.3.0
-
-# API Layer (Optional)
-Flask>=3.1.0
-flask-restx>=1.3.0
-gunicorn>=23.0.0
-
-# Async Processing (Optional)
-celery>=5.4.0
-retry>=0.9.0
-tqdm>=4.65.0
-
-# Dashboard (Optional)
-streamlit>=1.29.0
-
-# Logging & Monitoring
-rich>=13.7.0
-psutil>=5.9.0  # System and process monitoring for metrics collection
-
+beautifulsoup4>=4.12.0
+lxml>=4.9.0
+pandas>=2.0.0
+numpy>=1.24.0
+python-dateutil>=2.8.0
+pytz>=2023.3
+openpyxl>=3.1.0
+xlrd>=2.0.0
+xlsxwriter>=3.1.0
+pyyaml>=6.0
+python-dotenv>=1.0.0
+jinja2>=3.1.0
+markdown>=3.4.0
+# SEC EDGAR specific
+sec-edgar-downloader>=5.0.0
+edgar>=5.0.0
+# XBRL parsing
+python-xbrl>=1.1.0
+xbrl>=1.1.0
+# Additional XBRL tools
+ixbrlparse>=0.9.0  # XBRL inline parsing (latest stable version)
 # Testing
 pytest>=7.4.0
-pytest-asyncio>=0.21.0
-
-# Type Checking
-mypy>=1.7.0
-
-# ============================================
-# Nodes 2-5 Infrastructure Dependencies
-# ============================================
-
-# Local Caching (file-based, no Redis required)
-diskcache>=5.6.0
-
-# PDF Report Generation
-reportlab>=4.0.0
-PyPDF2>=3.0.0
-
-# ============================================
-# Production SEC Forensic System Dependencies
-# ============================================
-
-# RFC 3161 Timestamping
-rfc3161ng>=2.1.0  # RFC 3161 timestamp protocol
-
-# Merkle Trees
-# merkletools>=1.0.3  # Disabled due to pysha3 build failures on Windows (C compiler issues)
-# Note: Python 3.12+ has built-in hashlib.sha3 support - use that instead
-
-# Database Integration
-psycopg2-binary>=2.9.0  # PostgreSQL adapter (for TimescaleDB)
-asyncpg>=0.29.0  # Async PostgreSQL driver
-
-# NLP Models
-sentence-transformers>=2.2.0  # For bi-encoder and cross-encoder models
-
-# Additional Core Dependencies (if not already present)
-# aiolimiter>=1.1.0 already included above
+pytest-cov>=4.1.0
+# Development
+black>=23.7.0
+flake8>=6.1.0
+mypy>=1.5.0
