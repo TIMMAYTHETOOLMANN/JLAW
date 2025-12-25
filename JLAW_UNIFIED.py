@@ -1337,9 +1337,14 @@ class UnifiedForensicEngine:
                     # Add form4_trades mapping for Pattern 4 (Pre-Announcement Positioning)
                     pattern_data["form4_trades"] = node1_data.get("trades", node1_data.get("transactions", []))
                 
-                # Add filings from Phase 2 - CONVERT SECFiling objects to dicts
+                # ═══════════════════════════════════════════════════════════════
+                # CRITICAL FIX (Dec 2024): Convert SECFiling objects to dicts
+                # ═══════════════════════════════════════════════════════════════
+                # Pattern detector expects dictionaries, not SECFiling dataclass objects.
+                # Without conversion, pattern methods like detect_disclosure_timing_anomalies()
+                # fail with: AttributeError: 'SECFiling' object has no attribute 'get'
+                # ═══════════════════════════════════════════════════════════════
                 if self.filings:
-                    # Pattern detector expects dictionaries, not SECFiling objects
                     from src.integrations.sec_edgar.edgar_client import SECFiling
                     pattern_data["filings"] = []
                     for filing in self.filings:
@@ -1349,6 +1354,17 @@ class UnifiedForensicEngine:
                             pattern_data["filings"].append(filing)
                         else:
                             self.logger.warning(f"Unknown filing type: {type(filing)}")
+                
+                # ═══════════════════════════════════════════════════════════════
+                # CRITICAL FIX (Dec 2024): Map node results to pattern detector keys
+                # ═══════════════════════════════════════════════════════════════
+                # Pattern detector's run_all_patterns() expects specific keys:
+                # - form4_trades (Pattern 4: Pre-Announcement Positioning)
+                # - form8k_filings (Pattern 4 & 6: Pre-Announcement & Sequential Events)
+                # - schedule13_filings (Pattern 3: 13G-to-13D Conversion)
+                # - insider_trades (Pattern 13: Clustered Disposals)
+                # These must be mapped from node result keys (node1_form4, node9_8k, etc.)
+                # ═══════════════════════════════════════════════════════════════
                 
                 # Add document text from Phase 3 parsed documents
                 if self.parsed_documents:

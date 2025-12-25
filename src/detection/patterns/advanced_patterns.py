@@ -18,6 +18,11 @@ Implements 15 advanced fraud/manipulation detection patterns:
 13. Clustered Disposals (91% accuracy)
 14. CAR Event Study (88% accuracy)
 15. Volume Anomaly (Isolation Forest) (94% accuracy)
+
+CRITICAL FIX (Dec 2024):
+- Updated detect_disclosure_timing_anomalies() to handle both dict and SECFiling objects
+- Added defensive type checking to prevent AttributeError: 'SECFiling' object has no attribute 'get'
+- Pattern detector now accepts mixed list of dicts and objects
 """
 
 from dataclasses import dataclass, field

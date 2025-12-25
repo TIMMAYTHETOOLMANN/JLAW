@@ -282,6 +282,11 @@ class SECEdgarClient:
         """
         Internal fetch method with retry logic (called by circuit breaker).
         
+        CRITICAL FIX (Dec 2024): Added HTML detection for XML URLs
+        - SEC sometimes returns HTML-rendered pages instead of raw XML for Form 4 filings
+        - This causes parsing failures in Form4Parser
+        - Now detects HTML responses for .xml URLs and returns None to trigger fallback logic
+        
         Args:
             url: URL to fetch
             
@@ -297,7 +302,7 @@ class SECEdgarClient:
                     if response.status == 200:
                         content = await response.text()
                         
-                        # Detect if HTML was returned when XML was expected
+                        # CRITICAL FIX: Detect if HTML was returned when XML was expected
                         # This happens when SEC returns an HTML-rendered page instead of raw XML
                         if url.endswith('.xml') and content.strip().startswith(('<!DOCTYPE html', '<html', '<HTML')):
                             logger.warning(
