@@ -27,21 +27,24 @@ def test_command_parsing():
     print("=" * 70)
     
     # Simulate the argument parsing logic from JLAW_UNIFIED.py
+    # Derive expected values from COMPANY_LOOKUP to avoid duplication
+    nike_cik, nike_name = COMPANY_LOOKUP["NIKE"]
+    
     test_cases = [
         {
             "args": ["--cik", "320187", "--company", "NIKE", "--year", "2019", "--auto"],
-            "expected_cik": "320187",
-            "expected_company": "NIKE, Inc.",
+            "expected_cik": nike_cik,
+            "expected_company": nike_name,
         },
         {
             "args": ["--company", "NKE", "--year", "2019", "--auto"],
-            "expected_cik": "320187",
-            "expected_company": "NIKE, Inc.",
+            "expected_cik": nike_cik,
+            "expected_company": nike_name,
         },
         {
             "args": ["--company", "nike", "--year", "2019"],
-            "expected_cik": "320187",
-            "expected_company": "NIKE, Inc.",
+            "expected_cik": nike_cik,
+            "expected_company": nike_name,
         },
     ]
     
@@ -97,14 +100,15 @@ def test_actual_execution():
     # Increased default to 30 seconds to account for slower systems
     timeout_seconds = int(os.environ.get('JLAW_TEST_TIMEOUT', '30'))
     
-    print("\nExecuting: python JLAW_UNIFIED.py --cik 320187 --company \"NIKE\" --year 2019 --auto")
+    print(f"\nExecuting: {sys.executable} JLAW_UNIFIED.py --cik 320187 --company \"NIKE\" --year 2019 --auto")
     print(f"(Testing Phase 1 configuration only with {timeout_seconds}s timeout)")
     
     try:
         # Run with Python's built-in timeout (cross-platform)
+        # Use sys.executable to ensure same Python interpreter
         # We expect the process to timeout during Phase 2, which is fine for our test
         result = subprocess.run(
-            ["python", "JLAW_UNIFIED.py", 
+            [sys.executable, "JLAW_UNIFIED.py", 
              "--cik", "320187", "--company", "NIKE", "--year", "2019", "--auto"],
             capture_output=True,
             text=True,

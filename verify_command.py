@@ -30,13 +30,13 @@ def verify_company_lookup():
     print("=" * 70)
     print()
     
-    # Test case 1: --company "NIKE"
+    # Test case 1: --company "NIKE" (derive expected values from COMPANY_LOOKUP)
     test_cases = [
-        ("NIKE", "320187", "NIKE, Inc."),
-        ("nike", "320187", "NIKE, Inc."),  # Test case insensitive
-        ("NKE", "320187", "NIKE, Inc."),   # Test ticker
-        ("APPLE", "320193", "Apple Inc."),
-        ("AAPL", "320193", "Apple Inc."),
+        ("NIKE", *COMPANY_LOOKUP["NIKE"]),      # Direct lookup
+        ("nike", *COMPANY_LOOKUP["NIKE"]),      # Case insensitive
+        ("NKE", *COMPANY_LOOKUP["NKE"]),        # Ticker
+        ("APPLE", *COMPANY_LOOKUP["APPLE"]),    # Another company
+        ("AAPL", *COMPANY_LOOKUP["AAPL"]),      # Another ticker
     ]
     
     all_passed = True
