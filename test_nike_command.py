@@ -11,6 +11,17 @@ import subprocess
 import re
 from pathlib import Path
 
+# Import COMPANY_LOOKUP from JLAW_UNIFIED.py (single source of truth)
+try:
+    from JLAW_UNIFIED import COMPANY_LOOKUP
+except ImportError:
+    # Fallback for testing if JLAW_UNIFIED.py has import issues
+    print("Warning: Could not import COMPANY_LOOKUP from JLAW_UNIFIED.py")
+    COMPANY_LOOKUP = {
+        "NIKE": ("320187", "NIKE, Inc."),
+        "NKE": ("320187", "NIKE, Inc."),
+    }
+
 def test_command_parsing():
     """Test that command-line arguments are parsed correctly."""
     print("\n" + "=" * 70)
@@ -36,10 +47,7 @@ def test_command_parsing():
         },
     ]
     
-    COMPANY_LOOKUP = {
-        "NIKE": ("320187", "NIKE, Inc."),
-        "NKE": ("320187", "NIKE, Inc."),
-    }
+    # COMPANY_LOOKUP is imported from JLAW_UNIFIED.py at the top of the file
     
     all_passed = True
     
@@ -91,13 +99,14 @@ def test_actual_execution():
     print("(Testing Phase 1 configuration only with timeout)")
     
     try:
-        # Run with timeout to only test Phase 1
+        # Run with Python's built-in timeout (cross-platform)
+        # We expect the process to timeout during Phase 2, which is fine for our test
         result = subprocess.run(
-            ["timeout", "15", "python", "JLAW_UNIFIED.py", 
+            ["python", "JLAW_UNIFIED.py", 
              "--cik", "320187", "--company", "NIKE", "--year", "2019", "--auto"],
             capture_output=True,
             text=True,
-            timeout=20
+            timeout=15  # 15 second timeout (cross-platform)
         )
         
         output = result.stdout + result.stderr

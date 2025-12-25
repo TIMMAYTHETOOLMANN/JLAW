@@ -57,23 +57,24 @@ def check_dependencies():
     print("2. Checking Critical Dependencies")
     print("=" * 70)
     
-    critical_deps = [
-        "aiohttp",
-        "pandas",
-        "numpy",
-        "psutil",
-        "dotenv",  # python-dotenv package, imports as 'dotenv'
-    ]
+    # Map package names to their import names
+    critical_deps = {
+        "aiohttp": "aiohttp",
+        "pandas": "pandas",
+        "numpy": "numpy",
+        "psutil": "psutil",
+        "python-dotenv": "dotenv",  # Package name vs import name
+    }
     
     missing = []
     
-    for dep in critical_deps:
+    for package_name, import_name in critical_deps.items():
         try:
-            __import__(dep.replace("-", "_"))
-            print(f"✓ {dep}")
+            __import__(import_name)
+            print(f"✓ {package_name}")
         except ImportError:
-            print(f"✗ {dep} (missing)")
-            missing.append(dep)
+            print(f"✗ {package_name} (missing)")
+            missing.append(package_name)
     
     if missing:
         print(f"\n✗ {len(missing)} dependencies missing")
