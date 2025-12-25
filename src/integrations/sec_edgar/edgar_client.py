@@ -17,11 +17,19 @@ Form Coverage:
 - 8-K material events
 - Schedule 13D/13G beneficial ownership
 - 13F-HR institutional holdings
+
+Enhanced Features:
+- Triple-hash integrity verification (SHA-256 + SHA3-512 + BLAKE2b)
+- Automatic 60-second cooldown on 403 rate limit detection
+- Connection pooling with retry strategy
+- Exponential backoff with jitter
 """
 
 import asyncio
 import aiohttp
 import re
+import hashlib
+import random
 from dataclasses import dataclass, field
 from datetime import datetime, date
 from typing import List, Dict, Any, Optional
@@ -30,6 +38,10 @@ import logging
 import time
 import json
 import os
+
+# Import new modular components
+from .rate_limiter import get_shared_rate_limiter, RateLimiter
+from .models import IntegrityHashes, AcquisitionResult, AcquisitionStatus
 
 logger = logging.getLogger(__name__)
 
@@ -101,60 +113,6 @@ class XBRLFact:
         }
 
 
-class RateLimiter:
-    """
-    Token bucket rate limiter for SEC EDGAR API.
-    
-    SEC allows 10 requests/second maximum.
-    We use 9 req/sec (111ms minimum interval) for safety buffer.
-    
-    This is a singleton instance shared across all SECEdgarClient instances
-    to prevent concurrent rate violations.
-    """
-    
-    _instance = None
-    
-    def __new__(cls, requests_per_second: float = 9.0):
-        """Ensure singleton pattern for rate limiter."""
-        if cls._instance is None:
-            cls._instance = super(RateLimiter, cls).__new__(cls)
-            cls._instance._initialized = False
-        return cls._instance
-    
-    def __init__(self, requests_per_second: float = 9.0):
-        """Initialize rate limiter (only once due to singleton)."""
-        if getattr(self, '_initialized', False):
-            return
-        
-        self.requests_per_second = requests_per_second
-        self.min_interval = 1.0 / requests_per_second
-        self.last_request = 0.0
-        self._lock = asyncio.Lock()
-        self.request_count = 0
-        self._initialized = True
-        logger.info(f"Initialized shared SEC rate limiter: {requests_per_second} req/sec (min interval: {self.min_interval:.3f}s)")
-    
-    async def acquire(self):
-        """Wait until rate limit allows next request."""
-        async with self._lock:
-            now = time.time()
-            elapsed = now - self.last_request
-            
-            if elapsed < self.min_interval:
-                sleep_time = self.min_interval - elapsed
-                await asyncio.sleep(sleep_time)
-            
-            self.last_request = time.time()
-            self.request_count += 1
-            
-            if self.request_count % 100 == 0:
-                logger.debug(f"Rate limiter: {self.request_count} requests processed")
-
-
-# Global singleton rate limiter instance shared across all clients
-_SHARED_RATE_LIMITER = RateLimiter(requests_per_second=9.0)
-
-
 class SECEdgarClient:
     """
     SEC EDGAR API Client with rate limiting, retry logic, and circuit breaker protection.
@@ -209,8 +167,11 @@ class SECEdgarClient:
         
         self.user_agent = user_agent or self.DEFAULT_USER_AGENT
         
+        # Validate User-Agent format
+        self._validate_user_agent(self.user_agent)
+        
         # Use the shared global rate limiter (singleton)
-        self.rate_limiter = _SHARED_RATE_LIMITER
+        self.rate_limiter = get_shared_rate_limiter()
         
         # Initialize circuit breaker for fault tolerance
         self.enable_circuit_breaker = enable_circuit_breaker
@@ -234,6 +195,53 @@ class SECEdgarClient:
             logger.info("SEC EDGAR Client initialized in MOCK MODE - no real API calls will be made")
         else:
             logger.debug(f"SEC EDGAR Client initialized with User-Agent: {self.user_agent[:50]}...")
+    
+    def _validate_user_agent(self, user_agent: str):
+        """
+        Validate User-Agent format per SEC requirements.
+        
+        SEC requires: CompanyName admin@email.com
+        Format: <Company> <Name> <valid_email>
+        
+        Args:
+            user_agent: User-Agent string to validate
+        """
+        if not user_agent or len(user_agent) < 10:
+            logger.warning(
+                "User-Agent may not comply with SEC requirements. "
+                "SEC requires format: 'CompanyName ContactName email@example.com'"
+            )
+            return
+        
+        # Check for email address (basic validation)
+        email_pattern = r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b'
+        if not re.search(email_pattern, user_agent):
+            logger.warning(
+                f"User-Agent '{user_agent[:50]}...' may not comply with SEC requirements. "
+                "SEC requires a valid email address in the User-Agent header."
+            )
+    
+    def compute_integrity_hash(self, content: str) -> IntegrityHashes:
+        """
+        Compute triple-hash for FRE 902(13)/(14) compliance.
+        
+        Uses three independent hashing algorithms for maximum integrity:
+        - SHA-256: Primary hash (NIST FIPS 180-4)
+        - SHA3-512: Secondary hash (NIST FIPS 202)
+        - BLAKE2b: Tertiary hash (fast, cryptographically secure)
+        
+        Args:
+            content: Content to hash
+            
+        Returns:
+            IntegrityHashes with all three hash values
+        """
+        content_bytes = content.encode('utf-8')
+        return IntegrityHashes(
+            sha256=hashlib.sha256(content_bytes).hexdigest(),
+            sha3_512=hashlib.sha3_512(content_bytes).hexdigest(),
+            blake2b=hashlib.blake2b(content_bytes).hexdigest()
+        )
     
     async def __aenter__(self):
         """Async context manager entry."""
@@ -286,6 +294,18 @@ class SECEdgarClient:
         - SEC sometimes returns HTML-rendered pages instead of raw XML for Form 4 filings
         - This causes parsing failures in Form4Parser
         - Now detects HTML responses for .xml URLs and returns None to trigger fallback logic
+    async def _fetch_with_retry(self, url: str) -> Optional[str]:
+        """
+        Internal fetch method with retry logic (called by circuit breaker).
+        
+        CRITICAL FIX (Dec 2024): Added HTML detection for XML URLs
+        - SEC sometimes returns HTML-rendered pages instead of raw XML for Form 4 filings
+        - This causes parsing failures in Form4Parser
+        - Now detects HTML responses for .xml URLs and returns None to trigger fallback logic
+        
+        Enhanced with:
+        - Exponential backoff with jitter (1s → 2s → 4s → 8s → max 60s)
+        - 403 cooldown activation (60-second pause)
         
         Args:
             url: URL to fetch
@@ -316,14 +336,20 @@ class SECEdgarClient:
                         
                         return content
                     elif response.status == 429:
-                        # Rate limited - use exponential backoff
+                        # Rate limited - use exponential backoff with jitter
                         if attempt < self.MAX_RETRIES - 1:
-                            delay = self.RETRY_DELAYS[attempt]
+                            # Exponential backoff: 1s → 2s → 4s → 8s (capped at 60s)
+                            delay = min(self.RETRY_BASE_DELAY * (2 ** attempt), self.RETRY_MAX_DELAY)
+                            # Add jitter (0-25% of delay)
+                            jitter = random.uniform(0, delay * 0.25)
+                            total_delay = delay + jitter
+                            
                             logger.warning(
                                 f"SEC API rate limit (429) hit for {url}. "
-                                f"Retry {attempt + 1}/{self.MAX_RETRIES - 1} after {delay}s delay"
+                                f"Retry {attempt + 1}/{self.MAX_RETRIES} after {total_delay:.1f}s delay "
+                                f"(base: {delay}s + jitter: {jitter:.1f}s)"
                             )
-                            await asyncio.sleep(delay)
+                            await asyncio.sleep(total_delay)
                             continue
                         else:
                             error_msg = (
@@ -333,12 +359,18 @@ class SECEdgarClient:
                             logger.error(error_msg)
                             raise Exception(error_msg)
                     elif response.status == 403:
+                        # Forbidden - likely rate limit violation or User-Agent issue
+                        # Activate cooldown period
+                        self.rate_limiter.activate_cooldown(
+                            reason=f"403 Forbidden from SEC API for {url}"
+                        )
+                        
                         error_msg = (
                             f"SEC API access forbidden (403) for {url}. "
                             f"This usually indicates:\n"
-                            f"  1. User-Agent header not compliant with SEC requirements\n"
-                            f"  2. IP address may be blocked\n"
-                            f"  3. User-Agent must include: Company Name + Contact Name + Valid Email\n"
+                            f"  1. Rate limit violation - cooldown activated ({self.rate_limiter.COOLDOWN_PERIOD}s)\n"
+                            f"  2. User-Agent header not compliant with SEC requirements\n"
+                            f"  3. IP address may be blocked\n"
                             f"Current User-Agent: {self.user_agent}\n"
                             f"SEC Requirement: '<Company> <Name> <email@example.com>'"
                         )

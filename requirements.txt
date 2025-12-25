@@ -17,6 +17,11 @@ polars>=0.20.0  # High-performance data processing
 aiolimiter>=1.1.0  # Async rate limiting for SEC API
 tenacity>=8.2.0    # Retry with exponential backoff
 
+# SEC Filing Acquisition Enhancement (Production-Grade)
+edgartools>=1.0.0  # Production-ready SEC EDGAR library
+ixbrlparse>=1.0.0  # XBRL inline parsing
+instructor>=1.0.0  # Structured AI outputs
+
 # AWS
 boto3>=1.28.0
 botocore>=1.31.0
