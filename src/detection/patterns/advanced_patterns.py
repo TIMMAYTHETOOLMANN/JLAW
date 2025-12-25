@@ -209,7 +209,7 @@ class AdvancedPatternDetector:
             # Convert string dates to date objects if needed
             if isinstance(filing_date, str):
                 try:
-                    from datetime import datetime
+                    # datetime is already imported at top of file
                     filing_date = datetime.fromisoformat(filing_date).date()
                 except Exception as e:
                     logger.warning(f"Could not parse filing_date: {filing_date} - {e}")

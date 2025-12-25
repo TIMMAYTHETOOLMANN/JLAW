@@ -52,6 +52,8 @@ sys.path.insert(0, str(PROJECT_ROOT))
 # Import monitoring and retry infrastructure
 from src.infrastructure.monitoring.metrics import MetricsCollector
 from src.core.retry_handler import RetryHandler, RetryConfig, with_retry, NODE_RETRY_HANDLER
+# Import SECFiling for type checking in Phase 5
+from src.integrations.sec_edgar.edgar_client import SECFiling
 
 
 # ═══════════════════════════════════════════════════════════════════════════════════════════════
@@ -1345,7 +1347,7 @@ class UnifiedForensicEngine:
                 # fail with: AttributeError: 'SECFiling' object has no attribute 'get'
                 # ═══════════════════════════════════════════════════════════════
                 if self.filings:
-                    from src.integrations.sec_edgar.edgar_client import SECFiling
+                    # SECFiling imported at top of file
                     pattern_data["filings"] = []
                     for filing in self.filings:
                         if isinstance(filing, SECFiling):

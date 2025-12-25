@@ -304,7 +304,8 @@ class SECEdgarClient:
                         
                         # CRITICAL FIX: Detect if HTML was returned when XML was expected
                         # This happens when SEC returns an HTML-rendered page instead of raw XML
-                        if url.endswith('.xml') and content.strip().startswith(('<!DOCTYPE html', '<html', '<HTML')):
+                        # Case-insensitive check for HTML content
+                        if url.endswith('.xml') and content.strip().lower().startswith(('<!doctype html', '<html')):
                             logger.warning(
                                 f"HTML response detected for XML URL: {url}. "
                                 f"SEC may have returned an HTML-rendered page instead of raw XML. "

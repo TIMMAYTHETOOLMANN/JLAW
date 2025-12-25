@@ -278,24 +278,26 @@ class TestFallbackURLPatterns:
             index_url="https://www.sec.gov/Archives/edgar/data/320193/000123456724000001/index.json"
         )
         
-        # Mock _fetch to return None for all URLs (simulating failures)
+        # Mock _fetch_with_retry (not _fetch) to return None for all URLs (simulating failures)
         call_count = 0
         urls_tried = []
         
-        async def mock_fetch(url):
+        async def mock_fetch_with_retry(url):
             nonlocal call_count, urls_tried
             call_count += 1
             urls_tried.append(url)
             return None  # Simulate failure
         
-        client._fetch = mock_fetch
-        client._resolve_xml_from_index = AsyncMock(return_value=None)
-        
-        result = await client._fetch_with_fallback(filing, is_xml=True)
-        
-        # Should have tried multiple fallback patterns
-        assert call_count > 2  # At least tried direct URL + 2 fallbacks
-        assert any('form4.xml' in url for url in urls_tried)
+        # Need to initialize client session
+        async with client:
+            client._fetch_with_retry = mock_fetch_with_retry
+            client._resolve_xml_from_index = AsyncMock(return_value=None)
+            
+            result = await client._fetch_with_fallback(filing, is_xml=True)
+            
+            # Should have tried multiple fallback patterns
+            assert call_count > 2  # At least tried direct URL + 2 fallbacks
+            assert any('form4.xml' in url for url in urls_tried)
 
 
 if __name__ == "__main__":
