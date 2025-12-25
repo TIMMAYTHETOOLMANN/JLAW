@@ -18,6 +18,11 @@ Implements 15 advanced fraud/manipulation detection patterns:
 13. Clustered Disposals (91% accuracy)
 14. CAR Event Study (88% accuracy)
 15. Volume Anomaly (Isolation Forest) (94% accuracy)
+
+CRITICAL FIX (Dec 2024):
+- Updated detect_disclosure_timing_anomalies() to handle both dict and SECFiling objects
+- Added defensive type checking to prevent AttributeError: 'SECFiling' object has no attribute 'get'
+- Pattern detector now accepts mixed list of dicts and objects
 """
 
 from dataclasses import dataclass, field
@@ -166,24 +171,49 @@ class AdvancedPatternDetector:
     
     def detect_disclosure_timing_anomalies(
         self,
-        filings: List[Dict[str, Any]]
+        filings: List[Any]
     ) -> List[PatternAlert]:
         """
         Detect suspicious disclosure timing patterns:
         - Friday afternoon filings
         - Holiday-adjacent filings
         - After-hours critical disclosures
+        
+        Args:
+            filings: List of filings (can be dicts or SECFiling objects)
         """
         alerts = []
         
         for filing in filings:
             anomalies = []
-            filing_date = filing.get('filing_date')
-            filing_time = filing.get('filing_time', '12:00')
-            items = filing.get('items', [])
+            
+            # Handle both dict and SECFiling objects
+            if hasattr(filing, 'filing_date'):
+                # SECFiling object
+                filing_date = filing.filing_date
+                filing_time = getattr(filing, 'filing_time', '12:00')
+                items = getattr(filing, 'items', [])
+            elif isinstance(filing, dict):
+                # Dictionary
+                filing_date = filing.get('filing_date')
+                filing_time = filing.get('filing_time', '12:00')
+                items = filing.get('items', [])
+            else:
+                # Unknown type - skip
+                logger.warning(f"Unknown filing type in disclosure timing detection: {type(filing)}")
+                continue
             
             if not filing_date:
                 continue
+            
+            # Convert string dates to date objects if needed
+            if isinstance(filing_date, str):
+                try:
+                    # datetime is already imported at top of file
+                    filing_date = datetime.fromisoformat(filing_date).date()
+                except Exception as e:
+                    logger.warning(f"Could not parse filing_date: {filing_date} - {e}")
+                    continue
             
             # Friday afternoon check
             if filing_date.weekday() == 4:  # Friday
@@ -199,7 +229,13 @@ class AdvancedPatternDetector:
             critical_items = ['4.02', '2.06', '1.03', '5.01']
             has_critical = any(item in critical_items for item in items)
             
-            if has_critical and filing.get('market_hours') == 'AFTER_HOURS':
+            market_hours = None
+            if hasattr(filing, 'market_hours'):
+                market_hours = filing.market_hours
+            elif isinstance(filing, dict):
+                market_hours = filing.get('market_hours')
+            
+            if has_critical and market_hours == 'AFTER_HOURS':
                 anomalies.append('Critical disclosure after market hours')
             
             if anomalies:

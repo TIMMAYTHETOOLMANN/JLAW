@@ -282,6 +282,11 @@ class SECEdgarClient:
         """
         Internal fetch method with retry logic (called by circuit breaker).
         
+        CRITICAL FIX (Dec 2024): Added HTML detection for XML URLs
+        - SEC sometimes returns HTML-rendered pages instead of raw XML for Form 4 filings
+        - This causes parsing failures in Form4Parser
+        - Now detects HTML responses for .xml URLs and returns None to trigger fallback logic
+        
         Args:
             url: URL to fetch
             
@@ -295,7 +300,21 @@ class SECEdgarClient:
             try:
                 async with self.session.get(url, timeout=30) as response:
                     if response.status == 200:
-                        return await response.text()
+                        content = await response.text()
+                        
+                        # CRITICAL FIX: Detect if HTML was returned when XML was expected
+                        # This happens when SEC returns an HTML-rendered page instead of raw XML
+                        # Case-insensitive check for HTML content
+                        if url.endswith('.xml') and content.strip().lower().startswith(('<!doctype html', '<html')):
+                            logger.warning(
+                                f"HTML response detected for XML URL: {url}. "
+                                f"SEC may have returned an HTML-rendered page instead of raw XML. "
+                                f"This is common for XSL-transformed URLs."
+                            )
+                            # Return None to trigger fallback logic
+                            return None
+                        
+                        return content
                     elif response.status == 429:
                         # Rate limited - use exponential backoff
                         if attempt < self.MAX_RETRIES - 1:
@@ -494,8 +513,13 @@ class SECEdgarClient:
             
             fallback_patterns = [
                 f"{self.ARCHIVES_URL}/{cik_clean}/{accession_clean}/form4.xml",
+                f"{self.ARCHIVES_URL}/{cik_clean}/{accession_clean}/form{filing.form_type}.xml",
                 f"{self.ARCHIVES_URL}/{cik_clean}/{accession_clean}/edgardoc.xml",
                 f"{self.ARCHIVES_URL}/{cik_clean}/{accession_clean}/doc4.xml",
+                f"{self.ARCHIVES_URL}/{cik_clean}/{accession_clean}/doc{filing.form_type}.xml",
+                f"{self.ARCHIVES_URL}/{cik_clean}/{accession_clean}/primary_doc.xml",
+                # Try the primary document name without the XSL prefix
+                f"{self.ARCHIVES_URL}/{cik_clean}/{accession_clean}/{filing.primary_document.split('/')[-1]}",
             ]
             
             for fallback_url in fallback_patterns:

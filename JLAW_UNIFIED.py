@@ -52,6 +52,8 @@ sys.path.insert(0, str(PROJECT_ROOT))
 # Import monitoring and retry infrastructure
 from src.infrastructure.monitoring.metrics import MetricsCollector
 from src.core.retry_handler import RetryHandler, RetryConfig, with_retry, NODE_RETRY_HANDLER
+# Import SECFiling for type checking in Phase 5
+from src.integrations.sec_edgar.edgar_client import SECFiling
 
 
 # ═══════════════════════════════════════════════════════════════════════════════════════════════
@@ -1334,10 +1336,37 @@ class UnifiedForensicEngine:
                     node1_data = self.node_results["node1_form4"]
                     pattern_data["transactions"] = node1_data.get("transactions", [])
                     pattern_data["insider_trades"] = node1_data.get("trades", node1_data.get("transactions", []))
+                    # Add form4_trades mapping for Pattern 4 (Pre-Announcement Positioning)
+                    pattern_data["form4_trades"] = node1_data.get("trades", node1_data.get("transactions", []))
                 
-                # Add filings from Phase 2
+                # ═══════════════════════════════════════════════════════════════
+                # CRITICAL FIX (Dec 2024): Convert SECFiling objects to dicts
+                # ═══════════════════════════════════════════════════════════════
+                # Pattern detector expects dictionaries, not SECFiling dataclass objects.
+                # Without conversion, pattern methods like detect_disclosure_timing_anomalies()
+                # fail with: AttributeError: 'SECFiling' object has no attribute 'get'
+                # ═══════════════════════════════════════════════════════════════
                 if self.filings:
-                    pattern_data["filings"] = self.filings
+                    # SECFiling imported at top of file
+                    pattern_data["filings"] = []
+                    for filing in self.filings:
+                        if isinstance(filing, SECFiling):
+                            pattern_data["filings"].append(filing.to_dict())
+                        elif isinstance(filing, dict):
+                            pattern_data["filings"].append(filing)
+                        else:
+                            self.logger.warning(f"Unknown filing type: {type(filing)}")
+                
+                # ═══════════════════════════════════════════════════════════════
+                # CRITICAL FIX (Dec 2024): Map node results to pattern detector keys
+                # ═══════════════════════════════════════════════════════════════
+                # Pattern detector's run_all_patterns() expects specific keys:
+                # - form4_trades (Pattern 4: Pre-Announcement Positioning)
+                # - form8k_filings (Pattern 4 & 6: Pre-Announcement & Sequential Events)
+                # - schedule13_filings (Pattern 3: 13G-to-13D Conversion)
+                # - insider_trades (Pattern 13: Clustered Disposals)
+                # These must be mapped from node result keys (node1_form4, node9_8k, etc.)
+                # ═══════════════════════════════════════════════════════════════
                 
                 # Add document text from Phase 3 parsed documents
                 if self.parsed_documents:
@@ -1357,6 +1386,16 @@ class UnifiedForensicEngine:
                 if "node10_form144" in self.node_results:
                     node10_data = self.node_results["node10_form144"]
                     pattern_data["form144_filings"] = node10_data.get("filings", [])
+                
+                # Extract Form 8-K filings from Node 9 results for Pattern 4 and Pattern 6
+                if "node9_8k" in self.node_results:
+                    node9_data = self.node_results["node9_8k"]
+                    pattern_data["form8k_filings"] = node9_data.get("filings", [])
+                
+                # Extract Schedule 13D/13G filings from Node 8 results for Pattern 3
+                if "node8_schedule13" in self.node_results:
+                    node8_data = self.node_results["node8_schedule13"]
+                    pattern_data["schedule13_filings"] = node8_data.get("filings", [])
                 
                 # Extract volume data from Node 15 (Market Correlation) results
                 if "node15_market" in self.node_results:
