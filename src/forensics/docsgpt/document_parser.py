@@ -287,18 +287,41 @@ class EntityExtractor:
 
 class XBRLParser:
     """
-    XBRL Parser for extracting financial facts from XBRL filings.
+    Enhanced XBRL Parser for extracting financial facts from XBRL filings.
     Required for Beneish M-Score, Altman Z-Score, Piotroski F-Score.
+    
+    Features:
+    - Complete XBRL namespace dictionary (xbrli, us-gaap, dei, link, ifrs-full)
+    - Context extraction for period information (instant vs duration)
+    - Proper handling of contextRef and unitRef attributes
+    - Fallback to lxml.etree when arelle is unavailable
     """
+    
+    # Complete XBRL namespace dictionary per SEC EDGAR requirements
+    XBRL_NAMESPACES = {
+        'xbrli': 'http://www.xbrl.org/2003/instance',
+        'xbrl': 'http://www.xbrl.org/2003/instance',  # Alias
+        'us-gaap': 'http://fasb.org/us-gaap/2023',
+        'us-gaap-2022': 'http://fasb.org/us-gaap/2022',
+        'us-gaap-2021': 'http://fasb.org/us-gaap/2021',
+        'dei': 'http://xbrl.sec.gov/dei/2023',
+        'dei-2022': 'http://xbrl.sec.gov/dei/2022',
+        'link': 'http://www.xbrl.org/2003/linkbase',
+        'xlink': 'http://www.w3.org/1999/xlink',
+        'ifrs-full': 'http://xbrl.ifrs.org/taxonomy/2023-03-23/ifrs-full',
+        'iso4217': 'http://www.xbrl.org/2003/iso4217',  # Currency units
+        'xsi': 'http://www.w3.org/2001/XMLSchema-instance',
+    }
     
     def __init__(self):
         self.us_gaap_namespace = "http://fasb.org/us-gaap/"
+        self.contexts = {}  # Store parsed contexts
     
     def parse(self, content: bytes) -> Dict[str, Any]:
         """
-        Parse XBRL document and extract us-gaap financial facts.
+        Parse XBRL document and extract us-gaap financial facts with context.
         
-        Returns dict with financial metrics.
+        Returns dict with financial metrics and context information.
         """
         import tempfile
         
@@ -323,7 +346,10 @@ class XBRLParser:
                 if model_xbrl is None:
                     raise ValueError("Failed to load XBRL document")
                 
-                # Extract facts
+                # Extract contexts first
+                self.contexts = self._extract_contexts_arelle(model_xbrl)
+                
+                # Extract facts with enhanced context
                 facts = {}
                 for fact in model_xbrl.facts:
                     concept = str(fact.qname.localName)
@@ -333,14 +359,27 @@ class XBRLParser:
                     if concept not in facts:
                         facts[concept] = []
                     
-                    facts[concept].append({
+                    # Enhanced fact information with context details
+                    fact_info = {
                         "value": value,
-                        "context": context_id,
-                        "unit": str(fact.unit) if hasattr(fact, 'unit') and fact.unit else None
-                    })
+                        "context_id": context_id,
+                        "unit": str(fact.unit) if hasattr(fact, 'unit') and fact.unit else None,
+                    }
+                    
+                    # Add period information from context
+                    if context_id and context_id in self.contexts:
+                        ctx = self.contexts[context_id]
+                        fact_info.update({
+                            "period_type": ctx.get("period_type"),
+                            "instant_date": ctx.get("instant_date"),
+                            "start_date": ctx.get("start_date"),
+                            "end_date": ctx.get("end_date"),
+                        })
+                    
+                    facts[concept].append(fact_info)
                 
                 model_xbrl.close()
-                return facts
+                return {"facts": facts, "contexts": self.contexts}
             
             finally:
                 # Clean up temp file securely
@@ -351,54 +390,188 @@ class XBRLParser:
                         logger.warning(f"Failed to cleanup temp file: {temp_path}")
         
         except ImportError:
-            logger.warning("arelle-release not installed, falling back to XML parsing")
+            logger.warning("arelle-release not installed, falling back to lxml/xml parsing")
             return self._parse_xml_fallback(content)
         except Exception as e:
             logger.error(f"XBRL parsing error: {e}")
             return self._parse_xml_fallback(content)
     
-    def _parse_xml_fallback(self, content: bytes) -> Dict[str, Any]:
-        """Fallback XML-based XBRL parsing."""
+    def _extract_contexts_arelle(self, model_xbrl) -> Dict[str, Dict[str, Any]]:
+        """Extract context information from arelle model."""
+        contexts = {}
         try:
-            import xml.etree.ElementTree as ET
-            
-            root = ET.fromstring(content)
-            facts = {}
-            
-            # Extract all elements with numeric values (simple heuristic)
-            for elem in root.iter():
-                if elem.text and elem.text.strip():
-                    # Try to convert to number
-                    try:
-                        value = float(elem.text.strip().replace(',', ''))
-                        concept = elem.tag.split('}')[-1] if '}' in elem.tag else elem.tag
-                        
-                        if concept not in facts:
-                            facts[concept] = []
-                        
-                        facts[concept].append({
-                            "value": value,
-                            "context": elem.get('contextRef'),
-                            "unit": elem.get('unitRef')
-                        })
-                    except (ValueError, AttributeError):
-                        pass
-            
-            return facts
+            for context in model_xbrl.contexts.values():
+                ctx_id = context.id
+                period = context.period
+                
+                ctx_info = {
+                    "context_id": ctx_id,
+                    "entity_identifier": str(context.entityIdentifier[1]) if context.entityIdentifier else None,
+                    "entity_scheme": str(context.entityIdentifier[0]) if context.entityIdentifier else None,
+                }
+                
+                # Parse period (instant or duration)
+                if period:
+                    if period.instant:
+                        ctx_info["period_type"] = "instant"
+                        ctx_info["instant_date"] = str(period.instant)
+                    else:
+                        ctx_info["period_type"] = "duration"
+                        ctx_info["start_date"] = str(period.startDatetime) if period.startDatetime else None
+                        ctx_info["end_date"] = str(period.endDatetime) if period.endDatetime else None
+                
+                contexts[ctx_id] = ctx_info
+        except Exception as e:
+            logger.warning(f"Error extracting contexts from arelle: {e}")
+        
+        return contexts
+    
+    def _parse_xml_fallback(self, content: bytes) -> Dict[str, Any]:
+        """
+        Enhanced fallback XML-based XBRL parsing with lxml support.
+        
+        Tries lxml first for better namespace handling, then falls back to ElementTree.
+        """
+        try:
+            # Try lxml.etree first (better namespace support)
+            try:
+                from lxml import etree as lxml_ET
+                root = lxml_ET.fromstring(content)
+                return self._extract_facts_lxml(root)
+            except ImportError:
+                logger.info("lxml not available, using xml.etree.ElementTree")
+                import xml.etree.ElementTree as ET
+                root = ET.fromstring(content)
+                return self._extract_facts_et(root)
         
         except Exception as e:
             logger.error(f"XML fallback parsing error: {e}")
-            return {}
+            return {"facts": {}, "contexts": {}}
+    
+    def _extract_facts_lxml(self, root) -> Dict[str, Any]:
+        """Extract facts using lxml with proper namespace handling."""
+        facts = {}
+        contexts = {}
+        
+        # Extract contexts first
+        for context in root.findall('.//xbrli:context', self.XBRL_NAMESPACES):
+            ctx_id = context.get('id')
+            if not ctx_id:
+                continue
+            
+            ctx_info = {"context_id": ctx_id}
+            
+            # Entity information
+            entity = context.find('.//xbrli:entity', self.XBRL_NAMESPACES)
+            if entity is not None:
+                identifier = entity.find('.//xbrli:identifier', self.XBRL_NAMESPACES)
+                if identifier is not None:
+                    ctx_info["entity_identifier"] = identifier.text
+                    ctx_info["entity_scheme"] = identifier.get('scheme')
+            
+            # Period information
+            period = context.find('.//xbrli:period', self.XBRL_NAMESPACES)
+            if period is not None:
+                instant = period.find('.//xbrli:instant', self.XBRL_NAMESPACES)
+                if instant is not None:
+                    ctx_info["period_type"] = "instant"
+                    ctx_info["instant_date"] = instant.text
+                else:
+                    start_date = period.find('.//xbrli:startDate', self.XBRL_NAMESPACES)
+                    end_date = period.find('.//xbrli:endDate', self.XBRL_NAMESPACES)
+                    if start_date is not None or end_date is not None:
+                        ctx_info["period_type"] = "duration"
+                        ctx_info["start_date"] = start_date.text if start_date is not None else None
+                        ctx_info["end_date"] = end_date.text if end_date is not None else None
+            
+            contexts[ctx_id] = ctx_info
+        
+        # Extract facts from all namespace prefixes
+        for elem in root.iter():
+            if elem.text and elem.text.strip():
+                # Try to convert to number
+                try:
+                    value = float(elem.text.strip().replace(',', ''))
+                    concept = elem.tag.split('}')[-1] if '}' in elem.tag else elem.tag
+                    
+                    if concept not in facts:
+                        facts[concept] = []
+                    
+                    context_id = elem.get('contextRef')
+                    fact_info = {
+                        "value": value,
+                        "context_id": context_id,
+                        "unit": elem.get('unitRef')
+                    }
+                    
+                    # Add period information if context exists
+                    if context_id and context_id in contexts:
+                        ctx = contexts[context_id]
+                        fact_info.update({
+                            "period_type": ctx.get("period_type"),
+                            "instant_date": ctx.get("instant_date"),
+                            "start_date": ctx.get("start_date"),
+                            "end_date": ctx.get("end_date"),
+                        })
+                    
+                    facts[concept].append(fact_info)
+                except (ValueError, AttributeError):
+                    pass
+        
+        return {"facts": facts, "contexts": contexts}
+    
+    def _extract_facts_et(self, root) -> Dict[str, Any]:
+        """Extract facts using ElementTree (basic fallback)."""
+        facts = {}
+        
+        # Simple extraction without full context support
+        for elem in root.iter():
+            if elem.text and elem.text.strip():
+                # Try to convert to number
+                try:
+                    value = float(elem.text.strip().replace(',', ''))
+                    concept = elem.tag.split('}')[-1] if '}' in elem.tag else elem.tag
+                    
+                    if concept not in facts:
+                        facts[concept] = []
+                    
+                    facts[concept].append({
+                        "value": value,
+                        "context": elem.get('contextRef'),
+                        "unit": elem.get('unitRef')
+                    })
+                except (ValueError, AttributeError):
+                    pass
+        
+        return {"facts": facts, "contexts": {}}
     
     def extract_text(self, content: bytes) -> str:
-        """Extract text representation of XBRL data."""
-        facts = self.parse(content)
+        """Extract text representation of XBRL data with context information."""
+        result = self.parse(content)
+        facts = result.get("facts", {})
+        contexts = result.get("contexts", {})
         
-        lines = ["XBRL Financial Facts:"]
+        lines = ["XBRL Financial Facts with Context:"]
+        
+        # Add context summary
+        if contexts:
+            lines.append(f"\nTotal Contexts: {len(contexts)}")
+            for ctx_id, ctx_info in list(contexts.items())[:5]:  # Show first 5 contexts
+                period_type = ctx_info.get("period_type", "unknown")
+                lines.append(f"  {ctx_id}: {period_type}")
+        
+        # Add fact summary
+        lines.append(f"\nTotal Concepts: {len(facts)}")
         for concept, values in sorted(facts.items())[:50]:  # Limit output
             lines.append(f"\n{concept}:")
             for val in values[:3]:  # Limit values per concept
-                lines.append(f"  Value: {val.get('value')}, Context: {val.get('context')}")
+                period_info = ""
+                if val.get("period_type") == "instant":
+                    period_info = f" (instant: {val.get('instant_date')})"
+                elif val.get("period_type") == "duration":
+                    period_info = f" (period: {val.get('start_date')} to {val.get('end_date')})"
+                
+                lines.append(f"  Value: {val.get('value')}{period_info}")
         
         return "\n".join(lines)
 
