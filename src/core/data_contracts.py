@@ -295,6 +295,101 @@ class Phase5PatternDetectionContract(DataContract):
         return result
 
 
+class Phase6DualAgentContract(DataContract):
+    """Validates dual-agent AI cross-validation completion.
+    
+    Ensures both OpenAI and Anthropic agents have processed the analysis
+    and cross-validation has been performed.
+    """
+    
+    def __init__(self, strict_mode: bool = False):
+        self.strict_mode = strict_mode
+        self.openai_validation_complete: bool = False
+        self.anthropic_validation_complete: bool = False
+        self.cross_validation_score: float = 0.0
+        self.discrepancies_resolved: bool = False
+        self.min_confidence_threshold: float = 0.75
+    
+    def validate(self, data: Dict[str, Any]) -> ValidationResult:
+        """At least one AI agent must be responsive (per audit spec)."""
+        result = ValidationResult(passed=True)
+        
+        openai_complete = data.get("openai_validation_complete", False)
+        anthropic_complete = data.get("anthropic_validation_complete", False)
+        cross_validation_score = data.get("cross_validation_score", 0.0)
+        min_threshold = data.get("min_confidence_threshold", 0.75)
+        
+        # At least one AI agent must be responsive
+        if not (openai_complete or anthropic_complete):
+            result.add_violation(ContractViolation(
+                violation_type=ContractViolationType.FAILED_DEPENDENCY,
+                field_name="ai_agents",
+                expected="At least one agent responsive",
+                actual="No agents responsive",
+                message="At least one AI agent (OpenAI or Anthropic) must complete validation"
+            ))
+        
+        # Check confidence threshold if any agent is responsive
+        if (openai_complete or anthropic_complete) and cross_validation_score < min_threshold:
+            result.add_violation(ContractViolation(
+                violation_type=ContractViolationType.INSUFFICIENT_RECORDS,
+                field_name="cross_validation_score",
+                expected=f">= {min_threshold}",
+                actual=cross_validation_score,
+                message=f"Cross-validation confidence too low: {cross_validation_score} < {min_threshold}"
+            ))
+        
+        return result
+
+
+class Phase7SubagentContract(DataContract):
+    """Validates subagent orchestration completion.
+    
+    Ensures all 10 Claude specialized agents have been properly orchestrated
+    and their results aggregated.
+    """
+    
+    def __init__(self, strict_mode: bool = False):
+        self.strict_mode = strict_mode
+        self.agents_deployed: int = 0
+        self.agents_completed: int = 0
+        self.required_agents: int = 10
+        self.min_completion_ratio: float = 0.80
+        self.orchestration_errors: List[str] = []
+    
+    def validate(self, data: Dict[str, Any]) -> ValidationResult:
+        """80% of agents must complete successfully."""
+        result = ValidationResult(passed=True)
+        
+        agents_deployed = data.get("agents_deployed", 0)
+        agents_completed = data.get("agents_completed", 0)
+        min_ratio = data.get("min_completion_ratio", 0.80)
+        
+        # Check if any agents were deployed
+        if agents_deployed == 0:
+            result.add_violation(ContractViolation(
+                violation_type=ContractViolationType.EMPTY_REQUIRED_DATA,
+                field_name="agents_deployed",
+                expected="> 0",
+                actual=0,
+                message="No subagents were deployed for orchestration"
+            ))
+            return result
+        
+        # Check completion ratio
+        completion_ratio = agents_completed / agents_deployed
+        if completion_ratio < min_ratio:
+            result.add_violation(ContractViolation(
+                violation_type=ContractViolationType.INSUFFICIENT_RECORDS,
+                field_name="completion_ratio",
+                expected=f">= {min_ratio:.0%}",
+                actual=f"{completion_ratio:.0%}",
+                message=f"Insufficient agents completed: {agents_completed}/{agents_deployed} ({completion_ratio:.0%}) < {min_ratio:.0%}"
+            ))
+        
+        return result
+
+
 class Phase8EvidenceChainContract(DataContract):
     """Contract for Phase 8: Evidence Chain & Custody Finalization."""
     
@@ -327,6 +422,138 @@ class Phase8EvidenceChainContract(DataContract):
                     actual="None or empty",
                     message="Evidence chain hash must be computed"
                 ))
+        
+        return result
+
+
+class Phase9DossierContract(DataContract):
+    """Validates DOJ-grade dossier meets FRE 902(13)/(14) standards.
+    
+    Ensures the final forensic dossier contains all required components
+    for courtroom admissibility.
+    """
+    
+    def __init__(self, strict_mode: bool = False):
+        self.strict_mode = strict_mode
+        # FRE 902(13) - Certified Records of a Regularly Conducted Activity
+        self.fre_902_13_compliant: bool = False
+        # FRE 902(14) - Certified Data Copied from Electronic Device
+        self.fre_902_14_compliant: bool = False
+        # Evidence chain integrity
+        self.evidence_chain_complete: bool = False
+        self.triple_hash_verified: bool = False  # SHA-256 + SHA3-512 + BLAKE2b
+        self.merkle_tree_valid: bool = False  # RFC 6962 compliant
+        # Dossier components
+        self.executive_summary_present: bool = False
+        self.findings_documented: bool = False
+        self.evidence_exhibits_attached: bool = False
+        self.chain_of_custody_documented: bool = False
+        # Timestamp compliance
+        self.rfc_3161_timestamp_present: bool = False
+    
+    def validate(self, data: Dict[str, Any]) -> ValidationResult:
+        """All FRE compliance and evidence integrity requirements must be met."""
+        result = ValidationResult(passed=True)
+        
+        # Check FRE 902(13) compliance
+        if not data.get("fre_902_13_compliant", False):
+            result.add_violation(ContractViolation(
+                violation_type=ContractViolationType.MISSING_REQUIRED_FIELD,
+                field_name="fre_902_13_compliant",
+                expected=True,
+                actual=False,
+                message="Dossier must be FRE 902(13) compliant (Certified Records)"
+            ))
+        
+        # Check FRE 902(14) compliance
+        if not data.get("fre_902_14_compliant", False):
+            result.add_violation(ContractViolation(
+                violation_type=ContractViolationType.MISSING_REQUIRED_FIELD,
+                field_name="fre_902_14_compliant",
+                expected=True,
+                actual=False,
+                message="Dossier must be FRE 902(14) compliant (Certified Electronic Data)"
+            ))
+        
+        # Check evidence chain complete
+        if not data.get("evidence_chain_complete", False):
+            result.add_violation(ContractViolation(
+                violation_type=ContractViolationType.MISSING_REQUIRED_FIELD,
+                field_name="evidence_chain_complete",
+                expected=True,
+                actual=False,
+                message="Evidence chain must be complete and documented"
+            ))
+        
+        # Check triple-hash verification
+        if not data.get("triple_hash_verified", False):
+            result.add_violation(ContractViolation(
+                violation_type=ContractViolationType.HASH_MISMATCH,
+                field_name="triple_hash_verified",
+                expected=True,
+                actual=False,
+                message="Triple-hash integrity (SHA-256 + SHA3-512 + BLAKE2b) must be verified"
+            ))
+        
+        # Check Merkle tree validity
+        if not data.get("merkle_tree_valid", False):
+            result.add_violation(ContractViolation(
+                violation_type=ContractViolationType.HASH_MISMATCH,
+                field_name="merkle_tree_valid",
+                expected=True,
+                actual=False,
+                message="Merkle tree (RFC 6962) must be valid"
+            ))
+        
+        # Check executive summary
+        if not data.get("executive_summary_present", False):
+            result.add_violation(ContractViolation(
+                violation_type=ContractViolationType.MISSING_REQUIRED_FIELD,
+                field_name="executive_summary_present",
+                expected=True,
+                actual=False,
+                message="Dossier must contain executive summary"
+            ))
+        
+        # Check findings documented
+        if not data.get("findings_documented", False):
+            result.add_violation(ContractViolation(
+                violation_type=ContractViolationType.MISSING_REQUIRED_FIELD,
+                field_name="findings_documented",
+                expected=True,
+                actual=False,
+                message="Forensic findings must be documented"
+            ))
+        
+        # Check evidence exhibits
+        if not data.get("evidence_exhibits_attached", False):
+            result.add_violation(ContractViolation(
+                violation_type=ContractViolationType.MISSING_REQUIRED_FIELD,
+                field_name="evidence_exhibits_attached",
+                expected=True,
+                actual=False,
+                message="Evidence exhibits must be attached to dossier"
+            ))
+        
+        # Check chain of custody documentation
+        if not data.get("chain_of_custody_documented", False):
+            result.add_violation(ContractViolation(
+                violation_type=ContractViolationType.MISSING_REQUIRED_FIELD,
+                field_name="chain_of_custody_documented",
+                expected=True,
+                actual=False,
+                message="Chain of custody must be documented"
+            ))
+        
+        # Check RFC 3161 timestamp
+        if not data.get("rfc_3161_timestamp_present", False):
+            result.add_violation(ContractViolation(
+                violation_type=ContractViolationType.MISSING_REQUIRED_FIELD,
+                field_name="rfc_3161_timestamp_present",
+                expected=True,
+                actual=False,
+                message="RFC 3161 timestamp token must be present"
+            ))
         
         return result
 
@@ -374,11 +601,20 @@ def create_contract_for_phase(phase_name: str, config: Dict[str, Any]) -> DataCo
             strict_mode=strict_mode
         )
     
+    elif "Dual-Agent" in phase_name or "Dual Agent" in phase_name:
+        return Phase6DualAgentContract(strict_mode=strict_mode)
+    
+    elif "Subagent" in phase_name:
+        return Phase7SubagentContract(strict_mode=strict_mode)
+    
     elif "Evidence Chain" in phase_name:
         return Phase8EvidenceChainContract(
             require_evidence_chain=config.get("require_evidence_chain", True),
             strict_mode=strict_mode
         )
+    
+    elif "Dossier" in phase_name:
+        return Phase9DossierContract(strict_mode=strict_mode)
     
     # Default: no validation
     return DataContract()

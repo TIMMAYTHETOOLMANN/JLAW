@@ -214,7 +214,7 @@ class MasterExecutionController:
         start_date: date,
         end_date: date,
         output_dir: Path,
-        strict_mode: bool = False,
+        strict_mode: bool = True,
         auto_mode: bool = False,
         enable_optimization: bool = True,
         sec_user_agent: Optional[str] = None,
@@ -550,12 +550,12 @@ class MasterExecutionController:
         # Gate validation
         if self._strict_controller:
             gate_data = {"errors": errors, "valid": len(errors) == 0}
-            decision = self._strict_controller.validate_gate(
+            decision, validation_result = self._strict_controller.validator.validate_gate(
                 ExecutionPhase.CONFIGURATION.value,
                 gate_data
             )
-            if not decision.passed:
-                raise Exception(f"Configuration gate failed: {decision.reason}")
+            if not validation_result.passed:
+                raise Exception(f"Configuration gate failed: {validation_result.get_error_message()}")
         
         logger.info(f"✓ Phase 1 completed in {phase_duration:.2f}s")
     
@@ -641,12 +641,12 @@ class MasterExecutionController:
                 "filings_collected": len(self.filings),
                 "min_required": 5
             }
-            decision = self._strict_controller.validate_gate(
+            decision, validation_result = self._strict_controller.validator.validate_gate(
                 ExecutionPhase.DATA_COLLECTION.value,
                 gate_data
             )
-            if not decision.passed:
-                logger.warning(f"Data collection gate warning: {decision.reason}")
+            if not validation_result.passed:
+                logger.warning(f"Data collection gate warning: {validation_result.get_error_message()}")
         
         logger.info(f"✓ Phase 2 completed in {phase_duration:.2f}s")
     
@@ -711,12 +711,12 @@ class MasterExecutionController:
                 "documents_total": len(self.filings),
                 "success_rate": len(self.parsed_documents) / max(len(self.filings), 1)
             }
-            decision = self._strict_controller.validate_gate(
+            decision, validation_result = self._strict_controller.validator.validate_gate(
                 ExecutionPhase.DOCUMENT_PARSING.value,
                 gate_data
             )
-            if not decision.passed:
-                logger.warning(f"Document parsing gate warning: {decision.reason}")
+            if not validation_result.passed:
+                logger.warning(f"Document parsing gate warning: {validation_result.get_error_message()}")
         
         logger.info(f"✓ Phase 3 completed in {phase_duration:.2f}s")
     
@@ -851,12 +851,12 @@ class MasterExecutionController:
                 "nodes_successful": successful_nodes,
                 "min_required": 12
             }
-            decision = self._strict_controller.validate_gate(
+            decision, validation_result = self._strict_controller.validator.validate_gate(
                 ExecutionPhase.NODE_ANALYSIS.value,
                 gate_data
             )
-            if not decision.passed:
-                logger.warning(f"Node analysis gate warning: {decision.reason}")
+            if not validation_result.passed:
+                logger.warning(f"Node analysis gate warning: {validation_result.get_error_message()}")
         
         logger.info(f"✓ Phase 4 completed in {phase_duration:.2f}s")
     
@@ -1174,12 +1174,12 @@ class MasterExecutionController:
                 "patterns_executed": self.detection_results.get("patterns_executed", 0),
                 "min_required": 20
             }
-            decision = self._strict_controller.validate_gate(
+            decision, validation_result = self._strict_controller.validator.validate_gate(
                 ExecutionPhase.PATTERN_DETECTION.value,
                 gate_data
             )
-            if not decision.passed:
-                logger.warning(f"Pattern detection gate warning: {decision.reason}")
+            if not validation_result.passed:
+                logger.warning(f"Pattern detection gate warning: {validation_result.get_error_message()}")
         
         logger.info(f"✓ Phase 5 completed in {phase_duration:.2f}s")
     
@@ -1658,12 +1658,12 @@ Initial Confidence: {verification_request['confidence']}
                 "evidence_items": len(self.node_results),
                 "merkle_root": self._get_merkle_root()
             }
-            decision = self._strict_controller.validate_gate(
+            decision, validation_result = self._strict_controller.validator.validate_gate(
                 ExecutionPhase.EVIDENCE_CHAIN.value,
                 gate_data
             )
-            if not decision.passed:
-                raise Exception(f"Evidence chain gate failed: {decision.reason}")
+            if not validation_result.passed:
+                raise Exception(f"Evidence chain gate failed: {validation_result.get_error_message()}")
         
         logger.info(f"✓ Phase 8 completed in {phase_duration:.2f}s")
     
