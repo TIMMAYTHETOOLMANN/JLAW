@@ -289,55 +289,86 @@ class SOXCertificationAnalyzer:
         return self._compile_results(company_info)
     
     def _extract_section_302_certifications(self, text: str) -> None:
-        """Extract Section 302 certifications from Exhibits 31.1 and 31.2"""
-        # Find Exhibit 31 sections
+        """Extract Section 302 certifications from Exhibits 31.1 and 31.2.
+
+        Improved to detect certifications even when Exhibit headers are not
+        directly adjacent to certification text (common in modern SEC filings).
+        """
+        # Strategy 1: Find Exhibit 31 sections directly
         exhibit_31_pattern = r"(?i)exhibit\s+31\.?\d?"
         exhibit_matches = list(re.finditer(exhibit_31_pattern, text))
         
+        # Strategy 2: Find certification blocks by content pattern (backup)
+        cert_content_pattern = r"(?i)(?:CERTIFICATION(?:S)?|I,\s+[A-Z][a-z]+\s+[A-Z])[^\n]*(?:certify|pursuant\s+to)"
+
+        # Track found certifications to avoid duplicates
+        found_certs = set()
+
+        # Process Exhibit 31 matches
         for match in exhibit_matches:
             cert_region = text[match.start():match.end() + 5000]
-            
-            # Extract certifier information
-            name_pattern = r"(?i)(?:I,\s+)?([A-Z][a-z]+\s+[A-Z]\.?\s*[A-Z][a-z]+)"
-            title_pattern = r"(?i)(Chief\s+Executive\s+Officer|CEO|Chief\s+Financial\s+Officer|CFO|Principal\s+(?:Executive|Financial)\s+Officer)"
-            
-            name_match = re.search(name_pattern, cert_region)
-            title_match = re.search(title_pattern, cert_region)
-            
-            if name_match and title_match:
-                cert = Section302Certification(
-                    certifier_name=name_match.group(1),
-                    certifier_title=title_match.group(1),
-                    certification_date=date.today(),  # Would parse actual date
-                    certification_text=cert_region[:3000]
-                )
-                
-                # Check for required elements
-                for i, pattern in enumerate(self.SECTION_302_REQUIREMENTS):
-                    if re.search(pattern, cert_region):
-                        if i == 0:
-                            cert.reviewed_report = True
-                        elif i == 1:
-                            cert.no_material_misstatement = True
-                        elif i == 2:
-                            cert.fair_presentation = True
-                        elif i == 3:
-                            cert.responsible_for_controls = True
-                        elif i == 4:
-                            cert.designed_controls = True
-                        elif i == 5:
-                            cert.evaluated_effectiveness = True
-                        elif i == 6:
-                            cert.disclosed_to_auditors = True
-                
-                # Check for weakness/deficiency disclosure
-                if re.search(r"(?i)material\s+weakness", cert_region):
-                    cert.disclosed_material_weakness = True
-                if re.search(r"(?i)significant\s+deficienc", cert_region):
-                    cert.disclosed_significant_deficiencies = True
-                
-                self.section302_certs.append(cert)
-    
+            self._process_certification_region(cert_region, found_certs)
+
+        # If we didn't find enough certifications, search by content
+        if len(self.section302_certs) < 2:
+            # Look for Rule 13a-14(a) references which indicate Section 302
+            rule_13a_pattern = r"(?i)(?:rule|pursuant\s+to)\s+13a-14\(a\)"
+            rule_matches = list(re.finditer(rule_13a_pattern, text))
+
+            for match in rule_matches:
+                start = max(0, match.start() - 200)
+                end = min(len(text), match.end() + 5000)
+                cert_region = text[start:end]
+                self._process_certification_region(cert_region, found_certs)
+
+    def _process_certification_region(self, cert_region: str, found_certs: set) -> None:
+        """Process a potential certification region and extract certification details."""
+        # Extract certifier information
+        name_pattern = r"(?i)(?:I,\s+)?([A-Z][a-z]+(?:\s+[A-Z]\.?)?\s+[A-Z][a-z]+)"
+        title_pattern = r"(?i)(Chief\s+Executive\s+Officer|CEO|Chief\s+Financial\s+Officer|CFO|Principal\s+(?:Executive|Financial)\s+Officer)"
+
+        name_match = re.search(name_pattern, cert_region)
+        title_match = re.search(title_pattern, cert_region)
+
+        if name_match and title_match:
+            cert_key = (name_match.group(1), title_match.group(1))
+            if cert_key in found_certs:
+                return  # Skip duplicate
+            found_certs.add(cert_key)
+
+            cert = Section302Certification(
+                certifier_name=name_match.group(1),
+                certifier_title=title_match.group(1),
+                certification_date=date.today(),  # Would parse actual date
+                certification_text=cert_region[:3000]
+            )
+
+            # Check for required elements
+            for i, pattern in enumerate(self.SECTION_302_REQUIREMENTS):
+                if re.search(pattern, cert_region):
+                    if i == 0:
+                        cert.reviewed_report = True
+                    elif i == 1:
+                        cert.no_material_misstatement = True
+                    elif i == 2:
+                        cert.fair_presentation = True
+                    elif i == 3:
+                        cert.responsible_for_controls = True
+                    elif i == 4:
+                        cert.designed_controls = True
+                    elif i == 5:
+                        cert.evaluated_effectiveness = True
+                    elif i == 6:
+                        cert.disclosed_to_auditors = True
+
+            # Check for weakness/deficiency disclosure
+            if re.search(r"(?i)material\s+weakness", cert_region):
+                cert.disclosed_material_weakness = True
+            if re.search(r"(?i)significant\s+deficienc", cert_region):
+                cert.disclosed_significant_deficiencies = True
+
+            self.section302_certs.append(cert)
+
     def _extract_section_906_certifications(self, text: str) -> None:
         """Extract Section 906 certifications from Exhibits 32.1 and 32.2"""
         exhibit_32_pattern = r"(?i)exhibit\s+32\.?\d?"
@@ -697,26 +728,92 @@ class SOXCertificationAnalyzer:
                 ))
     
     def _check_restatement_indicators(self, text: str) -> None:
-        """Check for restatement language indicating control failures"""
+        """Check for restatement language indicating control failures.
+
+        IMPORTANT: Excludes common false positives like:
+        - "Restated Articles of Incorporation" (corporate governance document)
+        - "Restated Bylaws" (corporate governance document)
+        - References to prior period comparatives
+        """
+        # Patterns that indicate ACTUAL financial restatements
         restatement_patterns = [
-            r"(?i)restat(?:ed|ement)",
-            r"(?i)correction\s+of\s+(?:an?\s+)?error",
-            r"(?i)amended\s+(?:and\s+restated|financial\s+statements?)"
+            r"(?i)(?:financial\s+)?restatement\s+of\s+(?:financial\s+)?(?:statements?|results|earnings)",
+            r"(?i)correction\s+of\s+(?:an?\s+)?error\s+in\s+(?:previously\s+)?(?:issued|reported)",
+            r"(?i)restated\s+(?:financial\s+)?statements?\s+for\s+(?:the\s+)?(?:year|quarter|period)",
+            r"(?i)(?:we|the\s+company)\s+(?:have\s+)?restated\s+(?:our|its)\s+(?:financial|prior)",
+            r"(?i)material\s+misstatement.*(?:restat|correct)",
+            r"(?i)(?:big\s+r|little\s+r)\s+restatement",
+            r"(?i)restated\s+(?:to\s+correct|due\s+to)\s+(?:an?\s+)?(?:error|misstatement)",
+            r"(?i)amended\s+and\s+restated\s+financial\s+statements?"
+        ]
+
+        # Patterns that should be EXCLUDED (false positives)
+        false_positive_patterns = [
+            r"(?i)restated\s+articles\s+of\s+incorporation",
+            r"(?i)restated\s+bylaws?",
+            r"(?i)restated\s+certificate\s+of\s+incorporation",
+            r"(?i)(?:first|second|third|fourth|fifth)\s+restated\s+(?:articles|bylaws?|certificate)",
+            r"(?i)amended\s+and\s+restated\s+(?:bylaws?|articles|certificate|charter)",
+            r"(?i)exhibit\s+\d+\.\d+.*restated",  # Exhibit references to governance docs
+            r"(?i)have\s+not\s+been\s+restated"  # Explicit statement of NO restatement
         ]
         
+        text_lower = text.lower()
+
+        # Check if we should skip due to false positive patterns dominating
+        for fp_pattern in false_positive_patterns:
+            # If false positive context found, be more careful
+            if re.search(fp_pattern, text):
+                # Only flag if we find an ACTUAL financial restatement pattern
+                for actual_pattern in restatement_patterns[:4]:  # Use strict patterns
+                    match = re.search(actual_pattern, text)
+                    if match:
+                        # Verify this isn't near a false positive marker
+                        start = max(0, match.start() - 200)
+                        end = min(len(text), match.end() + 200)
+                        context = text[start:end]
+
+                        # Skip if context contains governance document references
+                        is_false_positive = any(
+                            re.search(fp, context)
+                            for fp in false_positive_patterns
+                        )
+
+                        if not is_false_positive:
+                            self.violations.append(SOXViolation(
+                                violation_type=SOXViolationType.RESTATEMENT_CONTROL_FAILURE,
+                                severity=9,
+                                description="Financial restatement language detected - indicates potential control failure",
+                                affected_certifications=["Financial Statements", "ICFR"],
+                                regulatory_citations=[
+                                    "ASC 250-10",
+                                    "SEC Staff Accounting Bulletin 99/108"
+                                ],
+                                evidence_text=context[:500],
+                                evidence_hash=self._hash_evidence(context[:500])
+                            ))
+                            return
+                return  # False positive detected, no actual restatement found
+
+        # No false positive context - check for restatement patterns normally
         for pattern in restatement_patterns:
-            if re.search(pattern, text):
+            match = re.search(pattern, text)
+            if match:
+                start = max(0, match.start() - 100)
+                end = min(len(text), match.end() + 100)
+                context = text[start:end]
+
                 self.violations.append(SOXViolation(
                     violation_type=SOXViolationType.RESTATEMENT_CONTROL_FAILURE,
                     severity=9,
-                    description="Restatement language detected - indicates potential control failure",
+                    description="Financial restatement language detected - indicates potential control failure",
                     affected_certifications=["Financial Statements", "ICFR"],
                     regulatory_citations=[
                         "ASC 250-10",
                         "SEC Staff Accounting Bulletin 99/108"
                     ],
-                    evidence_text="Restatement indicated",
-                    evidence_hash=self._hash_evidence("RESTATEMENT")
+                    evidence_text=context,
+                    evidence_hash=self._hash_evidence(context)
                 ))
                 break
     

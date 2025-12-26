@@ -16,7 +16,7 @@ Transaction Codes:
 
 import xml.etree.ElementTree as ET
 from dataclasses import dataclass, field
-from datetime import datetime, date
+from datetime import datetime, date, timedelta
 from typing import List, Dict, Any, Optional, Tuple
 from enum import Enum
 import re
@@ -36,7 +36,8 @@ class TransactionCode(Enum):
     D = "Disposition to issuer"
     F = "Payment of exercise price or tax liability by delivering securities"
     I = "Discretionary transaction"
-    
+    V = "Voluntary reporting of transaction - RSU vesting, tax withholding"
+
     # Derivative Securities
     M = "Exercise or conversion of derivative security"
     C = "Conversion of derivative security"
@@ -50,7 +51,9 @@ class TransactionCode(Enum):
     J = "Other acquisition or disposition"
     L = "Small acquisition"
     W = "Acquisition or disposition by will or succession"
-    
+    Z = "Deposit into or withdrawal from voting trust"
+    K = "Equity swap or similar transaction"
+
     # Unknown
     U = "Unknown transaction code"
 
@@ -171,11 +174,11 @@ class Form4Parser:
     
     # Transaction code classification
     GENERAL_CODES = {'P', 'S'}
-    RULE_16B3_CODES = {'A', 'D', 'F', 'I'}
-    DERIVATIVE_CODES = {'M', 'C', 'E', 'H', 'O', 'X'}
+    RULE_16B3_CODES = {'A', 'D', 'F', 'I', 'V'}  # V = RSU vesting/tax withholding
+    DERIVATIVE_CODES = {'M', 'C', 'E', 'H', 'O', 'X', 'K'}  # K = equity swap
     GIFT_CODES = {'G'}
-    OTHER_EXEMPT_CODES = {'J', 'L', 'W'}
-    
+    OTHER_EXEMPT_CODES = {'J', 'L', 'W', 'Z'}  # Z = voting trust
+
     def __init__(self):
         self.ns = {
             'xbrl': 'http://www.xbrl.org/2003/instance',
@@ -319,18 +322,39 @@ class Form4Parser:
             # Calculate total value
             total_value = shares * price
             
-            # Check for late filing (> 2 business days)
+            # Check for late filing (> 2 business days per Section 16(a))
+            # More accurate business day calculation:
+            # - Must account for weekends (not just divide by 7)
+            # - Holidays would require a holiday calendar (not implemented here)
             is_late = False
             days_late = 0
             if trans_date:
                 days_diff = (filing_date - trans_date).days
-                # Rough business day calculation (actual should account for holidays)
-                business_days = days_diff - (days_diff // 7 * 2)
+                
+                # Calculate actual business days between transaction and filing
+                business_days = 0
+                current = trans_date
+                while current < filing_date:
+                    current = current + timedelta(days=1)
+                    # Monday=0, Sunday=6; Skip weekends
+                    if current.weekday() < 5:
+                        business_days += 1
+                
+                # SEC requires filing within 2 business days after transaction
+                # So if business_days > 2, it's late
                 if business_days > 2:
                     is_late = True
                     days_late = business_days - 2
             
             # Create transaction object
+            # Zero-dollar detection: Flag ALL zero-dollar transactions for scrutiny
+            # ANY Form 4 transaction listed at $0 is suspicious and warrants investigation
+            # However, suspicion level varies by transaction code:
+            #   - HIGH SUSPICION: S (sale), P (purchase) at $0 = extremely abnormal
+            #   - MEDIUM SUSPICION: G (gift), J (other), W (will) at $0 = requires scrutiny
+            #   - REQUIRES REVIEW: V, A, F, M, X, etc. at $0 = may be legitimate but still needs review
+            is_zero_dollar_transaction = (price == 0.0 and shares > 0)
+            
             transaction = Form4Transaction(
                 transaction_code=trans_code,
                 transaction_code_description=description,
@@ -343,7 +367,7 @@ class Form4Parser:
                 direct_indirect=direct_indirect,
                 security_title=security_title or "Unknown Security",
                 is_derivative=False,
-                is_zero_dollar=(price == 0.0 and shares > 0),
+                is_zero_dollar=is_zero_dollar_transaction,  # Flag ALL zero-dollar transactions
                 is_gift=(trans_code == 'G'),
                 is_late_filed=is_late,
                 days_late=days_late
@@ -391,15 +415,26 @@ class Form4Parser:
             # Calculate total value
             total_value = shares * price
             
-            # Check for late filing
+            # Check for late filing (> 2 business days per Section 16(a))
             is_late = False
             days_late = 0
             if trans_date:
-                days_diff = (filing_date - trans_date).days
-                business_days = days_diff - (days_diff // 7 * 2)
+                # Calculate actual business days between transaction and filing
+                business_days = 0
+                current = trans_date
+                while current < filing_date:
+                    current = current + timedelta(days=1)
+                    # Monday=0, Sunday=6; Skip weekends
+                    if current.weekday() < 5:
+                        business_days += 1
+                
+                # SEC requires filing within 2 business days after transaction
                 if business_days > 2:
                     is_late = True
                     days_late = business_days - 2
+            
+            # Flag ALL zero-dollar derivative transactions for scrutiny
+            is_zero_dollar_derivative = (price == 0.0 and shares > 0)
             
             transaction = Form4Transaction(
                 transaction_code=trans_code,
@@ -416,7 +451,8 @@ class Form4Parser:
                 underlying_security=underlying,
                 exercise_price=exercise_price,
                 expiration_date=expiration,
-                is_zero_dollar=(price == 0.0 and shares > 0),
+                # Flag ALL zero-dollar transactions for scrutiny
+                is_zero_dollar=is_zero_dollar_derivative,
                 is_gift=(trans_code == 'G'),
                 is_late_filed=is_late,
                 days_late=days_late

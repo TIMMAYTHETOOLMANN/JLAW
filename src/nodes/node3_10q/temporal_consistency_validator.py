@@ -711,6 +711,8 @@ class TemporalConsistencyValidator:
             ],
             "violations_detected": len(self.violations),
             "violations": [v.to_dict() for v in self.violations],
+            # Add temporal_violations key for extraction by JLAW_UNIFIED.py
+            "temporal_violations": [v.to_dict() for v in self.violations],
             "severity_summary": {
                 "critical": len([v for v in self.violations if v.severity >= 8]),
                 "high": len([v for v in self.violations if 6 <= v.severity < 8]),

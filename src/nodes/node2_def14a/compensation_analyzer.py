@@ -219,11 +219,11 @@ class CompensationAnalysisResult:
     total_neo_compensation: Decimal
     
     # Say-on-Pay analysis
-    say_on_pay_vote: Optional[SayOnPayVote]
-    
+    say_on_pay_vote: Optional[SayOnPayVote] = None
+
     # CEO pay ratio
-    ceo_pay_ratio: Optional[CEOPayRatio]
-    
+    ceo_pay_ratio: Optional[CEOPayRatio] = None
+
     # Golden parachutes
     golden_parachutes: List[GoldenParachute] = field(default_factory=list)
     

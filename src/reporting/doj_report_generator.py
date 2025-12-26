@@ -1046,7 +1046,7 @@ EXECUTIVE SUMMARY
 
 Target: {company_name} (CIK: {cik})
 Case ID: {case_id}
-Analysis Period: {summary.analysis_period}
+Analysis Period: {summary.analysis_period_start} to {summary.analysis_period_end}
 
 FINDINGS SUMMARY:
 - Total Violations: {summary.total_violations}

@@ -972,6 +972,20 @@ class SECEdgarClient:
         """Alias for get_company_submissions (backward compatibility)."""
         return await self.get_company_submissions(cik)
     
+    async def fetch_url(self, url: str) -> Optional[str]:
+        """
+        Fetch content from a URL with rate limiting and circuit breaker protection.
+        
+        This is a public wrapper around _fetch for use by external components.
+        
+        Args:
+            url: URL to fetch
+            
+        Returns:
+            Response text or None if failed
+        """
+        return await self._fetch(url)
+    
     async def get_filings_by_type(
         self,
         cik: str,

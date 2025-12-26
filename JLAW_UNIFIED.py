@@ -145,7 +145,7 @@ class TargetConfig:
         # Restricted Stock Sales
         "144",
         # Registration Statements
-        "S-1", "S-1/A", "S-3", "S-3/A", "S-4", "S-4/A", "S-8", "S-11", "S-11/A",
+        "S-1", "S-1/A", "S-3", "S-3/A", "S-3ASR", "S-4", "S-4/A", "S-8", "S-11", "S-11/A",
         # Prospectus
         "424B1", "424B2", "424B3", "424B4", "424B5",
         # Tender Offers
@@ -154,6 +154,10 @@ class TargetConfig:
         "SC 13E-3",
         # Late Filing Notifications
         "NT 10-K", "NT 10-Q",
+        # Employee Benefit Plans
+        "11-K", "11-K/A",
+        # Specialized Disclosures (conflict minerals, etc.)
+        "SD",
         # Other Material Filings
         "6-K", "20-F", "40-F"
     ])
@@ -905,11 +909,19 @@ class UnifiedForensicEngine:
                 async with self._sec_client(user_agent="JLAW-Unified/3.0") as client:
                     for filing in self.filings:
                         try:
-                            # Fetch actual filing content from SEC EDGAR
-                            accession_number = filing.get("accessionNumber", "")
-                            filing_type = filing.get("form", "UNKNOWN")
-                            filing_date = filing.get("filingDate", "")
-                            primary_doc = filing.get("primaryDocument", "")
+                            # Handle both dict and SECFiling dataclass objects
+                            if hasattr(filing, 'accession_number'):
+                                # SECFiling dataclass
+                                accession_number = filing.accession_number
+                                filing_type = filing.form_type
+                                filing_date = filing.filing_date.isoformat() if hasattr(filing.filing_date, 'isoformat') else str(filing.filing_date)
+                                primary_doc = filing.primary_document
+                            else:
+                                # Dict-style access
+                                accession_number = filing.get("accessionNumber", "")
+                                filing_type = filing.get("form", "UNKNOWN")
+                                filing_date = filing.get("filingDate", "")
+                                primary_doc = filing.get("primaryDocument", "")
                             
                             if not accession_number or not primary_doc:
                                 continue
@@ -960,7 +972,9 @@ class UnifiedForensicEngine:
                                 self.logger.debug(f"    ✓ Parsed {filing_type}: {len(parsed_doc.chunks)} chunks")
                         
                         except Exception as e:
-                            errors.append(f"Parse error for {filing.get('accessionNumber', 'unknown')}: {e}")
+                            # Handle both dict and dataclass for error reporting
+                            acc_num = filing.accession_number if hasattr(filing, 'accession_number') else (filing.get('accessionNumber', 'unknown') if isinstance(filing, dict) else 'unknown')
+                            errors.append(f"Parse error for {acc_num}: {e}")
                             self.logger.warning(f"  Parse error: {e}")
             
             except Exception as e:
@@ -1062,6 +1076,9 @@ class UnifiedForensicEngine:
                 self.node_results = result.to_dict() if hasattr(result, 'to_dict') else {}
                 violations_found = result.total_alerts if hasattr(result, 'total_alerts') else 0
                 alerts = violations_found
+                
+                # Extract violations from node results and add to self.violations
+                self._extract_violations_from_node_results(result)
                 
                 # Count nodes from result
                 nodes_executed = 15  # Total nodes
@@ -1808,13 +1825,13 @@ class UnifiedForensicEngine:
             from src.core.custody.custody import ChainOfCustody, CustodyAction
             
             hash_service = HashService()
-            custody = ChainOfCustody(case_id=f"JLAW-{self.config.cik}")
+            custody = ChainOfCustody(evidence_id=f"JLAW-{self.config.cik}")
             
             # Record custody
-            custody.record_action(CustodyAction.COLLECTION, "SEC EDGAR", "Filings collected")
-            custody.record_action(CustodyAction.ANALYSIS, "JLAW System", "Forensic analysis complete")
+            custody.record_action(CustodyAction.RETRIEVED, "SEC EDGAR", "initial_hash", "Filings collected")
+            custody.record_action(CustodyAction.ANALYZED, "JLAW System", "analysis_hash", "Forensic analysis complete")
             
-            self.custody_records = custody.get_chain()
+            self.custody_records = custody.entries
             
             self.logger.info(f"    Evidence records: {len(self.violations)}")
             self.logger.info(f"    Custody entries: {len(self.custody_records)}")
@@ -2143,7 +2160,7 @@ class UnifiedForensicEngine:
             
             # Create citation engine
             govinfo_api_key = os.getenv("GOVINFO_API_KEY", "DEMO_KEY")
-            citation_engine = StatutoryCitationEngine(govinfo_api_key=govinfo_api_key)
+            citation_engine = StatutoryCitationEngine(api_key=govinfo_api_key)
             
             if self.violations:
                 # Extract unique citations from violations
@@ -2256,6 +2273,162 @@ class UnifiedForensicEngine:
             custody_records=self.custody_records
         )
     
+    def _extract_violations_from_node_results(self, result):
+        """Extract violations from recursive engine results and add to self.violations."""
+        import uuid
+        
+        # Get the result dict
+        result_dict = result.to_dict() if hasattr(result, 'to_dict') else {}
+        
+        # Process each phase's node results
+        for phase_results in [
+            result_dict.get('phase1_results', []),
+            result_dict.get('phase2_results', []),
+            result_dict.get('phase3_results', []),
+            result_dict.get('phase4_results', [])
+        ]:
+            for node_result in phase_results:
+                findings = node_result.get('findings', {})
+                
+                # Extract late filing violations from Node 1
+                for late_v in findings.get('late_filing_violations', []):
+                    self.violations.append(Violation(
+                        violation_id=f"V-{uuid.uuid4().hex[:8].upper()}",
+                        violation_type="Section 16(a) Late Form 4 Filing",
+                        severity="HIGH",
+                        statutory_reference="15 U.S.C. § 78p(a) - Section 16(a)",
+                        description=f"Form 4 filed {late_v.get('days_late', 0)} days late. SEC requires 2 business days.",
+                        evidence_summary=f"Reporting Owner: {late_v.get('reporting_owner', 'Unknown')}, "
+                                        f"Transaction Date: {late_v.get('transaction_date')}, "
+                                        f"Filing Date: {late_v.get('filing_date')}, "
+                                        f"Shares: {late_v.get('shares', 0)}",
+                        filing_accession=late_v.get('accession_number', ''),
+                        filing_date=late_v.get('filing_date', ''),
+                        estimated_penalty=late_v.get('estimated_penalty', 25000),
+                        criminal_referral=False,
+                        evidence_hash=hashlib.sha256(str(late_v).encode()).hexdigest(),
+                        regulatory_citations=["15 U.S.C. § 78p(a)", "Exchange Act Section 16(a)"],
+                        detected_by="node1_form4"
+                    ))
+                
+                # Extract ALL zero-dollar transaction violations from Node 1
+                # ANY Form 4 transaction at $0 is suspicious and warrants investigation
+                for zero_v in findings.get('zero_dollar_violations', []):
+                    # Use the severity from the detection or determine based on transaction code
+                    severity = zero_v.get('severity', 'MEDIUM')
+                    trans_code = zero_v.get('transaction_code', 'U')
+                    suspicion_level = zero_v.get('suspicion_level', 'Requires scrutiny')
+                    
+                    # Determine if criminal referral is warranted
+                    # Sale/Purchase at $0 is extremely abnormal and may indicate fraud
+                    criminal_ref = severity == "CRITICAL"
+                    
+                    # Estimate penalty based on severity
+                    if severity == "CRITICAL":
+                        penalty = 100000  # S/P at $0 = potential fraud
+                    elif severity == "HIGH":
+                        penalty = 50000   # Gift at $0 = possible tax evasion
+                    else:
+                        penalty = 10000   # Compensation event = verify legitimacy
+                    
+                    self.violations.append(Violation(
+                        violation_id=f"V-{uuid.uuid4().hex[:8].upper()}",
+                        violation_type="Zero-Dollar Transaction - Requires Scrutiny",
+                        severity=severity,
+                        statutory_reference="15 U.S.C. § 78p(a)",
+                        description=f"Zero-dollar transaction: {zero_v.get('shares', 0):,.0f} shares at $0.00. "
+                                   f"Transaction code: {trans_code} ({zero_v.get('transaction_code_description', 'Unknown')}). "
+                                   f"Suspicion: {suspicion_level}",
+                        evidence_summary=f"Reporting Owner: {zero_v.get('reporting_owner', 'Unknown')}, "
+                                        f"Shares: {zero_v.get('shares', 0):,.0f}, "
+                                        f"Transaction Code: {trans_code}, "
+                                        f"Security: {zero_v.get('security_title', 'Unknown')}, "
+                                        f"Is Derivative: {zero_v.get('is_derivative', False)}",
+                        filing_accession=zero_v.get('accession_number', ''),
+                        filing_date=zero_v.get('transaction_date', ''),
+                        estimated_penalty=penalty,
+                        criminal_referral=criminal_ref,
+                        evidence_hash=hashlib.sha256(str(zero_v).encode()).hexdigest(),
+                        regulatory_citations=["15 U.S.C. § 78p(a)", "SEC Rule 16a-3"],
+                        detected_by="node1_form4"
+                    ))
+                
+                # Extract SOX violations from Node 4
+                for sox_v in findings.get('violations', []):
+                    if isinstance(sox_v, dict) and sox_v.get('violation_type'):
+                        severity_score = sox_v.get('severity', 5)
+                        severity = "CRITICAL" if severity_score >= 9 else "HIGH" if severity_score >= 7 else "MEDIUM"
+                        
+                        # Special handling for restatement violations - these indicate Section 10(b) violations
+                        # with $15M estimated damages per the original analysis methodology
+                        violation_type = sox_v.get('violation_type', 'SOX Violation')
+                        if 'restatement' in violation_type.lower() or 'RESTATEMENT' in str(sox_v.get('regulatory_citations', [])):
+                            violation_type = "Section 10(b) Material Misstatement"
+                            estimated_penalty = 15000000  # $15M per original methodology
+                            severity = "CRITICAL"
+                            criminal_ref = True
+                        else:
+                            estimated_penalty = 1000000 if severity == "CRITICAL" else 100000
+                            criminal_ref = severity == "CRITICAL"
+                        
+                        self.violations.append(Violation(
+                            violation_id=f"V-{uuid.uuid4().hex[:8].upper()}",
+                            violation_type=violation_type,
+                            severity=severity,
+                            statutory_reference=", ".join(sox_v.get('regulatory_citations', ['SOX Section 302/906'])),
+                            description=sox_v.get('description', ''),
+                            evidence_summary=sox_v.get('evidence_text', ''),
+                            filing_accession='',
+                            filing_date=sox_v.get('detected_at', ''),
+                            estimated_penalty=estimated_penalty,
+                            criminal_referral=criminal_ref,
+                            evidence_hash=sox_v.get('evidence_hash', ''),
+                            regulatory_citations=sox_v.get('regulatory_citations', []),
+                            detected_by="node4_sox"
+                        ))
+                
+                # Extract Section 10(b) Material Misstatement violations from Node 3 (10-Q temporal analysis)
+                # These violations indicate restatements which carry $15M estimated damages
+                for temporal_v in findings.get('temporal_violations', []):
+                    if isinstance(temporal_v, dict):
+                        v_type = temporal_v.get('violation_type', '')
+                        # Restatement triggers are Section 10(b) violations
+                        if 'restatement' in v_type.lower() or v_type == 'restatement_trigger':
+                            self.violations.append(Violation(
+                                violation_id=f"V-{uuid.uuid4().hex[:8].upper()}",
+                                violation_type="Section 10(b) Material Misstatement",
+                                severity="CRITICAL",
+                                statutory_reference="Section 10(b) and Rule 10b-5",
+                                description="Financial restatement indicates prior material misstatement. "
+                                           "Estimated damages: $15M (SEC penalties + shareholder litigation exposure). "
+                                           "Restatements typically trigger class action lawsuits and SEC enforcement actions.",
+                                evidence_summary=f"Restatement language found in 10-Q. Est. Damages: $15,000,000",
+                                filing_accession=temporal_v.get('accession_number', ''),
+                                filing_date=temporal_v.get('filing_date', ''),
+                                estimated_penalty=15000000,  # $15M per original methodology
+                                criminal_referral=True,
+                                evidence_hash=hashlib.sha256(str(temporal_v).encode()).hexdigest(),
+                                regulatory_citations=["Section 10(b)", "Rule 10b-5", "15 U.S.C. § 78j(b)"],
+                                detected_by="node3_10q"
+                            ))
+                        else:
+                            # Other temporal violations (less severe but still notable)
+                            self.violations.append(Violation(
+                                violation_id=f"V-{uuid.uuid4().hex[:8].upper()}",
+                                violation_type=f"Temporal Consistency Violation: {v_type}",
+                                severity="HIGH",
+                                statutory_reference="Regulation S-X Rule 10-01, ASC 250",
+                                description=temporal_v.get('description', 'Temporal consistency violation detected'),
+                                evidence_summary=temporal_v.get('evidence', ''),
+                                filing_accession=temporal_v.get('accession_number', ''),
+                                filing_date=temporal_v.get('filing_date', ''),
+                                estimated_penalty=100000,
+                                criminal_referral=False,
+                                evidence_hash=hashlib.sha256(str(temporal_v).encode()).hexdigest(),
+                                regulatory_citations=["Regulation S-X Rule 10-01", "ASC 250"],
+                                detected_by="node3_10q"
+                            ))
+
     async def _save_outputs(self, dossier: ForensicDossier):
         """Save dossier to files."""
         timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
@@ -2785,7 +2958,7 @@ async def main():
             print(f"  Duration: {(result.execution_end - result.execution_start).total_seconds():.1f}s")
             print(f"  Violations: {result.total_violations}")
             print(f"  Alerts: {result.total_alerts}")
-            print(f"  Success: {'✓ YES' if result.success else '✗ NO'}")
+            print(f"  Success: {'✓' if result.success else '✗'}")
             print("=" * 70)
             
             return 0 if result.success else 1
