@@ -148,3 +148,29 @@ class TranscriptAnalyzerV2:
             narrative_discrepancies=len([a for a in alerts if a.alert_type == AlertType.NARRATIVE_DISCREPANCY]),
             alerts=alerts
         )
+    
+    def get_earnings_dates(
+        self,
+        transcripts: List[TranscriptData]
+    ) -> List[date]:
+        """
+        Extract earnings call dates for derivatives integration.
+        
+        This method provides earnings dates to the derivatives integration engine
+        (CRITICAL-010) to detect pre-earnings options activity.
+        
+        Args:
+            transcripts: List of earnings call transcripts
+        
+        Returns:
+            List of earnings announcement dates
+        """
+        earnings_dates = []
+        for transcript in transcripts:
+            if hasattr(transcript, 'call_date') and transcript.call_date:
+                if isinstance(transcript.call_date, date):
+                    earnings_dates.append(transcript.call_date)
+                elif isinstance(transcript.call_date, datetime):
+                    earnings_dates.append(transcript.call_date.date())
+        
+        return sorted(set(earnings_dates))  # Return unique sorted dates

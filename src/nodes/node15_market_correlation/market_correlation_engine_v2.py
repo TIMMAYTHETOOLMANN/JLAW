@@ -10,7 +10,7 @@ Enhanced version with:
 """
 
 from dataclasses import dataclass, field
-from datetime import datetime
+from datetime import datetime, date
 from typing import List, Dict, Any
 from enum import Enum
 import logging
@@ -221,3 +221,50 @@ class MarketCorrelationEngineV2:
             contagion_events=contagion_count,
             alerts=alerts
         )
+    
+    def get_spot_prices(
+        self,
+        ticker: str,
+        start_date: date,
+        end_date: date
+    ) -> Dict[date, float]:
+        """
+        Retrieve historical spot prices for derivatives moneyness calculation.
+        
+        This method provides spot price data to the derivatives integration engine
+        (CRITICAL-010) to calculate option moneyness (strike vs spot) for detecting
+        deep OTM purchases.
+        
+        Args:
+            ticker: Stock ticker symbol
+            start_date: Start date for price history
+            end_date: End date for price history
+        
+        Returns:
+            Dictionary mapping dates to closing prices
+        """
+        spot_prices = {}
+        
+        if not self.polygon_api_key:
+            logger.warning("Polygon.io API key not available - cannot retrieve spot prices")
+            return spot_prices
+        
+        try:
+            # In production, this would call Polygon.io API to get historical prices
+            # For now, return empty dict as placeholder
+            logger.info(f"Retrieving spot prices for {ticker} from {start_date} to {end_date}")
+            
+            # TODO: Implement actual Polygon.io API call
+            # Example:
+            # response = requests.get(
+            #     f"https://api.polygon.io/v2/aggs/ticker/{ticker}/range/1/day/{start_date}/{end_date}",
+            #     params={"apiKey": self.polygon_api_key}
+            # )
+            # for result in response.json().get('results', []):
+            #     date_obj = datetime.fromtimestamp(result['t'] / 1000).date()
+            #     spot_prices[date_obj] = result['c']  # closing price
+            
+        except Exception as e:
+            logger.error(f"Error retrieving spot prices: {e}", exc_info=True)
+        
+        return spot_prices
