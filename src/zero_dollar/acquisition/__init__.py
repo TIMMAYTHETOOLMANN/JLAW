@@ -9,6 +9,7 @@ Key Components:
 - Form4Filing: Parsed Form 4 filing structure
 - FilingMetadata: Filing metadata from EDGAR index
 - EdgarRateLimiter: SEC-compliant rate limiting
+- EventCalendarAcquisition: Material events acquisition
 - Custom exceptions for error handling
 
 Reference:
@@ -42,6 +43,9 @@ from .exceptions import (
     EdgarParsingError,
     EdgarNetworkError,
 )
+from .event_calendar import (
+    EventCalendarAcquisition,
+)
 
 __all__ = [
     # Main client
@@ -70,4 +74,7 @@ __all__ = [
     'EdgarRateLimitError',
     'EdgarParsingError',
     'EdgarNetworkError',
+    
+    # Event Calendar
+    'EventCalendarAcquisition',
 ]
