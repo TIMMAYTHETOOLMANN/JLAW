@@ -185,6 +185,16 @@ class SupremeOrchestrator:
     
     def __init__(self):
         """Initialize Supreme Orchestrator."""
+        # DEPRECATION WARNING
+        import warnings
+        warnings.warn(
+            "SupremeOrchestrator is deprecated. "
+            "Use UnifiedForensicOrchestrator from src.core.unified_orchestrator for DOJ-grade compliance. "
+            "This class will be removed in a future version.",
+            DeprecationWarning,
+            stacklevel=2
+        )
+        
         self.logger = logging.getLogger(self.__class__.__name__)
         
         # Lazy-loaded orchestrator instances

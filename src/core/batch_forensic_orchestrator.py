@@ -117,6 +117,16 @@ class BatchForensicOrchestrator:
             output_dir: Output directory for batch results
             max_concurrent: Maximum concurrent investigations
         """
+        # DEPRECATION WARNING
+        import warnings
+        warnings.warn(
+            "BatchForensicOrchestrator is deprecated. "
+            "Use UnifiedForensicOrchestrator from src.core.unified_orchestrator for DOJ-grade compliance. "
+            "This class will be removed in a future version.",
+            DeprecationWarning,
+            stacklevel=2
+        )
+        
         self.output_dir = output_dir
         self.max_concurrent = max_concurrent
         self.logger = logging.getLogger(self.__class__.__name__)

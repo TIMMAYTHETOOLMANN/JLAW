@@ -194,6 +194,16 @@ class ForensicMetaOrchestrator:
             default_timeout: Default timeout for agent execution (seconds)
             auto_register_agents: Automatically register default agents
         """
+        # DEPRECATION WARNING
+        import warnings
+        warnings.warn(
+            "ForensicMetaOrchestrator is deprecated. "
+            "Use UnifiedForensicOrchestrator from src.core.unified_orchestrator for DOJ-grade compliance. "
+            "This class will be removed in a future version.",
+            DeprecationWarning,
+            stacklevel=2
+        )
+        
         self.enable_circuit_breakers = enable_circuit_breakers
         self.default_timeout = default_timeout
         

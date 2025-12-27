@@ -237,6 +237,16 @@ class MasterExecutionController:
             sec_user_agent: SEC EDGAR User-Agent
             polygon_api_key: Polygon.io API key for market data
         """
+        # DEPRECATION WARNING
+        import warnings
+        warnings.warn(
+            "MasterExecutionController is deprecated. "
+            "Use UnifiedForensicOrchestrator from src.core.unified_orchestrator for DOJ-grade compliance. "
+            "This class will be removed in a future version.",
+            DeprecationWarning,
+            stacklevel=2
+        )
+        
         self.cik = cik
         self.company_name = company_name
         self.start_date = start_date
