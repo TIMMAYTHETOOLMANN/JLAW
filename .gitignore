@@ -156,3 +156,7 @@ jlaw_forensic_*.log
 
 # JLAW Cache Directory
 .jlaw_cache/
+
+# Evidence packages
+*.zip
+evidence_package_*.zip
