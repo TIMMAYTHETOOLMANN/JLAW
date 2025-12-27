@@ -10,6 +10,9 @@
 ║                                                                                              ║
 ║  SINGLE DEPLOYMENT SCRIPT - Executes ALL forensic modules systematically                    ║
 ║                                                                                              ║
+║  NOTE: For new integrations, consider using UnifiedForensicOrchestrator from                ║
+║        src.core.unified_orchestrator - the canonical entry point for DOJ-grade compliance.  ║
+║                                                                                              ║
 ║  EXECUTION PHASES:                                                                           ║
 ║    Phase 1: Configuration & Target Acquisition                                               ║
 ║    Phase 2: SEC EDGAR Data Collection                                                        ║

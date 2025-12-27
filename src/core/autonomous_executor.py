@@ -106,6 +106,16 @@ class AutonomousForensicExecutor:
             max_concurrent: Maximum concurrent investigations
             check_interval_seconds: Interval for checking schedules (default: 5 minutes)
         """
+        # DEPRECATION WARNING
+        import warnings
+        warnings.warn(
+            "AutonomousForensicExecutor is deprecated. "
+            "Use UnifiedForensicOrchestrator from src.core.unified_orchestrator for DOJ-grade compliance. "
+            "This class will be removed in a future version.",
+            DeprecationWarning,
+            stacklevel=2
+        )
+        
         from src.core.scheduler import InvestigationScheduler
         
         self.output_dir = Path(output_dir)
