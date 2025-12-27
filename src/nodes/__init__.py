@@ -117,6 +117,16 @@ from .node14_fscore import FinancialStrengthAnalyzer, FinancialStrengthAnalyzerV
 # Node 15: Market Correlation Engine
 from .node15_market_correlation import MarketCorrelationEngine, MarketCorrelationEngineV2, Node15OutputV2
 
+# Node 16: Customs & Trade Fraud Detection
+from .node16_customs_trade import (
+    CustomsTradeAnalyzer,
+    CustomsTradeResult,
+    TradeTransaction,
+    CustomsViolation,
+    CustomsViolationType,
+    TradeSeverity
+)
+
 # Cross-Node Integration
 from .cross_node import NodeCorrelator, CrossNodeAlert, UnifiedForensicAnalysis
 
@@ -216,6 +226,14 @@ __all__ = [
     'MarketCorrelationEngine',  # V1 for backward compatibility
     'MarketCorrelationEngineV2',
     'Node15OutputV2',
+    
+    # Node 16
+    'CustomsTradeAnalyzer',
+    'CustomsTradeResult',
+    'TradeTransaction',
+    'CustomsViolation',
+    'CustomsViolationType',
+    'TradeSeverity',
     
     # Cross-Node Integration
     'NodeCorrelator',
