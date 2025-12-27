@@ -1287,6 +1287,9 @@ class RecursiveProsecutorialEngine:
                 },
                 execution_time_seconds=time.time() - start
             )
+        except ValueError:
+            # Re-raise ValueError in strict mode (API key missing)
+            raise
         except Exception as e:
             logger.error(f"Node 15 error: {e}", exc_info=True)
             return NodeResult(
