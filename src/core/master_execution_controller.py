@@ -5,7 +5,7 @@ Master Execution Controller - JLAW Unified Forensic Analysis Platform
 SINGLE CANONICAL ENTRY POINT for DOJ-grade forensic analysis.
 
 This controller harmonizes the 9-phase orchestration architecture with the
-15-node recursive engine to produce prosecution-ready forensic dossiers from
+16-node recursive engine to produce prosecution-ready forensic dossiers from
 SEC EDGAR filings.
 
 EXECUTION ARCHITECTURE:
@@ -18,13 +18,13 @@ EXECUTION ARCHITECTURE:
   PHASE 3: Document Parsing & Indexing
     └── GATE: 80% documents parsed successfully
 
-  PHASE 4: 15-Node Recursive Analysis
+  PHASE 4: 16-Node Recursive Analysis
     ├── SUB-PHASE 4.1: Core SEC Filing Analysis (Nodes 1-6)
     ├── SUB-PHASE 4.2: Extended Intelligence (Nodes 7-12)
     ├── SUB-PHASE 4.3: Quantitative Forensic Scoring (Nodes 13-14)
-    ├── SUB-PHASE 4.4: Market Correlation (Node 15)
+    ├── SUB-PHASE 4.4: Market & Trade Analysis (Nodes 15-16)
     ├── SUB-PHASE 4.5: Cross-Node Correlation
-    └── GATE: 12/15 nodes successful (80% required)
+    └── GATE: 13/16 nodes successful (80% required)
 
   PHASE 5: Advanced Detection Patterns (23 algorithms)
     └── GATE: 20/23 patterns executed (87% required)
@@ -1234,16 +1234,53 @@ class MasterExecutionController:
         try:
             logger.info("→ Auto-triggering dual-agent verification for high-confidence violations...")
             
-            # NEW: Auto-trigger dual-agent verification for high-confidence findings
+            # STEP 1: Auto-trigger dual-agent verification for high-confidence findings
             verified_violations = await self._auto_trigger_dual_agent_verification()
             
             items_processed = len(verified_violations)
             logger.info(f"✓ Dual-agent verification completed: {items_processed} violations verified")
             
-            # Store verification results
+            # STEP 2: AI Cross-Validation for all 23 detection patterns (MOD-005)
+            logger.info("→ Running AI cross-validation for all 23 detection patterns...")
+            try:
+                from src.validation import AICrossValidator
+                
+                ai_validator = AICrossValidator()
+                if ai_validator.is_available():
+                    # Collect pattern results from Phase 5
+                    pattern_results = self.pattern_detection_results if hasattr(self, 'pattern_detection_results') else {}
+                    
+                    # Collect node results from Phase 4
+                    node_results_dict = {}
+                    for node_id, node_result in self.node_results.items():
+                        node_results_dict[node_id.lower()] = node_result.findings
+                    
+                    # Run cross-validation
+                    validation_report = await ai_validator.validate_all_patterns(
+                        company_name=self.company_name,
+                        cik=self.cik,
+                        pattern_results=pattern_results,
+                        node_results=node_results_dict
+                    )
+                    
+                    # Store validation results
+                    self.ai_validation_results = validation_report.to_dict()
+                    
+                    logger.info(f"✓ AI cross-validation completed: {validation_report.consensus_count}/{validation_report.patterns_validated} patterns reached consensus")
+                    logger.info(f"  High-confidence violations: {len(validation_report.high_confidence_violations)}")
+                    logger.info(f"  Flagged for review: {len(validation_report.flagged_for_review)}")
+                else:
+                    logger.warning("⚠ AI cross-validator not available (no API keys configured)")
+                    self.ai_validation_results = {"status": "unavailable", "reason": "No AI agents available"}
+            except Exception as validation_error:
+                logger.warning(f"⚠ AI cross-validation error: {validation_error}")
+                self.ai_validation_results = {"status": "error", "error": str(validation_error)}
+            
+            # Store combined verification results
             verification_data = {
                 "verified_count": items_processed,
-                "verified_violations": verified_violations
+                "verified_violations": verified_violations,
+                "ai_cross_validation": self.ai_validation_results
             }
             
         except Exception as e:
