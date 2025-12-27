@@ -81,7 +81,23 @@ class RegulatoryRouting:
 
 @dataclass
 class RecursiveAnalysisResult:
-    """Complete result from 15-node recursive analysis."""
+    """
+    Results from the 15-Node Recursive Prosecutorial Engine.
+    
+    Maps to the 9-phase forensic execution pipeline:
+    - Phase 1: Configuration & Target Acquisition
+    - Phase 2: SEC EDGAR Data Collection
+    - Phase 3: Document Parsing & Indexing
+    - Phase 4: 15-Node Recursive Analysis (this engine)
+    - Phase 5: Advanced Detection Patterns
+    - Phase 6: Dual-Agent AI Cross-Validation
+    - Phase 7: Subagent Orchestration
+    - Phase 8: Evidence Chain Finalization
+    - Phase 9: DOJ-Grade Dossier Generation
+    
+    Note: This engine executes Phase 4 (15-Node Analysis), which is internally
+    divided into 4 node groups for organizational clarity.
+    """
     case_id: str
     company_name: str
     cik: str
@@ -89,16 +105,53 @@ class RecursiveAnalysisResult:
     execution_start: datetime
     execution_end: datetime
     total_execution_seconds: float
-    phase1_results: List[NodeResult]
-    phase2_results: List[NodeResult]
-    phase3_results: List[NodeResult]
-    phase4_results: List[NodeResult]
+    
+    # Node groupings within Phase 4 (15-Node Analysis)
+    node_group_1_results: List[NodeResult]  # Nodes 1-6: Core SEC Analysis
+    node_group_2_results: List[NodeResult]  # Nodes 7-12: Extended Analysis
+    node_group_3_results: List[NodeResult]  # Nodes 13-14: Financial Scoring
+    node_group_4_results: List[NodeResult]  # Node 15: Market Correlation
+    
     total_alerts: int
     critical_alerts: int
     high_alerts: int
     prosecution_recommendation: str
     estimated_penalties: PenaltyEstimate
     regulatory_routing: RegulatoryRouting
+    
+    # Phase-level tracking for the 9-phase pipeline
+    phase_execution_status: Dict[str, str] = field(default_factory=lambda: {
+        'phase_1_configuration': 'pending',
+        'phase_2_data_collection': 'pending',
+        'phase_3_document_parsing': 'pending',
+        'phase_4_node_analysis': 'pending',
+        'phase_5_pattern_detection': 'pending',
+        'phase_6_dual_agent_validation': 'pending',
+        'phase_7_subagent_orchestration': 'pending',
+        'phase_8_evidence_finalization': 'pending',
+        'phase_9_dossier_generation': 'pending',
+    })
+    
+    # Backward compatibility aliases
+    @property
+    def phase1_results(self) -> List[NodeResult]:
+        """Deprecated: Use node_group_1_results instead."""
+        return self.node_group_1_results
+    
+    @property
+    def phase2_results(self) -> List[NodeResult]:
+        """Deprecated: Use node_group_2_results instead."""
+        return self.node_group_2_results
+    
+    @property
+    def phase3_results(self) -> List[NodeResult]:
+        """Deprecated: Use node_group_3_results instead."""
+        return self.node_group_3_results
+    
+    @property
+    def phase4_results(self) -> List[NodeResult]:
+        """Deprecated: Use node_group_4_results instead."""
+        return self.node_group_4_results
     
     def to_dict(self) -> Dict[str, Any]:
         return {
@@ -110,11 +163,17 @@ class RecursiveAnalysisResult:
             "prosecution_recommendation": self.prosecution_recommendation,
             "penalties": self.estimated_penalties.to_dict(),
             "routing": self.regulatory_routing.to_dict(),
-            # Include detailed phase results for violation extraction
-            "phase1_results": [r.to_dict() for r in self.phase1_results],
-            "phase2_results": [r.to_dict() for r in self.phase2_results],
-            "phase3_results": [r.to_dict() for r in self.phase3_results],
-            "phase4_results": [r.to_dict() for r in self.phase4_results]
+            "phase_execution_status": self.phase_execution_status,
+            # Include detailed node group results (maintain backward compatibility in output)
+            "phase1_results": [r.to_dict() for r in self.node_group_1_results],
+            "phase2_results": [r.to_dict() for r in self.node_group_2_results],
+            "phase3_results": [r.to_dict() for r in self.node_group_3_results],
+            "phase4_results": [r.to_dict() for r in self.node_group_4_results],
+            # Also include new naming for clarity
+            "node_group_1_results": [r.to_dict() for r in self.node_group_1_results],
+            "node_group_2_results": [r.to_dict() for r in self.node_group_2_results],
+            "node_group_3_results": [r.to_dict() for r in self.node_group_3_results],
+            "node_group_4_results": [r.to_dict() for r in self.node_group_4_results]
         }
 
 
@@ -239,10 +298,11 @@ class RecursiveProsecutorialEngine:
         
         self._print_header(company_name, cik, case_id)
         
-        phase1_results = []
-        phase2_results = []
-        phase3_results = []
-        phase4_results = []
+        # Node groupings (Phase 4 of the 9-phase pipeline)
+        node_group_1_results = []  # Nodes 1-6: Core SEC Analysis
+        node_group_2_results = []  # Nodes 7-12: Extended Analysis
+        node_group_3_results = []  # Nodes 13-14: Financial Scoring
+        node_group_4_results = []  # Node 15: Market Correlation
         total_violations = 0
         
         async with SECEdgarClient(user_agent=self.sec_user_agent) as sec_client:
@@ -252,40 +312,43 @@ class RecursiveProsecutorialEngine:
             print("  → Node 1: Form 4 Insider Transaction Analysis")
             node1_start = time.time()
             node1_result = await self._execute_node1(sec_client, cik, start_date, end_date)
-            phase1_results.append(node1_result)
+            node_group_1_results.append(node1_result)
             total_violations += node1_result.violations_found
             
             # Node 2: DEF 14A Compensation Analysis
             print("  → Node 2: DEF 14A Executive Compensation")
             node2_result = await self._execute_node2(sec_client, cik, start_date, end_date, company_name)
-            phase1_results.append(node2_result)
+            node_group_1_results.append(node2_result)
             total_violations += node2_result.violations_found
             
             # Node 3: 10-Q Temporal Consistency
             print("  → Node 3: 10-Q Temporal Consistency")
             node3_result = await self._execute_node3(sec_client, cik, start_date, end_date, company_name)
-            phase1_results.append(node3_result)
+            node_group_1_results.append(node3_result)
             total_violations += node3_result.violations_found
             
             # Node 4: 10-K SOX Certification
             print("  → Node 4: 10-K SOX Certification Analysis")
             node4_result = await self._execute_node4(sec_client, cik, start_date, end_date, company_name)
-            phase1_results.append(node4_result)
+            node_group_1_results.append(node4_result)
             total_violations += node4_result.violations_found
             
             # Node 5: IRC §83 Tax Exposure
             print("  → Node 5: IRC §83 Tax Exposure")
             node5_result = await self._execute_node5(sec_client, cik, start_date, end_date, company_name)
-            phase1_results.append(node5_result)
+            node_group_1_results.append(node5_result)
             total_violations += node5_result.violations_found
             
             # Node 6: Enforcement Routing
             print("  → Node 6: Enforcement Routing")
-            phase1_results.append(NodeResult(
-                node_id="NODE_6", node_name="Routing", status="success",
-                violations_found=0, alerts_generated=0, findings={},
-                execution_time_seconds=0.1
-            ))
+            node6_result = self._execute_node6(
+                case_id=case_id,
+                company_name=company_name,
+                cik=cik,
+                previous_node_results=node_group_1_results  # Pass Nodes 1-5 results
+            )
+            node_group_1_results.append(node6_result)
+            # Note: violations_found from Node 6 represents total violations routed, not new violations
             
             # PHASE 2
             print("\n⚡ PHASE 2: Extended Intelligence (Nodes 7-12)")
@@ -293,32 +356,32 @@ class RecursiveProsecutorialEngine:
             # Node 7: 13F-HR Institutional Holdings
             print("  → Node 7: 13F Holdings")
             node7_result = await self._execute_node7(sec_client, cik, start_date, end_date)
-            phase2_results.append(node7_result)
+            node_group_2_results.append(node7_result)
             
             # Node 8: SC 13D/13G Beneficial Ownership
             print("  → Node 8: 13D/13G Ownership")
             node8_result = await self._execute_node8(sec_client, cik, start_date, end_date)
-            phase2_results.append(node8_result)
+            node_group_2_results.append(node8_result)
             
             # Node 9: 8-K Material Events
             print("  → Node 9: 8-K Events")
             node9_result = await self._execute_node9(sec_client, cik, start_date, end_date)
-            phase2_results.append(node9_result)
+            node_group_2_results.append(node9_result)
             
             # Node 10: Form 144 Restricted Sales
             print("  → Node 10: Form 144")
             node10_result = await self._execute_node10(sec_client, cik, start_date, end_date)
-            phase2_results.append(node10_result)
+            node_group_2_results.append(node10_result)
             
             # Node 11: Executive Network Analysis
             print("  → Node 11: Network Mapper")
             node11_result = await self._execute_node11(sec_client, cik, start_date, end_date, node2_result)
-            phase2_results.append(node11_result)
+            node_group_2_results.append(node11_result)
             
             # Node 12: Earnings Call Transcripts
             print("  → Node 12: Earnings Calls")
             node12_result = await self._execute_node12(sec_client, cik, start_date, end_date, node9_result)
-            phase2_results.append(node12_result)
+            node_group_2_results.append(node12_result)
             
             # PHASE 3
             print("\n⚡ PHASE 3: Financial Health (Nodes 13-14)")
@@ -326,12 +389,12 @@ class RecursiveProsecutorialEngine:
             # Node 13: Z-Score Bankruptcy Prediction
             print("  → Node 13: Z-Score")
             node13_result = await self._execute_node13(sec_client, cik, company_name)
-            phase3_results.append(node13_result)
+            node_group_3_results.append(node13_result)
             
             # Node 14: F-Score Financial Strength
             print("  → Node 14: F-Score")
             node14_result = await self._execute_node14(sec_client, cik, company_name)
-            phase3_results.append(node14_result)
+            node_group_3_results.append(node14_result)
             
             # PHASE 4
             print("\n⚡ PHASE 4: Market Correlation (Node 15)")
@@ -339,7 +402,7 @@ class RecursiveProsecutorialEngine:
             # Node 15: Market Correlation Analysis
             print("  → Node 15: Market Correlation")
             node15_result = await self._execute_node15(cik, company_name)
-            phase4_results.append(node15_result)
+            node_group_4_results.append(node15_result)
             
             # Cross-Node Correlation (after all nodes complete)
             print("\n🔗 Cross-Node Correlation Analysis (All 15 Nodes)")
@@ -378,7 +441,7 @@ class RecursiveProsecutorialEngine:
         total_time = (execution_end - execution_start).total_seconds()
         
         total_alerts = sum(r.alerts_generated for r in 
-                         phase1_results + phase2_results + phase3_results + phase4_results)
+                         node_group_1_results + node_group_2_results + node_group_3_results + node_group_4_results)
         
         self._print_footer(total_alerts, total_violations, total_time)
         
@@ -390,10 +453,10 @@ class RecursiveProsecutorialEngine:
             execution_start=execution_start,
             execution_end=execution_end,
             total_execution_seconds=total_time,
-            phase1_results=phase1_results,
-            phase2_results=phase2_results,
-            phase3_results=phase3_results,
-            phase4_results=phase4_results,
+            node_group_1_results=node_group_1_results,
+            node_group_2_results=node_group_2_results,
+            node_group_3_results=node_group_3_results,
+            node_group_4_results=node_group_4_results,
             total_alerts=total_alerts,
             critical_alerts=0,
             high_alerts=0,
@@ -793,6 +856,97 @@ class RecursiveProsecutorialEngine:
                 node_id="NODE_5", node_name="IRC §83 Analysis",
                 status="error", violations_found=0, alerts_generated=0,
                 findings={}, execution_time_seconds=time.time() - start,
+                error_message=str(e)
+            )
+    
+    def _execute_node6(
+        self,
+        case_id: str,
+        company_name: str,
+        cik: str,
+        previous_node_results: List[NodeResult]
+    ) -> NodeResult:
+        """
+        Execute Node 6: Enforcement Routing.
+        
+        Routes detected violations from Nodes 1-5 to appropriate enforcement agencies
+        (SEC, DOJ, IRS, CFTC, FinCEN) with penalty estimates and routing rationale.
+        
+        Args:
+            case_id: Unique case identifier
+            company_name: Target company name
+            cik: SEC CIK number
+            previous_node_results: Results from Nodes 1-5 containing violations
+            
+        Returns:
+            NodeResult with routing decisions and findings
+        """
+        start = time.time()
+        
+        try:
+            # Import enforcement router
+            from src.nodes.node6_routing.enforcement_router import IntelligentEnforcementRouter
+            
+            # Initialize router
+            router = IntelligentEnforcementRouter()
+            
+            # Convert NodeResults to dict format expected by router
+            node_results_dict = []
+            for node_result in previous_node_results:
+                node_dict = node_result.to_dict()
+                
+                # Extract violations from findings if present
+                violations = []
+                if 'findings' in node_dict and node_dict['findings']:
+                    findings = node_dict['findings']
+                    
+                    # Extract violations based on node-specific structure
+                    if 'violations' in findings:
+                        violations = findings['violations']
+                    elif 'violations_detected' in findings and findings['violations_detected'] > 0:
+                        # Create synthetic violations for nodes that don't provide detailed list
+                        violations = [{
+                            'violation_type': f"{node_dict.get('node_name', 'Unknown')} violation",
+                            'severity': 'MEDIUM',
+                            'estimated_damages': 0,
+                            'source_node': node_dict.get('node_id', 'unknown')
+                        }]
+                
+                # Add violations to node dict
+                node_dict['violations'] = violations
+                node_results_dict.append(node_dict)
+            
+            # Analyze and route violations
+            routing_report = router.analyze_and_route(
+                case_id=case_id,
+                company_name=company_name,
+                cik=cik,
+                node_results=node_results_dict
+            )
+            
+            # Convert routing report to findings
+            findings = routing_report.to_dict()
+            
+            return NodeResult(
+                node_id="NODE_6",
+                node_name="Enforcement Router",
+                status="success",
+                violations_found=routing_report.total_violations,
+                alerts_generated=routing_report.total_violations,
+                findings=findings,
+                execution_time_seconds=time.time() - start
+            )
+            
+        except Exception as e:
+            logger.error(f"Node 6 error: {e}")
+            return NodeResult(
+                node_id="NODE_6",
+                node_name="Enforcement Router",
+                status="error",
+                violations_found=0,
+                alerts_generated=0,
+                findings={'error': str(e)},
+                execution_time_seconds=time.time() - start,
                 error_message=str(e)
             )
     
