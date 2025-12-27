@@ -65,6 +65,8 @@ from typing import List, Dict, Any, Optional, Tuple
 from pathlib import Path
 from enum import Enum
 
+from .phase_gate_validator import PhaseGateValidator
+
 logger = logging.getLogger(__name__)
 
 # Configuration constants
@@ -269,8 +271,16 @@ class MasterExecutionController:
         # Strict mode controller
         self._strict_controller = None
         
-        # Gate validator
-        self._gate_validator = None
+        # Gate validator - Initialize with configuration
+        gate_validator_config = {
+            "strict_mode": self.strict_mode,
+            "halt_on_critical_failure": True,
+            "min_filings_total": 5,
+            "min_documents_parsed": 1,
+            "min_nodes_successful": 12,
+            "min_patterns_executed": 20
+        }
+        self._gate_validator = PhaseGateValidator(gate_validator_config)
         
         # Audit logger
         self._audit = None
@@ -646,7 +656,10 @@ class MasterExecutionController:
                 gate_data
             )
             if not validation_result.passed:
-                logger.warning(f"Data collection gate warning: {validation_result.get_error_message()}")
+                if self.strict_mode:
+                    raise Exception(f"Data collection gate failed: {validation_result.get_error_message()}")
+                else:
+                    logger.warning(f"Data collection gate warning: {validation_result.get_error_message()}")
         
         logger.info(f"✓ Phase 2 completed in {phase_duration:.2f}s")
     
@@ -716,7 +729,10 @@ class MasterExecutionController:
                 gate_data
             )
             if not validation_result.passed:
-                logger.warning(f"Document parsing gate warning: {validation_result.get_error_message()}")
+                if self.strict_mode:
+                    raise Exception(f"Document parsing gate failed: {validation_result.get_error_message()}")
+                else:
+                    logger.warning(f"Document parsing gate warning: {validation_result.get_error_message()}")
         
         logger.info(f"✓ Phase 3 completed in {phase_duration:.2f}s")
     
@@ -856,7 +872,10 @@ class MasterExecutionController:
                 gate_data
             )
             if not validation_result.passed:
-                logger.warning(f"Node analysis gate warning: {validation_result.get_error_message()}")
+                if self.strict_mode:
+                    raise Exception(f"Node analysis gate failed: {validation_result.get_error_message()}")
+                else:
+                    logger.warning(f"Node analysis gate warning: {validation_result.get_error_message()}")
         
         logger.info(f"✓ Phase 4 completed in {phase_duration:.2f}s")
     
@@ -1179,7 +1198,10 @@ class MasterExecutionController:
                 gate_data
             )
             if not validation_result.passed:
-                logger.warning(f"Pattern detection gate warning: {validation_result.get_error_message()}")
+                if self.strict_mode:
+                    raise Exception(f"Pattern detection gate failed: {validation_result.get_error_message()}")
+                else:
+                    logger.warning(f"Pattern detection gate warning: {validation_result.get_error_message()}")
         
         logger.info(f"✓ Phase 5 completed in {phase_duration:.2f}s")
     
