@@ -95,7 +95,7 @@ class RecursiveAnalysisResult:
     - Phase 8: Evidence Chain Finalization
     - Phase 9: DOJ-Grade Dossier Generation
     
-    Note: This engine executes Phase 4 (15-Node Analysis), which is internally
+    Note: This engine executes Phase 4 (16-Node Analysis), which is internally
     divided into 4 node groups for organizational clarity.
     """
     case_id: str
@@ -106,11 +106,11 @@ class RecursiveAnalysisResult:
     execution_end: datetime
     total_execution_seconds: float
     
-    # Node groupings within Phase 4 (15-Node Analysis)
+    # Node groupings within Phase 4 (16-Node Analysis)
     node_group_1_results: List[NodeResult]  # Nodes 1-6: Core SEC Analysis
     node_group_2_results: List[NodeResult]  # Nodes 7-12: Extended Analysis
     node_group_3_results: List[NodeResult]  # Nodes 13-14: Financial Scoring
-    node_group_4_results: List[NodeResult]  # Node 15: Market Correlation
+    node_group_4_results: List[NodeResult]  # Nodes 15-16: Market & Trade Analysis
     
     total_alerts: int
     critical_alerts: int
@@ -264,6 +264,11 @@ class RecursiveProsecutorialEngine:
         
         self.node15_market = MarketCorrelationEngineV2(self.polygon_api_key)
         
+        # Node 16: Customs & Trade Fraud Detection
+        from src.nodes import CustomsTradeAnalyzer
+        
+        self.node16_customs = CustomsTradeAnalyzer()
+        
         # Detection modules
         # Core pattern detector (15 patterns)
         from src.detection.patterns.advanced_patterns import AdvancedPatternDetector
@@ -302,7 +307,7 @@ class RecursiveProsecutorialEngine:
         node_group_1_results = []  # Nodes 1-6: Core SEC Analysis
         node_group_2_results = []  # Nodes 7-12: Extended Analysis
         node_group_3_results = []  # Nodes 13-14: Financial Scoring
-        node_group_4_results = []  # Node 15: Market Correlation
+        node_group_4_results = []  # Nodes 15-16: Market & Trade Analysis
         total_violations = 0
         
         async with SECEdgarClient(user_agent=self.sec_user_agent) as sec_client:
@@ -397,15 +402,20 @@ class RecursiveProsecutorialEngine:
             node_group_3_results.append(node14_result)
             
             # PHASE 4
-            print("\n⚡ PHASE 4: Market Correlation (Node 15)")
+            print("\n⚡ PHASE 4: Market & Trade Analysis (Nodes 15-16)")
             
             # Node 15: Market Correlation Analysis
             print("  → Node 15: Market Correlation")
             node15_result = await self._execute_node15(cik, company_name)
             node_group_4_results.append(node15_result)
             
+            # Node 16: Customs & Trade Fraud Detection
+            print("  → Node 16: Customs & Trade")
+            node16_result = await self._execute_node16(sec_client, cik, company_name, start_date, end_date)
+            node_group_4_results.append(node16_result)
+            
             # Cross-Node Correlation (after all nodes complete)
-            print("\n🔗 Cross-Node Correlation Analysis (All 15 Nodes)")
+            print("\n🔗 Cross-Node Correlation Analysis (All 16 Nodes)")
             try:
                 correlation_start = time.time()
                 # Generate unified cross-node analysis with all 15 nodes
@@ -1448,6 +1458,66 @@ class RecursiveProsecutorialEngine:
             logger.error(f"Node 15 error: {e}", exc_info=True)
             return NodeResult(
                 node_id="NODE_15", node_name="Market Correlation",
+                status="error", violations_found=0, alerts_generated=0,
+                findings={}, execution_time_seconds=time.time() - start,
+                error_message=str(e)
+            )
+    
+    async def _execute_node16(
+        self,
+        sec_client,
+        cik: str,
+        company_name: str,
+        start_date: date,
+        end_date: date
+    ) -> NodeResult:
+        """Execute Node 16: Customs & Trade Fraud Detection."""
+        start = time.time()
+        
+        try:
+            # For now, create sample trade transactions for demonstration
+            # In production, this would pull from import/export data sources
+            from src.nodes.node16_customs_trade import TradeTransaction
+            
+            # Sample trade transactions (in production, fetch from data source)
+            sample_transactions = []
+            
+            # Note: Node 16 requires trade data which is typically not in SEC filings
+            # This is a placeholder that would be populated from:
+            # - Census Bureau trade data
+            # - Customs declarations
+            # - Import/export manifests
+            # - Company 10-K disclosures (international revenue)
+            
+            logger.info("Node 16: Analyzing customs and trade fraud patterns...")
+            
+            result = await self.node16_customs.analyze(
+                company_name=company_name,
+                cik=cik,
+                transactions=sample_transactions,
+                financial_data=None
+            )
+            
+            return NodeResult(
+                node_id="NODE_16",
+                node_name="Customs & Trade Fraud",
+                status="success",
+                violations_found=result.violations_found,
+                alerts_generated=len(result.alerts),
+                findings={
+                    "transactions_analyzed": result.transactions_analyzed,
+                    "violations": [v.to_dict() for v in result.violations],
+                    "total_estimated_loss": result.total_estimated_loss,
+                    "high_risk_countries": result.high_risk_countries,
+                    "suspicious_hs_codes": result.suspicious_hs_codes
+                },
+                execution_time_seconds=time.time() - start,
+                warnings=["Trade transaction data not available - Node 16 operates in limited mode"] if not sample_transactions else []
+            )
+        except Exception as e:
+            logger.error(f"Node 16 error: {e}", exc_info=True)
+            return NodeResult(
+                node_id="NODE_16", node_name="Customs & Trade Fraud",
                 status="error", violations_found=0, alerts_generated=0,
                 findings={}, execution_time_seconds=time.time() - start,
                 error_message=str(e)

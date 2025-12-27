@@ -275,11 +275,51 @@ class UnifiedForensicOrchestrator:
         """Phase 6: Dual-Agent AI Cross-Validation."""
         self._log("Phase 6: Dual-Agent AI Cross-Validation")
         
-        # Placeholder - would execute OpenAI + Anthropic validation
-        return {
-            'status': 'success',
-            'agents_responsive': 0,
-        }
+        try:
+            # Use the new AI cross-validator (MOD-005 implementation)
+            from src.validation import AICrossValidator
+            
+            ai_validator = AICrossValidator()
+            if ai_validator.is_available():
+                # Get pattern results from Phase 5
+                pattern_results = self._execution_result.get('phase_5', {}).get('pattern_results', {})
+                
+                # Get node results from Phase 4
+                node_results = self._execution_result.get('phase_4', {}).get('node_results', {})
+                
+                # Run AI cross-validation on all 23 patterns
+                validation_report = await ai_validator.validate_all_patterns(
+                    company_name=self.company_name,
+                    cik=self.cik,
+                    pattern_results=pattern_results,
+                    node_results=node_results
+                )
+                
+                self._log(
+                    "AI cross-validation complete",
+                    consensus_count=validation_report.consensus_count,
+                    total_patterns=validation_report.patterns_validated
+                )
+                
+                return {
+                    'status': 'success',
+                    'agents_responsive': 2 if ai_validator._openai_available and ai_validator._anthropic_available else 1,
+                    'validation_report': validation_report.to_dict()
+                }
+            else:
+                self._log("No AI agents available for cross-validation", level="warning")
+                return {
+                    'status': 'skipped',
+                    'agents_responsive': 0,
+                    'reason': 'No AI API keys configured'
+                }
+        except Exception as e:
+            self._log(f"Phase 6 error: {e}", level="error")
+            return {
+                'status': 'error',
+                'agents_responsive': 0,
+                'error': str(e)
+            }
     
     async def _execute_phase_7(self) -> Dict[str, Any]:
         """Phase 7: Subagent Orchestration."""
