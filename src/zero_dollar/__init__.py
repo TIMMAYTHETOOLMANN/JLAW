@@ -82,6 +82,20 @@ from .constants import (
 # Import schema utilities
 from .schema import get_schema_sql, SCHEMA_FILE
 
+# Import acquisition module (PR #2)
+from .acquisition import (
+    SECEdgarAcquisition,
+    FilingMetadata,
+    Form4Filing,
+    EdgarRateLimiter,
+    EdgarAcquisitionError,
+    EdgarRateLimitError,
+    EdgarParsingError,
+    EdgarNetworkError,
+    enrich_with_issuer_metadata,
+    calculate_derived_fields,
+)
+
 __all__ = [
     # Metadata
     "__version__",
@@ -139,4 +153,15 @@ __all__ = [
     # Schema
     "get_schema_sql",
     "SCHEMA_FILE",
+    # Acquisition (PR #2)
+    "SECEdgarAcquisition",
+    "FilingMetadata",
+    "Form4Filing",
+    "EdgarRateLimiter",
+    "EdgarAcquisitionError",
+    "EdgarRateLimitError",
+    "EdgarParsingError",
+    "EdgarNetworkError",
+    "enrich_with_issuer_metadata",
+    "calculate_derived_fields",
 ]
