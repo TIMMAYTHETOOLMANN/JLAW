@@ -208,31 +208,41 @@ class EventProximityFlag:
     Zero-dollar transaction occurring near material event.
     
     Links transactions to nearby corporate events for timing analysis.
+    Per Section 6.4 of JLAW Zero-Dollar Transaction Forensic Specification.
     
     Attributes:
-        proximity_id: Unique identifier
-        transaction_accession: Transaction accession number
-        event_id: Material event identifier
-        days_before_event: Days transaction preceded event (negative if after)
-        proximity_score: Risk score based on timing (0-100)
-        is_suspicious_timing: Whether timing warrants investigation
+        flag_id: Unique identifier for this flag
+        transaction_id: Transaction accession number
+        event: MaterialEvent object (full event details)
+        proximity_type: PRE_EVENT, POST_EVENT, or SAME_DAY
+        days_delta: Signed days from event (negative = before, positive = after)
+        mnpi_inference_score: MNPI exploitation probability [0.0 - 1.0]
+        regulatory_citations: List of applicable regulatory references
+        narrative: Human-readable description of the flag
+        evidence_hash: SHA-256 hash for evidence chain integrity
     """
-    proximity_id: str
-    transaction_accession: str
-    event_id: str
-    days_before_event: int
-    proximity_score: float
-    is_suspicious_timing: bool = False
+    flag_id: str
+    transaction_id: str
+    event: MaterialEvent
+    proximity_type: str
+    days_delta: int
+    mnpi_inference_score: Decimal
+    regulatory_citations: List[str]
+    narrative: str
+    evidence_hash: str
     
     def to_dict(self) -> Dict[str, Any]:
         """Convert to dictionary for serialization."""
         return {
-            'proximity_id': self.proximity_id,
-            'transaction_accession': self.transaction_accession,
-            'event_id': self.event_id,
-            'days_before_event': self.days_before_event,
-            'proximity_score': self.proximity_score,
-            'is_suspicious_timing': self.is_suspicious_timing,
+            'flag_id': self.flag_id,
+            'transaction_id': self.transaction_id,
+            'event': self.event.to_dict() if self.event else None,
+            'proximity_type': self.proximity_type,
+            'days_delta': self.days_delta,
+            'mnpi_inference_score': str(self.mnpi_inference_score),
+            'regulatory_citations': self.regulatory_citations,
+            'narrative': self.narrative,
+            'evidence_hash': self.evidence_hash,
         }
 
 
