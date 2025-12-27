@@ -35,6 +35,7 @@ class NodeResult:
     findings: Dict[str, Any]
     execution_time_seconds: float
     error_message: Optional[str] = None
+    warnings: List[str] = field(default_factory=list)
     
     def to_dict(self) -> Dict[str, Any]:
         return {
@@ -45,6 +46,7 @@ class NodeResult:
             "alerts_generated": self.alerts_generated,
             "execution_time": round(self.execution_time_seconds, 2),
             "error": self.error_message,
+            "warnings": self.warnings,
             "findings": self.findings  # Include findings for violation extraction
         }
 
@@ -127,11 +129,13 @@ class RecursiveProsecutorialEngine:
         self,
         sec_user_agent: str = None,
         polygon_api_key: Optional[str] = None,
-        config: Optional[Dict[str, Any]] = None
+        config: Optional[Dict[str, Any]] = None,
+        strict_mode: bool = False
     ):
         self.sec_user_agent = sec_user_agent or os.environ.get('SEC_USER_AGENT', "JLAW-Forensics/2.0")
         self.polygon_api_key = polygon_api_key or os.environ.get('POLYGON_API_KEY')
         self.config = config or {}
+        self.strict_mode = strict_mode
         
         # NEW: Initialize database connection for persistence
         self.db = None
@@ -1247,12 +1251,19 @@ class RecursiveProsecutorialEngine:
         try:
             # Check if Polygon.io API key is available
             if not self.polygon_api_key:
-                logger.info("Polygon.io API key not available - skipping market correlation")
+                warning_msg = "CRITICAL: Polygon.io API key not available - Node 15 (Market Correlation) skipped. Pre-announcement trading patterns and volume anomalies will NOT be detected."
+                logger.warning(warning_msg)
+                
+                # In strict mode, this should fail rather than silently skip
+                if self.strict_mode:
+                    raise ValueError(f"Node 15 cannot execute: {warning_msg}")
+                
                 return NodeResult(
                     node_id="NODE_15", node_name="Market Correlation",
                     status="skipped", violations_found=0, alerts_generated=0,
                     findings={"message": "Polygon.io API key not configured"},
-                    execution_time_seconds=time.time() - start
+                    execution_time_seconds=time.time() - start,
+                    warnings=[warning_msg]
                 )
             
             # Prepare data for MarketCorrelationEngineV2
@@ -1276,6 +1287,9 @@ class RecursiveProsecutorialEngine:
                 },
                 execution_time_seconds=time.time() - start
             )
+        except ValueError:
+            # Re-raise ValueError in strict mode (API key missing)
+            raise
         except Exception as e:
             logger.error(f"Node 15 error: {e}", exc_info=True)
             return NodeResult(

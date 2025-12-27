@@ -58,7 +58,8 @@ class DeBERTaContradictionDetector:
     def __init__(
         self,
         model_name: str = "microsoft/deberta-v3-large",
-        threshold: float = 0.7
+        threshold: float = 0.7,
+        strict_mode: bool = False
     ):
         """
         Initialize detector.
@@ -66,12 +67,16 @@ class DeBERTaContradictionDetector:
         Args:
             model_name: HuggingFace model name
             threshold: Confidence threshold for contradiction (default 0.7)
+            strict_mode: If True, fail instead of falling back to basic analysis
         """
         self.model_name = model_name
         self.threshold = threshold
+        self.strict_mode = strict_mode
         self.logger = logger
         self.mock_mode = True
         self._model_available = False
+        self._using_fallback = False
+        self._fallback_reason = None
         
         # Explicitly check model availability
         if TRANSFORMERS_AVAILABLE:
@@ -82,26 +87,45 @@ class DeBERTaContradictionDetector:
                 self.model.eval()
                 self.mock_mode = False
                 self._model_available = True
+                self._using_fallback = False
                 self.logger.info(f"✓ DeBERTa model loaded successfully")
                 self.logger.info(f"  Mode: ML-based contradiction detection")
             except Exception as e:
+                self._using_fallback = True
+                self._fallback_reason = str(e)
                 self.logger.warning("=" * 70)
                 self.logger.warning("⚠ DeBERTa Model Loading Failed")
                 self.logger.warning(f"  Model: {model_name}")
                 self.logger.warning(f"  Reason: {e}")
-                self.logger.warning(f"  Fallback: Using mock/rule-based analysis")
+                self.logger.warning(f"  Fallback: Using basic pattern matching")
+                self.logger.warning(f"  WARNING: AI-powered contradiction detection is NOT active")
                 self.logger.warning("=" * 70)
                 self.mock_mode = True
                 self._model_available = False
+                
+                # In strict mode, fail instead of falling back
+                if self.strict_mode:
+                    raise RuntimeError(
+                        f"DeBERTa model required for DOJ-grade analysis but failed to load: {e}"
+                    )
         else:
+            self._using_fallback = True
+            self._fallback_reason = "transformers/torch not installed"
             self.logger.warning("=" * 70)
             self.logger.warning("⚠ DeBERTa Model Not Available")
             self.logger.warning(f"  Reason: transformers/torch not installed")
-            self.logger.warning(f"  Fallback: Using mock/rule-based analysis")
+            self.logger.warning(f"  Fallback: Using basic pattern matching")
+            self.logger.warning(f"  WARNING: AI-powered contradiction detection is NOT active")
             self.logger.warning(f"  Install: pip install transformers torch")
             self.logger.warning("=" * 70)
             self.mock_mode = True
             self._model_available = False
+            
+            # In strict mode, fail instead of falling back
+            if self.strict_mode:
+                raise RuntimeError(
+                    f"DeBERTa model required for DOJ-grade analysis but is not available: {self._fallback_reason}"
+                )
     
     def is_model_available(self) -> bool:
         """
@@ -260,3 +284,27 @@ class DeBERTaContradictionDetector:
                         contradictions.append(result)
         
         return contradictions
+    
+    def get_detection_metadata(self) -> Dict[str, Any]:
+        """
+        Get metadata about the detection method being used.
+        
+        Returns:
+            Dictionary with metadata including fallback status, detection method, and warnings
+        """
+        metadata = {
+            'using_fallback': self._using_fallback,
+            'fallback_reason': self._fallback_reason,
+            'detection_method': 'basic_pattern_matching' if self._using_fallback else 'deberta_ai',
+            'model_available': self._model_available,
+            'warnings': []
+        }
+        
+        if self._using_fallback:
+            metadata['warnings'].append(
+                "WARNING: DeBERTa AI model unavailable. Results based on basic pattern matching only. "
+                "AI-powered semantic contradiction detection is NOT active."
+            )
+        
+        return metadata
+

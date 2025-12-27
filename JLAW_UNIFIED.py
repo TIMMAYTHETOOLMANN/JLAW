@@ -702,7 +702,8 @@ class UnifiedForensicEngine:
             from src.core.recursive_engine import RecursiveProsecutorialEngine
             import os
             self._recursive_engine = RecursiveProsecutorialEngine(
-                polygon_api_key=os.environ.get('POLYGON_API_KEY')
+                polygon_api_key=os.environ.get('POLYGON_API_KEY'),
+                strict_mode=self.config.strict_mode
             )
             modules_loaded += 1
             self.logger.info("    ✓ 15-Node Recursive Engine")
@@ -1194,15 +1195,23 @@ class UnifiedForensicEngine:
             try:
                 for node_id in sorted(nodes_to_run):
                     # Check if we should skip based on prior results
-                    if self._intelligent_orchestrator:
+                    # In strict mode, never skip any nodes - all 15 must execute for DOJ-grade analysis
+                    if self.config.strict_mode:
+                        should_skip = False
+                        reason = None
+                    elif self._intelligent_orchestrator:
                         should_skip, reason = self._intelligent_orchestrator.should_skip_node(
                             node_id, self.node_results
                         )
-                        if should_skip:
-                            self.logger.info(f"    ⏭ Node {node_id}: Skipped - {reason}")
-                            self._metrics_collector.skip_node(node_id, reason=reason)
-                            nodes_skipped += 1
-                            continue
+                    else:
+                        should_skip = False
+                        reason = None
+                    
+                    if should_skip:
+                        self.logger.warning(f"    ⏭ Node {node_id}: Skipped due to optimization - {reason}")
+                        self._metrics_collector.skip_node(node_id, reason=reason)
+                        nodes_skipped += 1
+                        continue
                     
                     # Start node metrics
                     self._metrics_collector.start_node(node_id)

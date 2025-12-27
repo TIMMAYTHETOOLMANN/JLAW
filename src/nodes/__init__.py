@@ -14,6 +14,8 @@ This module currently provides unified exports for Nodes 2-5:
 Additional nodes (1, 6-15) are available but not yet unified in this export structure.
 """
 
+import warnings
+
 # Node 1: Form 4 Insider Trading Analysis
 from .node1_form4.form4_parser import Form4Parser
 from .node1_form4.short_swing_calc import ShortSwingCalculator
@@ -220,4 +222,59 @@ __all__ = [
     'CrossNodeAlert',
     'UnifiedForensicAnalysis',
 ]
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# V1 NODE DEPRECATION WARNINGS
+# ═══════════════════════════════════════════════════════════════════════════════
+
+# List of deprecated V1 nodes (Nodes 7-15)
+__deprecated_v1_nodes__ = [
+    'InstitutionalHoldingsAnalyzer',
+    'BeneficialOwnershipTracker',
+    'MaterialEventCorrelator',
+    'RestrictedSaleMonitor',
+    'ExecutiveNetworkAnalyzer',
+    'EarningsCallAnalyzer',
+    'BankruptcyPredictor',
+    'FinancialStrengthAnalyzer',
+    'MarketCorrelationEngine',
+]
+
+# Map V1 names to their V2 equivalents
+__v1_to_v2_mapping__ = {
+    'InstitutionalHoldingsAnalyzer': 'InstitutionalHoldingsAnalyzerV2',
+    'BeneficialOwnershipTracker': 'BeneficialOwnershipTrackerV2',
+    'MaterialEventCorrelator': 'MaterialEventCorrelatorV2',
+    'RestrictedSaleMonitor': 'RestrictedSaleMonitorV2',
+    'ExecutiveNetworkAnalyzer': 'ExecutiveNetworkAnalyzerV2',
+    'EarningsCallAnalyzer': 'TranscriptAnalyzerV2',
+    'BankruptcyPredictor': 'BankruptcyPredictorV2',
+    'FinancialStrengthAnalyzer': 'FinancialStrengthAnalyzerV2',
+    'MarketCorrelationEngine': 'MarketCorrelationEngineV2',
+}
+
+
+def __getattr__(name):
+    """
+    Intercept attribute access to emit deprecation warnings for V1 nodes.
+    
+    This function is called when an attribute is not found in the module's
+    __dict__. We use it to catch V1 node imports and emit deprecation warnings.
+    """
+    if name in __deprecated_v1_nodes__:
+        v2_name = __v1_to_v2_mapping__.get(name, f"{name}_V2")
+        warnings.warn(
+            f"{name} is deprecated and will be removed in a future release. "
+            f"Please use {v2_name} instead.",
+            DeprecationWarning,
+            stacklevel=2
+        )
+        # Still return the V1 class for backward compatibility
+        # Look it up in globals() which should have been imported above
+        if name in globals():
+            return globals()[name]
+    
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
+
 
