@@ -101,7 +101,7 @@ class ProsecutorialNarrativeGenerator:
             anomaly_types.append("TEMPORAL_CLUSTERING")
         if events:
             anomaly_types.append("EVENT_PROXIMITY")
-        if len(ownership.entities) > 1:
+        if len(ownership.nodes) > 1:
             anomaly_types.append("OWNERSHIP_CHAIN")
         
         citations = compile_regulatory_citations(
@@ -150,11 +150,11 @@ class ProsecutorialNarrativeGenerator:
             f"**Ownership Structure:**",
         ]
         
-        if len(ownership.entities) == 1:
+        if len(ownership.nodes) == 1:
             lines.append("- Direct ownership (no intermediary entities)")
         else:
-            lines.append(f"- Complex ownership structure involving {len(ownership.entities)} entities:")
-            for entity in ownership.entities[:5]:  # Limit to first 5
+            lines.append(f"- Complex ownership structure involving {len(ownership.nodes)} entities:")
+            for entity in ownership.nodes[:5]:  # Limit to first 5
                 lines.append(f"  - {entity.entity_name} ({entity.entity_type.value})")
         
         return "\n".join(lines)
@@ -267,9 +267,9 @@ class ProsecutorialNarrativeGenerator:
             "",
         ])
         
-        if len(ownership.entities) > 1:
+        if len(ownership.nodes) > 1:
             lines.append(
-                f"Analysis revealed complex ownership structure involving {len(ownership.entities)} "
+                f"Analysis revealed complex ownership structure involving {len(ownership.nodes)} "
                 f"entities with {ownership.chain_depth} levels of indirection."
             )
             lines.append("")

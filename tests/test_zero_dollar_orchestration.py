@@ -233,17 +233,18 @@ def test_behavioral_scoring():
         event_flags = []
         
         ownership_chain = OwnershipChain(
+            chain_id="CHAIN-001",
             reporting_person_cik="0001234567",
-            entities=[
+            issuer_cik="0000320187",
+            nodes=[
                 OwnershipNode(
                     node_id="NODE-001", entity_name="John Doe",
                     entity_type=EntityType.RLT, ownership_percentage=100.0,
                     
                 )
             ],
-            control_assessments=[],
-            chain_depth=1,
-            total_entities=1,
+            total_depth=1,
+            effective_ownership=100.0,
         )
         
         # Create scoring engine
@@ -339,17 +340,18 @@ def test_narrative_generation():
         )
         
         ownership_chain = OwnershipChain(
+            chain_id="CHAIN-002",
             reporting_person_cik="0001234567",
-            entities=[
+            issuer_cik="0000320187",
+            nodes=[
                 OwnershipNode(
                     node_id="NODE-001", entity_name="John Doe",
                     entity_type=EntityType.RLT, ownership_percentage=100.0,
                     
                 )
             ],
-            control_assessments=[],
-            chain_depth=1,
-            total_entities=1,
+            total_depth=1,
+            effective_ownership=100.0,
         )
         
         transactions = [
@@ -529,17 +531,18 @@ def test_dossier_export():
         )
         
         ownership_chain = OwnershipChain(
+            chain_id="CHAIN-003",
             reporting_person_cik="0001234567",
-            entities=[
+            issuer_cik="0000320187",
+            nodes=[
                 OwnershipNode(
                     node_id="NODE-001", entity_name="John Doe",
                     entity_type=EntityType.RLT, ownership_percentage=100.0,
                     
                 )
             ],
-            control_assessments=[],
-            chain_depth=1,
-            total_entities=1,
+            total_depth=1,
+            effective_ownership=100.0,
         )
         
         dossier = ForensicDossier(
