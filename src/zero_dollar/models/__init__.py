@@ -42,6 +42,12 @@ from .assessment import (
     ChainOfCustodyRecord,
 )
 
+# Dossier models
+from .dossier import (
+    ProsecutorialNarrative,
+    ForensicDossier,
+)
+
 __all__ = [
     # Transaction
     "Transaction",
@@ -68,4 +74,7 @@ __all__ = [
     "MerkleProof",
     "TrustedTimestamp",
     "ChainOfCustodyRecord",
+    # Dossier
+    "ProsecutorialNarrative",
+    "ForensicDossier",
 ]

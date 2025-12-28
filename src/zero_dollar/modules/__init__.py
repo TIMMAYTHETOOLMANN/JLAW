@@ -87,6 +87,9 @@ from .hsr_analysis import (
     detect_threshold_fragmentation,
     get_hsr_filing_requirements,
 )
+from .behavioral_scoring import (
+    BehavioralScoringEngine,
+)
 
 __all__ = [
     # Temporal Clustering
@@ -147,4 +150,6 @@ __all__ = [
     "calculate_hsr_threshold_distance",
     "detect_threshold_fragmentation",
     "get_hsr_filing_requirements",
+    # Behavioral Scoring
+    "BehavioralScoringEngine",
 ]

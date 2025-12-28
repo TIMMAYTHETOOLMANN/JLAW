@@ -48,6 +48,9 @@ from .models import (
     MerkleProof,
     TrustedTimestamp,
     ChainOfCustodyRecord,
+    # Dossier models (PR #8)
+    ProsecutorialNarrative,
+    ForensicDossier,
 )
 
 # Import all constants
@@ -96,6 +99,41 @@ from .acquisition import (
     calculate_derived_fields,
 )
 
+# Import modules (PRs #3-6)
+from .modules import (
+    TemporalClusteringModule,
+    TemporalClusteringOutput,
+    EventProximityModule,
+    EventProximityOutput,
+    BeneficialOwnershipModule,
+    BehavioralScoringEngine,
+)
+
+# Import evidence chain (PR #7)
+from .evidence import (
+    MerkleEvidenceChain,
+    create_evidence_artifact,
+)
+
+# Import config (PR #8)
+from .config import JLAWConfig
+
+# Import orchestration (PR #8)
+from .orchestration import (
+    JLAWForensicEngine,
+    PipelineExecutor,
+    PipelineStage,
+)
+
+# Import narrative (PR #8)
+from .narrative import (
+    ProsecutorialNarrativeGenerator,
+    SECURITIES_CITATIONS,
+    TAX_CITATIONS,
+    ANTITRUST_CITATIONS,
+    get_citations_for_anomaly,
+)
+
 __all__ = [
     # Metadata
     "__version__",
@@ -125,6 +163,9 @@ __all__ = [
     "MerkleProof",
     "TrustedTimestamp",
     "ChainOfCustodyRecord",
+    # Dossier models (PR #8)
+    "ProsecutorialNarrative",
+    "ForensicDossier",
     # Transaction codes
     "TransactionCode",
     "TransactionCodeInfo",
@@ -164,4 +205,29 @@ __all__ = [
     "EdgarNetworkError",
     "enrich_with_issuer_metadata",
     "calculate_derived_fields",
+    # Modules (PRs #3-6)
+    "TemporalClusteringModule",
+    "TemporalClusteringOutput",
+    "EventProximityModule",
+    "EventProximityOutput",
+    "BeneficialOwnershipModule",
+    "BehavioralScoringEngine",
+    # Evidence Chain (PR #7)
+    "MerkleEvidenceChain",
+    "create_evidence_artifact",
+    # Config (PR #8)
+    "JLAWConfig",
+    # Orchestration (PR #8)
+    "JLAWForensicEngine",
+    "PipelineExecutor",
+    "PipelineStage",
+    # Narrative (PR #8)
+    "ProsecutorialNarrativeGenerator",
+    "SECURITIES_CITATIONS",
+    "TAX_CITATIONS",
+    "ANTITRUST_CITATIONS",
+    "get_citations_for_anomaly",
+    # Dossier Models (PR #8)
+    "ProsecutorialNarrative",
+    "ForensicDossier",
 ]
