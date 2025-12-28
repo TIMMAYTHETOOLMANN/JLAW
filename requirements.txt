@@ -22,6 +22,8 @@ python-xbrl>=1.1.0
 xbrl>=1.1.0
 # Additional XBRL tools
 ixbrlparse>=0.9.0  # XBRL inline parsing (latest stable version)
+# RFC 3161 Timestamping
+asn1crypto>=1.5.0
 # Testing
 pytest>=7.4.0
 pytest-cov>=4.1.0
