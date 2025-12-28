@@ -3,12 +3,18 @@ SEC EDGAR Models - Data Structures for Acquisitions
 ===================================================
 
 Structured result types for SEC filing acquisitions with integrity tracking.
+
+Note: DocumentType and ValidationResult are defined in document_validator.py
+and re-exported here for convenience.
 """
 
 from dataclasses import dataclass, field
 from datetime import datetime, date
 from typing import Optional, Dict, Any, List
 from enum import Enum
+
+# Import and re-export validation types
+from .document_validator import DocumentType, ValidationResult
 
 
 class AcquisitionStatus(Enum):
