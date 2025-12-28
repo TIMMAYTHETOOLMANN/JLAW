@@ -30,7 +30,10 @@ cryptography>=41.0.0  # Core cryptographic library (pinned for security and comp
 asn1crypto>=1.5.0  # ASN.1 parsing for timestamp token validation
 # Testing
 pytest>=7.4.0
+pytest-asyncio>=0.23.0
 pytest-cov>=4.1.0
+# CLI Enhancement
+rich>=13.0.0
 # Development
 black>=23.7.0
 flake8>=6.1.0
