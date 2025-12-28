@@ -67,32 +67,130 @@ class RFC3161Client:
     RFC 3161 timestamp client with multiple TSA support.
     
     Features:
-    - Multiple trusted timestamp authorities
-    - Automatic retry with fallback
+    - Multiple trusted timestamp authorities with fallback
+    - Automatic retry with exponential backoff
     - SHA-256 message imprint
     - Token verification
     - Court-admissible timestamps
+    - Connection validation
     """
     
     AUTHORITIES = {
-        "freetsa": "https://freetsa.org/tsr",
-        "digicert": "http://timestamp.digicert.com",  # Note: DigiCert uses HTTP for TSA protocol
-        "local": "local"
+        "freetsa": "http://freetsa.org/tsr",  # Primary TSA (free, public, court-admissible)
+        "sectigo": "http://timestamp.sectigo.com",  # Fallback 1 (commercial TSA)
+        "digicert": "http://timestamp.digicert.com",  # Fallback 2 (commercial TSA)
+        "local": "local"  # Development only - NOT court-admissible
     }
     
-    # Note: DigiCert TSA endpoint uses HTTP as per RFC 3161 standard.
+    # Note: TSA endpoints typically use HTTP as per RFC 3161 standard.
     # The timestamp response itself is cryptographically signed by the TSA,
     # ensuring integrity regardless of transport protocol.
     
-    def __init__(self, authority: str = "local"):
+    # Retry configuration
+    DEFAULT_MAX_RETRIES = 3
+    DEFAULT_RETRY_DELAYS = [2, 4, 8]  # Exponential backoff in seconds
+    DEFAULT_TIMEOUT = 10  # Default timeout in seconds
+    
+    def __init__(
+        self, 
+        authority: str = "freetsa",
+        timeout: int = DEFAULT_TIMEOUT,
+        max_retries: int = DEFAULT_MAX_RETRIES
+    ):
         """
         Initialize RFC 3161 client.
         
         Args:
-            authority: TSA to use ("freetsa", "digicert", or "local")
+            authority: TSA to use ("freetsa", "sectigo", "digicert", or "local")
+            timeout: Request timeout in seconds (default: 10)
+            max_retries: Maximum retry attempts per authority (default: 3)
         """
         self.authority = authority
-        self.tsa_url = self.AUTHORITIES.get(authority, self.AUTHORITIES["local"])
+        self.tsa_url = self.AUTHORITIES.get(authority, self.AUTHORITIES["freetsa"])
+        self.timeout = timeout
+        self.max_retries = max_retries
+    
+    async def validate_tsa_connectivity(self, test_all: bool = False) -> bool:
+        """
+        Validate connectivity to TSA endpoint(s).
+        
+        Args:
+            test_all: If True, test all available TSAs. If False, test only current authority.
+        
+        Returns:
+            True if at least one TSA is reachable, False otherwise.
+        """
+        authorities_to_test = []
+        
+        if test_all:
+            # Test all non-local authorities
+            authorities_to_test = [
+                (name, url) for name, url in self.AUTHORITIES.items() 
+                if name != "local"
+            ]
+        else:
+            # Test only current authority
+            if self.authority == "local":
+                logger.warning("Cannot validate local timestamp authority connectivity")
+                return False
+            authorities_to_test = [(self.authority, self.tsa_url)]
+        
+        results = []
+        for auth_name, auth_url in authorities_to_test:
+            try:
+                logger.info(f"Testing TSA connectivity: {auth_name} ({auth_url})")
+                
+                # Create a simple test hash
+                test_data = b"JLAW_TSA_CONNECTIVITY_TEST"
+                test_hash = hashlib.sha256(test_data).digest()
+                
+                if not RFC3161NG_AVAILABLE:
+                    logger.error("rfc3161ng library not available - cannot validate TSA")
+                    results.append(False)
+                    continue
+                
+                # Try to get a timestamp with timeout
+                try:
+                    async with asyncio.timeout(self.timeout):
+                        timestamper = RemoteTimestamper(
+                            auth_url,
+                            hashname='sha256',
+                            certificate=None
+                        )
+                        
+                        loop = asyncio.get_event_loop()
+                        response = await loop.run_in_executor(
+                            None,
+                            timestamper.timestamp,
+                            test_hash
+                        )
+                        
+                        if response:
+                            logger.info(f"✓ TSA {auth_name} is reachable and responsive")
+                            results.append(True)
+                        else:
+                            logger.warning(f"✗ TSA {auth_name} returned empty response")
+                            results.append(False)
+                            
+                except asyncio.TimeoutError:
+                    logger.warning(f"✗ TSA {auth_name} timed out after {self.timeout}s")
+                    results.append(False)
+                except Exception as e:
+                    logger.warning(f"✗ TSA {auth_name} connectivity failed: {e}")
+                    results.append(False)
+                    
+            except Exception as e:
+                logger.error(f"Error testing TSA {auth_name}: {e}")
+                results.append(False)
+        
+        # Return True if at least one TSA is reachable
+        any_success = any(results)
+        if any_success:
+            logger.info(f"✓ TSA connectivity validated: {sum(results)}/{len(results)} authorities reachable")
+        else:
+            logger.error("✗ No TSA authorities are reachable")
+        
+        return any_success
     
     async def timestamp(self, data: bytes) -> TimestampToken:
         """
@@ -182,17 +280,17 @@ class RFC3161Client:
     async def timestamp_with_retry(
         self,
         data: bytes,
-        max_retries: int = 3,
+        max_retries: Optional[int] = None,
         fallback_authorities: Optional[list] = None,
         strict_mode: bool = True
     ) -> TimestampToken:
         """
-        Get timestamp with automatic retry and fallback.
+        Get timestamp with automatic retry and fallback to multiple TSAs.
         
         Args:
             data: Data to timestamp
-            max_retries: Max retry attempts per authority
-            fallback_authorities: List of backup TSAs to try
+            max_retries: Max retry attempts per authority (default: uses client's max_retries)
+            fallback_authorities: List of backup TSAs to try (default: ["sectigo", "digicert"])
             strict_mode: If True, raise exception on failure instead of using local timestamp.
                         Default True for court-admissible evidence.
             
@@ -202,9 +300,19 @@ class RFC3161Client:
         Raises:
             RuntimeError: If strict_mode=True and all authorities fail
         """
+        if max_retries is None:
+            max_retries = self.max_retries
+        
+        # Set default fallback authorities
+        if fallback_authorities is None:
+            fallback_authorities = ["sectigo", "digicert"]
+        
         authorities = [self.authority]
         if fallback_authorities:
-            authorities.extend(fallback_authorities)
+            # Only add authorities that aren't already in the list
+            for auth in fallback_authorities:
+                if auth not in authorities and auth != "local":
+                    authorities.append(auth)
         
         last_error = None
         
@@ -214,20 +322,33 @@ class RFC3161Client:
             
             try:
                 self.authority = auth
-                self.tsa_url = self.AUTHORITIES.get(auth, self.AUTHORITIES["local"])
+                self.tsa_url = self.AUTHORITIES.get(auth, self.AUTHORITIES["freetsa"])
+                
+                logger.info(f"Attempting timestamp from TSA: {auth} ({self.tsa_url})")
                 
                 for attempt in range(max_retries):
                     try:
-                        token = await self.timestamp(data)
-                        logger.info(f"Timestamp successful: {auth}")
-                        return token
+                        # Use timeout for each attempt
+                        async with asyncio.timeout(self.timeout):
+                            token = await self.timestamp(data)
+                            logger.info(f"✓ Timestamp successful: {auth} (attempt {attempt + 1}/{max_retries})")
+                            return token
+                    except asyncio.TimeoutError:
+                        last_error = TimeoutError(f"Timeout after {self.timeout}s")
+                        logger.warning(f"✗ TSA {auth} timeout (attempt {attempt + 1}/{max_retries})")
                     except Exception as e:
                         last_error = e
-                        if attempt < max_retries - 1:
-                            await asyncio.sleep(2 ** attempt)  # Exponential backoff
+                        logger.warning(f"✗ TSA {auth} failed (attempt {attempt + 1}/{max_retries}): {e}")
+                        
+                    # Exponential backoff between retries
+                    if attempt < max_retries - 1:
+                        delay = self.DEFAULT_RETRY_DELAYS[min(attempt, len(self.DEFAULT_RETRY_DELAYS) - 1)]
+                        logger.debug(f"Waiting {delay}s before retry...")
+                        await asyncio.sleep(delay)
             
             except Exception as e:
                 last_error = e
+                logger.error(f"✗ TSA {auth} failed completely: {e}")
             
             finally:
                 # Restore original settings
@@ -235,13 +356,17 @@ class RFC3161Client:
                 self.tsa_url = original_url
         
         # All attempts failed
+        error_msg = (
+            f"All timestamp authorities failed after {max_retries} retries each. "
+            f"Tried: {', '.join(authorities)}. "
+            f"Last error: {last_error}. Evidence chain cannot be court-admissible."
+        )
+        
         if strict_mode:
-            raise RuntimeError(
-                f"All timestamp authorities failed after {max_retries} retries. "
-                f"Last error: {last_error}. Evidence chain cannot be court-admissible."
-            )
+            raise RuntimeError(error_msg)
         else:
-            logger.warning(f"All timestamp authorities failed: {last_error}")
+            logger.warning(error_msg)
+            logger.warning("Falling back to local timestamp (NOT court-admissible)")
             return self.create_local_timestamp(data, "fallback_local")
     
     @staticmethod
