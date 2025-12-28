@@ -520,12 +520,76 @@ class MasterExecutionController:
             raise
         
         try:
+            # Validate SEC configuration
             sec_valid, sec_msg = validate_sec_configuration()
             if not sec_valid:
-                errors.append(f"SEC configuration invalid: {sec_msg}")
-                logger.error(f"✗ {sec_msg}")
+                for msg in sec_msg:
+                    errors.append(f"SEC configuration invalid: {msg}")
+                    logger.error(f"✗ {msg}")
             else:
-                logger.info(f"✓ {sec_msg}")
+                logger.info("✓ SEC configuration valid")
+            
+            # Validate all API keys
+            from config.secure_config import validate_all_api_keys
+            api_keys_valid, api_validation_results = validate_all_api_keys()
+            
+            if not api_keys_valid:
+                logger.warning("⚠️  Some API keys are invalid or missing")
+                for key_name, (is_valid, error_msg) in api_validation_results.items():
+                    if not is_valid and key_name not in ['POLYGON_API_KEY', 'GOVINFO_API_KEY']:
+                        # Only error on required keys
+                        errors.append(f"{key_name}: {error_msg}")
+                        logger.error(f"✗ {key_name}: {error_msg}")
+            else:
+                logger.info("✓ All required API keys valid")
+            
+            # Validate RFC 3161 connectivity (optional, warn if fails)
+            try:
+                from src.core.evidence_chain.rfc3161_client import RFC3161Client
+                rfc3161_client = RFC3161Client(authority="freetsa", timeout=10)
+                
+                logger.info("→ Validating RFC 3161 timestamp authority connectivity...")
+                rfc3161_connectivity = await asyncio.wait_for(
+                    rfc3161_client.validate_tsa_connectivity(test_all=False),
+                    timeout=15
+                )
+                
+                if rfc3161_connectivity:
+                    logger.info("✓ RFC 3161 timestamp authority is reachable")
+                else:
+                    logger.warning("⚠️  RFC 3161 timestamp authority not reachable (will use fallback)")
+            except asyncio.TimeoutError:
+                logger.warning("⚠️  RFC 3161 connectivity test timed out (will retry during evidence chain)")
+            except Exception as e:
+                logger.warning(f"⚠️  RFC 3161 validation error: {e} (will retry during evidence chain)")
+            
+            # Validate database connectivity (optional, warn if fails)
+            try:
+                from src.database.db_health_checker import DatabaseHealthChecker
+                
+                logger.info("→ Checking database connectivity...")
+                db_checker = DatabaseHealthChecker()
+                db_results = await asyncio.wait_for(
+                    db_checker.check_all(),
+                    timeout=30
+                )
+                
+                # Log database status
+                for db_name, db_result in db_results.items():
+                    if db_result.is_healthy:
+                        logger.info(f"✓ {db_name} is healthy ({db_result.latency_ms:.2f}ms)")
+                    else:
+                        logger.warning(f"⚠️  {db_name} is not available: {db_result.error}")
+                        if db_name == "neo4j":
+                            logger.warning("   → Node 11 (Executive Network Analysis) may be limited")
+                        elif db_name == "timescaledb":
+                            logger.warning("   → Node 14 (Time-series Correlation) may be limited")
+                        elif db_name == "redis":
+                            logger.warning("   → Caching will use in-memory fallback")
+            except asyncio.TimeoutError:
+                logger.warning("⚠️  Database health checks timed out (services may not be running)")
+            except Exception as e:
+                logger.warning(f"⚠️  Database validation error: {e} (services may not be running)")
             
             # Set SEC user agent
             if not self.sec_user_agent and 'SEC_USER_AGENT' in keys:

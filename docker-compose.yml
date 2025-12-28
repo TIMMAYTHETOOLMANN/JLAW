@@ -45,12 +45,17 @@ services:
       - NEO4J_PLUGINS=["apoc"]
       - NEO4J_dbms_memory_heap_initial__size=512m
       - NEO4J_dbms_memory_heap_max__size=2G
+      - NEO4J_dbms_memory_pagecache_size=1G
+      - NEO4J_dbms_security_procedures_unrestricted=apoc.*
+      - NEO4J_dbms_security_procedures_allowlist=apoc.*
     ports:
-      - "7474:7474"
-      - "7687:7687"
+      - "7474:7474"  # HTTP
+      - "7687:7687"  # Bolt
     volumes:
       - neo4j_data:/data
       - neo4j_logs:/logs
+      - neo4j_import:/var/lib/neo4j/import
+      - neo4j_plugins:/plugins
     networks:
       - jlaw-network
     healthcheck:
@@ -68,10 +73,28 @@ services:
       - POSTGRES_USER=jlaw
       - POSTGRES_PASSWORD=${TIMESCALE_PASSWORD:-jlaw_secure_password}
       - POSTGRES_DB=jlaw_forensics
+      - POSTGRES_INITDB_ARGS="-E UTF8 --locale=en_US.UTF-8"
     ports:
       - "5432:5432"
     volumes:
       - timescale_data:/var/lib/postgresql/data
+      - ./sql/timescaledb_schema.sql:/docker-entrypoint-initdb.d/01_schema.sql:ro
+    command: 
+      - "postgres"
+      - "-c"
+      - "shared_buffers=2GB"
+      - "-c"
+      - "effective_cache_size=6GB"
+      - "-c"
+      - "maintenance_work_mem=512MB"
+      - "-c"
+      - "work_mem=32MB"
+      - "-c"
+      - "timescaledb.max_background_workers=8"
+      - "-c"
+      - "max_parallel_workers_per_gather=4"
+      - "-c"
+      - "max_parallel_workers=8"
     networks:
       - jlaw-network
     healthcheck:
@@ -84,13 +107,25 @@ services:
   redis:
     image: redis:7-alpine
     container_name: jlaw-redis
+    environment:
+      - REDIS_PASSWORD=${REDIS_PASSWORD:-}
     ports:
       - "6379:6379"
     volumes:
       - redis_data:/data
     networks:
       - jlaw-network
-    command: redis-server --appendonly yes
+    command: >
+      sh -c "if [ -n \"$$REDIS_PASSWORD\" ]; then
+        redis-server --appendonly yes --requirepass $$REDIS_PASSWORD --maxmemory 1gb --maxmemory-policy allkeys-lru;
+      else
+        redis-server --appendonly yes --maxmemory 1gb --maxmemory-policy allkeys-lru;
+      fi"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
     restart: unless-stopped
 
 networks:
@@ -100,6 +135,8 @@ networks:
 volumes:
   neo4j_data:
   neo4j_logs:
+  neo4j_import:
+  neo4j_plugins:
   timescale_data:
   redis_data:
   jlaw_cache:
