@@ -124,11 +124,42 @@ strict = false
 ignore_missing_imports = true
 
 [tool.pytest.ini_options]
-asyncio_mode = "auto"
+minversion = "7.0"
 testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+asyncio_mode = "auto"
+markers = [
+    "unit: Unit tests",
+    "integration: Integration tests",
+    "slow: Slow running tests",
+    "circuit_breaker: Circuit breaker tests",
+]
+addopts = [
+    "--cov=src",
+    "--cov-report=html:coverage_report",
+    "--cov-report=term-missing",
+    "--cov-fail-under=80",
+    "-v",
+    "--strict-markers",
+    "--tb=short",
+]
 
 [tool.coverage.run]
 source = ["src"]
+omit = [
+    "*/tests/*",
+    "*/test_*.py",
+    "*/__pycache__/*",
+    "*/site-packages/*",
+    "*/venv/*",
+]
 
 [tool.coverage.report]
+precision = 2
 show_missing = true
+skip_covered = false
+
+[tool.coverage.html]
+directory = "coverage_report"
