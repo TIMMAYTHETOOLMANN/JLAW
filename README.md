@@ -36,58 +36,55 @@ Before running JLAW, verify your setup:
 
 ```bash
 # Check dependencies and configuration
-python setup_check.py
+python jlaw_cli.py --validate-only
 
-# Verify company lookup functionality
-python verify_command.py
+# Or use legacy setup check
+python setup_check.py
 ```
 
-### Single Deployment Script
+### Command Line Interface (v3.0)
+
+**⚡ New in v3.0:** Modular CLI with enhanced features. See [docs/CLI_REFERENCE.md](docs/CLI_REFERENCE.md) for complete reference.
+
 ```bash
-# Interactive mode (recommended)
-python JLAW_UNIFIED.py
+# Interactive validation
+python jlaw_cli.py --validate-only
 
-# CLI mode with parameters (company name or ticker auto-lookup)
-python JLAW_UNIFIED.py --cik 320187 --company "NIKE" --year 2019 --auto
+# Basic analysis
+python jlaw_cli.py --cik 0000320187 --company "NIKE, Inc." --year 2019
 
-# CLI mode with full company name
-python JLAW_UNIFIED.py --cik 320187 --company "NIKE, Inc." --year 2019
+# Dry run (show execution plan)
+python jlaw_cli.py --cik 0000320187 --year 2019 --dry-run
 
 # Full auto execution (no confirmations)
-python JLAW_UNIFIED.py --cik 320187 --year 2019 --auto
+python jlaw_cli.py --cik 0000320187 --year 2019 --auto
 
-# Use ticker symbol (auto-lookup to full name)
-python JLAW_UNIFIED.py --company "NKE" --year 2019 --auto
+# Strict forensic mode (DOJ-grade with mandatory phase gates)
+python jlaw_cli.py --cik 0000320187 --year 2019 --mode forensic --strict --auto
 
-# Strict execution mode (DOJ-grade with mandatory phase gates)
-python JLAW_UNIFIED.py --cik 320187 --year 2019 --strict --auto
+# Download ML models (one-time setup)
+python jlaw_cli.py --download-models
 
-# ✨ NEW: Execution Strategy Selection
-# Triage mode (5-10 min rapid assessment)
-python JLAW_UNIFIED.py --cik 320187 --year 2019 --strategy triage --auto
+# Investigation type optimization
+python jlaw_cli.py --cik 0000320187 --year 2019 \
+  --investigation insider-trading --auto
 
-# Standard mode (15-30 min comprehensive analysis)
-python JLAW_UNIFIED.py --cik 320187 --year 2019 --strategy standard --auto
-
-# DOJ referral mode (30-60 min exhaustive analysis)
-python JLAW_UNIFIED.py --cik 320187 --year 2019 --strategy doj_referral --auto
-
-# Investigation type optimization (30-50% speedup)
-python JLAW_UNIFIED.py --cik 320187 --year 2019 \
-  --type insider_trading --auto
-
-# 🔄 NEW: Daemon Mode (Continuous Monitoring)
-python JLAW_UNIFIED.py --daemon --watchlist watchlist.json \
-  --schedule "0 9 * * MON" --alert-webhook https://hooks.slack.com/...
-
-# 📊 NEW: Batch Processing (Multi-Company Analysis)
-python JLAW_UNIFIED.py --batch cik_list.txt \
-  --max-concurrent 5 --industry-analysis --auto
+# Batch processing
+python jlaw_cli.py --batch targets.json --mode batch --auto
 ```
 
 **🔒 Strict Execution Mode** - See [STRICT_EXECUTION_MODE.md](STRICT_EXECUTION_MODE.md) for DOJ-grade forensic protocols with mandatory phase gates, cascade abort, and specific exit codes.
 
-**🎯 Execution Strategies** - See [docs/adr/ADR-001-Orchestration-Hierarchy-Design.md](docs/adr/ADR-001-Orchestration-Hierarchy-Design.md) for details on the 7-tier orchestration hierarchy.
+**📖 Migration from v2.x** - See [docs/MIGRATION_V2_TO_V3.md](docs/MIGRATION_V2_TO_V3.md) for migration guide from `JLAW_UNIFIED.py` to `jlaw_cli.py`.
+
+### Legacy Entry Point (Deprecated)
+
+⚠️ **DEPRECATED**: `JLAW_UNIFIED.py` is deprecated and will be removed in v4.0. Please migrate to `jlaw_cli.py`.
+
+```bash
+# Legacy usage (redirects to jlaw_cli.py)
+python JLAW_UNIFIED.py --cik 320187 --year 2019 --auto
+```
 
 ### Common Companies (Auto-Lookup)
 
