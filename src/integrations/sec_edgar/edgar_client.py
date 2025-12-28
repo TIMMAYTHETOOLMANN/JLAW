@@ -42,6 +42,7 @@ import os
 # Import new modular components
 from .rate_limiter import get_shared_rate_limiter, RateLimiter
 from .models import IntegrityHashes, AcquisitionResult, AcquisitionStatus
+# ValidationResult imported on-demand to avoid circular dependency
 
 logger = logging.getLogger(__name__)
 
@@ -141,6 +142,8 @@ class SECEdgarClient:
     # Retry configuration for 429 errors
     MAX_RETRIES = 4
     RETRY_DELAYS = [1, 2, 4, 8]  # Exponential backoff in seconds
+    RETRY_BASE_DELAY = 1.0  # Base delay for exponential backoff (seconds)
+    RETRY_MAX_DELAY = 60.0  # Maximum retry delay cap (seconds)
     
     def __init__(
         self,
@@ -243,10 +246,202 @@ class SECEdgarClient:
             blake2b=hashlib.blake2b(content_bytes).hexdigest()
         )
     
+    async def fetch_and_validate(
+        self, 
+        url: str, 
+        form_type: Optional[str] = None,
+        max_retries: int = 3
+    ) -> tuple[Optional[str], Optional['ValidationResult']]:
+        """
+        Fetch document with automatic validation and retry on incomplete documents.
+        
+        This method provides bulletproof document acquisition:
+        1. Fetches the document
+        2. Validates completeness using SECDocumentValidator
+        3. Automatically retries (up to max_retries) if document is incomplete
+        4. Uses exponential backoff between retries
+        
+        Args:
+            url: URL to fetch
+            form_type: Form type for targeted validation (e.g., "4", "10-K")
+            max_retries: Maximum retry attempts for incomplete documents (default: 3)
+            
+        Returns:
+            Tuple of (content, validation_result)
+            - content: Document content (None if failed)
+            - validation_result: ValidationResult object (None if fetch failed)
+        """
+        from .document_validator import SECDocumentValidator
+        
+        validator = SECDocumentValidator()
+        
+        for attempt in range(max_retries):
+            # Fetch the document
+            content = await self._fetch(url)
+            
+            if content is None:
+                logger.warning(f"Fetch failed for {url} (attempt {attempt + 1}/{max_retries})")
+                if attempt < max_retries - 1:
+                    delay = 2 ** attempt  # Exponential backoff: 1s, 2s, 4s
+                    await asyncio.sleep(delay)
+                    continue
+                return None, None
+            
+            # Validate the document
+            validation_result = validator.validate(content, form_type)
+            
+            if validation_result.is_valid:
+                logger.debug(
+                    f"Document validated successfully: {url} "
+                    f"({validation_result.content_length} bytes, "
+                    f"type: {validation_result.document_type.value})"
+                )
+                return content, validation_result
+            else:
+                logger.warning(
+                    f"Document validation failed for {url}: {validation_result.error_message} "
+                    f"(attempt {attempt + 1}/{max_retries})"
+                )
+                
+                if attempt < max_retries - 1:
+                    # Exponential backoff: 1s, 2s, 4s
+                    delay = 2 ** attempt
+                    logger.info(f"Retrying after {delay}s delay...")
+                    await asyncio.sleep(delay)
+                    continue
+                
+                # Max retries exhausted - return invalid result
+                return content, validation_result
+        
+        return None, None
+    
+    async def acquire_filing_with_integrity(
+        self,
+        filing: SECFiling,
+        is_xml: bool = False
+    ) -> AcquisitionResult:
+        """
+        Acquire filing with full forensic integrity tracking.
+        
+        Provides bulletproof acquisition with:
+        1. Validated document retrieval with automatic retry
+        2. Triple-hash computation for FRE 902(13)/(14) compliance
+        3. Complete acquisition metadata for chain of custody
+        4. Fallback to alternate URLs for Form 4 XSL-transformed URLs
+        
+        Args:
+            filing: SECFiling metadata
+            is_xml: If True, attempt fallback for XSL-transformed URLs
+            
+        Returns:
+            AcquisitionResult with full audit trail
+        """
+        start_time = time.time()
+        retry_count = 0
+        
+        try:
+            # Determine form type for validation
+            form_type = filing.form_type
+            
+            # Attempt primary fetch with validation
+            content, validation_result = await self.fetch_and_validate(
+                filing.document_url,
+                form_type=form_type,
+                max_retries=3
+            )
+            
+            if content and validation_result and validation_result.is_valid:
+                # Success - create result with hashes
+                integrity_hashes = IntegrityHashes(
+                    sha256=validation_result.sha256,
+                    sha3_512=validation_result.sha3_512,
+                    blake2b=validation_result.blake2b
+                )
+                
+                logger.info(
+                    f"Successfully acquired {filing.form_type} filing: {filing.accession_number} "
+                    f"({validation_result.content_length} bytes, "
+                    f"elapsed: {time.time() - start_time:.2f}s)"
+                )
+                
+                return AcquisitionResult.success_result(
+                    filing=filing,
+                    content=content,
+                    integrity_hashes=integrity_hashes,
+                    retry_count=0,
+                    response_code=200,
+                    source="sec_edgar_api"
+                )
+            
+            # If primary fetch failed and this is XML, try fallback
+            if is_xml and hasattr(self, '_fetch_with_fallback'):
+                logger.info(
+                    f"Primary fetch failed for {filing.accession_number}, "
+                    f"attempting fallback URL resolution..."
+                )
+                retry_count += 1
+                
+                content = await self._fetch_with_fallback(filing, is_xml=True)
+                
+                if content:
+                    # Validate fallback content
+                    from .document_validator import SECDocumentValidator
+                    validator = SECDocumentValidator()
+                    validation_result = validator.validate(content, form_type)
+                    
+                    if validation_result.is_valid:
+                        integrity_hashes = IntegrityHashes(
+                            sha256=validation_result.sha256,
+                            sha3_512=validation_result.sha3_512,
+                            blake2b=validation_result.blake2b
+                        )
+                        
+                        logger.info(
+                            f"Successfully acquired {filing.form_type} filing via fallback: "
+                            f"{filing.accession_number}"
+                        )
+                        
+                        return AcquisitionResult.success_result(
+                            filing=filing,
+                            content=content,
+                            integrity_hashes=integrity_hashes,
+                            retry_count=retry_count,
+                            response_code=200,
+                            source="sec_edgar_api_fallback"
+                        )
+            
+            # All attempts failed
+            error_message = (
+                f"Failed to acquire valid document for {filing.accession_number}. "
+                f"Validation error: {validation_result.error_message if validation_result else 'fetch failed'}"
+            )
+            logger.error(error_message)
+            
+            return AcquisitionResult.error_result(
+                error=error_message,
+                filing=filing,
+                retry_count=retry_count
+            )
+            
+        except Exception as e:
+            error_message = f"Exception during acquisition of {filing.accession_number}: {str(e)}"
+            logger.error(error_message, exc_info=True)
+            return AcquisitionResult.error_result(
+                error=error_message,
+                filing=filing,
+                retry_count=retry_count
+            )
+    
     async def __aenter__(self):
         """Async context manager entry."""
         self.session = aiohttp.ClientSession(
-            headers={"User-Agent": self.user_agent}
+            headers={
+                "User-Agent": self.user_agent,
+                "Accept-Encoding": "gzip, deflate",
+                "Accept": "*/*",
+                "Connection": "keep-alive",
+                "Host": "www.sec.gov"
+            }
         )
         return self
     

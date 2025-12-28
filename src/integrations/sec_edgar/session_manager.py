@@ -79,7 +79,8 @@ class SECSessionManager:
             "User-Agent": self.user_agent,
             "Accept-Encoding": "gzip, deflate",
             "Accept": "*/*",
-            "Connection": "keep-alive"
+            "Connection": "keep-alive",
+            "Host": "www.sec.gov"
         })
         
         logger.debug(
@@ -133,7 +134,13 @@ class AsyncSECSessionManager:
         """Async context manager entry."""
         import aiohttp
         self.session = aiohttp.ClientSession(
-            headers={"User-Agent": self.user_agent}
+            headers={
+                "User-Agent": self.user_agent,
+                "Accept-Encoding": "gzip, deflate",
+                "Accept": "*/*",
+                "Connection": "keep-alive",
+                "Host": "www.sec.gov"
+            }
         )
         return self.session
     

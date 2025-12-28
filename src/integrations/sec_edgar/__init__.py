@@ -5,12 +5,14 @@ SEC EDGAR Integration Module
 Production-grade SEC EDGAR API client with comprehensive features:
 - Rate limiting (9 req/sec with 60s cooldown on 403)
 - Triple-hash integrity verification (SHA-256 + SHA3-512 + BLAKE2b)
+- Document completeness validation
 - Connection pooling and retry strategy
 - CIK/accession number normalization
 - Structured acquisition results
 
 Key Components:
 - edgar_client.SECEdgarClient: Main API client
+- document_validator.SECDocumentValidator: Document validation engine
 - rate_limiter.RateLimiter: Shared rate limiter with cooldown
 - models: Data structures (AcquisitionResult, IntegrityHashes, etc.)
 - utils: CIK/accession normalization utilities
@@ -18,6 +20,7 @@ Key Components:
 """
 
 from .edgar_client import SECEdgarClient, FormType, SECFiling, XBRLFact
+from .document_validator import SECDocumentValidator, DocumentType, ValidationResult
 from .rate_limiter import RateLimiter, get_shared_rate_limiter
 from .models import (
     AcquisitionResult,
@@ -46,6 +49,11 @@ __all__ = [
     'FormType',
     'SECFiling',
     'XBRLFact',
+    
+    # Document validation
+    'SECDocumentValidator',
+    'DocumentType',
+    'ValidationResult',
     
     # Rate limiting
     'RateLimiter',
