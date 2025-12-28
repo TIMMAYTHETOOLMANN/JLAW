@@ -189,15 +189,15 @@ class BehavioralScoringEngine:
         magnitude_scores = []
         for txn in transactions:
             tier = classify_magnitude(int(txn.shares))
-            if tier == MagnitudeTier.STRATEGIC:
+            if tier == MagnitudeTier.TIER_4_EXTRAORDINARY:
                 magnitude_scores.append(25)
-            elif tier == MagnitudeTier.SUBSTANTIAL:
+            elif tier == MagnitudeTier.TIER_3_SUBSTANTIAL:
                 magnitude_scores.append(20)
-            elif tier == MagnitudeTier.MODERATE:
+            elif tier == MagnitudeTier.TIER_2_MODERATE:
                 magnitude_scores.append(15)
-            elif tier == MagnitudeTier.NOMINAL:
+            elif tier == MagnitudeTier.TIER_1_ROUTINE:
                 magnitude_scores.append(10)
-            else:  # MINIMAL
+            else:  # Fallback
                 magnitude_scores.append(5)
         
         # Return maximum score (worst case)
@@ -295,13 +295,16 @@ class BehavioralScoringEngine:
             - 2 entities: 5 points
             - 1 entity (direct ownership): 0 points
         """
-        entity_count = len(ownership_chain.entities)
+        entity_count = len(ownership_chain.nodes)
         
-        # Check control assessment
-        has_high_control = any(
-            a.control_probability >= 0.8
-            for a in ownership_chain.control_assessments
-        )
+        # Check control assessment (if available)
+        # Note: control_assessments may not be present in all OwnershipChain instances
+        has_high_control = False
+        if hasattr(ownership_chain, 'control_assessments') and ownership_chain.control_assessments:
+            has_high_control = any(
+                a.control_probability >= 0.8
+                for a in ownership_chain.control_assessments
+            )
         
         if entity_count >= 4 or has_high_control:
             return 15.0
@@ -348,7 +351,7 @@ class BehavioralScoringEngine:
                 f"CRITICAL RISK: Immediate referral to SEC Enforcement Division recommended. "
                 f"Subject exhibits {zero_dollar_count} zero-dollar transactions across "
                 f"{cluster_count} temporal clusters with {event_count} MNPI event proximities. "
-                f"Ownership structure involves {len(ownership_chain.entities)} entities. "
+                f"Ownership structure involves {len(ownership_chain.nodes)} entities. "
                 f"Pattern consistent with coordinated disposition structuring and potential "
                 f"Rule 10b-5 violations."
             )
@@ -418,7 +421,7 @@ class BehavioralScoringEngine:
         if event_flags:
             steps.append("Analyze relationship between transactions and material events")
         
-        if len(ownership_chain.entities) >= 3:
+        if len(ownership_chain.nodes) >= 3:
             steps.append("Map complete beneficial ownership network and control relationships")
         
         return steps
