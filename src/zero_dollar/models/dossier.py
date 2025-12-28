@@ -273,7 +273,7 @@ class ForensicDossier:
             f"- **Prosecutorial Priority:** {self.risk_assessment.prosecutorial_priority}",
             f"- **Temporal Clusters Detected:** {self.temporal_analysis.cluster_count}",
             f"- **Event Proximity Flags:** {len(self.event_proximity_analysis)}",
-            f"- **Ownership Entities:** {len(self.ownership_chain_analysis.entities)}",
+            f"- **Ownership Entities:** {len(self.ownership_chain_analysis.nodes)}",
             "",
             "---",
             "",

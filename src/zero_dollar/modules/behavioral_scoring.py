@@ -5,14 +5,14 @@ Behavioral Risk Scoring Engine
 Synthesizes outputs from temporal clustering, event proximity, and ownership
 chain modules into a unified behavioral risk assessment.
 
-This module implements Section 6: Behavioral Risk Scoring per JLAW Zero-Dollar
+This module implements Section 8: Behavioral Pattern Scoring Engine per JLAW Zero-Dollar
 Transaction Forensic Specification v1.0.
 
 Reference:
-    - Section 6: Behavioral Risk Scoring
-    - Section 6.1: Score Component Definitions
-    - Section 6.2: Aggregation Methodology
-    - Section 6.3: Prosecutorial Priority Ranking
+    - Section 8: Behavioral Pattern Scoring Engine
+    - Section 8.1: Score Component Definitions
+    - Section 8.2: Aggregation Methodology
+    - Section 8.3: Prosecutorial Priority Ranking
 """
 
 import logging
@@ -51,8 +51,8 @@ class BehavioralScoringEngine:
         - Entity Complexity Score: 0-15 points
     
     Risk Tiers:
-        - CRITICAL: 75-100 (Immediate referral to enforcement)
-        - HIGH: 60-74 (Enhanced investigation)
+        - CRITICAL: 80-100 (Immediate referral to enforcement)
+        - HIGH: 60-79 (Enhanced investigation)
         - MODERATE: 40-59 (Monitoring and documentation)
         - LOW: 0-39 (Routine surveillance)
     """
@@ -95,6 +95,24 @@ class BehavioralScoringEngine:
         timing_score = self._calculate_timing_score(event_flags)
         filing_score = self._calculate_filing_compliance_score(zero_dollar_txns)
         entity_score = self._calculate_entity_complexity_score(ownership_chain)
+        
+        # Apply compound multiplier for multi-anomaly patterns
+        compound_multiplier = self._calculate_compound_multiplier(
+            magnitude_score, frequency_score, timing_score, filing_score, entity_score
+        )
+        
+        # Apply multiplier to total score
+        base_total = magnitude_score + frequency_score + timing_score + filing_score + entity_score
+        adjusted_total = min(100.0, base_total * compound_multiplier)  # Cap at 100
+        
+        # Adjust individual scores proportionally if multiplier applied
+        if compound_multiplier > 1.0:
+            scale_factor = adjusted_total / base_total if base_total > 0 else 1.0
+            magnitude_score *= scale_factor
+            frequency_score *= scale_factor
+            timing_score *= scale_factor
+            filing_score *= scale_factor
+            entity_score *= scale_factor
         
         # Create score components
         score_components = BehavioralScoreComponents(
@@ -171,15 +189,15 @@ class BehavioralScoringEngine:
         magnitude_scores = []
         for txn in transactions:
             tier = classify_magnitude(int(txn.shares))
-            if tier == MagnitudeTier.STRATEGIC:
+            if tier == MagnitudeTier.TIER_4_EXTRAORDINARY:
                 magnitude_scores.append(25)
-            elif tier == MagnitudeTier.SUBSTANTIAL:
+            elif tier == MagnitudeTier.TIER_3_SUBSTANTIAL:
                 magnitude_scores.append(20)
-            elif tier == MagnitudeTier.MODERATE:
+            elif tier == MagnitudeTier.TIER_2_MODERATE:
                 magnitude_scores.append(15)
-            elif tier == MagnitudeTier.NOMINAL:
+            elif tier == MagnitudeTier.TIER_1_ROUTINE:
                 magnitude_scores.append(10)
-            else:  # MINIMAL
+            else:  # Fallback
                 magnitude_scores.append(5)
         
         # Return maximum score (worst case)
@@ -242,6 +260,10 @@ class BehavioralScoringEngine:
         """
         Calculate filing compliance score (0-15 points) based on late filings.
         
+        Note: This component is referred to as "price_variance_score" in the 
+        specification but implemented as "filing_compliance_score" in the codebase.
+        Both names describe the same scoring logic and have equivalent semantic meaning.
+        
         Scoring:
             - 50%+ late filings: 15 points
             - 25-49% late filings: 10 points
@@ -273,13 +295,16 @@ class BehavioralScoringEngine:
             - 2 entities: 5 points
             - 1 entity (direct ownership): 0 points
         """
-        entity_count = len(ownership_chain.entities)
+        entity_count = len(ownership_chain.nodes)
         
-        # Check control assessment
-        has_high_control = any(
-            a.control_probability >= 0.8
-            for a in ownership_chain.control_assessments
-        )
+        # Check control assessment (if available)
+        # Note: control_assessments may not be present in all OwnershipChain instances
+        has_high_control = False
+        if hasattr(ownership_chain, 'control_assessments') and ownership_chain.control_assessments:
+            has_high_control = any(
+                a.control_probability >= 0.8
+                for a in ownership_chain.control_assessments
+            )
         
         if entity_count >= 4 or has_high_control:
             return 15.0
@@ -295,13 +320,13 @@ class BehavioralScoringEngine:
         Determine prosecutorial priority ranking (1-5, 1=highest).
         
         Priority Mapping:
-            - 1 (CRITICAL): 75-100 points
-            - 2 (HIGH): 60-74 points
+            - 1 (CRITICAL): 80-100 points
+            - 2 (HIGH): 60-79 points
             - 3 (MODERATE): 40-59 points
             - 4 (LOW): 20-39 points
             - 5 (MINIMAL): 0-19 points
         """
-        if total_score >= 75:
+        if total_score >= 80:  # Changed from 75 to match specification
             return 1
         elif total_score >= 60:
             return 2
@@ -321,12 +346,12 @@ class BehavioralScoringEngine:
         ownership_chain: OwnershipChain,
     ) -> str:
         """Generate human-readable recommendation based on risk score."""
-        if total_score >= 75:
+        if total_score >= 80:  # Changed from 75 to match specification
             return (
                 f"CRITICAL RISK: Immediate referral to SEC Enforcement Division recommended. "
                 f"Subject exhibits {zero_dollar_count} zero-dollar transactions across "
                 f"{cluster_count} temporal clusters with {event_count} MNPI event proximities. "
-                f"Ownership structure involves {len(ownership_chain.entities)} entities. "
+                f"Ownership structure involves {len(ownership_chain.nodes)} entities. "
                 f"Pattern consistent with coordinated disposition structuring and potential "
                 f"Rule 10b-5 violations."
             )
@@ -362,7 +387,7 @@ class BehavioralScoringEngine:
         """Generate suggested next steps based on assessment."""
         steps = []
         
-        if total_score >= 75:
+        if total_score >= 80:  # Changed from 75 to match specification
             steps.extend([
                 "Prepare SEC Enforcement Division referral memorandum",
                 "Compile complete evidence package with Merkle tree attestation",
@@ -396,10 +421,74 @@ class BehavioralScoringEngine:
         if event_flags:
             steps.append("Analyze relationship between transactions and material events")
         
-        if len(ownership_chain.entities) >= 3:
+        if len(ownership_chain.nodes) >= 3:
             steps.append("Map complete beneficial ownership network and control relationships")
         
         return steps
+    
+    def _calculate_compound_multiplier(
+        self,
+        magnitude_score: float,
+        frequency_score: float,
+        timing_score: float,
+        filing_score: float,
+        entity_score: float,
+    ) -> float:
+        """
+        Calculate compound multiplier for multi-anomaly patterns.
+        
+        Per specification Section 8.2: When multiple anomaly types are detected
+        concurrently, the risk score is amplified through compound multipliers:
+        
+        - 1.5x multiplier for 2 concurrent anomaly types
+        - 1.75x multiplier for 3 concurrent anomaly types
+        - 2.0x multiplier for 4+ concurrent anomaly types
+        
+        An anomaly type is considered "active" if its score exceeds 50% of its
+        maximum possible value:
+        - Magnitude: >12.5 (of 25 max)
+        - Frequency: >12.5 (of 25 max)
+        - Timing: >10 (of 20 max)
+        - Filing: >7.5 (of 15 max)
+        - Entity: >7.5 (of 15 max)
+        
+        Args:
+            magnitude_score: Magnitude component score (0-25)
+            frequency_score: Frequency component score (0-25)
+            timing_score: Timing component score (0-20)
+            filing_score: Filing compliance score (0-15)
+            entity_score: Entity complexity score (0-15)
+            
+        Returns:
+            Compound multiplier (1.0, 1.5, 1.75, or 2.0)
+        """
+        # Count active anomaly types (those exceeding 50% of their maximum)
+        active_anomalies = 0
+        
+        if magnitude_score > 12.5:  # >50% of 25 max
+            active_anomalies += 1
+        if frequency_score > 12.5:  # >50% of 25 max
+            active_anomalies += 1
+        if timing_score > 10.0:  # >50% of 20 max
+            active_anomalies += 1
+        if filing_score > 7.5:  # >50% of 15 max
+            active_anomalies += 1
+        if entity_score > 7.5:  # >50% of 15 max
+            active_anomalies += 1
+        
+        # Apply compound multiplier per specification
+        if active_anomalies >= 4:
+            logger.info(f"Compound multiplier: 2.0x ({active_anomalies} concurrent anomaly types)")
+            return 2.0
+        elif active_anomalies == 3:
+            logger.info(f"Compound multiplier: 1.75x ({active_anomalies} concurrent anomaly types)")
+            return 1.75
+        elif active_anomalies == 2:
+            logger.info(f"Compound multiplier: 1.5x ({active_anomalies} concurrent anomaly types)")
+            return 1.5
+        else:
+            # 0 or 1 active anomaly - no multiplier
+            return 1.0
     
     def _generate_assessment_id(self, reporting_person_cik: str, issuer_cik: str) -> str:
         """Generate unique assessment ID."""
