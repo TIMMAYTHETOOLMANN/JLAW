@@ -166,6 +166,186 @@ def validate_sec_configuration() -> Tuple[bool, List[str]]:
     return len(errors) == 0, errors
 
 
+def is_placeholder_value(value: str) -> bool:
+    """
+    Check if a value is a placeholder.
+    
+    Args:
+        value: Value to check
+        
+    Returns:
+        True if value is a placeholder
+    """
+    if not value:
+        return False
+    
+    placeholders = [
+        'YOUR_', 'YOUR-', 'CHANGE_ME', '_HERE', 
+        'your-email', 'your_password', '@example', 
+        '@PLACEHOLDER', 'PLACEHOLDER', 'TODO',
+        'FIXME', 'REPLACE_ME'
+    ]
+    
+    for placeholder in placeholders:
+        if placeholder.lower() in value.lower():
+            return True
+    
+    return False
+
+
+def validate_openai_key(api_key: Optional[str]) -> Tuple[bool, str]:
+    """
+    Validate OpenAI API key format and optionally test connectivity.
+    
+    Args:
+        api_key: OpenAI API key to validate
+        
+    Returns:
+        Tuple of (is_valid, error_message)
+    """
+    if not api_key:
+        return False, "OpenAI API key is not set"
+    
+    if is_placeholder_value(api_key):
+        return False, (
+            "OpenAI API key contains placeholder value. "
+            "Get your API key from: https://platform.openai.com/api-keys"
+        )
+    
+    # Check format (should start with sk-proj- or sk-)
+    if not (api_key.startswith('sk-proj-') or api_key.startswith('sk-')):
+        return False, (
+            "OpenAI API key has invalid format. "
+            "Keys should start with 'sk-proj-' or 'sk-'"
+        )
+    
+    # Check minimum length
+    if len(api_key) < 20:
+        return False, "OpenAI API key is too short"
+    
+    return True, ""
+
+
+def validate_anthropic_key(api_key: Optional[str]) -> Tuple[bool, str]:
+    """
+    Validate Anthropic (Claude) API key format.
+    
+    Args:
+        api_key: Anthropic API key to validate
+        
+    Returns:
+        Tuple of (is_valid, error_message)
+    """
+    if not api_key:
+        return False, "Anthropic API key is not set"
+    
+    if is_placeholder_value(api_key):
+        return False, (
+            "Anthropic API key contains placeholder value. "
+            "Get your API key from: https://console.anthropic.com/settings/keys"
+        )
+    
+    # Check format (should start with sk-ant-)
+    if not api_key.startswith('sk-ant-'):
+        return False, (
+            "Anthropic API key has invalid format. "
+            "Keys should start with 'sk-ant-'"
+        )
+    
+    # Check minimum length
+    if len(api_key) < 30:
+        return False, "Anthropic API key is too short"
+    
+    return True, ""
+
+
+def validate_polygon_key(api_key: Optional[str]) -> Tuple[bool, str]:
+    """
+    Validate Polygon.io API key format.
+    
+    Args:
+        api_key: Polygon.io API key to validate
+        
+    Returns:
+        Tuple of (is_valid, error_message)
+    """
+    if not api_key:
+        # Polygon is optional
+        return True, "Polygon.io API key not set (optional for Node 15)"
+    
+    if is_placeholder_value(api_key):
+        return False, (
+            "Polygon.io API key contains placeholder value. "
+            "Get your API key from: https://polygon.io/dashboard/api-keys"
+        )
+    
+    # Check minimum length (Polygon keys are typically 32+ characters)
+    if len(api_key) < 20:
+        return False, "Polygon.io API key appears invalid (too short)"
+    
+    return True, ""
+
+
+def validate_govinfo_key(api_key: Optional[str]) -> Tuple[bool, str]:
+    """
+    Validate GovInfo API key format.
+    
+    Args:
+        api_key: GovInfo API key to validate
+        
+    Returns:
+        Tuple of (is_valid, error_message)
+    """
+    if not api_key:
+        # GovInfo is optional
+        return True, "GovInfo API key not set (optional for statutory citations)"
+    
+    if is_placeholder_value(api_key):
+        return False, (
+            "GovInfo API key contains placeholder value. "
+            "Request your API key from: https://api.govinfo.gov/docs/"
+        )
+    
+    # Check minimum length
+    if len(api_key) < 10:
+        return False, "GovInfo API key appears invalid (too short)"
+    
+    return True, ""
+
+
+def validate_all_api_keys() -> Tuple[bool, Dict[str, Tuple[bool, str]]]:
+    """
+    Validate all API keys.
+    
+    Returns:
+        Tuple of (all_valid, dict of key_name -> (is_valid, error_message))
+    """
+    load_dotenv_file()
+    
+    results = {
+        'OPENAI_API_KEY': validate_openai_key(os.environ.get('OPENAI_API_KEY')),
+        'ANTHROPIC_API_KEY': validate_anthropic_key(os.environ.get('ANTHROPIC_API_KEY')),
+        'POLYGON_API_KEY': validate_polygon_key(os.environ.get('POLYGON_API_KEY')),
+        'GOVINFO_API_KEY': validate_govinfo_key(os.environ.get('GOVINFO_API_KEY')),
+        'SEC_USER_AGENT': validate_sec_user_agent(
+            os.environ.get('SEC_USER_AGENT') or os.environ.get('SEC_EDGAR_USER_AGENT')
+        )
+    }
+    
+    # Check if at least one AI key is valid (required for dual-agent validation)
+    ai_keys_valid = (
+        results['OPENAI_API_KEY'][0] or 
+        results['ANTHROPIC_API_KEY'][0]
+    )
+    
+    # SEC user agent is always required
+    sec_valid = results['SEC_USER_AGENT'][0]
+    
+    all_valid = ai_keys_valid and sec_valid
+    
+    return all_valid, results
+
+
 def load_all_keys() -> Dict[str, bool]:
     load_dotenv_file()
     
@@ -208,45 +388,80 @@ def print_configuration_status():
     
     load_dotenv_file()
     
-    keys_to_check = [
-        ('OPENAI_API_KEY', 'OpenAI API'),
-        ('OPENAI_SECONDARY_API_KEY', 'OpenAI Secondary'),
-        ('ANTHROPIC_API_KEY', 'Anthropic (Claude)'),
-        ('OPENROUTER_API_KEY', 'OpenRouter'),
-        ('GOVINFO_API_KEY', 'GovInfo'),
-        ('SEC_USER_AGENT', 'SEC User Agent'),
-        ('POLYGON_API_KEY', 'Polygon.io Market Data'),
-        ('SEC_EDGAR_USER_AGENT', 'SEC EDGAR User Agent'),
-    ]
+    # Validate all API keys
+    all_valid, validation_results = validate_all_api_keys()
     
-    for key_name, display_name in keys_to_check:
+    print("API KEY VALIDATION:")
+    print("-" * 60)
+    
+    for key_name, (is_valid, error_msg) in validation_results.items():
         value = os.environ.get(key_name, '')
+        
         if not value:
             status = "❌ NOT SET"
-        elif 'YOUR_' in value or 'YOUR-' in value or value.endswith('_HERE'):
-            status = "⚠️  PLACEHOLDER"
+            detail = ""
+        elif not is_valid:
+            status = "⚠️  INVALID"
+            detail = f" - {error_msg}"
         else:
-            masked = value[:8] + '...' + value[-4:] if len(value) > 12 else '****'
-            status = f"✅ SET ({masked})"
-        print(f"  {display_name:20s} : {status}")
+            # Mask the key for security
+            if len(value) > 12:
+                masked = value[:8] + '...' + value[-4:]
+            else:
+                masked = '****'
+            status = f"✅ VALID ({masked})"
+            detail = ""
+        
+        display_name = key_name.replace('_', ' ').title()
+        print(f"  {display_name:30s} : {status}{detail}")
     
-    # Validate SEC configuration
+    # Overall validation status
     print("\n" + "-"*60)
-    print("SEC API CONFIGURATION VALIDATION")
+    print("OVERALL VALIDATION")
     print("-"*60 + "\n")
     
-    is_valid, errors = validate_sec_configuration()
-    if is_valid:
-        print("  ✅ SEC API configuration is valid")
-        print("  ✅ User-Agent contains email address")
-        print("  ✅ Ready to make SEC EDGAR API requests")
+    if all_valid:
+        print("  ✅ Configuration is valid")
+        print("  ✅ At least one AI API key is configured")
+        print("  ✅ SEC User-Agent is properly configured")
+        print("  ✅ Ready for forensic analysis")
     else:
-        print("  ❌ SEC API configuration is INVALID")
-        for error in errors:
-            for line in error.split('\n'):
-                if line.strip():
-                    print(f"     {line}")
-        print("\n  ⚠️  SEC API requests will FAIL until configuration is fixed")
+        print("  ❌ Configuration is INVALID")
+        
+        # Check what's missing
+        ai_keys_valid = (
+            validation_results['OPENAI_API_KEY'][0] or 
+            validation_results['ANTHROPIC_API_KEY'][0]
+        )
+        
+        if not ai_keys_valid:
+            print("  ❌ No valid AI API key (OpenAI or Anthropic required)")
+        
+        if not validation_results['SEC_USER_AGENT'][0]:
+            print("  ❌ SEC User-Agent not properly configured")
+        
+        print("\n  ⚠️  System cannot perform forensic analysis until configuration is fixed")
+        print("  ⚠️  See errors above for specific issues")
+    
+    # Optional services status
+    print("\n" + "-"*60)
+    print("OPTIONAL SERVICES")
+    print("-"*60 + "\n")
+    
+    polygon_valid = validation_results['POLYGON_API_KEY'][0]
+    govinfo_valid = validation_results['GOVINFO_API_KEY'][0]
+    
+    polygon_status = "✅ CONFIGURED" if polygon_valid and os.environ.get('POLYGON_API_KEY') else "⚠️  NOT CONFIGURED"
+    govinfo_status = "✅ CONFIGURED" if govinfo_valid and os.environ.get('GOVINFO_API_KEY') else "⚠️  NOT CONFIGURED"
+    
+    print(f"  Polygon.io (Node 15 - Market Data)    : {polygon_status}")
+    print(f"  GovInfo (Statutory Citations)         : {govinfo_status}")
+    
+    if not (polygon_valid and os.environ.get('POLYGON_API_KEY')):
+        print("     → Node 15 (Market Correlation) will be skipped")
+    
+    if not (govinfo_valid and os.environ.get('GOVINFO_API_KEY')):
+        print("     → Live statutory citation validation unavailable")
     
     print("\n" + "="*60)
 
