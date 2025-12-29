@@ -50,9 +50,16 @@ import time
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
+from pathlib import Path
 from typing import Dict, List, Any, Optional, Set
 
 from src.forensics.execution_metrics import ExecutionMetricsCollector, AgentExecutionMetric
+from src.profiling import (
+    PerformanceMetricsCollector,
+    OptimizationAnalyzer,
+    TimelineVisualizer,
+    BudgetEnforcer
+)
 
 logger = logging.getLogger(__name__)
 
@@ -125,11 +132,46 @@ class UnifiedAgentOrchestrator:
     and comprehensive execution metrics.
     """
     
-    VERSION = "1.0.0"
+    VERSION = "1.1.0"  # Updated for enhanced profiling
     
-    def __init__(self):
-        """Initialize unified orchestrator."""
+    def __init__(
+        self,
+        max_tokens: Optional[int] = None,
+        max_cost_usd: Optional[float] = None,
+        enable_profiling: bool = True
+    ):
+        """
+        Initialize unified orchestrator with enhanced profiling.
+        
+        Args:
+            max_tokens: Maximum token budget (optional)
+            max_cost_usd: Maximum cost budget in USD (optional)
+            enable_profiling: Enable enhanced profiling features (default: True)
+        """
+        # Legacy metrics collector (for backward compatibility)
         self.metrics_collector = ExecutionMetricsCollector()
+        
+        # Enhanced profiling framework
+        self.enable_profiling = enable_profiling
+        if enable_profiling:
+            self.performance_metrics = PerformanceMetricsCollector()
+            self.optimization_analyzer = OptimizationAnalyzer()
+            self.timeline_visualizer = TimelineVisualizer()
+            
+            # Budget enforcer (optional)
+            if max_tokens or max_cost_usd:
+                self.budget_enforcer = BudgetEnforcer(
+                    max_tokens=max_tokens,
+                    max_cost_usd=max_cost_usd,
+                    strict_mode=False  # Use warning mode by default
+                )
+            else:
+                self.budget_enforcer = None
+        else:
+            self.performance_metrics = None
+            self.optimization_analyzer = None
+            self.timeline_visualizer = None
+            self.budget_enforcer = None
         
         # Track tier invocations
         self.tier_invocation_counts: Dict[AgentTier, int] = {
@@ -147,7 +189,11 @@ class UnifiedAgentOrchestrator:
         from src.forensics.sdk_manager import get_sdk_manager_sync
         self.sdk_manager = get_sdk_manager_sync()
         
-        logger.info(f"UnifiedAgentOrchestrator v{self.VERSION} initialized")
+        logger.info(
+            f"UnifiedAgentOrchestrator v{self.VERSION} initialized "
+            f"(profiling={'enabled' if enable_profiling else 'disabled'}, "
+            f"budget={'enforced' if self.budget_enforcer else 'none'})"
+        )
     
     async def execute_investigation(
         self,
@@ -156,10 +202,11 @@ class UnifiedAgentOrchestrator:
         context: Dict[str, Any],
         enable_subagents: bool = True,
         enable_patterns: bool = True,
-        enable_nodes: bool = False
+        enable_nodes: bool = False,
+        output_dir: Optional[Path] = None
     ) -> UnifiedResult:
         """
-        Execute complete multi-tier investigation.
+        Execute complete multi-tier investigation with enhanced profiling.
         
         Workflow:
         1. TIER 1 (Primary): Dual-agent analysis (OpenAI + Anthropic)
@@ -186,6 +233,7 @@ class UnifiedAgentOrchestrator:
            - Compute unified consensus score
            - Track execution metrics
            - Integrate into evidence chain
+           - Generate optimization recommendations
         
         Args:
             investigation_type: Type of investigation ("form4", "10k", "full_forensic")
@@ -194,6 +242,7 @@ class UnifiedAgentOrchestrator:
             enable_subagents: Enable Tier 2 subagent routing (default: True)
             enable_patterns: Enable Tier 3 pattern detection (default: True)
             enable_nodes: Enable Tier 4 node processing (default: False)
+            output_dir: Optional output directory for profiling reports
             
         Returns:
             UnifiedResult with aggregated findings from all tiers
@@ -201,14 +250,23 @@ class UnifiedAgentOrchestrator:
         start_time = time.time()
         task_id = f"investigation_{int(start_time)}"
         
+        # Start enhanced profiling
+        if self.enable_profiling and self.performance_metrics:
+            self.performance_metrics.start_phase(
+                "unified_investigation",
+                "Unified Multi-Tier Investigation"
+            )
+        
         logger.info("=" * 80)
-        logger.info(f"  UNIFIED AGENT ORCHESTRATOR - {investigation_type.upper()}")
+        logger.info(f"  UNIFIED AGENT ORCHESTRATOR v{self.VERSION} - {investigation_type.upper()}")
         logger.info("=" * 80)
         logger.info(f"Task ID: {task_id}")
         logger.info(f"Filings: {len(filings)}")
         logger.info(f"Context: {context}")
         logger.info(f"Tiers enabled: Primary=True, Subagents={enable_subagents}, "
                    f"Patterns={enable_patterns}, Nodes={enable_nodes}")
+        if self.budget_enforcer:
+            logger.info(f"Budget: {self.budget_enforcer}")
         
         tier_results: Dict[str, Any] = {}
         all_violations: List[Dict[str, Any]] = []
@@ -378,6 +436,65 @@ class UnifiedAgentOrchestrator:
             else:
                 status = "failure"
             
+            # ═══════════════════════════════════════════════════════════════════
+            # ENHANCED PROFILING: Generate Reports & Recommendations
+            # ═══════════════════════════════════════════════════════════════════
+            
+            profiling_data = {}
+            if self.enable_profiling and self.performance_metrics:
+                # End profiling phase
+                self.performance_metrics.end_phase("unified_investigation", status=status)
+                
+                # Generate optimization recommendations
+                optimization_result = self.optimization_analyzer.analyze(self.performance_metrics)
+                
+                # Generate timeline
+                timeline = self.timeline_visualizer.generate_timeline(self.performance_metrics)
+                
+                # Export reports if output directory specified
+                if output_dir:
+                    output_dir = Path(output_dir)
+                    output_dir.mkdir(parents=True, exist_ok=True)
+                    
+                    # Export detailed performance report
+                    perf_report_path = output_dir / f"performance_metrics_{task_id}.json"
+                    self.performance_metrics.export_detailed_report(perf_report_path)
+                    logger.info(f"✓ Performance report: {perf_report_path}")
+                    
+                    # Export timeline
+                    timeline_path = output_dir / f"timeline_{task_id}.json"
+                    self.timeline_visualizer.export_json(timeline, timeline_path)
+                    logger.info(f"✓ Timeline report: {timeline_path}")
+                    
+                    # Export Gantt chart HTML
+                    gantt_path = output_dir / f"gantt_chart_{task_id}.html"
+                    self.timeline_visualizer.generate_gantt_html(timeline, gantt_path)
+                    logger.info(f"✓ Gantt chart: {gantt_path}")
+                
+                # Log optimization recommendations
+                if optimization_result["recommendations"]:
+                    logger.info("\n" + "─" * 80)
+                    logger.info("OPTIMIZATION RECOMMENDATIONS")
+                    logger.info("─" * 80)
+                    for i, rec in enumerate(optimization_result["recommendations"], 1):
+                        logger.info(f"{i}. [{rec['severity'].upper()}] {rec['message']}")
+                        logger.info(f"   → {rec['suggestion']}")
+                    
+                    summary = optimization_result["summary"]
+                    logger.info("\n" + "─" * 40)
+                    logger.info(f"Current cost: ${summary['current_cost']:.4f}")
+                    logger.info(f"Potential savings: ${summary['potential_savings']:.4f} ({summary['savings_percentage']:.1f}%)")
+                    logger.info(f"Optimized cost: ${summary['optimized_cost']:.4f}")
+                    logger.info("─" * 40)
+                
+                # Include profiling data in result
+                profiling_data = {
+                    "performance_summary": self.performance_metrics.get_summary(),
+                    "optimization": optimization_result,
+                    "timeline": timeline,
+                    "budget_status": self.budget_enforcer.get_status().to_dict() if self.budget_enforcer else None
+                }
+            
             result = UnifiedResult(
                 task_id=task_id,
                 status=status,
@@ -398,6 +515,10 @@ class UnifiedAgentOrchestrator:
             logger.info(f"  Violations found: {len(deduplicated_violations)}")
             logger.info(f"  Agents invoked: {len(set(agents_invoked))}")
             logger.info(f"  Consensus: {consensus_score:.2%}")
+            if profiling_data.get("performance_summary"):
+                perf = profiling_data["performance_summary"]
+                logger.info(f"  Total cost: ${perf['total_cost_usd']:.4f}")
+                logger.info(f"  Total tokens: {perf['total_tokens']:,}")
             logger.info("=" * 80)
             
             return result
@@ -451,6 +572,15 @@ class UnifiedAgentOrchestrator:
             tier="primary"
         )
         
+        # Start enhanced profiling
+        if self.enable_profiling and self.performance_metrics:
+            self.performance_metrics.start_agent(
+                "dual_agent_coordinator",
+                "anthropic",  # Primary type
+                "primary",
+                model="gpt-4o+claude-sonnet-3.5"
+            )
+        
         try:
             dual_agent = DualAgentCoordinator()
             
@@ -490,8 +620,20 @@ class UnifiedAgentOrchestrator:
             # Update metrics
             metric.violations_found = len(primary_violations)
             # Estimate tokens (rough heuristic)
-            metric.tokens_used = len(filings) * 2000  # ~2k tokens per filing
+            estimated_tokens = len(filings) * 2000  # ~2k tokens per filing
+            metric.tokens_used = estimated_tokens
             self.metrics_collector.end_agent(metric, status="success")
+            
+            # Update enhanced profiling
+            if self.enable_profiling and self.performance_metrics:
+                self.performance_metrics.end_agent(
+                    "dual_agent_coordinator",
+                    input_tokens=estimated_tokens // 2,  # Rough estimate: 50% input, 50% output
+                    output_tokens=estimated_tokens // 2,
+                    violations_found=len(primary_violations),
+                    consensus_contribution=avg_consensus,
+                    status="success"
+                )
             
             return {
                 "violations": primary_violations,
