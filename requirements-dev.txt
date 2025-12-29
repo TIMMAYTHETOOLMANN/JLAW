@@ -1,0 +1,36 @@
+# JLAW Development Dependencies
+# ==============================
+# Testing, code quality, and development tools not needed in production
+
+# Testing Framework
+pytest>=7.4.0
+pytest-asyncio>=0.23.0
+pytest-cov>=4.1.0
+pytest-timeout>=2.1.0
+pytest-mock>=3.11.0
+
+# Code Quality & Linting
+black>=23.7.0
+ruff>=0.1.0
+flake8>=6.1.0
+mypy>=1.5.0
+isort>=5.12.0
+
+# Security Scanning
+bandit>=1.7.5
+safety>=2.3.5
+
+# Documentation
+mkdocs>=1.5.0
+mkdocs-material>=9.4.0
+pymdown-extensions>=10.3.0
+
+# Development Tools
+ipython>=8.15.0
+ipdb>=0.13.13
+
+# Type Stubs
+types-requests>=2.31.0
+types-python-dateutil>=2.8.0
+types-PyYAML>=6.0.0
+types-beautifulsoup4>=4.12.0

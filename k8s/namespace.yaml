@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: jlaw-forensics
+  labels:
+    name: jlaw-forensics
+    environment: production
+    app: jlaw
