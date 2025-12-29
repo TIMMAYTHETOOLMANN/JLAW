@@ -260,8 +260,10 @@ class LocalEncryptedSecretsManager(SecretsManagerInterface):
             ciphertext = aesgcm.encrypt(nonce, plaintext.encode('utf-8'), None)
             return nonce + ciphertext
         except ImportError:
-            logger.warning("cryptography library not available, using base64 encoding only")
-            return base64.b64encode(plaintext.encode('utf-8'))
+            raise ImportError(
+                "cryptography library is required for secure secrets storage. "
+                "Install it with: pip install cryptography"
+            )
     
     def _decrypt(self, ciphertext: bytes) -> str:
         """Decrypt ciphertext using AES-256-GCM."""
@@ -274,7 +276,10 @@ class LocalEncryptedSecretsManager(SecretsManagerInterface):
             plaintext = aesgcm.decrypt(nonce, encrypted, None)
             return plaintext.decode('utf-8')
         except ImportError:
-            return base64.b64decode(ciphertext).decode('utf-8')
+            raise ImportError(
+                "cryptography library is required for secure secrets storage. "
+                "Install it with: pip install cryptography"
+            )
     
     async def get_secret(self, name: str) -> Optional[str]:
         """Retrieve a secret by name."""
@@ -955,7 +960,8 @@ def create_secrets_manager(
     elif backend == "aws":
         raise NotImplementedError(
             "AWS Secrets Manager backend not yet implemented. "
-            "Set AWS_SECRET_ACCESS_KEY and use boto3 integration."
+            "Set AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY environment variables "
+            "and use boto3 integration."
         )
     elif backend == "vault":
         raise NotImplementedError(
