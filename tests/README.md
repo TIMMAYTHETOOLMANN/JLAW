@@ -165,6 +165,52 @@ python scripts/deploy_jlaw.py --auto
 - Chain of custody logger
 - Evidence packager
 
+### FRE 902(13)/(14) Compliance Tests
+
+The security hardening test suite (`test_security_hardening.py`) provides comprehensive
+validation for Federal Rules of Evidence 902(13) and 902(14) compliance:
+
+**Triple-Hash Evidence Generation** (12 tests)
+- SHA-256 hash generation and verification
+- SHA3-512 hash generation and verification
+- BLAKE2b hash generation and verification
+- Hash determinism and uniqueness validation
+
+**Merkle Tree Edge Cases** (14 tests)
+- Single leaf handling
+- Odd/even leaf node scenarios
+- RFC 6962 compliance verification
+- Proof generation and verification
+- Order sensitivity validation
+
+**RFC 3161 Timestamp Validation** (8 tests)
+- Timestamp token creation and verification
+- Trusted authority validation
+- Local timestamp rejection (not court-admissible)
+
+**Chain of Custody Lifecycle** (6 tests)
+- Custody chain creation and tracking
+- Multi-action recording
+- Court export functionality
+
+**Tampering Detection** (4 tests)
+- Hash tampering detection
+- Merkle tree tampering detection
+- Subtle modification detection
+- Chain link tampering detection
+
+**FRE Compliance Validation** (6 tests)
+- FRE certification generation
+- Triple-hash compliance checks
+- Merkle tree compliance checks
+- Timestamp token compliance checks
+- Custody chain compliance checks
+
+Run FRE compliance tests:
+```bash
+python -m pytest tests/test_security_hardening.py -v
+```
+
 ### Reporting Layer
 - Markdown dossier generation
 - JSON output serialization
