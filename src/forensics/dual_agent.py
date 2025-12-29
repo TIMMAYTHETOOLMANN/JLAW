@@ -25,6 +25,7 @@ import logging
 from typing import Any, Dict, List, Optional, Set
 
 from .config_manager import get_config
+from .sdk_manager import get_sdk_manager_sync
 
 logger = logging.getLogger(__name__)
 
@@ -51,9 +52,14 @@ class DualAgentCoordinator:
     """
 
     def __init__(self) -> None:
+        # Use SDK manager for availability checks
+        self._sdk_manager = get_sdk_manager_sync()
+        availability = self._sdk_manager.get_availability()
+        
+        self._openai_available = availability['openai']
+        self._anthropic_available = availability['anthropic']
+        
         cfg = get_config().config
-        self._openai_available = bool(cfg.openai.api_key)
-        self._anthropic_available = bool(cfg.anthropic.api_key)
         self._govinfo_available = bool(_get_govinfo_api_key(cfg))
         self._init_errors: Dict[str, str] = {}
 
@@ -84,12 +90,11 @@ class DualAgentCoordinator:
         
         # If Anthropic not available, try secondary OpenAI agent
         if not self.anthropic_analyzer:
-            secondary_key = os.getenv('OPENAI_SECONDARY_API_KEY')
-            if secondary_key:
+            if availability['openai_secondary']:
                 try:
                     logger.info("🔄 Anthropic unavailable, using secondary OpenAI agent for dual-agent mode")
                     from .openai_secondary_agent import OpenAISecondaryAgent
-                    self.anthropic_analyzer = OpenAISecondaryAgent(api_key=secondary_key)
+                    self.anthropic_analyzer = OpenAISecondaryAgent()
                     logger.info("✅ Dual-OpenAI mode activated (temporary configuration)")
                 except Exception as e:
                     self._init_errors["openai_secondary"] = str(e)

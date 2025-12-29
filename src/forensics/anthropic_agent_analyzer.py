@@ -20,6 +20,7 @@ except ImportError:
 
 from src.forensics.sec_edgar_analyzer import FilingAnalysis, SECForensicAnalyzer
 from src.forensics.config_manager import get_config
+from src.forensics.sdk_manager import get_sdk_manager_sync
 
 logger = logging.getLogger(__name__)
 
@@ -45,32 +46,27 @@ class AnthropicAgentAnalyzer:
         self.model = config.config.anthropic.model
         self.max_tokens = config.config.anthropic.max_tokens
         
-        # Prioritize direct Anthropic API first, then fall back to OpenRouter
-        anthropic_key = api_key or config.config.anthropic.api_key
-        openrouter_key = os.getenv('OPENROUTER_API_KEY')
-        
-        if anthropic_key and ANTHROPIC_AVAILABLE:
-            # Use direct Anthropic API (preferred)
-            logger.info("🔄 Using direct Anthropic API ($15 credits available)")
-            self.client = anthropic.Anthropic(api_key=anthropic_key)
-            self.using_openrouter = False
-        elif openrouter_key:
-            # Use OpenRouter adapter as fallback
-            logger.info("🔄 Using OpenRouter API (fallback)")
-            from src.forensics.openrouter_adapter import create_anthropic_compatible_client
-            self.client = create_anthropic_compatible_client(openrouter_key)
-            self.using_openrouter = True
-        else:
-            raise ValueError(
-                "Either ANTHROPIC_API_KEY or OPENROUTER_API_KEY required. "
-                "Set in .env file or pass to constructor."
-            )
+        # Use unified SDK manager for Anthropic client (async)
+        self._sdk_manager = get_sdk_manager_sync()
+        self.client = None  # Will be lazily accessed via SDK manager
+        self.using_openrouter = False  # No longer needed with SDK manager
         
         # Fallback to manual analyzer for compatibility
         self.manual_analyzer = SECForensicAnalyzer(user_agent=self.user_agent)
         
-        provider = "OpenRouter" if self.using_openrouter else "Anthropic"
-        logger.info(f"✅ {provider} agent analyzer initialized with model: {self.model}")
+        logger.info(f"✅ Anthropic agent analyzer initialized with model: {self.model}")
+    
+    @property
+    def anthropic_client(self):
+        """Lazily access Anthropic async client from SDK manager."""
+        if self.client is None:
+            anthropic_client = self._sdk_manager.anthropic
+            if anthropic_client:
+                self.client = anthropic_client
+                logger.debug("Anthropic client loaded from SDK manager")
+            else:
+                logger.warning("Anthropic client not available from SDK manager")
+        return self.client
 
     async def analyze_text(self, content: str, context: Optional[Dict] = None) -> Dict[str, Any]:
         """Analyze arbitrary text content using Claude's deep reasoning path.
@@ -194,7 +190,7 @@ Provide a JSON response with detected violations following this structure:
         
         try:
             # Call Claude API with streaming disabled for structured output
-            message = self.client.messages.create(
+            message = await self.anthropic_client.messages.create(
                 model=self.model,
                 max_tokens=self.max_tokens,
                 system=self._get_system_prompt(),
@@ -286,18 +282,19 @@ Provide a JSON response with detected violations following this structure:
         logger.info(f"[Anthropic Analyzer] Analyzing {filing_type} for CIK {cik}")
         
         try:
-            # Fetch document content
+            # Fetch document content using SDK manager
             import aiohttp
-            async with aiohttp.ClientSession() as session:
-                headers = {'User-Agent': self.user_agent}
-                await asyncio.sleep(0.35)  # SEC rate limiting
-                
-                async with session.get(document_url, headers=headers, timeout=aiohttp.ClientTimeout(total=30)) as response:
-                    if response.status != 200:
-                        logger.warning(f"[Anthropic Analyzer] Failed to fetch {document_url}: {response.status}")
-                        raise Exception(f"HTTP {response.status}")
-                    
-                    content = await response.text()
+            response = await self._sdk_manager.sec_request(
+                document_url,
+                self.user_agent,
+                timeout=aiohttp.ClientTimeout(total=30)
+            )
+            
+            if response.status != 200:
+                logger.warning(f"[Anthropic Analyzer] Failed to fetch {document_url}: {response.status}")
+                raise Exception(f"HTTP {response.status}")
+            
+            content = await response.text()
             
             # Perform deep analysis with Claude
             analysis_result = await self.analyze_filing_deep(

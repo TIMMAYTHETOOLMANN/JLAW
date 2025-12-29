@@ -23,6 +23,7 @@ import openai
 
 from src.forensics.sec_edgar_analyzer import FilingAnalysis, SECForensicAnalyzer
 from src.forensics.config_manager import get_config
+from src.forensics.sdk_manager import get_sdk_manager_sync
 
 logger = logging.getLogger(__name__)
 
@@ -58,13 +59,26 @@ class OpenAISecondaryAgent:
         self.model = config.config.openai.model  # Same model, different key
         self.max_tokens = config.config.openai.max_tokens
         
-        # Initialize OpenAI client with secondary key
-        self.client = openai.OpenAI(api_key=self.api_key)
+        # Use unified SDK manager for secondary OpenAI client
+        self._sdk_manager = get_sdk_manager_sync()
+        self.client = None  # Will be lazily accessed via SDK manager
         
         # Fallback to manual analyzer for compatibility
         self.manual_analyzer = SECForensicAnalyzer(user_agent=self.user_agent)
         
         logger.info(f"✅ OpenAI secondary agent initialized with model: {self.model}")
+    
+    @property
+    def openai_client(self):
+        """Lazily access secondary OpenAI sync client from SDK manager."""
+        if self.client is None:
+            secondary_client = self._sdk_manager.openai_secondary
+            if secondary_client:
+                self.client = secondary_client
+                logger.debug("Secondary OpenAI client loaded from SDK manager")
+            else:
+                logger.warning("Secondary OpenAI client not available from SDK manager")
+        return self.client
     
     def _get_cross_reference_prompt(self) -> str:
         """
@@ -236,7 +250,7 @@ Return JSON with this structure:
 }}"""
         
         try:
-            response = self.client.chat.completions.create(
+            response = self.openai_client.chat.completions.create(
                 model=self.model,
                 messages=[
                     {"role": "system", "content": self._get_cross_reference_prompt()},
