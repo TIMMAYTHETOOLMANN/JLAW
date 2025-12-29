@@ -1529,7 +1529,7 @@ Initial Confidence: {verification_request['confidence']}
     # ═══════════════════════════════════════════════════════════════════════
     
     async def _execute_phase_7_subagent(self):
-        """Execute Phase 7: Subagent Orchestration with auto-triggering."""
+        """Execute Phase 7: Unified Agent Orchestration (ENHANCED)."""
         phase_start = time.time()
         errors = []
         subagent_results = {}
@@ -1541,27 +1541,33 @@ Initial Confidence: {verification_request['confidence']}
         if self._strict_controller:
             self._strict_controller.begin_phase(ExecutionPhase.SUBAGENT.value)
         
-        try:
-            # Collect violations from all nodes for auto-orchestration
-            all_violations = []
-            for node_id, node_result in self.node_results.items():
-                if hasattr(node_result, 'findings') and node_result.findings:
-                    violations = node_result.findings.get('violations', [])
-                    if isinstance(violations, list):
-                        for v in violations:
-                            if isinstance(v, dict):
-                                v['source_node'] = node_id
-                                all_violations.append(v)
-            
-            logger.info(f"→ Collected {len(all_violations)} violations for subagent analysis")
-            
-            if all_violations:
-                # Import and use SubagentOrchestrator with auto-orchestration
-                from src.forensics.subagents.orchestrator import SubagentOrchestrator
+        # Check if unified orchestration is enabled (new feature flag)
+        use_unified_orchestrator = os.environ.get('JLAW_USE_UNIFIED_ORCHESTRATOR', 'true').lower() == 'true'
+        
+        if use_unified_orchestrator:
+            # ═══════════════════════════════════════════════════════════════════
+            # NEW: Unified Agent Orchestrator (Phase 3)
+            # ═══════════════════════════════════════════════════════════════════
+            try:
+                logger.info("→ Using UnifiedAgentOrchestrator for multi-tier analysis")
                 
-                orchestrator = SubagentOrchestrator()
+                from src.core.unified_agent_orchestrator import UnifiedAgentOrchestrator
                 
-                # Auto-orchestrate based on violations
+                orchestrator = UnifiedAgentOrchestrator()
+                
+                # Prepare filings data for orchestrator
+                filings_for_orchestration = []
+                for filing in self.filings[:10]:  # Limit to 10 filings
+                    filing_dict = filing if isinstance(filing, dict) else {
+                        'form_type': filing.get('form_type', 'unknown'),
+                        'filing_date': filing.get('filing_date', ''),
+                        'accession_number': filing.get('accession_number', ''),
+                        'cik': self.cik,
+                        'content': ''  # Content will be fetched if needed
+                    }
+                    filings_for_orchestration.append(filing_dict)
+                
+                # Build context
                 context = {
                     "cik": self.cik,
                     "company_name": self.company_name,
@@ -1572,25 +1578,111 @@ Initial Confidence: {verification_request['confidence']}
                     }
                 }
                 
-                subagent_results = await orchestrator.auto_orchestrate(
-                    violations=all_violations,
+                # Execute unified investigation
+                unified_result = await orchestrator.execute_investigation(
+                    investigation_type="full_forensic",
+                    filings=filings_for_orchestration,
                     context=context,
-                    parallel=True
+                    enable_subagents=True,
+                    enable_patterns=False,  # Patterns already run in Phase 5
+                    enable_nodes=False  # Nodes already run in Phase 4
                 )
                 
-                logger.info(f"✓ Auto-orchestrated {len(subagent_results.get('agents_spawned', []))} agents")
-                logger.info(f"  Combined findings: {len(subagent_results.get('combined_findings', []))}")
+                # Integrate results
+                self._integrate_orchestrator_results(unified_result)
                 
-            else:
-                logger.info("→ No violations detected, skipping subagent orchestration")
-                subagent_results = {"status": "skipped", "reason": "no_violations"}
-            
-        except ImportError as e:
-            errors.append(f"Subagent orchestrator import error: {str(e)}")
-            logger.warning(f"  ⚠ Subagent orchestration skipped: {e}")
-        except Exception as e:
-            errors.append(f"Subagent error: {str(e)}")
-            logger.error(f"✗ Subagent error: {e}", exc_info=True)
+                # Convert to subagent_results format for backward compatibility
+                subagent_results = {
+                    "status": unified_result.status,
+                    "agents_spawned": unified_result.agents_invoked,
+                    "violations_analyzed": len(unified_result.aggregated_violations),
+                    "combined_findings": unified_result.aggregated_violations,
+                    "consensus_score": unified_result.consensus_score,
+                    "execution_time": unified_result.execution_time_seconds,
+                    "tokens_used": unified_result.tokens_used,
+                    "tiers_executed": unified_result.tiers_executed,
+                    "orchestrator_version": "unified_v1.0.0"
+                }
+                
+                logger.info(f"✓ Unified orchestration complete:")
+                logger.info(f"  Tiers executed: {len(unified_result.tiers_executed)}")
+                logger.info(f"  Agents invoked: {len(set(unified_result.agents_invoked))}")
+                logger.info(f"  Violations: {len(unified_result.aggregated_violations)}")
+                logger.info(f"  Consensus: {unified_result.consensus_score:.2%}")
+                logger.info(f"  Tokens: {unified_result.tokens_used}")
+                
+                # Phase gate validation for unified consensus (strict mode)
+                if self.strict_mode and unified_result.consensus_score < 0.70:
+                    error_msg = (
+                        f"Unified consensus below threshold: "
+                        f"{unified_result.consensus_score:.2%} < 70%"
+                    )
+                    errors.append(error_msg)
+                    logger.warning(f"  ⚠ {error_msg}")
+                
+            except Exception as e:
+                error_msg = f"Unified orchestrator error: {str(e)}"
+                errors.append(error_msg)
+                logger.error(error_msg, exc_info=True)
+                
+                # Fallback to legacy orchestration
+                logger.warning("  → Falling back to legacy subagent orchestration")
+                use_unified_orchestrator = False
+        
+        if not use_unified_orchestrator:
+            # ═══════════════════════════════════════════════════════════════════
+            # LEGACY: Original Subagent Orchestration (backward compatibility)
+            # ═══════════════════════════════════════════════════════════════════
+            try:
+                # Collect violations from all nodes for auto-orchestration
+                all_violations = []
+                for node_id, node_result in self.node_results.items():
+                    if hasattr(node_result, 'findings') and node_result.findings:
+                        violations = node_result.findings.get('violations', [])
+                        if isinstance(violations, list):
+                            for v in violations:
+                                if isinstance(v, dict):
+                                    v['source_node'] = node_id
+                                    all_violations.append(v)
+                
+                logger.info(f"→ Collected {len(all_violations)} violations for subagent analysis")
+                
+                if all_violations:
+                    # Import and use SubagentOrchestrator with auto-orchestration
+                    from src.forensics.subagents.orchestrator import SubagentOrchestrator
+                    
+                    orchestrator = SubagentOrchestrator()
+                    
+                    # Auto-orchestrate based on violations
+                    context = {
+                        "cik": self.cik,
+                        "company_name": self.company_name,
+                        "case_id": self.case_id,
+                        "analysis_period": {
+                            "start": str(self.start_date),
+                            "end": str(self.end_date)
+                        }
+                    }
+                    
+                    subagent_results = await orchestrator.auto_orchestrate(
+                        violations=all_violations,
+                        context=context,
+                        parallel=True
+                    )
+                    
+                    logger.info(f"✓ Auto-orchestrated {len(subagent_results.get('agents_spawned', []))} agents")
+                    logger.info(f"  Combined findings: {len(subagent_results.get('combined_findings', []))}")
+                    
+                else:
+                    logger.info("→ No violations detected, skipping subagent orchestration")
+                    subagent_results = {"status": "skipped", "reason": "no_violations"}
+                
+            except ImportError as e:
+                errors.append(f"Subagent orchestrator import error: {str(e)}")
+                logger.warning(f"  ⚠ Subagent orchestration skipped: {e}")
+            except Exception as e:
+                errors.append(f"Subagent error: {str(e)}")
+                logger.error(f"✗ Subagent error: {e}", exc_info=True)
         
         phase_duration = time.time() - phase_start
         
@@ -1605,7 +1697,9 @@ Initial Confidence: {verification_request['confidence']}
                 "status": subagent_results.get("status", "unknown"),
                 "agents_spawned": subagent_results.get("agents_spawned", []),
                 "violations_analyzed": subagent_results.get("violations_analyzed", 0),
-                "combined_findings_count": len(subagent_results.get("combined_findings", []))
+                "combined_findings_count": len(subagent_results.get("combined_findings", [])),
+                "consensus_score": subagent_results.get("consensus_score", 0.0),
+                "orchestrator_mode": "unified" if use_unified_orchestrator else "legacy"
             }
         )
         self.phase_results.append(result)
@@ -1614,6 +1708,50 @@ Initial Confidence: {verification_request['confidence']}
         self.subagent_results = subagent_results
         
         logger.info(f"✓ Phase 7 completed in {phase_duration:.2f}s")
+    
+    def _integrate_orchestrator_results(self, unified_result):
+        """
+        Integrate UnifiedAgentOrchestrator results into execution context.
+        
+        Extracts violations, metrics, and consensus scores from the unified
+        result and integrates them into the master controller's state for
+        evidence chain tracking and dossier generation.
+        
+        Args:
+            unified_result: UnifiedResult from orchestrator
+        """
+        logger.debug("→ Integrating unified orchestrator results")
+        
+        # Update execution metrics
+        if not hasattr(self, 'execution_metrics'):
+            self.execution_metrics = {}
+        
+        self.execution_metrics.update({
+            "orchestrator_consensus": unified_result.consensus_score,
+            "total_agents_invoked": len(set(unified_result.agents_invoked)),
+            "orchestrator_execution_time": unified_result.execution_time_seconds,
+            "orchestrator_tokens_used": unified_result.tokens_used,
+            "orchestrator_tiers_executed": len(unified_result.tiers_executed),
+            "orchestrator_status": unified_result.status
+        })
+        
+        # Add violations to evidence chain (if available)
+        if hasattr(self, '_add_to_evidence_chain'):
+            for violation in unified_result.aggregated_violations:
+                try:
+                    self._add_to_evidence_chain(violation)
+                except Exception as e:
+                    logger.debug(f"Could not add violation to evidence chain: {e}")
+        
+        # Store tier-specific results for dossier
+        if not hasattr(self, 'unified_tier_results'):
+            self.unified_tier_results = {}
+        
+        self.unified_tier_results = unified_result.tier_results
+        
+        logger.debug(f"✓ Integrated {len(unified_result.aggregated_violations)} violations")
+        logger.debug(f"✓ Tracked {unified_result.tokens_used} tokens")
+        logger.debug(f"✓ Consensus: {unified_result.consensus_score:.2%}")
     
     # ═══════════════════════════════════════════════════════════════════════
     # PHASE 8: EVIDENCE CHAIN FINALIZATION
