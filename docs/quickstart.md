@@ -74,7 +74,7 @@ SEC_USER_AGENT=YourCompany/1.0 (your-email@company.com)
 !!! warning "SEC User-Agent Required"
     The SEC requires a valid User-Agent header with your organization name and contact email. Requests without this will fail with HTTP 429 errors.
     
-    See [SEC API Setup Guide](../SEC_API_SETUP.md) for details.
+    See [SEC API Setup Guide](SEC_API_SETUP.md) for details.
 
 ### 3. Configure API Keys
 
@@ -179,7 +179,7 @@ python jlaw_cli.py --cik 320187 --year 2019 --strict --auto
 ```
 
 !!! info "Strict Mode"
-    Strict mode enforces mandatory phase gates, cascade abort on failures, and generates detailed failure reports. See [Strict Execution Mode](../STRICT_EXECUTION_MODE.md) for details.
+    Strict mode enforces mandatory phase gates, cascade abort on failures, and generates detailed failure reports. See [Strict Execution Mode](STRICT_EXECUTION_MODE.md) for details.
 
 ### Investigation Type Optimization
 
@@ -269,7 +269,7 @@ Solution: JLAW automatically handles rate limiting with exponential backoff. If 
 
 Solution: Verify the company's CIK is correct and expand the date range. Some companies may not have filed in the specified period.
 
-For more troubleshooting, see [Troubleshooting Guide](deployment/troubleshooting.md) and [Strict Mode Troubleshooting](../STRICT_MODE_TROUBLESHOOTING.md).
+For more troubleshooting, see [Troubleshooting Guide](deployment/troubleshooting.md) and [Strict Mode Troubleshooting](STRICT_MODE_TROUBLESHOOTING.md).
 
 ---
 

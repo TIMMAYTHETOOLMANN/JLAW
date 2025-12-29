@@ -758,7 +758,7 @@ class PreFlightChecker:
         self.logger.info("=" * 70)
         
         return PreFlightReport(
-            timestamp=datetime.utcnow().isoformat(),
+            timestamp=datetime.now().isoformat(),
             passed=passed,
             checks=self.results,
             summary=summary
