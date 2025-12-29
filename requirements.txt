@@ -36,6 +36,10 @@ pytest-timeout>=2.1.0
 pytest-mock>=3.11.0
 # CLI Enhancement
 rich>=13.0.0
+# Documentation
+mkdocs>=1.5.0
+mkdocs-material>=9.4.0
+pymdown-extensions>=10.3.0
 # Development
 black>=23.7.0
 flake8>=6.1.0

@@ -62,15 +62,37 @@ def setup_logging(debug: bool = False, verbose: bool = False) -> logging.Logger:
     Returns:
         Configured logger
     """
-    level = logging.DEBUG if debug else (logging.INFO if verbose else logging.WARNING)
+    # Use centralized logging configuration
+    try:
+        from src.core.logging_config import setup_logging as configure_logging
+        
+        # Determine log level
+        if debug:
+            log_level = 'DEBUG'
+        elif verbose:
+            log_level = 'INFO'
+        else:
+            log_level = os.getenv('LOG_LEVEL', 'WARNING')
+        
+        # Configure logging
+        configure_logging(
+            log_level=log_level,
+            console_output=True
+        )
+        
+        return logging.getLogger('JLAW')
     
-    logging.basicConfig(
-        level=level,
-        format='%(asctime)s | %(levelname)s | %(name)s | %(message)s',
-        datefmt='%Y-%m-%d %H:%M:%S'
-    )
-    
-    return logging.getLogger('JLAW')
+    except ImportError:
+        # Fallback to basic logging if centralized config not available
+        level = logging.DEBUG if debug else (logging.INFO if verbose else logging.WARNING)
+        
+        logging.basicConfig(
+            level=level,
+            format='%(asctime)s | %(levelname)s | %(name)s | %(message)s',
+            datefmt='%Y-%m-%d %H:%M:%S'
+        )
+        
+        return logging.getLogger('JLAW')
 
 
 async def run_validation_only(console: Optional[Console] = None) -> int:
