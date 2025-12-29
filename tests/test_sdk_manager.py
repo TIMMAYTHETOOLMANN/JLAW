@@ -87,7 +87,7 @@ class TestSDKClientInitialization:
             assert sdk._openai_client is None
             
             # Access the client (lazy load)
-            with patch('src.forensics.sdk_manager.AsyncOpenAI') as mock_openai:
+            with patch('openai.OpenAI') as mock_openai:
                 mock_openai.return_value = MagicMock()
                 client = sdk.openai
                 
@@ -113,7 +113,7 @@ class TestSDKClientInitialization:
             assert sdk._anthropic_client is None
             
             # Access the client (lazy load)
-            with patch('src.forensics.sdk_manager.AsyncAnthropic') as mock_anthropic:
+            with patch('anthropic.AsyncAnthropic') as mock_anthropic:
                 mock_anthropic.return_value = MagicMock()
                 client = sdk.anthropic
                 
@@ -138,7 +138,7 @@ class TestSDKClientInitialization:
             assert sdk._openai_secondary_client is None
             
             # Access the client (lazy load)
-            with patch('src.forensics.sdk_manager.AsyncOpenAI') as mock_openai:
+            with patch('openai.OpenAI') as mock_openai:
                 mock_openai.return_value = MagicMock()
                 client = sdk.openai_secondary
                 
@@ -410,8 +410,8 @@ class TestAvailabilityCheck:
             
             sdk = get_sdk_manager_sync()
             
-            with patch('src.forensics.sdk_manager.AsyncOpenAI'), \
-                 patch('src.forensics.sdk_manager.AsyncAnthropic'):
+            with patch('openai.OpenAI'), \
+                 patch('anthropic.AsyncAnthropic'):
                 
                 availability = sdk.get_availability()
                 
@@ -437,7 +437,7 @@ class TestAvailabilityCheck:
             
             sdk = get_sdk_manager_sync()
             
-            with patch('src.forensics.sdk_manager.AsyncOpenAI'):
+            with patch('openai.OpenAI'):
                 availability = sdk.get_availability()
                 
                 assert availability['openai'] is True
