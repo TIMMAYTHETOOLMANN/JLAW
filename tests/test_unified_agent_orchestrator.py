@@ -68,7 +68,7 @@ class TestUnifiedAgentOrchestrator:
             }
         })
         
-        with patch('src.core.unified_agent_orchestrator.DualAgentCoordinator', return_value=mock_dual_agent):
+        with patch('src.forensics.dual_agent.DualAgentCoordinator', return_value=mock_dual_agent):
             orchestrator = UnifiedAgentOrchestrator()
             
             filings = [
@@ -227,7 +227,7 @@ class TestUnifiedAgentOrchestrator:
         from src.core.unified_agent_orchestrator import UnifiedAgentOrchestrator
         
         # Mock DualAgentCoordinator that raises error
-        with patch('src.core.unified_agent_orchestrator.DualAgentCoordinator') as mock_class:
+        with patch('src.forensics.dual_agent.DualAgentCoordinator') as mock_class:
             mock_class.side_effect = Exception("Mock dual-agent error")
             
             orchestrator = UnifiedAgentOrchestrator()
@@ -271,8 +271,8 @@ class TestUnifiedAgentOrchestrator:
             'conflicts': []
         })
         
-        with patch('src.core.unified_agent_orchestrator.DualAgentCoordinator', return_value=mock_dual_agent), \
-             patch('src.core.unified_agent_orchestrator.IntelligentSubagentRouter', return_value=mock_router):
+        with patch('src.forensics.dual_agent.DualAgentCoordinator', return_value=mock_dual_agent), \
+             patch('src.forensics.intelligent_router.IntelligentSubagentRouter', return_value=mock_router):
             
             orchestrator = UnifiedAgentOrchestrator()
             
