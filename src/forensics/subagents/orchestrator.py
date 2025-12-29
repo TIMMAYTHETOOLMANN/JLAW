@@ -45,82 +45,26 @@ except ImportError:
 # Import SDK manager for unified client access
 from src.forensics.sdk_manager import get_sdk_manager_sync
 
+# Import dynamic agent registry and intelligent router (Phase 2)
+from src.forensics.agent_registry import DynamicAgentRegistry
+from src.forensics.intelligent_router import IntelligentSubagentRouter
+
 
 # ═══════════════════════════════════════════════════════════════════════════
-# VIOLATION-TO-AGENT MAPPING
+# DYNAMIC AGENT DISCOVERY (Phase 2)
 # ═══════════════════════════════════════════════════════════════════════════
-
-VIOLATION_TO_AGENT_MAP: Dict[str, List[str]] = {
-    "insider_trading": [
-        "forensic-financial-analyst",
-        "forensic-research-specialist"
-    ],
-    "late_form4": [
-        "forensic-compliance-auditor",
-        "forensic-research-specialist"
-    ],
-    "zero_dollar_transaction": [
-        "forensic-financial-analyst",
-        "forensic-compliance-auditor"
-    ],
-    "accounting_fraud": [
-        "forensic-nlp-analyst",
-        "forensic-financial-analyst",
-        "forensic-compliance-auditor"
-    ],
-    "sox_certification": [
-        "forensic-compliance-auditor",
-        "security-auditor"
-    ],
-    "sox_violation": [
-        "forensic-compliance-auditor",
-        "security-auditor"
-    ],
-    "executive_compensation": [
-        "forensic-financial-analyst",
-        "forensic-compliance-auditor"
-    ],
-    "excessive_severance": [
-        "forensic-financial-analyst",
-        "forensic-compliance-auditor"
-    ],
-    "material_misstatement": [
-        "forensic-nlp-analyst",
-        "forensic-financial-analyst"
-    ],
-    "revenue_recognition": [
-        "forensic-financial-analyst",
-        "forensic-compliance-auditor"
-    ],
-    "options_backdating": [
-        "forensic-financial-analyst",
-        "forensic-research-specialist",
-        "forensic-compliance-auditor"
-    ],
-    "channel_stuffing": [
-        "forensic-financial-analyst",
-        "forensic-nlp-analyst"
-    ],
-    "beneficial_ownership": [
-        "forensic-research-specialist",
-        "forensic-compliance-auditor"
-    ],
-    "material_event": [
-        "forensic-nlp-analyst",
-        "forensic-research-specialist"
-    ],
-    "financial_distress": [
-        "forensic-financial-analyst"
-    ],
-    "bankruptcy_risk": [
-        "forensic-financial-analyst"
-    ]
-}
+# Hardcoded VIOLATION_TO_AGENT_MAP has been REMOVED.
+# Agent discovery is now dynamic from markdown files in .claude/agents/
+# via DynamicAgentRegistry and IntelligentSubagentRouter.
+# ═══════════════════════════════════════════════════════════════════════════
 
 
 def get_agents_for_violation_types(violation_types: List[str]) -> Set[str]:
     """
     Get relevant Claude subagents for given violation types.
+    
+    DEPRECATED: This is a backward compatibility shim. New code should use
+    DynamicAgentRegistry.get_agents_for_violations() instead.
     
     Args:
         violation_types: List of violation type strings
@@ -128,26 +72,28 @@ def get_agents_for_violation_types(violation_types: List[str]) -> Set[str]:
     Returns:
         Set of agent names to invoke
     """
-    required_agents: Set[str] = set()
+    logger.warning("get_agents_for_violation_types() is deprecated. Use DynamicAgentRegistry instead.")
     
-    for vtype in violation_types:
-        # Normalize violation type
-        vtype_normalized = vtype.lower().replace(" ", "_").replace("-", "_")
+    try:
+        # Use new dynamic registry
+        from src.forensics.agent_registry import DynamicAgentRegistry
+        registry = DynamicAgentRegistry()
         
-        # Direct match
-        if vtype_normalized in VIOLATION_TO_AGENT_MAP:
-            required_agents.update(VIOLATION_TO_AGENT_MAP[vtype_normalized])
-        else:
-            # Partial match
-            for key, agents in VIOLATION_TO_AGENT_MAP.items():
-                if key in vtype_normalized or vtype_normalized in key:
-                    required_agents.update(agents)
+        violations = [{"type": vtype} for vtype in violation_types]
+        agents = registry.get_agents_for_violations(violations, top_k=10)
+        
+        agent_names = {agent.agent_name for agent in agents}
+        
+        # Always include compliance auditor for backward compatibility
+        if agent_names:
+            agent_names.add("forensic-compliance-auditor")
+        
+        return agent_names
     
-    # Always include compliance auditor for any violation
-    if required_agents:
-        required_agents.add("forensic-compliance-auditor")
-    
-    return required_agents
+    except Exception as e:
+        logger.error(f"Failed to use dynamic registry: {e}")
+        # Fallback: return default agents
+        return {"forensic-compliance-auditor"}
 
 
 class AgentRole(Enum):
@@ -349,6 +295,16 @@ class SubagentOrchestrator:
         # Use unified SDK manager for Claude API client
         self._sdk_manager = get_sdk_manager_sync()
         self.claude_client = None  # Will be lazily accessed via SDK manager
+        
+        # Initialize dynamic agent registry and intelligent router (Phase 2)
+        try:
+            self.registry = DynamicAgentRegistry()
+            self.router = IntelligentSubagentRouter(self.registry)
+            logger.info(f"🧠 Dynamic agent registry initialized: {len(self.registry.agents)} agents discovered")
+        except Exception as e:
+            logger.warning(f"Failed to initialize dynamic agent registry: {e}")
+            self.registry = None
+            self.router = None
         
         logger.info("✅ SubagentOrchestrator initialized")
     
@@ -907,6 +863,9 @@ Return your analysis in JSON format with keys: violations, applicable_statutes, 
         """
         Automatically spawn relevant Claude subagents based on violation types.
         
+        PHASE 2: Now uses DynamicAgentRegistry + IntelligentSubagentRouter
+        for intelligent agent selection and execution planning.
+        
         This method analyzes the violation types and automatically selects
         and invokes the appropriate specialized agents for forensic analysis.
         
@@ -922,6 +881,8 @@ Return your analysis in JSON format with keys: violations, applicable_statutes, 
             - violations_analyzed: Number of violations processed
             - agent_results: Results from each agent
             - combined_findings: Merged findings from all agents
+            - consensus_score: Agent agreement metric (Phase 2)
+            - conflicts: Conflicting findings (Phase 2)
             - errors: Any errors encountered
             
         Example:
@@ -940,8 +901,53 @@ Return your analysis in JSON format with keys: violations, applicable_statutes, 
                 "violations_analyzed": 0,
                 "agent_results": {},
                 "combined_findings": [],
+                "consensus_score": 0.0,
+                "conflicts": [],
                 "errors": []
             }
+        
+        # Use intelligent router if available (Phase 2)
+        if self.router:
+            try:
+                logger.info(f"Using IntelligentSubagentRouter for {len(violations)} violations")
+                
+                # Plan execution strategy
+                routing_decision = self.router.plan_execution(
+                    violations=violations,
+                    max_agents=5,
+                    parallel_stages=3 if parallel else 1
+                )
+                
+                logger.info(f"Execution plan: {len(routing_decision.selected_agents)} agents, "
+                           f"{len(routing_decision.execution_plan)} stages")
+                
+                # Execute with intelligent router
+                result = await self.router.execute(
+                    decision=routing_decision,
+                    violations=violations,
+                    context=context or {},
+                    orchestrator=self  # Pass self for actual agent execution
+                )
+                
+                # Transform result to maintain backward compatibility
+                return {
+                    "status": result["status"],
+                    "agents_spawned": [a.agent_name for a in routing_decision.selected_agents],
+                    "violations_analyzed": len(violations),
+                    "agent_results": result.get("combined_findings", []),
+                    "combined_findings": result.get("combined_findings", []),
+                    "consensus_score": result.get("consensus_score", 0.0),
+                    "conflicts": result.get("conflicts", []),
+                    "execution_time": result.get("execution_time", 0.0),
+                    "errors": []
+                }
+            
+            except Exception as e:
+                logger.error(f"Intelligent router execution failed: {e}", exc_info=True)
+                # Fall through to legacy execution
+        
+        # LEGACY FALLBACK: If router not available, use basic execution
+        logger.warning("Falling back to legacy auto-orchestration (router unavailable)")
         
         # Extract violation types
         violation_types = []
@@ -950,12 +956,16 @@ Return your analysis in JSON format with keys: violations, applicable_statutes, 
             if vtype:
                 violation_types.append(vtype)
         
-        # Determine required agents
-        required_agents = get_agents_for_violation_types(violation_types)
+        # Use registry if available, otherwise use fallback
+        if self.registry:
+            selected_agents = self.registry.get_agents_for_violations(violations, top_k=5)
+            required_agents = {agent.agent_name for agent in selected_agents}
+        else:
+            # Fallback to compliance auditor
+            required_agents = {"forensic-compliance-auditor"}
         
         if not required_agents:
             logger.warning(f"No matching agents found for violation types: {violation_types}")
-            # Default to compliance auditor for unknown violations
             required_agents = {"forensic-compliance-auditor"}
         
         logger.info(f"Auto-orchestrating {len(required_agents)} agents for {len(violations)} violations")
@@ -985,6 +995,8 @@ Return your analysis in JSON format with keys: violations, applicable_statutes, 
             "combined_findings": [],
             "combined_recommendations": [],
             "severity_summary": {},
+            "consensus_score": 0.0,
+            "conflicts": [],
             "errors": []
         }
         
