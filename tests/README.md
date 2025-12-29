@@ -514,3 +514,152 @@ For issues or questions:
 ## License
 
 See LICENSE file in repository root.
+
+---
+
+## Phase 3: Integration & Performance Testing
+
+### New Test Suites (Phase 3 Implementation)
+
+The Phase 3 implementation adds comprehensive integration, circuit breaker, and performance testing:
+
+#### Integration Tests (`tests/integration/`)
+
+**test_full_pipeline.py** - End-to-end forensic analysis:
+```bash
+# Full pipeline tests with real SEC data
+pytest tests/integration/test_full_pipeline.py -v
+
+# Individual test examples:
+# - test_full_forensic_analysis_apple_2019: Complete Apple 2019 analysis
+# - test_full_pipeline_nike_2020: Nike 2020 analysis  
+# - test_pipeline_with_multiple_filings: Multi-filing test (Microsoft)
+# - test_evidence_chain_continuity: Evidence chain validation
+# - test_doj_dossier_completeness: DOJ dossier validation
+```
+
+**test_node_execution.py** - Node validation:
+```bash
+# Test all 15 nodes execute correctly
+pytest tests/integration/test_node_execution.py -v
+
+# Tests:
+# - test_all_15_nodes_execute: Validates all nodes run
+# - test_23_detection_patterns: Validates detection patterns
+# - test_node_error_handling: Error handling validation
+```
+
+**test_circuit_breakers.py** - Fault tolerance:
+```bash
+# Circuit breaker and failover tests
+pytest tests/integration/test_circuit_breakers.py -m circuit_breaker -v
+
+# Tests:
+# - SEC EDGAR rate limit handling
+# - OpenAI to Anthropic fallback
+# - RFC3161 TSA timeout fallback  
+# - Neo4j graceful degradation
+# - Strict mode cascade abort
+# - Partial failure recovery
+```
+
+**test_fault_injection.py** - Resilience testing:
+```bash
+# Fault injection tests
+pytest tests/integration/test_fault_injection.py -m circuit_breaker -v
+
+# Tests:
+# - Network timeout handling
+# - Memory pressure handling
+# - Invalid date ranges
+# - Concurrent execution
+```
+
+#### Performance Tests (`tests/performance/`)
+
+**test_load.py** - Performance & scalability:
+```bash
+# Performance tests (slow - marked accordingly)
+pytest tests/performance/test_load.py -m slow -v
+
+# Tests:
+# - test_concurrent_analysis_throughput: 5 concurrent analyses
+# - test_sequential_analysis_performance: Single analysis timing
+# - test_large_date_range_performance: Full year analysis
+```
+
+### Running Phase 3 Tests
+
+```bash
+# Run all integration tests
+pytest tests/integration/ -v
+
+# Run circuit breaker tests only
+pytest -m circuit_breaker -v
+
+# Run performance tests
+pytest -m slow -v
+
+# Run everything with coverage
+pytest --cov=src --cov-report=html -v
+
+# Skip slow tests (faster CI runs)
+pytest -m "not slow" -v
+```
+
+### Coverage Reporting
+
+Phase 3 includes enhanced coverage reporting:
+
+```bash
+# Generate HTML coverage report
+pytest --cov=src --cov-report=html:coverage_report -v
+
+# View coverage report
+open coverage_report/index.html  # macOS
+xdg-open coverage_report/index.html  # Linux
+
+# Coverage is enforced at 80% minimum in CI/CD
+```
+
+### Test Output
+
+Tests create output in `tests/output/` (gitignored):
+- `apple_2019/` - Apple analysis outputs
+- `nike_2020/` - Nike analysis outputs  
+- `multi_filing/` - Microsoft multi-filing test
+- `evidence_chain/` - Evidence chain tests
+- `load_test/` - Performance test outputs
+
+### CI/CD Integration
+
+The `.github/workflows/ci.yml` now includes:
+- **Coverage job**: Enforces 80% minimum coverage
+- **Test artifacts**: Uploads coverage reports
+- **Multiple Python versions**: Tests on 3.9, 3.10, 3.11, 3.12
+
+### Test Markers Reference
+
+```python
+@pytest.mark.unit           # Fast, isolated unit tests
+@pytest.mark.integration    # End-to-end workflow tests
+@pytest.mark.circuit_breaker # Fault tolerance tests
+@pytest.mark.slow           # Performance tests (>30s)
+```
+
+### Known Test Behaviors
+
+1. **Integration tests fetch real SEC data** - May take 2-10 minutes each
+2. **Performance tests are slow** - Marked with `@pytest.mark.slow`
+3. **Circuit breaker tests validate failure modes** - Some may show expected errors
+4. **Coverage minimum is 80%** - Enforced in CI/CD pipeline
+
+### Adding Tests
+
+When adding new tests:
+1. Place in appropriate directory (`integration/`, `performance/`, `unit/`)
+2. Use proper markers (`@pytest.mark.integration`, etc.)
+3. Follow naming convention: `test_*.py`
+4. Create output in `tests/output/<test_name>/`
+5. Add docstrings explaining test purpose
+6. Update this README if adding new categories

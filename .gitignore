@@ -52,6 +52,7 @@ coverage.xml
 .hypothesis/
 .pytest_cache/
 cover/
+coverage_report/
 
 # Translations
 *.mo
@@ -156,6 +157,9 @@ jlaw_forensic_*.log
 
 # JLAW Cache Directory
 .jlaw_cache/
+
+# Test output directory
+tests/output/
 
 # Evidence packages
 *.zip
