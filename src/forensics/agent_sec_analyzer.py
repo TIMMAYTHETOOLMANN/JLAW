@@ -13,6 +13,7 @@ import openai
 
 from src.forensics.sec_edgar_analyzer import FilingAnalysis, SECForensicAnalyzer
 from src.forensics.config_manager import get_config
+from src.forensics.sdk_manager import get_sdk_manager_sync
 
 logger = logging.getLogger(__name__)
 
@@ -57,8 +58,9 @@ class AgentSECForensicAnalyzer:
         # Fallback to manual analyzer for compatibility
         self.manual_analyzer = SECForensicAnalyzer(user_agent=self.user_agent)
         
-        # Initialize OpenAI client
-        self.client = openai.OpenAI(api_key=self.api_key)
+        # Use unified SDK manager for OpenAI client (lazy-loaded)
+        self._sdk_manager = get_sdk_manager_sync()
+        self.client = None  # Will be lazily accessed via SDK manager
         
         # Use agent SDK if available, otherwise direct API
         if AGENTS_SDK_AVAILABLE:
@@ -84,6 +86,17 @@ class AgentSECForensicAnalyzer:
         else:
             self.agent = None
             logger.info(f"✅ Direct API SEC analyzer initialized with model: {self.model}")
+    
+    @property
+    def openai_client(self):
+        """Lazily access OpenAI sync client from SDK manager."""
+        if self.client is None:
+            openai_client = self._sdk_manager.openai
+            if openai_client:
+                self.client = openai_client
+            else:
+                logger.warning("OpenAI client not available from SDK manager")
+        return self.client
 
     def _get_instructions(self) -> str:
         """Get agent instructions for forensic SEC analysis."""
@@ -145,25 +158,26 @@ Maintain forensic chain of custody:
 
             # Strategy 1: Try primary URL
             try:
-                async with aiohttp.ClientSession() as session:
-                    headers = {'User-Agent': self.user_agent, 'Accept': 'text/xml,application/xml,text/html'}
-                    await asyncio.sleep(0.35)  # SEC rate limiting
-
-                    async with session.get(url, headers=headers, timeout=aiohttp.ClientTimeout(total=30)) as response:
-                        if response.status == 200:
-                            content = await response.text()
-                            logger.info(f"[Agent Tool] ✓ Fetched {len(content)} bytes from primary URL")
-                            return {
-                                'status': 'success',
-                                'url': url,
-                                'content': content,
-                                'content_length': len(content),
-                                'form_type': form_type,
-                                'filing_date': filing_date,
-                                'extraction_strategy': 'primary_url'
-                            }
-                        elif response.status == 404:
-                            logger.warning(f"[Agent Tool] Primary URL returned 404: {url}")
+                response = await self._sdk_manager.sec_request(
+                    url, 
+                    self.user_agent,
+                    timeout=aiohttp.ClientTimeout(total=30)
+                )
+                
+                if response.status == 200:
+                    content = await response.text()
+                    logger.info(f"[Agent Tool] ✓ Fetched {len(content)} bytes from primary URL")
+                    return {
+                        'status': 'success',
+                        'url': url,
+                        'content': content,
+                        'content_length': len(content),
+                        'form_type': form_type,
+                        'filing_date': filing_date,
+                        'extraction_strategy': 'primary_url'
+                    }
+                elif response.status == 404:
+                    logger.warning(f"[Agent Tool] Primary URL returned 404: {url}")
             except Exception as e:
                 logger.warning(f"[Agent Tool] Primary URL failed: {e}")
 
@@ -185,19 +199,20 @@ Maintain forensic chain of custody:
 
                     for alt_url in alternates:
                         try:
-                            async with aiohttp.ClientSession() as session:
-                                headers = {'User-Agent': self.user_agent}
-                                await asyncio.sleep(0.35)
-                                async with session.get(alt_url, headers=headers,
-                                                       timeout=aiohttp.ClientTimeout(total=20)) as resp:
-                                    if resp.status == 200:
-                                        content = await resp.text()
-                                        logger.info(f"[Agent Tool] ✓ Found via alternate: {alt_url}")
-                                        return {
-                                            'status': 'success',
-                                            'url': alt_url,
-                                            'content': content,
-                                            'content_length': len(content),
+                            resp = await self._sdk_manager.sec_request(
+                                alt_url,
+                                self.user_agent,
+                                timeout=aiohttp.ClientTimeout(total=20)
+                            )
+                            
+                            if resp.status == 200:
+                                content = await resp.text()
+                                logger.info(f"[Agent Tool] ✓ Found via alternate: {alt_url}")
+                                return {
+                                    'status': 'success',
+                                    'url': alt_url,
+                                    'content': content,
+                                    'content_length': len(content),
                                             'form_type': form_type,
                                             'filing_date': filing_date,
                                             'extraction_strategy': 'alternate_url'
@@ -488,7 +503,7 @@ Content (first 8000 chars):
 Return JSON array of detected violations."""
         
         try:
-            response = self.client.chat.completions.create(
+            response = self.openai_client.chat.completions.create(
                 model=self.model,
                 messages=[
                     {"role": "system", "content": system_prompt},

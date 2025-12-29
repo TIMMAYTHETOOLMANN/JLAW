@@ -7,8 +7,10 @@ instantiations across the codebase, eliminating redundant SDK initializations
 and enabling connection pooling.
 
 Key Features:
-- Single AsyncOpenAI client (primary)
+- Single AsyncOpenAI client (primary) for async code
+- Single OpenAI client (primary) for sync code
 - Single AsyncOpenAI client (secondary for dual-OpenAI mode)
+- Single OpenAI client (secondary) for sync code
 - Single AsyncAnthropic client
 - Shared aiohttp.ClientSession with connection pooling
 - SEC EDGAR rate limiting (0.35s delay, semaphore for concurrent requests)
@@ -16,12 +18,13 @@ Key Features:
 - Graceful fallback handling (OpenRouter, secondary keys)
 
 Usage:
-    from src.forensics.sdk_manager import get_sdk_manager
+    from src.forensics.sdk_manager import get_sdk_manager_sync
     
-    sdk = get_sdk_manager()
+    sdk = get_sdk_manager_sync()
     
-    # Use OpenAI client
-    response = await sdk.openai.chat.completions.create(...)
+    # Use OpenAI client (sync or async)
+    response = sdk.openai.chat.completions.create(...)
+    response = await sdk.openai_async.chat.completions.create(...)
     
     # Use Anthropic client
     response = await sdk.anthropic.messages.create(...)
@@ -58,9 +61,13 @@ class UnifiedSDKManager:
     
     def __init__(self):
         """Initialize SDK manager (should only be called once via get_sdk_manager())."""
-        # Lazy-loaded clients
+        # Lazy-loaded clients (sync versions for backward compatibility)
         self._openai_client: Optional[Any] = None
         self._openai_secondary_client: Optional[Any] = None
+        
+        # Async versions for new async code
+        self._openai_async_client: Optional[Any] = None
+        self._openai_secondary_async_client: Optional[Any] = None
         self._anthropic_client: Optional[Any] = None
         self._http_session: Optional[aiohttp.ClientSession] = None
         
@@ -93,35 +100,98 @@ class UnifiedSDKManager:
     @property
     def openai(self):
         """
-        Get primary OpenAI async client (lazy-loaded).
+        Get primary OpenAI sync client (lazy-loaded).
+        For backward compatibility with sync code.
         
         Returns:
-            AsyncOpenAI client or None if not available
+            OpenAI sync client or None if not available
         """
         if self._openai_client is None:
             try:
-                from openai import AsyncOpenAI
+                from openai import OpenAI
                 config = self._load_config()
                 
                 if config.openai.api_key:
-                    self._openai_client = AsyncOpenAI(
+                    self._openai_client = OpenAI(
                         api_key=config.openai.api_key,
                         max_retries=self._max_retries,
                         timeout=60.0
                     )
                     self._openai_available = True
-                    logger.info(f"✅ Primary OpenAI client initialized (model: {config.openai.model})")
+                    logger.info(f"✅ Primary OpenAI sync client initialized (model: {config.openai.model})")
                 else:
                     logger.warning("⚠️ OPENAI_API_KEY not set - OpenAI features disabled")
             except ImportError:
                 logger.warning("⚠️ openai package not available - install with: pip install openai")
             except Exception as e:
-                logger.error(f"❌ Failed to initialize primary OpenAI client: {e}")
+                logger.error(f"❌ Failed to initialize primary OpenAI sync client: {e}")
         
         return self._openai_client
     
     @property
+    def openai_async(self):
+        """
+        Get primary OpenAI async client (lazy-loaded).
+        For new async code.
+        
+        Returns:
+            AsyncOpenAI client or None if not available
+        """
+        if self._openai_async_client is None:
+            try:
+                from openai import AsyncOpenAI
+                config = self._load_config()
+                
+                if config.openai.api_key:
+                    self._openai_async_client = AsyncOpenAI(
+                        api_key=config.openai.api_key,
+                        max_retries=self._max_retries,
+                        timeout=60.0
+                    )
+                    self._openai_available = True
+                    logger.info(f"✅ Primary OpenAI async client initialized (model: {config.openai.model})")
+                else:
+                    logger.warning("⚠️ OPENAI_API_KEY not set - OpenAI features disabled")
+            except ImportError:
+                logger.warning("⚠️ openai package not available - install with: pip install openai")
+            except Exception as e:
+                logger.error(f"❌ Failed to initialize primary OpenAI async client: {e}")
+        
+        return self._openai_async_client
+    
+    @property
     def openai_secondary(self):
+        """
+        Get secondary OpenAI sync client (lazy-loaded).
+        Used for dual-OpenAI mode when Anthropic is not available.
+        
+        Returns:
+            OpenAI sync client or None if not available
+        """
+        if self._openai_secondary_client is None:
+            try:
+                from openai import OpenAI
+                config = self._load_config()
+                
+                if config.openai.secondary_api_key:
+                    self._openai_secondary_client = OpenAI(
+                        api_key=config.openai.secondary_api_key,
+                        max_retries=self._max_retries,
+                        timeout=60.0
+                    )
+                    self._openai_secondary_available = True
+                    logger.info("✅ Secondary OpenAI sync client initialized (dual-OpenAI mode)")
+                else:
+                    logger.debug("Secondary OpenAI key not configured")
+            except ImportError:
+                logger.warning("⚠️ openai package not available - install with: pip install openai")
+            except Exception as e:
+                logger.error(f"❌ Failed to initialize secondary OpenAI sync client: {e}")
+        
+        return self._openai_secondary_client
+    
+    @property
+    def openai_secondary_async(self):
         """
         Get secondary OpenAI async client (lazy-loaded).
         Used for dual-OpenAI mode when Anthropic is not available.
@@ -129,27 +199,27 @@ class UnifiedSDKManager:
         Returns:
             AsyncOpenAI client or None if not available
         """
-        if self._openai_secondary_client is None:
+        if self._openai_secondary_async_client is None:
             try:
                 from openai import AsyncOpenAI
                 config = self._load_config()
                 
                 if config.openai.secondary_api_key:
-                    self._openai_secondary_client = AsyncOpenAI(
+                    self._openai_secondary_async_client = AsyncOpenAI(
                         api_key=config.openai.secondary_api_key,
                         max_retries=self._max_retries,
                         timeout=60.0
                     )
                     self._openai_secondary_available = True
-                    logger.info("✅ Secondary OpenAI client initialized (dual-OpenAI mode)")
+                    logger.info("✅ Secondary OpenAI async client initialized (dual-OpenAI mode)")
                 else:
                     logger.debug("Secondary OpenAI key not configured")
             except ImportError:
                 logger.warning("⚠️ openai package not available - install with: pip install openai")
             except Exception as e:
-                logger.error(f"❌ Failed to initialize secondary OpenAI client: {e}")
+                logger.error(f"❌ Failed to initialize secondary OpenAI async client: {e}")
         
-        return self._openai_secondary_client
+        return self._openai_secondary_async_client
     
     @property
     def anthropic(self):
@@ -326,20 +396,35 @@ class UnifiedSDKManager:
             await self._http_session.close()
             logger.info("✅ HTTP session closed")
         
-        # OpenAI clients don't need explicit cleanup (use httpx internally)
+        # OpenAI sync clients don't need async cleanup
         if self._openai_client:
             try:
-                await self._openai_client.close()
-                logger.info("✅ Primary OpenAI client closed")
+                self._openai_client.close()
+                logger.info("✅ Primary OpenAI sync client closed")
             except Exception as e:
-                logger.warning(f"Error closing primary OpenAI client: {e}")
+                logger.warning(f"Error closing primary OpenAI sync client: {e}")
         
         if self._openai_secondary_client:
             try:
-                await self._openai_secondary_client.close()
-                logger.info("✅ Secondary OpenAI client closed")
+                self._openai_secondary_client.close()
+                logger.info("✅ Secondary OpenAI sync client closed")
             except Exception as e:
-                logger.warning(f"Error closing secondary OpenAI client: {e}")
+                logger.warning(f"Error closing secondary OpenAI sync client: {e}")
+        
+        # OpenAI async clients need async cleanup
+        if self._openai_async_client:
+            try:
+                await self._openai_async_client.close()
+                logger.info("✅ Primary OpenAI async client closed")
+            except Exception as e:
+                logger.warning(f"Error closing primary OpenAI async client: {e}")
+        
+        if self._openai_secondary_async_client:
+            try:
+                await self._openai_secondary_async_client.close()
+                logger.info("✅ Secondary OpenAI async client closed")
+            except Exception as e:
+                logger.warning(f"Error closing secondary OpenAI async client: {e}")
         
         # Anthropic client cleanup
         if self._anthropic_client:

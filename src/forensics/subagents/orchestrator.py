@@ -42,6 +42,9 @@ except ImportError:
     ANTHROPIC_AVAILABLE = False
     logger.warning("anthropic package not available. Install with: pip install anthropic")
 
+# Import SDK manager for unified client access
+from src.forensics.sdk_manager import get_sdk_manager_sync
+
 
 # ═══════════════════════════════════════════════════════════════════════════
 # VIOLATION-TO-AGENT MAPPING
@@ -343,17 +346,23 @@ class SubagentOrchestrator:
         self.workflow_counter = 0
         self._verify_agents()
         
-        # Initialize Claude API client if available
-        self.claude_client = None
-        if ANTHROPIC_AVAILABLE:
-            api_key = os.getenv("ANTHROPIC_API_KEY")
-            if api_key:
-                self.claude_client = AsyncAnthropic(api_key=api_key)
-                logger.info("✅ Claude API client initialized")
+        # Use unified SDK manager for Claude API client
+        self._sdk_manager = get_sdk_manager_sync()
+        self.claude_client = None  # Will be lazily accessed via SDK manager
+        
+        logger.info("✅ SubagentOrchestrator initialized")
+    
+    @property
+    def anthropic_client(self):
+        """Lazily access Anthropic async client from SDK manager."""
+        if self.claude_client is None:
+            anthropic_client = self._sdk_manager.anthropic
+            if anthropic_client:
+                self.claude_client = anthropic_client
+                logger.info("✅ Claude API client loaded from SDK manager")
             else:
-                logger.warning("ANTHROPIC_API_KEY not set - using mock responses")
-        else:
-            logger.warning("Anthropic package not available - using mock responses")
+                logger.warning("Anthropic client not available from SDK manager - using mock responses")
+        return self.claude_client
     
     def _verify_agents(self):
         """Verify agent configuration files exist."""
@@ -771,8 +780,8 @@ Return your analysis in JSON format with keys: violations, applicable_statutes, 
             # Load agent system prompt
             system_prompt = self._load_agent_prompt(agent)
             
-            # Call Claude API
-            response = await self.claude_client.messages.create(
+            # Call Claude API using SDK manager client
+            response = await self.anthropic_client.messages.create(
                 model="claude-opus-4-20250514",  # Latest Opus model
                 system=system_prompt,
                 messages=[{
