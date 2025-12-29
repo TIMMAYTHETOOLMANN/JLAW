@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: jlaw-config
+  namespace: jlaw-forensics
+  labels:
+    app: jlaw
+data:
+  sec_user_agent: "JLAW-Forensics/4.0 (forensics@jlaw-system.org)"
+  sec_rate_limit: "6.0"
+  sec_cache_enabled: "true"
+  rfc3161_timestamp_url: "https://freetsa.org/tsr"

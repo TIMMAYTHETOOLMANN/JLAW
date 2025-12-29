@@ -1,0 +1,175 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: jlaw-forensics
+  namespace: jlaw-forensics
+  labels:
+    app: jlaw
+    component: forensics-engine
+    version: "4.0.0"
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: jlaw
+      component: forensics-engine
+  template:
+    metadata:
+      labels:
+        app: jlaw
+        component: forensics-engine
+        version: "4.0.0"
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        fsGroup: 1000
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+      - name: jlaw-forensics
+        image: ghcr.io/timmaythetoolmann/jlaw:latest
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8080
+          name: http
+          protocol: TCP
+        env:
+        # SEC EDGAR Configuration
+        - name: SEC_USER_AGENT
+          valueFrom:
+            configMapKeyRef:
+              name: jlaw-config
+              key: sec_user_agent
+        - name: SEC_RATE_LIMIT
+          valueFrom:
+            configMapKeyRef:
+              name: jlaw-config
+              key: sec_rate_limit
+        - name: SEC_CACHE_ENABLED
+          valueFrom:
+            configMapKeyRef:
+              name: jlaw-config
+              key: sec_cache_enabled
+        
+        # External API Keys
+        - name: POLYGON_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: jlaw-secrets
+              key: polygon_api_key
+        - name: OPENAI_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: jlaw-secrets
+              key: openai_api_key
+              optional: true
+        - name: ANTHROPIC_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: jlaw-secrets
+              key: anthropic_api_key
+              optional: true
+        
+        # Neo4j Configuration
+        - name: NEO4J_URI
+          value: "bolt://neo4j:7687"
+        - name: NEO4J_USER
+          value: "neo4j"
+        - name: NEO4J_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: jlaw-secrets
+              key: neo4j_password
+        
+        # TimescaleDB Configuration
+        - name: TIMESCALE_HOST
+          value: "timescaledb"
+        - name: TIMESCALE_PORT
+          value: "5432"
+        - name: TIMESCALE_USER
+          value: "jlaw"
+        - name: TIMESCALE_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: jlaw-secrets
+              key: timescale_password
+        
+        # Redis Configuration
+        - name: REDIS_HOST
+          value: "redis"
+        - name: REDIS_PORT
+          value: "6379"
+        - name: REDIS_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: jlaw-secrets
+              key: redis_password
+              optional: true
+        
+        # RFC 3161 Timestamp Configuration
+        - name: RFC3161_TIMESTAMP_URL
+          valueFrom:
+            configMapKeyRef:
+              name: jlaw-config
+              key: rfc3161_timestamp_url
+        
+        # Python Configuration
+        - name: PYTHONUNBUFFERED
+          value: "1"
+        - name: PYTHONDONTWRITEBYTECODE
+          value: "1"
+        
+        resources:
+          requests:
+            memory: "2Gi"
+            cpu: "1000m"
+          limits:
+            memory: "4Gi"
+            cpu: "2000m"
+        
+        livenessProbe:
+          exec:
+            command:
+            - python
+            - scripts/health_check.py
+          initialDelaySeconds: 30
+          periodSeconds: 30
+          timeoutSeconds: 10
+          failureThreshold: 3
+        
+        readinessProbe:
+          exec:
+            command:
+            - python
+            - scripts/health_check.py
+          initialDelaySeconds: 10
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        
+        securityContext:
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: false
+          capabilities:
+            drop:
+            - ALL
+        
+        volumeMounts:
+        - name: evidence
+          mountPath: /app/evidence
+        - name: reports
+          mountPath: /app/reports
+        - name: cache
+          mountPath: /app/.jlaw_cache
+      
+      volumes:
+      - name: evidence
+        persistentVolumeClaim:
+          claimName: jlaw-evidence-pvc
+      - name: reports
+        persistentVolumeClaim:
+          claimName: jlaw-reports-pvc
+      - name: cache
+        emptyDir:
+          sizeLimit: 10Gi

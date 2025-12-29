@@ -1314,6 +1314,126 @@ Key: `aiohttp`, `openai`, `anthropic`, `python-dotenv`, `pdfplumber`, `beautiful
 
 ---
 
+## DEPLOYMENT
+
+### Docker Deployment 🐋
+
+JLAW supports containerized deployment with Docker and Docker Compose for production environments.
+
+#### Quick Start with Docker Compose
+
+```bash
+# 1. Clone repository
+git clone https://github.com/TIMMAYTHETOOLMANN/JLAW.git
+cd JLAW
+
+# 2. Configure environment
+cp .env.example .env
+# Edit .env with your credentials
+
+# 3. Start all services
+docker compose up -d
+
+# 4. Verify health
+docker compose exec jlaw python scripts/health_check.py
+
+# 5. View logs
+docker compose logs -f jlaw
+```
+
+**Services Included:**
+- JLAW Forensics Engine (Python 3.10)
+- Neo4j Graph Database (5.15-community)
+- TimescaleDB (PostgreSQL 15 + TimescaleDB)
+- Redis Cache (7-alpine)
+
+**Full Guide**: [docs/deployment/docker.md](docs/deployment/docker.md)
+
+### Kubernetes Deployment ☸️
+
+For production-grade orchestration with autoscaling and high availability.
+
+#### Quick Start with Kubernetes
+
+```bash
+# 1. Create namespace
+kubectl apply -f k8s/namespace.yaml
+
+# 2. Configure secrets
+cp k8s/secrets.yaml.example k8s/secrets.yaml
+# Edit k8s/secrets.yaml with actual credentials
+kubectl apply -f k8s/secrets.yaml
+
+# 3. Deploy configuration
+kubectl apply -f k8s/configmap.yaml
+
+# 4. Provision storage (50GB evidence + 100GB reports)
+kubectl apply -f k8s/pvc.yaml
+
+# 5. Deploy application
+kubectl apply -f k8s/deployment.yaml
+kubectl apply -f k8s/service.yaml
+
+# 6. Enable autoscaling (2-10 replicas)
+kubectl apply -f k8s/hpa.yaml
+
+# 7. Verify deployment
+kubectl get pods -n jlaw-forensics
+kubectl logs -n jlaw-forensics -l app=jlaw --tail=50
+```
+
+**Features:**
+- Horizontal Pod Autoscaling (HPA): 2-10 replicas based on CPU/memory
+- Resource limits: 2-4GB RAM, 1-2 CPU cores per pod
+- Health checks: Liveness and readiness probes
+- Security: Non-root execution (UID 1000), minimal capabilities
+- Storage: PersistentVolumeClaims for evidence and reports
+
+**Full Guide**: [docs/deployment/kubernetes.md](docs/deployment/kubernetes.md)
+
+**Quick Reference**: [k8s/README.md](k8s/README.md)
+
+### Health Check
+
+All deployments include a comprehensive health check script:
+
+```bash
+# Docker
+docker compose exec jlaw python scripts/health_check.py
+
+# Kubernetes
+kubectl exec -n jlaw-forensics deployment/jlaw-forensics -- python scripts/health_check.py
+
+# Local
+python scripts/health_check.py
+```
+
+**Health check validates:**
+- ✓ Core engine (RecursiveProsecutorialEngine)
+- ✓ Evidence chain (HashService, MerkleTree)
+- ✓ All 15 analysis nodes (Phase 1-4)
+- ✓ Detection algorithms (23 patterns)
+- ✓ Cross-node correlation
+
+### CI/CD Pipeline
+
+GitHub Actions workflow automatically:
+- Runs tests on Python 3.9-3.12
+- Builds Docker images with multi-stage optimization
+- Scans containers with Trivy (CRITICAL/HIGH vulnerabilities)
+- Pushes to GitHub Container Registry (GHCR) on main branch
+- Performs security scanning (Bandit, Safety)
+
+**Workflow**: [.github/workflows/ci.yml](.github/workflows/ci.yml)
+
+### Deployment Checklist
+
+Complete pre-deployment validation checklist:
+
+**Checklist**: [DEPLOYMENT_CHECKLIST.md](DEPLOYMENT_CHECKLIST.md)
+
+---
+
 ## DOJ-LEVEL FORENSIC REPORTING ENHANCEMENT
 
 ### Overview

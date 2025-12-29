@@ -164,3 +164,8 @@ tests/output/
 # Evidence packages
 *.zip
 evidence_package_*.zip
+
+# Kubernetes Secrets (never commit actual secrets!)
+k8s/secrets.yaml
+**/secrets.yaml
+!k8s/secrets.yaml.example
