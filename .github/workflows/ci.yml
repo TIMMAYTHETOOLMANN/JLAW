@@ -34,8 +34,7 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install -r requirements.txt
-        pip install pytest pytest-cov ruff flake8
+        pip install -e .[dev]
 
     - name: Lint with ruff
       run: |
@@ -92,6 +91,13 @@ jobs:
         
         print('\n✓ All import verification tests passed!')
         "
+    
+    - name: Run pre-flight check
+      run: |
+        python scripts/preflight_check.py --verbose || true
+      continue-on-error: true
+      env:
+        SEC_USER_AGENT: "JLAW CI/CD test@example.com"
 
     - name: Run pytest tests
       run: |
@@ -116,8 +122,7 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install -r requirements.txt
-        pip install pytest pytest-cov pytest-asyncio pytest-timeout pytest-mock
+        pip install -e .[dev]
 
     - name: Run tests with coverage
       run: |
@@ -131,6 +136,8 @@ jobs:
           --tb=short \
           --continue-on-collection-errors || true
       continue-on-error: true
+      env:
+        SEC_USER_AGENT: "JLAW CI/CD test@example.com"
 
     - name: Upload coverage report
       uses: actions/upload-artifact@v3
@@ -159,7 +166,7 @@ jobs:
 
     - name: Check dependencies for vulnerabilities
       run: |
-        pip install -r requirements.txt
+        pip install -e .
         safety check --json || true
       continue-on-error: true
 

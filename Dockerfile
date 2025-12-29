@@ -35,11 +35,11 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 FROM base AS dependencies
 
 # Copy dependency files
-COPY requirements.txt pyproject.toml ./
+COPY pyproject.toml ./
 
 # Install Python dependencies (upgrade pip without pinning to avoid SSL issues in build environments)
 RUN pip install --upgrade pip setuptools wheel \
-    && pip install --no-cache-dir -r requirements.txt
+    && pip install --no-cache-dir -e .
 
 FROM dependencies AS production
 
