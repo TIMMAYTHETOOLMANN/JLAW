@@ -66,6 +66,7 @@ from pathlib import Path
 from enum import Enum
 
 from .phase_gate_validator import PhaseGateValidator
+from .phase_execution_framework import PhaseExecutionFramework
 
 logger = logging.getLogger(__name__)
 
@@ -74,12 +75,10 @@ MAX_DOCUMENTS_TO_PARSE = 10  # Limit for initial document parsing in Phase 3
 
 
 # ═══════════════════════════════════════════════════════════════════════════
-# EXCEPTIONS
+# EXCEPTIONS (Import from centralized exceptions module)
 # ═══════════════════════════════════════════════════════════════════════════
 
-class EvidenceChainIntegrityError(Exception):
-    """Raised when evidence chain validation fails in strict mode."""
-    pass
+from .exceptions import EvidenceChainIntegrityError
 
 
 # ═══════════════════════════════════════════════════════════════════════════
@@ -292,6 +291,9 @@ class MasterExecutionController:
         }
         self._gate_validator = PhaseGateValidator(gate_validator_config)
         
+        # Phase Execution Framework - NEW (Phase 4 Implementation)
+        self._phase_framework = PhaseExecutionFramework(strict_mode=self.strict_mode)
+        
         # Audit logger
         self._audit = None
         
@@ -364,6 +366,14 @@ class MasterExecutionController:
             raise
         
         analysis_end = datetime.utcnow()
+        
+        # Export Phase Execution Framework audit trail (NEW - Phase 4 Implementation)
+        try:
+            audit_trail_path = self.output_dir / "phase_execution_audit_trail.json"
+            self._phase_framework.export_audit_trail(audit_trail_path)
+            logger.info(f"✓ Phase execution audit trail exported to: {audit_trail_path}")
+        except Exception as e:
+            logger.warning(f"Failed to export phase execution audit trail: {e}")
         
         # Finalize strict mode
         if self._strict_controller:
@@ -2220,3 +2230,27 @@ EVIDENCE CHAIN:
         logger.info(f"  Merkle Root: {result.merkle_root[:32]}...")
         logger.info(f"  Dossier: {result.dossier_path}")
         logger.info("=" * 80)
+    
+    def get_phase_execution_summary(self) -> Dict[str, Any]:
+        """
+        Get phase execution framework summary.
+        
+        This method returns the execution summary from the Phase Execution Framework,
+        including all phase execution records, timing, and validation status.
+        
+        Returns:
+            Dictionary with phase execution statistics
+        """
+        return self._phase_framework.get_execution_summary()
+    
+    def export_phase_audit_trail(self, output_path: Path):
+        """
+        Export phase execution audit trail to specified path.
+        
+        This creates an immutable FRE 902(13)/(14) compliant audit trail
+        of all phase executions for DOJ submission.
+        
+        Args:
+            output_path: Path where audit trail JSON should be written
+        """
+        self._phase_framework.export_audit_trail(output_path)
