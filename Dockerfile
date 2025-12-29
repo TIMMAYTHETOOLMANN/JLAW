@@ -21,11 +21,11 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 
 WORKDIR /app
 
-# Install system dependencies with pinned versions
+# Install system dependencies (no version pinning for system packages due to distro variations)
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    build-essential=12.9 \
-    libpq-dev=15.* \
-    curl=7.* \
+    build-essential \
+    libpq-dev \
+    curl \
     && rm -rf /var/lib/apt/lists/* \
     && apt-get clean
 
@@ -34,8 +34,8 @@ FROM base AS dependencies
 # Copy dependency files
 COPY requirements.txt pyproject.toml ./
 
-# Install Python dependencies with pinned versions
-RUN pip install --upgrade pip==23.3.1 setuptools==69.0.2 wheel==0.42.0 \
+# Install Python dependencies (upgrade pip without pinning to avoid SSL issues in build environments)
+RUN pip install --upgrade pip setuptools wheel \
     && pip install --no-cache-dir -r requirements.txt
 
 FROM dependencies AS production
