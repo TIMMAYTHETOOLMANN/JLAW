@@ -39,6 +39,10 @@ dependencies = [
     "transformers>=4.30.0",
     "xgboost>=2.0.0",
     
+    # AI/ML Clients (REQUIRED for dual validation)
+    "anthropic>=0.18.0",
+    "openai>=1.10.0",
+    
     # Cryptography & Evidence Chain
     "cryptography>=41.0.0",
     "rfc3161ng>=2.1.0",
@@ -52,6 +56,13 @@ dependencies = [
     
     # SEC/Financial Analysis
     "benford-py>=0.6.0",
+    "sec-edgar-downloader>=5.0.0",
+    "edgar>=5.0.0",
+    "python-xbrl>=1.1.0",
+    "ixbrlparse>=0.9.0",
+    
+    # Market Data (Optional)
+    "polygon-api-client>=1.12.0",
     
     # Parsing & Extraction
     "beautifulsoup4>=4.12.0",
@@ -64,6 +75,9 @@ dependencies = [
     "PyMuPDF>=1.23.0",
     "pytesseract>=0.3.10",
     
+    # Environment & Configuration
+    "python-dotenv>=1.0.0",
+    
     # Logging & Reporting
     "structlog>=24.1.0",
     "reportlab>=4.0.0",
@@ -75,6 +89,10 @@ dependencies = [
 [project.urls]
 Repository = "https://github.com/TIMMAYTHETOOLMANN/JLAW"
 Documentation = "https://github.com/TIMMAYTHETOOLMANN/JLAW/blob/main/README.md"
+
+[project.scripts]
+jlaw = "JLAW_UNIFIED:main"
+jlaw-preflight = "scripts.preflight_check:main"
 
 [project.optional-dependencies]
 dev = [

@@ -5,13 +5,16 @@ FROM python:3.10-slim AS base
 # Security & Metadata Labels
 LABEL maintainer="JLAW Development Team"
 LABEL description="JLAW SEC Forensic Financial Analysis System - 15-Node Recursive Prosecutorial Engine"
-LABEL version="4.0.0"
+LABEL version="4.1.0"
 LABEL org.opencontainers.image.title="JLAW Forensics"
 LABEL org.opencontainers.image.description="DOJ-grade SEC filing forensic analysis platform"
 LABEL org.opencontainers.image.vendor="JLAW Development Team"
-LABEL org.opencontainers.image.version="4.0.0"
+LABEL org.opencontainers.image.version="4.1.0"
 LABEL org.opencontainers.image.licenses="MIT"
 LABEL org.opencontainers.image.source="https://github.com/TIMMAYTHETOOLMANN/JLAW"
+LABEL security.scan="trivy"
+LABEL compliance.fre="902(13)/902(14)"
+LABEL compliance.soc2="type-ii-preparation"
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
@@ -32,11 +35,11 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 FROM base AS dependencies
 
 # Copy dependency files
-COPY requirements.txt pyproject.toml ./
+COPY pyproject.toml ./
 
 # Install Python dependencies (upgrade pip without pinning to avoid SSL issues in build environments)
 RUN pip install --upgrade pip setuptools wheel \
-    && pip install --no-cache-dir -r requirements.txt
+    && pip install --no-cache-dir -e .
 
 FROM dependencies AS production
 
