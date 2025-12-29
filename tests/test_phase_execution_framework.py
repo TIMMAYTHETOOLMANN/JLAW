@@ -70,7 +70,7 @@ async def failing_phase_executor():
 async def slow_phase_executor():
     """Create mock slow phase executor that times out."""
     async def executor(**kwargs):
-        await asyncio.sleep(10)  # Will timeout
+        await asyncio.sleep(60)  # Will timeout (phase_1 has 30s timeout)
         return {"status": "completed"}
     return executor
 
@@ -601,11 +601,18 @@ class TestStrictVsStandardMode:
             )
     
     @pytest.mark.asyncio
-    async def test_strict_mode_in_summary(self, strict_framework, mock_phase_executor):
+    async def test_strict_mode_in_summary(self, strict_framework):
         """Test that strict mode flag appears in summary."""
+        async def good_executor(**kwargs):
+            return {
+                "sec_client_available": True,
+                "modules_loaded": 6,  # Exact match required
+                "sec_config_valid": True,
+            }
+        
         await strict_framework.execute_phase(
             "phase_1_initialization",
-            executor=mock_phase_executor
+            executor=good_executor
         )
         
         summary = strict_framework.get_execution_summary()
