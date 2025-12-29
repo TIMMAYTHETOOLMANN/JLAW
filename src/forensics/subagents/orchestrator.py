@@ -59,6 +59,43 @@ from src.forensics.intelligent_router import IntelligentSubagentRouter
 # ═══════════════════════════════════════════════════════════════════════════
 
 
+def get_agents_for_violation_types(violation_types: List[str]) -> Set[str]:
+    """
+    Get relevant Claude subagents for given violation types.
+    
+    DEPRECATED: This is a backward compatibility shim. New code should use
+    DynamicAgentRegistry.get_agents_for_violations() instead.
+    
+    Args:
+        violation_types: List of violation type strings
+        
+    Returns:
+        Set of agent names to invoke
+    """
+    logger.warning("get_agents_for_violation_types() is deprecated. Use DynamicAgentRegistry instead.")
+    
+    try:
+        # Use new dynamic registry
+        from src.forensics.agent_registry import DynamicAgentRegistry
+        registry = DynamicAgentRegistry()
+        
+        violations = [{"type": vtype} for vtype in violation_types]
+        agents = registry.get_agents_for_violations(violations, top_k=10)
+        
+        agent_names = {agent.agent_name for agent in agents}
+        
+        # Always include compliance auditor for backward compatibility
+        if agent_names:
+            agent_names.add("forensic-compliance-auditor")
+        
+        return agent_names
+    
+    except Exception as e:
+        logger.error(f"Failed to use dynamic registry: {e}")
+        # Fallback: return default agents
+        return {"forensic-compliance-auditor"}
+
+
 class AgentRole(Enum):
     """Available specialized agent roles."""
     FINANCIAL_ANALYST = "forensic-financial-analyst"

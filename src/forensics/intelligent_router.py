@@ -404,26 +404,41 @@ class IntelligentSubagentRouter:
             
             # If orchestrator provided, use it to spawn agent
             if orchestrator:
-                result = await orchestrator.spawn_subagent(
+                # Use orchestrator's _spawn_single_agent method
+                result = await orchestrator._spawn_single_agent(
                     agent_name=agent_name,
-                    task_description=f"Analyze {len(violations)} violations",
-                    input_data={
-                        "violations": violations,
-                        **context
-                    }
+                    violations=violations,
+                    context=context
                 )
                 
                 execution_time = (datetime.now() - start_time).total_seconds()
                 
-                return AgentResult(
-                    agent_name=agent_name,
-                    status="success" if result.get("status") == "success" else "error",
-                    findings=result.get("findings", {}),
-                    recommendations=result.get("recommendations", []),
-                    severity=result.get("severity", ""),
-                    execution_time=execution_time,
-                    error=result.get("error")
-                )
+                # Transform orchestrator result to AgentResult
+                if isinstance(result, dict):
+                    return AgentResult(
+                        agent_name=agent_name,
+                        status="success" if result.get("status") == "success" else "error",
+                        findings=result.get("findings", {}),
+                        recommendations=result.get("recommendations", []),
+                        severity=result.get("severity", ""),
+                        execution_time=execution_time,
+                        error=result.get("error")
+                    )
+                elif isinstance(result, Exception):
+                    return AgentResult(
+                        agent_name=agent_name,
+                        status="error",
+                        error=str(result),
+                        execution_time=execution_time
+                    )
+                else:
+                    # Unexpected result type
+                    return AgentResult(
+                        agent_name=agent_name,
+                        status="success",
+                        findings={"result": str(result)},
+                        execution_time=execution_time
+                    )
             else:
                 # Placeholder execution (no actual API call)
                 logger.debug(f"Agent {agent_name} executed (placeholder mode)")
