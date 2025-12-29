@@ -330,13 +330,16 @@ class BudgetEnforcer:
         if self.max_tokens:
             parts.append(
                 f"Tokens: {status.tokens_used:,}/{self.max_tokens:,} "
-                f"({status.tokens_percentage:.1f}%)"
+                f"({status.tokens_percentage or 0:.1f}%)"
             )
         
         if self.max_cost_usd:
             parts.append(
                 f"Cost: ${status.cost_used:.4f}/${self.max_cost_usd:.2f} "
-                f"({status.cost_percentage:.1f}%)"
+                f"({status.cost_percentage or 0:.1f}%)"
             )
+        
+        if not parts:
+            return "BudgetEnforcer(no limits set)"
         
         return f"BudgetEnforcer({', '.join(parts)})"
