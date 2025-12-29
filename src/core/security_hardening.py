@@ -22,7 +22,6 @@ import os
 import re
 import hashlib
 import json
-import base64
 import logging
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field

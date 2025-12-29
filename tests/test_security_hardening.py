@@ -17,7 +17,6 @@ Compliance: FRE 902(13)/(14), NIST SP 800-86, RFC 6962
 """
 
 import hashlib
-import asyncio
 import tempfile
 import json
 from datetime import datetime, timedelta
