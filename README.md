@@ -55,6 +55,89 @@ JLAW has completed **Phase 6: Final Integration, Documentation & Validation**, a
 
 ---
 
+## 🎯 RIM PHASE 1: RECURSIVE INVESTIGATIVE MODULE
+
+**Status:** ✅ Production Ready (December 2024)
+
+JLAW now implements the **Recursive Investigative Module (RIM) execution standard**, transforming the system from a detection platform into a **recursive prosecutorial intelligence system** that produces courtroom-usable evidence narratives with **zero hedging language**.
+
+### RIM Components
+
+| Component | Purpose | Status |
+|-----------|---------|--------|
+| **Recursive Forensic Analyzer** | 3-tier analysis (PRIMARY → SECONDARY → TERTIARY) | ✅ Complete |
+| **Statutory Binding Engine** | Violation-to-statute mapping for all 23 patterns | ✅ Complete |
+| **RIM Compliance Validator** | Output quality assurance (0 hedging language) | ✅ Complete |
+
+### RIM Execution Flow
+
+```
+Phase 5: Pattern Detection
+    ↓
+RIM 1A: Recursive Forensic Analysis
+    ├── PRIMARY: Initial violations
+    ├── SECONDARY: Transaction clustering, temporal correlation
+    └── TERTIARY: Actor coordination detection
+    ↓
+RIM 1B: Statutory Binding
+    ├── Map violations to USC/CFR statutes
+    ├── Classify enforcement pathways (SEC/DOJ/IRS)
+    └── Generate plain-language explanations
+    ↓
+Phase 9: Dossier Generation
+    ↓
+RIM 1C: Compliance Validation
+    ├── Scan for prohibited hedging language
+    ├── Verify 100% statutory binding coverage
+    └── Check secondary pass execution
+    ↓
+DOJ-Grade Dossier (RIM Compliant)
+```
+
+### Key Features
+
+- **Zero Hedging Language**: Eliminates probabilistic terms ("may indicate" → "indicates")
+- **100% Statutory Binding**: Every violation mapped to specific statutes (17 CFR, 15 USC, IRC)
+- **3-Tier Analysis**: PRIMARY (detection) → SECONDARY (clustering) → TERTIARY (coordination)
+- **Transaction Clustering**: Zero-dollar gifts, same-day trades, temporal correlations
+- **Enforcement Pathways**: SEC civil, DOJ criminal, IRS tax evasion classification
+
+### RIM-Mandated Dossier Sections
+
+1. **Executive Forensic Summary** (NO HEDGING)
+2. **Table of Violations with Statutes**
+3. **Transaction Clustering Analysis**
+4. **Temporal Correlation Analysis**
+5. **Enforcement Pathway Mapping**
+6. **Evidence Strength Statement** (EXPLICIT)
+7. **RIM Compliance Report**
+
+### Usage
+
+```bash
+# Run analysis with RIM compliance
+python jlaw_cli.py --cik 0000320187 --year 2019 --strict --auto
+
+# RIM compliance validation will:
+# 1. Execute recursive forensic analysis
+# 2. Bind all violations to statutes
+# 3. Validate output for prohibited language
+# 4. ABORT if not compliant (in strict mode)
+```
+
+### RIM Compliance Requirements
+
+| Requirement | Target | Critical |
+|-------------|--------|----------|
+| Prohibited Language | 0 instances | ✅ Yes |
+| Statutory Binding Coverage | 100% | ✅ Yes |
+| Secondary Pass Coverage | 100% | ✅ Yes |
+| Evidence Strength Explicit | Required | ✅ Yes |
+
+**See**: [RIM Phase 1 Implementation Guide](docs/RIM_PHASE1_IMPLEMENTATION.md) for complete documentation.
+
+---
+
 ## QUICK START
 
 ### Setup Verification
