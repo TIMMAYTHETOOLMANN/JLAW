@@ -12,11 +12,21 @@ from .ai_cross_validator import (
     ValidationStatus,
     DetectionPattern
 )
+from .rim_compliance_validator import (
+    RIMComplianceValidator,
+    RIMComplianceResult,
+    ComplianceDeficiency,
+    ComplianceStatus
+)
 
 __all__ = [
     'AICrossValidator',
     'AICrossValidationReport',
     'CrossValidationResult',
     'ValidationStatus',
-    'DetectionPattern'
+    'DetectionPattern',
+    'RIMComplianceValidator',
+    'RIMComplianceResult',
+    'ComplianceDeficiency',
+    'ComplianceStatus'
 ]
