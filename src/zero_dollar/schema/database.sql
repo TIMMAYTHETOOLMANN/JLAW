@@ -308,7 +308,7 @@ CREATE TABLE IF NOT EXISTS behavioral_assessments (
     risk_level VARCHAR(20) GENERATED ALWAYS AS (
         CASE
             WHEN (magnitude_score + frequency_score + timing_score + 
-                  filing_compliance_score + entity_complexity_score) >= 75 THEN 'CRITICAL'
+                  filing_compliance_score + entity_complexity_score) >= 80 THEN 'CRITICAL'  -- per Section 8.3 of JLAW Zero-Dollar Specification
             WHEN (magnitude_score + frequency_score + timing_score + 
                   filing_compliance_score + entity_complexity_score) >= 60 THEN 'HIGH'
             WHEN (magnitude_score + frequency_score + timing_score + 
