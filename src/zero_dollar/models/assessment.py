@@ -6,8 +6,8 @@ Data structures for behavioral risk assessment and FRE 902(13)/(14) compliant
 evidence chain tracking.
 
 Reference:
-- Section 6: Behavioral Risk Scoring
-- Section 7: Evidence Chain & Custody
+- Section 8: Behavioral Pattern Scoring Engine
+- Section 9: Evidence Integrity Protocol
 - Section 11.4: Assessment Schema
 """
 
@@ -22,13 +22,14 @@ class BehavioralScoreComponents:
     Component scores for behavioral risk assessment.
     
     Breaks down the total behavioral risk score into constituent factors
-    per Section 6.2 of the specification.
+    per Section 8.2 of the specification.
     
     Attributes:
         magnitude_score: Score based on transaction size (0-25)
         frequency_score: Score based on transaction frequency (0-25)
         timing_score: Score based on event proximity timing (0-20)
         filing_compliance_score: Score based on late filing patterns (0-15)
+            Note: Also referred to as 'price_variance_score' in specification
         entity_complexity_score: Score based on ownership structure (0-15)
         total_score: Sum of all component scores (0-100)
     """
@@ -67,7 +68,7 @@ class BehavioralRiskAssessment:
     Comprehensive behavioral risk assessment for reporting person.
     
     Aggregates multiple risk factors to produce prosecutorial priority
-    ranking per Section 6 of the specification.
+    ranking per Section 8 of the specification.
     
     Attributes:
         assessment_id: Unique assessment identifier
@@ -110,10 +111,16 @@ class BehavioralRiskAssessment:
         """
         Classify risk level based on score.
         
+        Per Section 8.3 of JLAW Zero-Dollar Transaction Forensic Specification:
+        - CRITICAL: 80-100 (Immediate referral to SEC Enforcement Division)
+        - HIGH: 60-79 (Enhanced investigation and documentation)
+        - MODERATE: 40-59 (Continued monitoring and periodic review)
+        - LOW: 0-39 (Routine surveillance)
+        
         Returns:
             Risk level: CRITICAL, HIGH, MODERATE, or LOW
         """
-        if self.risk_score >= 75:
+        if self.risk_score >= 80:
             return "CRITICAL"
         elif self.risk_score >= 60:
             return "HIGH"
