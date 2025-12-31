@@ -105,7 +105,11 @@ class AppendixGenerator:
         lines.append(f"│ VIOLATION #{index}: {violation.get('violation_type', 'UNKNOWN'):<{box_width - 18}} │")
         lines.append(f"├{'─' * box_width}┤")
         lines.append(f"│ Violation ID:     {violation.get('violation_id', 'N/A'):<{box_width - 20}} │")
-        lines.append(f"│ Confidence:       {violation.get('confidence', 0):.1%:<{box_width - 20}} │")
+        
+        confidence = violation.get('confidence', 0)
+        confidence_str = f"{confidence:.1%}" if isinstance(confidence, (int, float)) else str(confidence)
+        lines.append(f"│ Confidence:       {confidence_str:<{box_width - 20}} │")
+        
         lines.append(f"│ Severity:         {violation.get('severity', 'UNKNOWN'):<{box_width - 20}} │")
         
         # Statutes
@@ -290,68 +294,5 @@ class AppendixGenerator:
             lines.append(f"│ {algo_short:<34}│ {status_display:<11}│ {detections:>9}│ {exec_time:>14.2f}│")
         
         lines.append(f"└{'─' * 35}┴{'─' * 12}┴{'─' * 10}┴{'─' * 15}┘")
-        
-        return lines
-
-            if len(node_results) > 10:
-                lines.append(f"  ... and {len(node_results) - 10} more")
-        
-        return lines
-    
-    @staticmethod
-    def _format_appendix_c(data: Dict[str, Any]) -> List[str]:
-        """Format Appendix C: Raw SEC Filing Index."""
-        lines = []
-        
-        lines.append("═" * 80)
-        lines.append("  APPENDIX C: RAW SEC FILING INDEX")
-        lines.append("═" * 80)
-        lines.append("")
-        
-        lines.append(f"Total Filings Analyzed: {data.get('total_filings', 0)}")
-        lines.append("")
-        
-        # List filings (truncated)
-        filings = data.get('filings_analyzed', [])
-        if filings:
-            lines.append("Filings Analyzed (first 20):")
-            for i, filing in enumerate(filings[:20], 1):
-                if isinstance(filing, dict):
-                    form_type = filing.get('form_type', 'N/A')
-                    filing_date = filing.get('filing_date', 'N/A')
-                    lines.append(f"  {i}. {form_type} - {filing_date}")
-                else:
-                    lines.append(f"  {i}. {filing}")
-            if len(filings) > 20:
-                lines.append(f"  ... and {len(filings) - 20} more")
-        
-        return lines
-    
-    @staticmethod
-    def _format_appendix_d(data: Dict[str, Any]) -> List[str]:
-        """Format Appendix D: Algorithm Execution Log."""
-        lines = []
-        
-        lines.append("═" * 80)
-        lines.append("  APPENDIX D: ALGORITHM EXECUTION LOG")
-        lines.append("═" * 80)
-        lines.append("")
-        
-        lines.append(f"Total Patterns Executed: {data.get('total_patterns', 0)}")
-        lines.append("")
-        
-        # List patterns (truncated)
-        patterns = data.get('patterns_executed', [])
-        if patterns:
-            lines.append("Patterns Executed (first 20):")
-            for i, pattern in enumerate(patterns[:20], 1):
-                if isinstance(pattern, dict):
-                    pattern_name = pattern.get('name', 'N/A')
-                    status = pattern.get('status', 'N/A')
-                    lines.append(f"  {i}. {pattern_name}: {status}")
-                else:
-                    lines.append(f"  {i}. {pattern}")
-            if len(patterns) > 20:
-                lines.append(f"  ... and {len(patterns) - 20} more")
         
         return lines
