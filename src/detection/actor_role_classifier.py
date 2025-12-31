@@ -376,9 +376,6 @@ class ActorRoleClassifier:
         
         Enablers facilitate violations without direct benefit.
         """
-        if not violation_details:
-            return False
-        
         # Check roles
         roles_lower = [role.lower() for role in actor.roles]
         
@@ -391,9 +388,11 @@ class ActorRoleClassifier:
                 return True
         
         # Check if actor facilitated but didn't benefit
-        if actor.evidence_items and len(actor.violations) == 0:
-            # Has evidence of involvement but no direct violations
-            return True
+        if not violation_details:
+            # No violations provided, check if has evidence but no direct violations
+            if actor.evidence_items and len(actor.violations) == 0:
+                # Has evidence of involvement but no direct violations
+                return True
         
         return False
     

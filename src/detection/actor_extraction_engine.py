@@ -533,6 +533,9 @@ class ActorExtractionEngine:
         for title in titles:
             name_lower = name_lower.replace(title, '')
         
+        # Remove punctuation
+        name_lower = name_lower.replace(',', '').replace('.', '')
+        
         # Remove extra whitespace
         name_normalized = ' '.join(name_lower.split())
         
