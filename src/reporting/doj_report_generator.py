@@ -206,7 +206,8 @@ class DOJReportGenerator:
         filing_reports: List[FilingAnalysisReport],
         chain_of_custody: List[ChainOfCustodyRecord],
         subagent_findings: Optional[List[SubagentFinding]] = None,
-        output_formats: Optional[List[str]] = None
+        output_formats: Optional[List[str]] = None,
+        phase3_results: Optional[Dict[str, Any]] = None
     ) -> Dict[str, Path]:
         """
         Generate comprehensive DOJ-level forensic report.
@@ -219,6 +220,7 @@ class DOJReportGenerator:
             chain_of_custody: Evidence chain of custody records
             subagent_findings: Optional specialized subagent findings
             output_formats: Output formats to generate ('markdown', 'json', 'html', 'court_pdf')
+            phase3_results: Optional Phase 3 multi-jurisdictional compliance results
             
         Returns:
             Dict mapping format names to output file paths
@@ -241,7 +243,7 @@ class DOJReportGenerator:
             md_path = self.output_dir / f"{base_filename}.md"
             self._generate_markdown_report(
                 md_path, summary, filing_reports,
-                chain_of_custody, subagent_findings
+                chain_of_custody, subagent_findings, phase3_results
             )
             outputs['markdown'] = md_path
             logger.info(f"Generated Markdown report: {md_path}")
@@ -418,7 +420,8 @@ class DOJReportGenerator:
         summary: ForensicReportSummary,
         filing_reports: List[FilingAnalysisReport],
         chain_of_custody: List[ChainOfCustodyRecord],
-        subagent_findings: List[SubagentFinding]
+        subagent_findings: List[SubagentFinding],
+        phase3_results: Optional[Dict[str, Any]] = None
     ):
         """Generate comprehensive Markdown report."""
         lines = []
@@ -453,6 +456,12 @@ class DOJReportGenerator:
         
         # Chain of Custody
         lines.extend(self._generate_chain_of_custody_section(chain_of_custody))
+        
+        # NEW: Multi-Jurisdictional Compliance Sections
+        if phase3_results:
+            lines.extend(self._generate_jurisdictional_authority_section(phase3_results))
+            lines.extend(self._generate_multi_jurisdictional_violations_section(phase3_results))
+            lines.extend(self._generate_forum_shopping_section(phase3_results))
         
         # Write file
         with open(output_path, 'w', encoding='utf-8') as f:
@@ -862,6 +871,346 @@ class DOJReportGenerator:
             "---",
             "",
             "**END OF FORENSIC REPORT**",
+        ])
+        
+        return lines
+    
+    def _generate_jurisdictional_authority_section(
+        self,
+        phase3_results: Optional[Dict[str, Any]]
+    ) -> List[str]:
+        """
+        Generate Section XI: Jurisdictional Authority Map.
+        
+        11.1 Federal Jurisdiction Analysis
+        11.2 State Jurisdiction Analysis
+        11.3 International Jurisdiction Analysis
+        11.4 Jurisdiction Authority Matrix
+        """
+        lines = []
+        
+        if not phase3_results:
+            return lines
+        
+        jurisdictions = phase3_results.get('jurisdictions', [])
+        if not jurisdictions:
+            return lines
+        
+        lines.extend([
+            "## SECTION XI: JURISDICTIONAL AUTHORITY MAP",
+            "",
+            "This section identifies all jurisdictions with prosecutorial authority based on",
+            "issuer domicile, offer locations, victim residence, actor residence, listing venues,",
+            "and cross-border activity.",
+            "",
+        ])
+        
+        # 11.1 Federal Jurisdiction Analysis
+        federal_jurisdictions = [
+            j for j in jurisdictions 
+            if hasattr(j, 'jurisdiction_type') and j.jurisdiction_type == 'FEDERAL'
+        ]
+        
+        if federal_jurisdictions:
+            lines.extend([
+                "### 11.1 Federal Jurisdiction Analysis",
+                "",
+            ])
+            
+            for jurisdiction in federal_jurisdictions:
+                j_name = jurisdiction.jurisdiction_name if hasattr(jurisdiction, 'jurisdiction_name') else str(jurisdiction)
+                reg_body = jurisdiction.regulatory_body if hasattr(jurisdiction, 'regulatory_body') else 'N/A'
+                authority_basis = jurisdiction.authority_basis if hasattr(jurisdiction, 'authority_basis') else []
+                statutes = jurisdiction.applicable_statutes if hasattr(jurisdiction, 'applicable_statutes') else []
+                
+                lines.extend([
+                    f"**{j_name}**",
+                    f"- **Regulatory Body:** {reg_body}",
+                    f"- **Authority Basis:**",
+                ])
+                
+                for basis in authority_basis:
+                    lines.append(f"  - {basis}")
+                
+                lines.append(f"- **Applicable Statutes:**")
+                for statute in statutes[:5]:  # Limit to 5
+                    lines.append(f"  - {statute}")
+                
+                lines.append("")
+        
+        # 11.2 State Jurisdiction Analysis
+        state_jurisdictions = [
+            j for j in jurisdictions 
+            if hasattr(j, 'jurisdiction_type') and j.jurisdiction_type == 'STATE'
+        ]
+        
+        if state_jurisdictions:
+            lines.extend([
+                "### 11.2 State Jurisdiction Analysis",
+                "",
+                "| State | Authority Basis | Key Statutes |",
+                "|-------|----------------|--------------|",
+            ])
+            
+            for jurisdiction in state_jurisdictions:
+                j_name = jurisdiction.jurisdiction_name if hasattr(jurisdiction, 'jurisdiction_name') else str(jurisdiction)
+                authority_basis = jurisdiction.authority_basis if hasattr(jurisdiction, 'authority_basis') else []
+                statutes = jurisdiction.applicable_statutes if hasattr(jurisdiction, 'applicable_statutes') else []
+                
+                basis_str = ', '.join(authority_basis[:2]) if authority_basis else 'N/A'
+                statute_str = statutes[0] if statutes else 'N/A'
+                
+                lines.append(f"| {j_name} | {basis_str} | {statute_str} |")
+            
+            lines.append("")
+        
+        # 11.3 International Jurisdiction Analysis
+        intl_jurisdictions = [
+            j for j in jurisdictions 
+            if hasattr(j, 'jurisdiction_type') and j.jurisdiction_type == 'INTERNATIONAL'
+        ]
+        
+        if intl_jurisdictions:
+            lines.extend([
+                "### 11.3 International Jurisdiction Analysis",
+                "",
+            ])
+            
+            for jurisdiction in intl_jurisdictions:
+                j_name = jurisdiction.jurisdiction_name if hasattr(jurisdiction, 'jurisdiction_name') else str(jurisdiction)
+                reg_body = jurisdiction.regulatory_body if hasattr(jurisdiction, 'regulatory_body') else 'N/A'
+                statutes = jurisdiction.applicable_statutes if hasattr(jurisdiction, 'applicable_statutes') else []
+                
+                lines.extend([
+                    f"**{j_name}**",
+                    f"- **Regulator:** {reg_body}",
+                    f"- **Key Regulations:**",
+                ])
+                
+                for statute in statutes[:3]:
+                    lines.append(f"  - {statute}")
+                
+                lines.append("")
+        
+        lines.extend([
+            "---",
+            "",
+        ])
+        
+        return lines
+    
+    def _generate_multi_jurisdictional_violations_section(
+        self,
+        phase3_results: Optional[Dict[str, Any]]
+    ) -> List[str]:
+        """
+        Generate Section XII: Multi-Jurisdictional Violations.
+        
+        12.1 State-Specific Violations
+        12.2 International Violations
+        12.3 Comparative Violation Analysis
+        """
+        lines = []
+        
+        if not phase3_results:
+            return lines
+        
+        state_violations = phase3_results.get('state_violations', [])
+        international_violations = phase3_results.get('international_violations', [])
+        
+        if not state_violations and not international_violations:
+            return lines
+        
+        lines.extend([
+            "## SECTION XII: MULTI-JURISDICTIONAL VIOLATIONS",
+            "",
+            "This section analyzes violations under state and international securities laws,",
+            "providing a comprehensive view of multi-jurisdictional exposure.",
+            "",
+        ])
+        
+        # 12.1 State-Specific Violations
+        if state_violations:
+            lines.extend([
+                "### 12.1 State-Specific Violations",
+                "",
+            ])
+            
+            # Group by state
+            by_state = {}
+            for violation in state_violations:
+                state = violation.get('state', 'Unknown')
+                if state not in by_state:
+                    by_state[state] = []
+                by_state[state].append(violation)
+            
+            for state, violations in sorted(by_state.items()):
+                lines.extend([
+                    f"**{state}**",
+                    f"- **Violations:** {len(violations)}",
+                    "",
+                ])
+                
+                for v in violations[:3]:  # Limit to 3 per state
+                    lines.extend([
+                        f"  - **Statute:** {v.get('statute_citation', 'N/A')}",
+                        f"    - **Name:** {v.get('statute_name', 'N/A')}",
+                        f"    - **Penalties:** {v.get('penalties', {}).get('criminal', 'N/A')}",
+                        "",
+                    ])
+        
+        # 12.2 International Violations
+        if international_violations:
+            lines.extend([
+                "### 12.2 International Violations",
+                "",
+            ])
+            
+            # Group by jurisdiction
+            by_jurisdiction = {}
+            for violation in international_violations:
+                jurisdiction = violation.get('jurisdiction', 'Unknown')
+                if jurisdiction not in by_jurisdiction:
+                    by_jurisdiction[jurisdiction] = []
+                by_jurisdiction[jurisdiction].append(violation)
+            
+            for jurisdiction, violations in sorted(by_jurisdiction.items()):
+                lines.extend([
+                    f"**{jurisdiction}**",
+                    f"- **Violations:** {len(violations)}",
+                    f"- **MLAT Available:** {'Yes' if violations[0].get('mlat_available', False) else 'No'}",
+                    "",
+                ])
+                
+                for v in violations[:2]:  # Limit to 2 per jurisdiction
+                    lines.extend([
+                        f"  - **Regulation:** {v.get('regulation_citation', 'N/A')}",
+                        f"    - **Type:** {v.get('violation_type', 'N/A')}",
+                        f"    - **Penalties:** {v.get('penalties', {}).get('criminal', 'N/A')}",
+                        "",
+                    ])
+        
+        lines.extend([
+            "---",
+            "",
+        ])
+        
+        return lines
+    
+    def _generate_forum_shopping_section(
+        self,
+        phase3_results: Optional[Dict[str, Any]]
+    ) -> List[str]:
+        """
+        Generate Section XIII: Forum Shopping Analysis & Prosecution Strategy.
+        
+        13.1 Venue Scoring Matrix
+        13.2 Primary Venue Recommendation
+        13.3 Secondary/Tertiary Venue Recommendations
+        13.4 Coordinated Prosecution Timeline
+        """
+        lines = []
+        
+        if not phase3_results:
+            return lines
+        
+        forum_analyses = phase3_results.get('forum_analyses', [])
+        prosecution_strategy = phase3_results.get('prosecution_strategy', {})
+        
+        if not forum_analyses:
+            return lines
+        
+        lines.extend([
+            "## SECTION XIII: FORUM SHOPPING ANALYSIS & PROSECUTION STRATEGY",
+            "",
+            "This section provides prosecution venue optimization based on multi-factor scoring,",
+            "recommending primary, secondary, and tertiary forums with coordinated timing strategy.",
+            "",
+        ])
+        
+        # 13.1 Venue Scoring Matrix
+        lines.extend([
+            "### 13.1 Venue Scoring Matrix",
+            "",
+            "| Rank | Jurisdiction | Type | Venue Score | Priority | Penalty Score | Evidentiary Score |",
+            "|------|-------------|------|-------------|----------|---------------|-------------------|",
+        ])
+        
+        for idx, analysis in enumerate(forum_analyses[:10], 1):  # Top 10
+            if hasattr(analysis, 'to_dict'):
+                data = analysis.to_dict()
+            else:
+                data = analysis if isinstance(analysis, dict) else {}
+            
+            jurisdiction = data.get('jurisdiction', 'N/A')
+            j_type = data.get('jurisdiction_type', 'N/A')
+            venue_score = data.get('venue_score', 0.0)
+            priority = data.get('recommended_priority', 'N/A')
+            penalty_score = data.get('score_breakdown', {}).get('penalty_score', 0.0) if 'score_breakdown' in data else data.get('penalty_score', 0.0)
+            evid_score = data.get('score_breakdown', {}).get('evidentiary_score', 0.0) if 'score_breakdown' in data else data.get('evidentiary_score', 0.0)
+            
+            lines.append(f"| {idx} | {jurisdiction} | {j_type} | {venue_score:.1f} | {priority} | {penalty_score:.1f} | {evid_score:.1f} |")
+        
+        lines.append("")
+        
+        # 13.2 Primary Venue Recommendation
+        primary_venue = prosecution_strategy.get('primary_venue', {})
+        if primary_venue:
+            lines.extend([
+                "### 13.2 Primary Venue Recommendation",
+                "",
+                f"**Jurisdiction:** {primary_venue.get('jurisdiction', 'N/A')}",
+                f"**Venue Score:** {primary_venue.get('venue_score', 0.0):.1f}/100",
+                "",
+                "**Prosecutorial Advantages:**",
+            ])
+            
+            for advantage in primary_venue.get('prosecutorial_advantages', [])[:5]:
+                lines.append(f"- {advantage}")
+            
+            lines.extend([
+                "",
+                "**Estimated Penalties:**",
+                f"- **Criminal:** {primary_venue.get('estimated_penalties', {}).get('criminal_years', 0):.0f} years",
+                f"- **Criminal Fine:** ${primary_venue.get('estimated_penalties', {}).get('criminal_fine', 0):,.0f}",
+                f"- **Civil Damages:** ${primary_venue.get('estimated_penalties', {}).get('civil_damages', 0):,.0f}",
+                "",
+            ])
+        
+        # 13.3 Secondary/Tertiary Venues
+        secondary_venues = prosecution_strategy.get('secondary_venues', [])
+        if secondary_venues:
+            lines.extend([
+                "### 13.3 Secondary/Tertiary Venue Recommendations",
+                "",
+                "**Secondary Venues (Coordinated State AG Actions):**",
+                "",
+            ])
+            
+            for venue in secondary_venues[:5]:
+                lines.append(f"- {venue.get('jurisdiction', 'N/A')} (Score: {venue.get('venue_score', 0.0):.1f})")
+            
+            lines.append("")
+        
+        # 13.4 Coordinated Prosecution Timeline
+        recommended_sequence = prosecution_strategy.get('recommended_sequence', [])
+        if recommended_sequence:
+            lines.extend([
+                "### 13.4 Coordinated Prosecution Timeline",
+                "",
+            ])
+            
+            for step in recommended_sequence:
+                lines.extend([
+                    f"**Step {step.get('step', 'N/A')}:** {step.get('action', 'N/A')}",
+                    f"- **Timing:** {step.get('timing', 'N/A')}",
+                    f"- **Rationale:** {step.get('rationale', 'N/A')}",
+                    "",
+                ])
+        
+        lines.extend([
+            "---",
+            "",
         ])
         
         return lines
