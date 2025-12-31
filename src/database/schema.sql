@@ -292,3 +292,180 @@ COMMENT ON TABLE interrogation_questions IS 'Individual questions in FBI intervi
 COMMENT ON COLUMN actor_profiles.risk_score IS 'Risk score 0-100 calculated from violations (30%), evidence (25%), position (25%), benefit (20%)';
 COMMENT ON COLUMN evidence_attributions.relevance_score IS 'Relevance score 0.0-1.0 indicating strength of actor-evidence link';
 COMMENT ON COLUMN interrogation_questions.phase IS 'FBI interview phase: RAPPORT, BASELINE, ACCUSATION, or CONFRONTATION';
+
+-- ============================================================================
+-- Phase 3: Multi-Jurisdictional Compliance Extensions
+-- ============================================================================
+
+-- ============================================================================
+-- TABLE: jurisdictions
+-- ============================================================================
+-- Tracks all jurisdictions with prosecutorial authority
+CREATE TABLE IF NOT EXISTS jurisdictions (
+    jurisdiction_id TEXT PRIMARY KEY,
+    jurisdiction_name TEXT NOT NULL,
+    jurisdiction_type TEXT NOT NULL, -- STATE, FEDERAL, INTERNATIONAL
+    regulatory_body TEXT NOT NULL,
+    has_authority BOOLEAN NOT NULL DEFAULT TRUE,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_jurisdiction_type ON jurisdictions(jurisdiction_type);
+CREATE INDEX IF NOT EXISTS idx_jurisdiction_name ON jurisdictions(jurisdiction_name);
+
+-- ============================================================================
+-- TABLE: jurisdiction_authority
+-- ============================================================================
+-- Tracks basis for jurisdiction authority (many-to-many with evidence)
+CREATE TABLE IF NOT EXISTS jurisdiction_authority (
+    id SERIAL PRIMARY KEY,
+    jurisdiction_id TEXT NOT NULL REFERENCES jurisdictions(jurisdiction_id) ON DELETE CASCADE,
+    authority_basis TEXT NOT NULL,
+    evidence_id TEXT,
+    statute_citation TEXT,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_jurisdiction_authority_jid ON jurisdiction_authority(jurisdiction_id);
+CREATE INDEX IF NOT EXISTS idx_jurisdiction_authority_evidence ON jurisdiction_authority(evidence_id);
+
+-- ============================================================================
+-- TABLE: state_violations
+-- ============================================================================
+-- State-specific securities law violations
+CREATE TABLE IF NOT EXISTS state_violations (
+    violation_id TEXT PRIMARY KEY,
+    state TEXT NOT NULL,
+    statute_citation TEXT NOT NULL,
+    statute_name TEXT NOT NULL,
+    violation_description TEXT NOT NULL,
+    penalties_json TEXT NOT NULL, -- JSON: {criminal, civil, administrative}
+    statute_of_limitations TEXT,
+    elements_met TEXT[], -- Array of legal elements satisfied
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_state_violations_state ON state_violations(state);
+CREATE INDEX IF NOT EXISTS idx_state_violations_statute ON state_violations(statute_citation);
+
+-- ============================================================================
+-- TABLE: international_violations
+-- ============================================================================
+-- International regulatory violations
+CREATE TABLE IF NOT EXISTS international_violations (
+    violation_id TEXT PRIMARY KEY,
+    jurisdiction TEXT NOT NULL,
+    regulator TEXT NOT NULL,
+    regulation_citation TEXT NOT NULL,
+    regulation_name TEXT NOT NULL,
+    violation_description TEXT NOT NULL,
+    violation_type TEXT NOT NULL, -- MARKET_MANIPULATION, INSIDER_TRADING, FRAUD, etc.
+    mlat_available BOOLEAN NOT NULL DEFAULT FALSE,
+    penalties_json TEXT NOT NULL,
+    extraterritorial_basis TEXT[],
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_intl_violations_jurisdiction ON international_violations(jurisdiction);
+CREATE INDEX IF NOT EXISTS idx_intl_violations_type ON international_violations(violation_type);
+CREATE INDEX IF NOT EXISTS idx_intl_violations_mlat ON international_violations(mlat_available);
+
+-- ============================================================================
+-- TABLE: forum_analyses
+-- ============================================================================
+-- Prosecution venue analysis and scoring
+CREATE TABLE IF NOT EXISTS forum_analyses (
+    analysis_id TEXT PRIMARY KEY,
+    jurisdiction_id TEXT NOT NULL REFERENCES jurisdictions(jurisdiction_id) ON DELETE CASCADE,
+    jurisdiction_name TEXT NOT NULL,
+    jurisdiction_type TEXT NOT NULL,
+    venue_score REAL NOT NULL, -- 0-100 score
+    recommended_priority TEXT NOT NULL, -- PRIMARY, SECONDARY, TERTIARY
+    analysis_json TEXT NOT NULL, -- Full ForumAnalysis JSON
+    penalty_score REAL,
+    evidentiary_score REAL,
+    limitations_score REAL,
+    precedent_score REAL,
+    resources_score REAL,
+    political_will_score REAL,
+    victim_impact_score REAL,
+    statute_of_limitations_remaining INTEGER, -- Days remaining
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_forum_venue_score ON forum_analyses(venue_score DESC);
+CREATE INDEX IF NOT EXISTS idx_forum_priority ON forum_analyses(recommended_priority);
+CREATE INDEX IF NOT EXISTS idx_forum_jurisdiction ON forum_analyses(jurisdiction_id);
+
+-- ============================================================================
+-- VIEWS: Multi-Jurisdictional Analysis
+-- ============================================================================
+
+-- Primary venue recommendation view
+CREATE OR REPLACE VIEW primary_prosecution_venues AS
+SELECT 
+    fa.jurisdiction_name,
+    fa.jurisdiction_type,
+    fa.venue_score,
+    fa.recommended_priority,
+    fa.penalty_score,
+    fa.evidentiary_score,
+    fa.statute_of_limitations_remaining,
+    j.regulatory_body
+FROM forum_analyses fa
+JOIN jurisdictions j ON fa.jurisdiction_id = j.jurisdiction_id
+WHERE fa.recommended_priority = 'PRIMARY'
+ORDER BY fa.venue_score DESC;
+
+-- State violations summary view
+CREATE OR REPLACE VIEW state_violations_summary AS
+SELECT 
+    state,
+    COUNT(*) as violation_count,
+    COUNT(DISTINCT statute_citation) as unique_statutes,
+    ARRAY_AGG(DISTINCT statute_name) as statute_names
+FROM state_violations
+GROUP BY state
+ORDER BY violation_count DESC;
+
+-- International violations with MLAT availability
+CREATE OR REPLACE VIEW international_violations_mlat AS
+SELECT 
+    iv.jurisdiction,
+    iv.regulator,
+    iv.violation_type,
+    COUNT(*) as violation_count,
+    BOOL_OR(iv.mlat_available) as has_mlat_treaty
+FROM international_violations iv
+GROUP BY iv.jurisdiction, iv.regulator, iv.violation_type
+ORDER BY violation_count DESC;
+
+-- Jurisdiction authority matrix
+CREATE OR REPLACE VIEW jurisdiction_authority_matrix AS
+SELECT 
+    j.jurisdiction_name,
+    j.jurisdiction_type,
+    j.regulatory_body,
+    COUNT(ja.id) as authority_basis_count,
+    ARRAY_AGG(DISTINCT ja.authority_basis) as authority_reasons,
+    ARRAY_AGG(DISTINCT ja.statute_citation) as applicable_statutes
+FROM jurisdictions j
+LEFT JOIN jurisdiction_authority ja ON j.jurisdiction_id = ja.jurisdiction_id
+GROUP BY j.jurisdiction_id, j.jurisdiction_name, j.jurisdiction_type, j.regulatory_body
+ORDER BY authority_basis_count DESC;
+
+-- ============================================================================
+-- COMMENTS: Multi-Jurisdictional Tables
+-- ============================================================================
+
+COMMENT ON TABLE jurisdictions IS 'All jurisdictions (federal, state, international) with prosecutorial authority';
+COMMENT ON TABLE jurisdiction_authority IS 'Basis for jurisdiction authority with supporting evidence';
+COMMENT ON TABLE state_violations IS '50-state Blue Sky Law violations with penalties and elements';
+COMMENT ON TABLE international_violations IS 'International regulatory violations with MLAT treaty information';
+COMMENT ON TABLE forum_analyses IS 'Prosecution venue scoring and forum shopping optimization';
+
+COMMENT ON COLUMN forum_analyses.venue_score IS 'Overall venue score 0-100 from multi-factor algorithm';
+COMMENT ON COLUMN forum_analyses.recommended_priority IS 'PRIMARY (lead), SECONDARY (coordinated), or TERTIARY (support)';
+COMMENT ON COLUMN state_violations.elements_met IS 'Array of legal elements satisfied by the violation';
+COMMENT ON COLUMN international_violations.mlat_available IS 'Whether Mutual Legal Assistance Treaty exists with U.S.';
+
