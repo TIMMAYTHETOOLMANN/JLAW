@@ -166,8 +166,12 @@ class UnifiedAnalysisResult:
     total_violations: int
     total_alerts: int
     
+    # Phase 5.5: Actor Mapping results
+    actor_profiles: Optional[List[Any]] = None
+    interrogation_packages: Optional[Dict[str, Any]] = None
+    
     def to_dict(self) -> Dict[str, Any]:
-        return {
+        result = {
             "cik": self.cik,
             "company_name": self.company_name,
             "analysis_start": self.analysis_start.isoformat(),
@@ -183,6 +187,21 @@ class UnifiedAnalysisResult:
             "total_violations": self.total_violations,
             "total_alerts": self.total_alerts
         }
+        
+        # Add Phase 5.5 results if available
+        if self.actor_profiles:
+            result["actor_profiles"] = [
+                actor.to_dict() if hasattr(actor, 'to_dict') else actor 
+                for actor in self.actor_profiles
+            ]
+        
+        if self.interrogation_packages:
+            result["interrogation_packages"] = {
+                actor_id: pkg.to_dict() if hasattr(pkg, 'to_dict') else pkg
+                for actor_id, pkg in self.interrogation_packages.items()
+            }
+        
+        return result
 
 
 # ═══════════════════════════════════════════════════════════════════════════
@@ -266,6 +285,12 @@ class MasterExecutionController:
         self.parsed_documents: List[Any] = []
         self.violations: List[Dict[str, Any]] = []
         self.custody_records: List[Dict[str, Any]] = []
+        
+        # Phase 5.5: Actor Mapping state
+        self.actor_profiles: List[Any] = []  # List of ActorProfile objects
+        self.actor_classifications: Dict[str, Any] = {}  # actor_id -> ActorRole
+        self.evidence_attributions: List[Any] = []  # List of EvidenceAttribution objects
+        self.interrogation_packages: Dict[str, Any] = {}  # actor_id -> InterrogationPackage
         
         # RIM Phase 1 state (Recursive Investigative Module)
         self.recursive_analysis_result: Optional[Dict[str, Any]] = None
@@ -355,6 +380,9 @@ class MasterExecutionController:
             # PHASE 5: Advanced Detection Patterns
             await self._execute_phase_5_pattern_detection()
             
+            # PHASE 5.5: Actor Mapping & Interrogation Package Generation
+            await self._execute_phase_5_5_actor_mapping()
+            
             # PHASE 6: Dual-Agent AI Cross-Validation
             await self._execute_phase_6_dual_agent()
             
@@ -403,7 +431,9 @@ class MasterExecutionController:
             dossier_path=dossier_path,
             pdf_path=pdf_path,
             total_violations=len(self.violations),
-            total_alerts=sum(n.alerts_generated for n in self.node_results.values())
+            total_alerts=sum(n.alerts_generated for n in self.node_results.values()),
+            actor_profiles=self.actor_profiles if self.actor_profiles else None,
+            interrogation_packages=self.interrogation_packages if self.interrogation_packages else None
         )
         
         self._print_summary(result)
@@ -1306,6 +1336,277 @@ class MasterExecutionController:
         await self._execute_rim_statutory_binding()
         
         logger.info(f"✓ Phase 5 completed in {phase_duration:.2f}s")
+    
+    # ═══════════════════════════════════════════════════════════════════════
+    # PHASE 5.5: ACTOR MAPPING & INTERROGATION PACKAGE GENERATION
+    # ═══════════════════════════════════════════════════════════════════════
+    
+    async def _execute_phase_5_5_actor_mapping(self):
+        """
+        Execute Phase 5.5: Actor Mapping & Interrogation Package Generation.
+        
+        This phase transforms forensic findings into actionable prosecutorial intelligence by:
+        1. Extracting actors from node results and pattern detections
+        2. Classifying actors using DOJ 6-tier role system
+        3. Attributing evidence to actors
+        4. Generating interrogation packages for priority actors (risk >= 50)
+        """
+        phase_start = time.time()
+        errors = []
+        
+        logger.info("\n" + "=" * 80)
+        logger.info("  Phase 5.5: Actor Mapping & Interrogation Package Generation")
+        logger.info("=" * 80)
+        
+        try:
+            # Import actor mapping components
+            from src.detection.actor_extraction_engine import ActorExtractionEngine
+            from src.detection.actor_role_classifier import ActorRoleClassifier, ActorRole
+            from src.core.evidence_chain.evidence_attribution import EvidenceAttributionLinker
+            from src.reporting.interrogation_package import InterrogationPackageGenerator
+            
+            # STEP 1: Extract actors from node results
+            logger.info("→ Step 1: Extracting actors from node results...")
+            extraction_engine = ActorExtractionEngine()
+            
+            # Extract from node results
+            actors_from_nodes = extraction_engine.extract_actors_from_nodes(self.node_results)
+            logger.info(f"  ✓ Extracted {len(actors_from_nodes)} actors from nodes")
+            
+            # Extract from pattern detection results
+            actors_from_patterns = extraction_engine.extract_actors_from_patterns(self.detection_results)
+            logger.info(f"  ✓ Total unique actors: {len(extraction_engine.actors)}")
+            
+            # Get all unique actors
+            self.actor_profiles = extraction_engine.get_all_actors()
+            
+            if not self.actor_profiles:
+                logger.warning("  ⚠ No actors extracted - skipping actor mapping phase")
+                return
+            
+            # STEP 2: Classify actors and calculate risk scores
+            logger.info(f"→ Step 2: Classifying {len(self.actor_profiles)} actors...")
+            classifier = ActorRoleClassifier()
+            
+            # Build violation and evidence maps
+            violation_map = self._build_violation_map()
+            evidence_map = self._build_evidence_map()
+            
+            # Classify all actors
+            for actor in self.actor_profiles:
+                violations = violation_map.get(actor.actor_id, [])
+                evidence = evidence_map.get(actor.actor_id, [])
+                
+                role = classifier.classify_actor(actor, violations, evidence)
+                self.actor_classifications[actor.actor_id] = role
+                
+                logger.debug(f"  Actor: {actor.name} -> {role.value} (Risk: {actor.risk_score:.1f})")
+            
+            # Group by classification
+            grouped = classifier.get_actors_by_classification(self.actor_profiles, self.actor_classifications)
+            logger.info(f"  ✓ Classification Summary:")
+            for role_type, actors in grouped.items():
+                if actors:
+                    logger.info(f"    {role_type.value}: {len(actors)} actors")
+            
+            # STEP 3: Attribute evidence to actors
+            logger.info("→ Step 3: Attributing evidence to actors...")
+            attribution_linker = EvidenceAttributionLinker()
+            
+            # Collect evidence items
+            evidence_items = self._collect_evidence_items()
+            logger.info(f"  Collected {len(evidence_items)} evidence items")
+            
+            # Create attributions
+            self.evidence_attributions = attribution_linker.attribute_evidence_to_actors(
+                actors=self.actor_profiles,
+                evidence_items=evidence_items,
+                node_results=self.node_results
+            )
+            logger.info(f"  ✓ Created {len(self.evidence_attributions)} evidence attributions")
+            
+            # STEP 4: Generate interrogation packages for priority actors
+            logger.info("→ Step 4: Generating interrogation packages...")
+            package_generator = InterrogationPackageGenerator()
+            
+            # Get priority actors (risk score >= 50)
+            priority_actors = classifier.get_priority_actors(self.actor_profiles, min_risk_score=50.0)
+            logger.info(f"  Priority actors (risk >= 50): {len(priority_actors)}")
+            
+            if priority_actors:
+                for actor in priority_actors:
+                    try:
+                        # Get actor's violations and evidence
+                        actor_violations = violation_map.get(actor.actor_id, [])
+                        actor_attributions = [
+                            attr for attr in self.evidence_attributions 
+                            if attr.actor_id == actor.actor_id
+                        ]
+                        
+                        # Generate package
+                        package = package_generator.generate_package(
+                            actor=actor,
+                            actor_role=self.actor_classifications[actor.actor_id],
+                            violations=actor_violations,
+                            evidence_attributions=actor_attributions,
+                            evidence_items=evidence_items
+                        )
+                        
+                        self.interrogation_packages[actor.actor_id] = package
+                        logger.info(f"  ✓ Generated package for {actor.name} ({package.actor_role.value})")
+                        
+                    except Exception as e:
+                        logger.warning(f"  ⚠ Failed to generate package for {actor.name}: {e}")
+                        errors.append(f"Package generation failed for {actor.name}: {str(e)}")
+                
+                logger.info(f"✓ Generated {len(self.interrogation_packages)} interrogation packages")
+            else:
+                logger.info("  No priority actors meet threshold for interrogation packages")
+            
+            # STEP 5: Summary statistics
+            subjects = [a for a in self.actor_profiles if self.actor_classifications.get(a.actor_id) == ActorRole.SUBJECT]
+            targets = [a for a in self.actor_profiles if self.actor_classifications.get(a.actor_id) == ActorRole.TARGET]
+            witnesses = [a for a in self.actor_profiles if self.actor_classifications.get(a.actor_id) == ActorRole.WITNESS]
+            
+            logger.info("\n✓ Phase 5.5 Summary:")
+            logger.info(f"  Total Actors Identified: {len(self.actor_profiles)}")
+            logger.info(f"  SUBJECTS (90-100 risk): {len(subjects)}")
+            logger.info(f"  TARGETS (70-89 risk): {len(targets)}")
+            logger.info(f"  WITNESSES (50-69 risk): {len(witnesses)}")
+            logger.info(f"  Evidence Attributions: {len(self.evidence_attributions)}")
+            logger.info(f"  Interrogation Packages: {len(self.interrogation_packages)}")
+            
+        except Exception as e:
+            errors.append(f"Actor mapping error: {str(e)}")
+            logger.error(f"✗ Actor mapping error: {e}", exc_info=True)
+        
+        phase_duration = time.time() - phase_start
+        
+        # Create phase result
+        result = PhaseResult(
+            phase=ExecutionPhase.PATTERN_DETECTION,  # Using existing enum
+            success=len(errors) == 0,
+            duration_seconds=phase_duration,
+            items_processed=len(self.actor_profiles),
+            errors=errors,
+            data={
+                "actors_extracted": len(self.actor_profiles),
+                "evidence_attributions": len(self.evidence_attributions),
+                "interrogation_packages": len(self.interrogation_packages),
+                "subjects": len([a for a in self.actor_profiles if self.actor_classifications.get(a.actor_id) == ActorRole.SUBJECT]),
+                "targets": len([a for a in self.actor_profiles if self.actor_classifications.get(a.actor_id) == ActorRole.TARGET]),
+                "witnesses": len([a for a in self.actor_profiles if self.actor_classifications.get(a.actor_id) == ActorRole.WITNESS])
+            }
+        )
+        self.phase_results.append(result)
+        
+        logger.info(f"✓ Phase 5.5 completed in {phase_duration:.2f}s")
+    
+    def _build_violation_map(self) -> Dict[str, List[Dict[str, Any]]]:
+        """
+        Build mapping of actor_id to violations.
+        
+        Returns:
+            Dictionary mapping actor_id to list of violation details
+        """
+        violation_map = {}
+        
+        # Extract violations from node results
+        for node_id, node_result in self.node_results.items():
+            if hasattr(node_result, 'findings'):
+                findings = node_result.findings
+            else:
+                findings = node_result
+            
+            violations = findings.get('violations', []) if isinstance(findings, dict) else []
+            
+            for violation in violations:
+                if isinstance(violation, dict):
+                    # Try to match violation to actors by name or other identifiers
+                    actor_name = violation.get('actor', violation.get('reporting_owner', violation.get('owner_name')))
+                    
+                    if actor_name:
+                        # Find matching actor
+                        for actor in self.actor_profiles:
+                            if actor.name.lower() == str(actor_name).lower():
+                                if actor.actor_id not in violation_map:
+                                    violation_map[actor.actor_id] = []
+                                
+                                violation_map[actor.actor_id].append({
+                                    'violation_type': violation.get('violation_type', 'unknown'),
+                                    'severity': violation.get('severity', 'MEDIUM'),
+                                    'description': violation.get('description', ''),
+                                    'financial_impact': violation.get('financial_impact', 0),
+                                    'evidence_strength': violation.get('evidence_strength', 'Moderate'),
+                                    'date': violation.get('date', violation.get('transaction_date'))
+                                })
+                                break
+        
+        return violation_map
+    
+    def _build_evidence_map(self) -> Dict[str, List[Dict[str, Any]]]:
+        """
+        Build mapping of actor_id to evidence items.
+        
+        Returns:
+            Dictionary mapping actor_id to list of evidence details
+        """
+        evidence_map = {}
+        
+        # Match evidence items in actor evidence_items list
+        for actor in self.actor_profiles:
+            if actor.evidence_items:
+                evidence_map[actor.actor_id] = [
+                    {
+                        'type': 'direct' if 'form4' in item.lower() or 'def14a' in item.lower() else 'indirect',
+                        'strength': 'STRONG' if any(sig in item.lower() for sig in ['signature', 'certification', 'sox']) else 'MODERATE',
+                        'evidence_id': item
+                    }
+                    for item in actor.evidence_items
+                ]
+        
+        return evidence_map
+    
+    def _collect_evidence_items(self) -> List[Dict[str, Any]]:
+        """
+        Collect all evidence items from filings and parsed documents.
+        
+        Returns:
+            List of evidence item dictionaries with id, type, content, metadata
+        """
+        evidence_items = []
+        
+        # Add filings as evidence
+        for idx, filing in enumerate(self.filings):
+            evidence_items.append({
+                'id': f"filing_{filing.get('accession_number', idx)}",
+                'type': filing.get('form_type', filing.get('type', 'unknown')),
+                'content': filing.get('description', ''),
+                'filing_date': filing.get('filing_date', filing.get('date')),
+                'metadata': {
+                    'accession_number': filing.get('accession_number'),
+                    'form_type': filing.get('form_type', filing.get('type'))
+                }
+            })
+        
+        # Add parsed documents as evidence
+        for idx, doc in enumerate(self.parsed_documents):
+            if hasattr(doc, '__dict__'):
+                doc_dict = doc.__dict__
+            elif isinstance(doc, dict):
+                doc_dict = doc
+            else:
+                continue
+            
+            evidence_items.append({
+                'id': f"document_{idx}",
+                'type': doc_dict.get('type', 'document'),
+                'content': str(doc_dict.get('content', '')),
+                'filing_date': doc_dict.get('filing_date'),
+                'metadata': doc_dict
+            })
+        
+        return evidence_items
     
     # ═══════════════════════════════════════════════════════════════════════
     # PHASE 6: DUAL-AGENT AI CROSS-VALIDATION
