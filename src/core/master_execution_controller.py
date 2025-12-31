@@ -2477,40 +2477,126 @@ Initial Confidence: {verification_request['confidence']}
         try:
             logger.info("→ Generating DOJ-grade forensic dossier...")
             
-            # Generate JSON dossier
-            dossier_data = {
-                "case_id": self.case_id,
-                "company": {
-                    "name": self.company_name,
-                    "cik": self.cik
-                },
-                "analysis_period": {
-                    "start": str(self.start_date),
-                    "end": str(self.end_date)
-                },
-                "phase_results": [p.to_dict() for p in self.phase_results],
-                "node_results": {k: v.to_dict() for k, v in self.node_results.items()},
-                "detection_results": self.detection_results,
-                "evidence_chain": self._build_evidence_chain_summary(),
-                "merkle_root": self._get_merkle_root(),
-                # RIM Phase 1 sections
-                "recursive_analysis": self.recursive_analysis_result,
-                "statutory_bindings": self.statutory_bindings,
-                "rim_compliance": self.rim_compliance_result,
-                # RIM-mandated sections
-                "executive_summary": self._generate_executive_forensic_summary(),
-                "violations_table": self._generate_violations_table(),
-                "transaction_clusters": self._extract_transaction_clusters(),
-                "temporal_correlations": self._extract_temporal_correlations(),
-                "enforcement_pathways": self._generate_enforcement_pathways(),
-                "evidence_strength": self._generate_evidence_strength_statement()
-            }
+            # ═══════════════════════════════════════════════════════════════
+            # PHASE 4: PROSECUTORIAL DOSSIER GENERATOR (NEW)
+            # ═══════════════════════════════════════════════════════════════
+            use_phase4_generator = True
+            try:
+                from src.reporting.prosecutorial_dossier_generator import ProsecutorialDossierGenerator
+                
+                logger.info("  → Using Phase 4 Prosecutorial Dossier Generator")
+                
+                # Prepare data for prosecutorial dossier generator
+                node_results_dict = {k: v.to_dict() if hasattr(v, 'to_dict') else v for k, v in self.node_results.items()}
+                
+                # Extract actor profiles (if available from Phase 2)
+                actor_profiles = []
+                if hasattr(self, 'actor_profiles') and self.actor_profiles:
+                    actor_profiles = self.actor_profiles
+                
+                # Extract interrogation packages (if available from Phase 3)
+                interrogation_packages = {}
+                if hasattr(self, 'interrogation_packages') and self.interrogation_packages:
+                    interrogation_packages = self.interrogation_packages
+                
+                # Extract statutory bindings (if available from RIM Phase 1)
+                statutory_bindings = []
+                if hasattr(self, 'statutory_bindings') and self.statutory_bindings:
+                    statutory_bindings = self.statutory_bindings
+                
+                # Extract recursive analysis result (if available from RIM Phase 1)
+                recursive_analysis = None
+                if hasattr(self, 'recursive_analysis_result') and self.recursive_analysis_result:
+                    recursive_analysis = self.recursive_analysis_result
+                
+                # Initialize prosecutorial dossier generator
+                generator = ProsecutorialDossierGenerator(
+                    output_dir=self.output_dir,
+                    bates_prefix=f"JLAW-{self.case_id}",
+                    dossier_type="DOJ_GRADE" if self.strict_mode else "INTERNAL",
+                )
+                
+                # Generate dossier with 7 RIM-mandated sections
+                dossier = await generator.generate_dossier(
+                    case_id=self.case_id,
+                    company_name=self.company_name,
+                    cik=self.cik,
+                    node_results=node_results_dict,
+                    detection_results=self.detection_results if hasattr(self, 'detection_results') else {},
+                    actor_profiles=actor_profiles,
+                    interrogation_packages=interrogation_packages,
+                    statutory_bindings=statutory_bindings,
+                    recursive_analysis=recursive_analysis,
+                    output_formats=['json', 'markdown', 'pdf'] if self.strict_mode else ['json', 'markdown'],
+                    merkle_root=self._get_merkle_root(),
+                )
+                
+                dossier_path = str(self.output_dir / f"dossier_{self.case_id}.json")
+                logger.info(f"✓ Phase 4 Prosecutorial Dossier generated:")
+                logger.info(f"  → Dossier ID: {dossier.dossier_id}")
+                logger.info(f"  → Total Violations: {dossier.total_violations}")
+                logger.info(f"  → Total Actors: {dossier.total_actors}")
+                logger.info(f"  → RIM Compliance: {dossier.rim_compliance_status}")
+                logger.info(f"  → JSON: {dossier_path}")
+                
+                # Check for markdown export
+                md_path = self.output_dir / f"dossier_{self.case_id}.md"
+                if md_path.exists():
+                    logger.info(f"  → Markdown: {md_path}")
+                
+                # Check for PDF export
+                pdf_dossier_path = self.output_dir / f"dossier_{self.case_id}.pdf"
+                if pdf_dossier_path.exists():
+                    pdf_path = str(pdf_dossier_path)
+                    logger.info(f"  → PDF: {pdf_path}")
+                
+            except ImportError as e:
+                logger.warning(f"⚠ Phase 4 Prosecutorial Dossier Generator not available: {e}")
+                logger.info("  → Falling back to legacy dossier generation...")
+                use_phase4_generator = False
+            except Exception as e:
+                logger.warning(f"⚠ Phase 4 dossier generation error: {e}")
+                logger.info("  → Falling back to legacy dossier generation...")
+                use_phase4_generator = False
             
-            dossier_path = str(self.output_dir / f"dossier_{self.case_id}.json")
-            with open(dossier_path, 'w') as f:
-                json.dump(dossier_data, f, indent=2, default=str)
-            
-            logger.info(f"✓ JSON dossier: {dossier_path}")
+            # ═══════════════════════════════════════════════════════════════
+            # LEGACY JSON DOSSIER GENERATION (Fallback)
+            # ═══════════════════════════════════════════════════════════════
+            if not use_phase4_generator:
+                # Generate JSON dossier
+                dossier_data = {
+                    "case_id": self.case_id,
+                    "company": {
+                        "name": self.company_name,
+                        "cik": self.cik
+                    },
+                    "analysis_period": {
+                        "start": str(self.start_date),
+                        "end": str(self.end_date)
+                    },
+                    "phase_results": [p.to_dict() for p in self.phase_results],
+                    "node_results": {k: v.to_dict() for k, v in self.node_results.items()},
+                    "detection_results": self.detection_results,
+                    "evidence_chain": self._build_evidence_chain_summary(),
+                    "merkle_root": self._get_merkle_root(),
+                    # RIM Phase 1 sections
+                    "recursive_analysis": self.recursive_analysis_result if hasattr(self, 'recursive_analysis_result') else None,
+                    "statutory_bindings": self.statutory_bindings if hasattr(self, 'statutory_bindings') else [],
+                    "rim_compliance": self.rim_compliance_result if hasattr(self, 'rim_compliance_result') else None,
+                    # RIM-mandated sections
+                    "executive_summary": self._generate_executive_forensic_summary(),
+                    "violations_table": self._generate_violations_table(),
+                    "transaction_clusters": self._extract_transaction_clusters(),
+                    "temporal_correlations": self._extract_temporal_correlations(),
+                    "enforcement_pathways": self._generate_enforcement_pathways(),
+                    "evidence_strength": self._generate_evidence_strength_statement()
+                }
+                
+                dossier_path = str(self.output_dir / f"dossier_{self.case_id}.json")
+                with open(dossier_path, 'w') as f:
+                    json.dump(dossier_data, f, indent=2, default=str)
+                
+                logger.info(f"✓ JSON dossier: {dossier_path}")
             
             # Generate PDF report (GAP-001 FIX - Wire CourtPDFGenerator to Phase 9)
             pdf_path = str(self.output_dir / f"report_{self.case_id}.pdf")
