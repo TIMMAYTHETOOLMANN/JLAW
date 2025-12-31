@@ -1,0 +1,282 @@
+{
+  "California": {
+    "abbreviation": "CA",
+    "statutes": [
+      {
+        "citation": "CA Corp Code §25401",
+        "name": "Fraud in Sale of Securities",
+        "type": "FRAUD",
+        "elements": [
+          "Material misrepresentation or omission",
+          "In connection with offer/sale of security",
+          "Scienter (intent to deceive)"
+        ],
+        "penalties": {
+          "criminal": "Up to 5 years imprisonment + $10M fine",
+          "civil": "Rescission + damages + attorney fees",
+          "administrative": "Cease and desist + disgorgement"
+        },
+        "statute_of_limitations": "3 years from violation, 1 year from discovery",
+        "extraterritorial": true
+      },
+      {
+        "citation": "CA Corp Code §25110",
+        "name": "Registration of Securities",
+        "type": "REGISTRATION",
+        "elements": [
+          "Offer or sale of security",
+          "Security not registered or exempt"
+        ],
+        "penalties": {
+          "criminal": "Up to 3 years imprisonment",
+          "civil": "Rescission",
+          "administrative": "Cease and desist"
+        },
+        "statute_of_limitations": "3 years",
+        "extraterritorial": false
+      }
+    ]
+  },
+  "New York": {
+    "abbreviation": "NY",
+    "statutes": [
+      {
+        "citation": "NY Gen Bus Law §352",
+        "name": "Martin Act - Fraudulent Practices",
+        "type": "FRAUD",
+        "elements": [
+          "Fraudulent practices in securities dealings",
+          "No scienter required (strict liability)"
+        ],
+        "penalties": {
+          "criminal": "Felony: up to 4 years + $5,000 fine",
+          "civil": "Restitution + penalties",
+          "administrative": "Broad AG powers"
+        },
+        "statute_of_limitations": "6 years",
+        "extraterritorial": true
+      },
+      {
+        "citation": "NY Gen Bus Law §359-e",
+        "name": "Martin Act - Criminal Penalties",
+        "type": "FRAUD",
+        "elements": [
+          "Willful violation of Martin Act"
+        ],
+        "penalties": {
+          "criminal": "Up to 4 years imprisonment"
+        },
+        "statute_of_limitations": "6 years",
+        "extraterritorial": true
+      }
+    ]
+  },
+  "Texas": {
+    "abbreviation": "TX",
+    "statutes": [
+      {
+        "citation": "TX Securities Act §33.02",
+        "name": "Registration Requirement",
+        "type": "REGISTRATION",
+        "elements": [
+          "Offer or sale of security in or from Texas",
+          "Security not registered or exempt"
+        ],
+        "penalties": {
+          "criminal": "Up to 10 years imprisonment",
+          "civil": "Rescission + damages",
+          "administrative": "Cease and desist"
+        },
+        "statute_of_limitations": "3 years",
+        "extraterritorial": true
+      },
+      {
+        "citation": "TX Securities Act §33.04",
+        "name": "Fraud in Securities Transactions",
+        "type": "FRAUD",
+        "elements": [
+          "Material misrepresentation or omission",
+          "In connection with offer/sale/purchase",
+          "Scienter required"
+        ],
+        "penalties": {
+          "criminal": "Up to 99 years or life imprisonment + $10K fine",
+          "civil": "Actual damages + attorney fees",
+          "administrative": "Cease and desist + civil penalties"
+        },
+        "statute_of_limitations": "3 years from violation",
+        "extraterritorial": true
+      }
+    ]
+  },
+  "Florida": {
+    "abbreviation": "FL",
+    "statutes": [
+      {
+        "citation": "FL Stat §517.301",
+        "name": "Registration of Securities and Notice Filings",
+        "type": "REGISTRATION",
+        "elements": [
+          "Offer or sale of security in Florida",
+          "Security not registered or exempt"
+        ],
+        "penalties": {
+          "criminal": "Third degree felony",
+          "civil": "Rescission",
+          "administrative": "Cease and desist"
+        },
+        "statute_of_limitations": "3 years",
+        "extraterritorial": false
+      },
+      {
+        "citation": "FL Stat §517.07",
+        "name": "Fraudulent Transactions",
+        "type": "FRAUD",
+        "elements": [
+          "Material misrepresentation or omission",
+          "In connection with securities transaction",
+          "Scienter required"
+        ],
+        "penalties": {
+          "criminal": "Up to 5 years imprisonment",
+          "civil": "Rescission + damages",
+          "administrative": "Cease and desist + fines"
+        },
+        "statute_of_limitations": "3 years",
+        "extraterritorial": false
+      }
+    ]
+  },
+  "Massachusetts": {
+    "abbreviation": "MA",
+    "statutes": [
+      {
+        "citation": "MA Gen L ch 110A §101",
+        "name": "Fraud and Other Prohibited Conduct",
+        "type": "FRAUD",
+        "elements": [
+          "Material misrepresentation or omission",
+          "In connection with offer/sale",
+          "Scienter required"
+        ],
+        "penalties": {
+          "criminal": "Up to 5 years imprisonment + $5,000 fine",
+          "civil": "Rescission + damages",
+          "administrative": "Cease and desist"
+        },
+        "statute_of_limitations": "3 years",
+        "extraterritorial": false
+      }
+    ]
+  },
+  "Illinois": {
+    "abbreviation": "IL",
+    "statutes": [
+      {
+        "citation": "815 ILCS 5/12(F)",
+        "name": "Securities Fraud",
+        "type": "FRAUD",
+        "elements": [
+          "Material misrepresentation or omission",
+          "In connection with securities transaction",
+          "Scienter required"
+        ],
+        "penalties": {
+          "criminal": "Class 3 felony: 2-5 years",
+          "civil": "Rescission + damages",
+          "administrative": "Cease and desist"
+        },
+        "statute_of_limitations": "3 years",
+        "extraterritorial": false
+      }
+    ]
+  },
+  "Pennsylvania": {
+    "abbreviation": "PA",
+    "statutes": [
+      {
+        "citation": "70 PA Stat §1-501",
+        "name": "Fraudulent Practices",
+        "type": "FRAUD",
+        "elements": [
+          "Material misrepresentation or omission",
+          "In connection with offer/sale",
+          "Scienter required"
+        ],
+        "penalties": {
+          "criminal": "Up to 5 years imprisonment",
+          "civil": "Rescission + damages",
+          "administrative": "Cease and desist"
+        },
+        "statute_of_limitations": "3 years",
+        "extraterritorial": false
+      }
+    ]
+  },
+  "Ohio": {
+    "abbreviation": "OH",
+    "statutes": [
+      {
+        "citation": "OH Rev Code §1707.44",
+        "name": "Securities Fraud",
+        "type": "FRAUD",
+        "elements": [
+          "Material misrepresentation or omission",
+          "In connection with securities transaction",
+          "Scienter required"
+        ],
+        "penalties": {
+          "criminal": "Felony of the third degree",
+          "civil": "Rescission + damages",
+          "administrative": "Cease and desist"
+        },
+        "statute_of_limitations": "3 years",
+        "extraterritorial": false
+      }
+    ]
+  },
+  "Georgia": {
+    "abbreviation": "GA",
+    "statutes": [
+      {
+        "citation": "GA Code §10-5-51",
+        "name": "Fraudulent Transactions",
+        "type": "FRAUD",
+        "elements": [
+          "Material misrepresentation or omission",
+          "In connection with offer/sale",
+          "Scienter required"
+        ],
+        "penalties": {
+          "criminal": "Up to 10 years imprisonment",
+          "civil": "Rescission + damages",
+          "administrative": "Cease and desist"
+        },
+        "statute_of_limitations": "3 years",
+        "extraterritorial": false
+      }
+    ]
+  },
+  "North Carolina": {
+    "abbreviation": "NC",
+    "statutes": [
+      {
+        "citation": "NC Gen Stat §78A-56",
+        "name": "Securities Fraud",
+        "type": "FRAUD",
+        "elements": [
+          "Material misrepresentation or omission",
+          "In connection with securities transaction",
+          "Scienter required"
+        ],
+        "penalties": {
+          "criminal": "Class G felony",
+          "civil": "Rescission + damages",
+          "administrative": "Cease and desist"
+        },
+        "statute_of_limitations": "3 years",
+        "extraterritorial": false
+      }
+    ]
+  }
+}

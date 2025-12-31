@@ -292,6 +292,9 @@ class MasterExecutionController:
         self.evidence_attributions: List[Any] = []  # List of EvidenceAttribution objects
         self.interrogation_packages: Dict[str, Any] = {}  # actor_id -> InterrogationPackage
         
+        # Phase 5.6: Multi-Jurisdictional Compliance state
+        self.phase3_results: Dict[str, Any] = {}  # Jurisdiction mapping, state violations, etc.
+        
         # RIM Phase 1 state (Recursive Investigative Module)
         self.recursive_analysis_result: Optional[Dict[str, Any]] = None
         self.statutory_bindings: List[Dict[str, Any]] = []
@@ -382,6 +385,9 @@ class MasterExecutionController:
             
             # PHASE 5.5: Actor Mapping & Interrogation Package Generation
             await self._execute_phase_5_5_actor_mapping()
+            
+            # PHASE 5.6: Multi-Jurisdictional Compliance Mapping
+            await self._execute_phase_5_6_jurisdiction_mapping()
             
             # PHASE 6: Dual-Agent AI Cross-Validation
             await self._execute_phase_6_dual_agent()
@@ -1607,6 +1613,183 @@ class MasterExecutionController:
             })
         
         return evidence_items
+    
+    # ═══════════════════════════════════════════════════════════════════════
+    # PHASE 5.6: MULTI-JURISDICTIONAL COMPLIANCE MAPPING
+    # ═══════════════════════════════════════════════════════════════════════
+    
+    async def _execute_phase_5_6_jurisdiction_mapping(self):
+        """
+        Execute Phase 5.6: Multi-Jurisdictional Compliance Mapping.
+        
+        This phase expands forensic analysis to multi-jurisdictional legal frameworks by:
+        1. Mapping all jurisdictions with prosecutorial authority
+        2. Analyzing violations under state securities laws (50 states)
+        3. Identifying international violations (UK, EU, Canada, Australia, etc.)
+        4. Optimizing prosecution venue selection (forum shopping)
+        5. Generating coordinated prosecution strategy
+        """
+        phase_start = time.time()
+        errors = []
+        
+        logger.info("\n" + "=" * 80)
+        logger.info("  Phase 5.6: Multi-Jurisdictional Compliance Mapping")
+        logger.info("=" * 80)
+        
+        try:
+            # Import compliance modules
+            from src.compliance import (
+                JurisdictionMapper,
+                StateSecuritiesLawEngine,
+                InternationalComplianceAnalyzer,
+                ForumShoppingOptimizer
+            )
+            
+            # Build company profile for jurisdiction mapping
+            company_profile = {
+                'cik': self.cik,
+                'company_name': self.company_name,
+                'state_of_incorporation': self._extract_state_of_incorporation(),
+                'headquarters_state': self._extract_headquarters_state(),
+                'has_uk_listing': False,
+                'has_eu_listing': False,
+                'has_canadian_listing': False,
+                'has_australian_listing': False
+            }
+            
+            # STEP 1: Map jurisdictions
+            logger.info("→ Step 1: Mapping jurisdictions with authority...")
+            jurisdiction_mapper = JurisdictionMapper()
+            jurisdictions = await jurisdiction_mapper.map_jurisdictions(
+                company_profile,
+                self.violations,
+                self.actor_classifications
+            )
+            
+            logger.info(f"  ✓ Identified {len(jurisdictions)} jurisdictions with authority")
+            
+            # STEP 2: Analyze state violations
+            logger.info("→ Step 2: Analyzing state-level violations...")
+            state_engine = StateSecuritiesLawEngine()
+            state_violations = await state_engine.analyze_state_violations(
+                self.violations,
+                [j for j in jurisdictions if hasattr(j, 'jurisdiction_type') and j.jurisdiction_type == "STATE"]
+            )
+            
+            logger.info(f"  ✓ Identified {len(state_violations)} state-level violations")
+            
+            # STEP 3: Analyze international violations
+            logger.info("→ Step 3: Analyzing international violations...")
+            intl_analyzer = InternationalComplianceAnalyzer()
+            
+            # Extract investor locations from actors (if available)
+            investor_locations = self._extract_investor_locations()
+            
+            international_violations = await intl_analyzer.analyze_cross_border_violations(
+                company_profile,
+                self.violations,
+                investor_locations
+            )
+            
+            logger.info(f"  ✓ Identified {len(international_violations)} international violations")
+            
+            # STEP 4: Optimize prosecution venue
+            logger.info("→ Step 4: Analyzing prosecution venues...")
+            forum_optimizer = ForumShoppingOptimizer()
+            forum_analyses = await forum_optimizer.analyze_prosecution_venues(
+                jurisdictions,
+                self.violations,
+                state_violations,
+                international_violations
+            )
+            
+            logger.info(f"  ✓ Analyzed {len(forum_analyses)} prosecution venues")
+            
+            # STEP 5: Generate prosecution strategy
+            logger.info("→ Step 5: Generating coordinated prosecution strategy...")
+            prosecution_strategy = forum_optimizer.generate_prosecution_strategy(
+                forum_analyses
+            )
+            
+            logger.info(f"  ✓ Generated prosecution strategy across {len(forum_analyses)} venues")
+            
+            # Store results
+            self.phase3_results = {
+                'jurisdictions': jurisdictions,
+                'state_violations': state_violations,
+                'international_violations': international_violations,
+                'forum_analyses': forum_analyses,
+                'prosecution_strategy': prosecution_strategy
+            }
+            
+            # Summary statistics
+            primary_venue = prosecution_strategy.get('primary_venue', {})
+            if primary_venue:
+                logger.info(f"\n✓ Phase 5.6 Summary:")
+                logger.info(f"  Total Jurisdictions: {len(jurisdictions)}")
+                logger.info(f"  State Violations: {len(state_violations)}")
+                logger.info(f"  International Violations: {len(international_violations)}")
+                logger.info(f"  Primary Venue: {primary_venue.get('jurisdiction', 'N/A')}")
+                logger.info(f"  Venue Score: {primary_venue.get('venue_score', 0):.1f}/100")
+            
+        except Exception as e:
+            errors.append(f"Jurisdiction mapping error: {str(e)}")
+            logger.error(f"✗ Jurisdiction mapping error: {e}", exc_info=True)
+        
+        phase_duration = time.time() - phase_start
+        
+        # Create phase result
+        result = PhaseResult(
+            phase=ExecutionPhase.PATTERN_DETECTION,  # Using existing enum
+            success=len(errors) == 0,
+            duration_seconds=phase_duration,
+            items_processed=len(self.phase3_results.get('jurisdictions', [])),
+            errors=errors,
+            data={
+                'jurisdictions_mapped': len(self.phase3_results.get('jurisdictions', [])),
+                'state_violations': len(self.phase3_results.get('state_violations', [])),
+                'international_violations': len(self.phase3_results.get('international_violations', [])),
+                'forum_analyses': len(self.phase3_results.get('forum_analyses', []))
+            }
+        )
+        self.phase_results.append(result)
+        
+        logger.info(f"✓ Phase 5.6 completed in {phase_duration:.2f}s")
+    
+    def _extract_state_of_incorporation(self) -> Optional[str]:
+        """Extract state of incorporation from company profile or filings."""
+        # Try to extract from parsed documents
+        for doc in self.parsed_documents:
+            if isinstance(doc, dict):
+                state = doc.get('state_of_incorporation')
+                if state:
+                    return state
+        
+        # Default: None (will not trigger state jurisdiction by this route)
+        return None
+    
+    def _extract_headquarters_state(self) -> Optional[str]:
+        """Extract headquarters state from company profile or filings."""
+        # Try to extract from parsed documents
+        for doc in self.parsed_documents:
+            if isinstance(doc, dict):
+                state = doc.get('headquarters_state', doc.get('principal_state'))
+                if state:
+                    return state
+        
+        return None
+    
+    def _extract_investor_locations(self) -> List[str]:
+        """Extract investor locations from actor profiles."""
+        locations = []
+        
+        for actor in self.actor_profiles:
+            if hasattr(actor, 'metadata') and isinstance(actor.metadata, dict):
+                country = actor.metadata.get('country')
+                if country:
+                    locations.append(country)
+        
+        return list(set(locations))  # Return unique locations
     
     # ═══════════════════════════════════════════════════════════════════════
     # PHASE 6: DUAL-AGENT AI CROSS-VALIDATION

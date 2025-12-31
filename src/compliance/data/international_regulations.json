@@ -1,0 +1,297 @@
+{
+  "United Kingdom": {
+    "regulator": "Financial Conduct Authority (FCA)",
+    "regulations": [
+      {
+        "citation": "FSMA 2000 s.397",
+        "name": "Misleading statements and practices",
+        "violation_type": "MARKET_MANIPULATION",
+        "penalties": {
+          "criminal": "Up to 7 years imprisonment + unlimited fine",
+          "civil": "Unlimited fines + disgorgement"
+        },
+        "mlat_treaty": true
+      },
+      {
+        "citation": "Criminal Justice Act 1993 Part V",
+        "name": "Insider Dealing",
+        "violation_type": "INSIDER_TRADING",
+        "penalties": {
+          "criminal": "Up to 7 years imprisonment + unlimited fine"
+        },
+        "mlat_treaty": true
+      },
+      {
+        "citation": "Market Abuse Regulation (MAR)",
+        "name": "Market Abuse",
+        "violation_type": "MARKET_ABUSE",
+        "penalties": {
+          "criminal": "Up to 7 years imprisonment",
+          "civil": "Unlimited fines",
+          "administrative": "Public censure + disgorgement"
+        },
+        "mlat_treaty": true
+      },
+      {
+        "citation": "FCA Listing Rules",
+        "name": "Listing Rule Violations",
+        "violation_type": "DISCLOSURE_VIOLATIONS",
+        "penalties": {
+          "administrative": "Unlimited fines + suspension"
+        },
+        "mlat_treaty": true
+      }
+    ]
+  },
+  "European Union": {
+    "regulator": "European Securities and Markets Authority (ESMA)",
+    "regulations": [
+      {
+        "citation": "MAR Article 15",
+        "name": "Market Manipulation",
+        "violation_type": "MARKET_MANIPULATION",
+        "penalties": {
+          "criminal": "Varies by member state",
+          "civil": "Up to €5M or 10% of annual turnover",
+          "administrative": "€5M or 15% of annual turnover"
+        },
+        "mlat_treaty": true,
+        "applicable_countries": [
+          "Austria", "Belgium", "Bulgaria", "Croatia", "Cyprus", "Czech Republic",
+          "Denmark", "Estonia", "Finland", "France", "Germany", "Greece", "Hungary",
+          "Ireland", "Italy", "Latvia", "Lithuania", "Luxembourg", "Malta", "Netherlands",
+          "Poland", "Portugal", "Romania", "Slovakia", "Slovenia", "Spain", "Sweden"
+        ]
+      },
+      {
+        "citation": "MiFID II",
+        "name": "Markets in Financial Instruments Directive",
+        "violation_type": "CONDUCT_VIOLATIONS",
+        "penalties": {
+          "administrative": "Up to €5M or 10% of annual turnover"
+        },
+        "mlat_treaty": true
+      },
+      {
+        "citation": "EU 2017/1129",
+        "name": "Prospectus Regulation",
+        "violation_type": "DISCLOSURE_VIOLATIONS",
+        "penalties": {
+          "administrative": "Up to €5M or 3% of annual turnover"
+        },
+        "mlat_treaty": true
+      },
+      {
+        "citation": "Transparency Directive 2004/109/EC",
+        "name": "Transparency Directive",
+        "violation_type": "DISCLOSURE_VIOLATIONS",
+        "penalties": {
+          "administrative": "Up to €10M or 5% of annual turnover"
+        },
+        "mlat_treaty": true
+      }
+    ]
+  },
+  "Canada": {
+    "regulator": "Investment Industry Regulatory Organization of Canada (IIROC)",
+    "regulations": [
+      {
+        "citation": "National Instrument 31-103",
+        "name": "Registration Requirements and Exemptions",
+        "violation_type": "REGISTRATION_VIOLATIONS",
+        "penalties": {
+          "administrative": "Fines up to $5M CAD per violation",
+          "civil": "Disgorgement + damages"
+        },
+        "mlat_treaty": true
+      },
+      {
+        "citation": "Ontario Securities Act",
+        "name": "Securities Fraud",
+        "violation_type": "FRAUD",
+        "penalties": {
+          "criminal": "Up to 5 years imprisonment less a day",
+          "civil": "Disgorgement + damages + costs"
+        },
+        "mlat_treaty": true
+      },
+      {
+        "citation": "Criminal Code §380",
+        "name": "Fraud",
+        "violation_type": "FRAUD",
+        "penalties": {
+          "criminal": "Up to 14 years imprisonment"
+        },
+        "mlat_treaty": true
+      },
+      {
+        "citation": "IIROC Rule 2500",
+        "name": "Market Integrity",
+        "violation_type": "MARKET_MANIPULATION",
+        "penalties": {
+          "administrative": "Fines + suspension"
+        },
+        "mlat_treaty": true
+      }
+    ]
+  },
+  "Australia": {
+    "regulator": "Australian Securities and Investments Commission (ASIC)",
+    "regulations": [
+      {
+        "citation": "Corporations Act 2001 s.1041A",
+        "name": "Market Manipulation",
+        "violation_type": "MARKET_MANIPULATION",
+        "penalties": {
+          "criminal": "Up to 10 years imprisonment + fines",
+          "civil": "Pecuniary penalties up to $1.05M AUD + disgorgement"
+        },
+        "mlat_treaty": true
+      },
+      {
+        "citation": "Corporations Act 2001 s.1043A",
+        "name": "Insider Trading",
+        "violation_type": "INSIDER_TRADING",
+        "penalties": {
+          "criminal": "Up to 10 years imprisonment or $1.05M AUD",
+          "civil": "Pecuniary penalties + disgorgement"
+        },
+        "mlat_treaty": true
+      },
+      {
+        "citation": "ASIC Act 2001 s.12DA",
+        "name": "Misleading or Deceptive Conduct",
+        "violation_type": "FRAUD",
+        "penalties": {
+          "civil": "Pecuniary penalties up to $1M AUD",
+          "administrative": "Banning orders + enforceable undertakings"
+        },
+        "mlat_treaty": true
+      },
+      {
+        "citation": "Corporations Act 2001 s.674",
+        "name": "Continuous Disclosure",
+        "violation_type": "DISCLOSURE_VIOLATIONS",
+        "penalties": {
+          "civil": "Pecuniary penalties",
+          "administrative": "Infringement notices"
+        },
+        "mlat_treaty": true
+      }
+    ]
+  },
+  "Switzerland": {
+    "regulator": "Swiss Financial Market Supervisory Authority (FINMA)",
+    "regulations": [
+      {
+        "citation": "Financial Market Infrastructure Act (FMIA) Art. 154",
+        "name": "Market Manipulation",
+        "violation_type": "MARKET_MANIPULATION",
+        "penalties": {
+          "criminal": "Up to 3 years imprisonment or monetary penalty",
+          "administrative": "Disgorgement + fines up to CHF 10M"
+        },
+        "mlat_treaty": true
+      },
+      {
+        "citation": "FMIA Art. 154",
+        "name": "Insider Trading",
+        "violation_type": "INSIDER_TRADING",
+        "penalties": {
+          "criminal": "Up to 3 years imprisonment or monetary penalty"
+        },
+        "mlat_treaty": true
+      },
+      {
+        "citation": "Financial Services Act (FinSA)",
+        "name": "Conduct of Business Rules",
+        "violation_type": "CONDUCT_VIOLATIONS",
+        "penalties": {
+          "administrative": "Fines up to CHF 10M"
+        },
+        "mlat_treaty": true
+      },
+      {
+        "citation": "Stock Exchange Act Art. 41",
+        "name": "Disclosure Violations",
+        "violation_type": "DISCLOSURE_VIOLATIONS",
+        "penalties": {
+          "criminal": "Up to 3 years imprisonment or monetary penalty"
+        },
+        "mlat_treaty": true
+      }
+    ]
+  },
+  "Japan": {
+    "regulator": "Financial Services Agency (FSA)",
+    "regulations": [
+      {
+        "citation": "Financial Instruments and Exchange Act Art. 197",
+        "name": "Market Manipulation",
+        "violation_type": "MARKET_MANIPULATION",
+        "penalties": {
+          "criminal": "Up to 10 years imprisonment + ¥10M fine",
+          "administrative": "Business improvement orders + license suspension"
+        },
+        "mlat_treaty": true
+      },
+      {
+        "citation": "Financial Instruments and Exchange Act Art. 197-2",
+        "name": "Insider Trading",
+        "violation_type": "INSIDER_TRADING",
+        "penalties": {
+          "criminal": "Up to 5 years imprisonment + ¥5M fine"
+        },
+        "mlat_treaty": true
+      }
+    ]
+  },
+  "Singapore": {
+    "regulator": "Monetary Authority of Singapore (MAS)",
+    "regulations": [
+      {
+        "citation": "Securities and Futures Act s.197",
+        "name": "Market Manipulation",
+        "violation_type": "MARKET_MANIPULATION",
+        "penalties": {
+          "criminal": "Up to 7 years imprisonment + $250,000 SGD fine",
+          "civil": "Civil penalty up to $2M SGD"
+        },
+        "mlat_treaty": true
+      },
+      {
+        "citation": "Securities and Futures Act s.218",
+        "name": "Insider Trading",
+        "violation_type": "INSIDER_TRADING",
+        "penalties": {
+          "criminal": "Up to 7 years imprisonment + $250,000 SGD fine"
+        },
+        "mlat_treaty": true
+      }
+    ]
+  },
+  "Hong Kong": {
+    "regulator": "Securities and Futures Commission (SFC)",
+    "regulations": [
+      {
+        "citation": "Securities and Futures Ordinance s.295",
+        "name": "False Trading",
+        "violation_type": "MARKET_MANIPULATION",
+        "penalties": {
+          "criminal": "Up to 10 years imprisonment + HK$10M fine",
+          "civil": "Disgorgement + civil penalties"
+        },
+        "mlat_treaty": false
+      },
+      {
+        "citation": "Securities and Futures Ordinance s.270",
+        "name": "Insider Dealing",
+        "violation_type": "INSIDER_TRADING",
+        "penalties": {
+          "criminal": "Up to 10 years imprisonment + HK$10M fine"
+        },
+        "mlat_treaty": false
+      }
+    ]
+  }
+}
