@@ -17,8 +17,11 @@ from datetime import date
 
 from src.integrations.sec_edgar.edgar_client import (
     SECEdgarClient, 
-    RateLimiter, 
-    _SHARED_RATE_LIMITER
+    RateLimiter,
+)
+from src.integrations.sec_edgar.rate_limiter import (
+    _SHARED_RATE_LIMITER,
+    get_shared_rate_limiter,
 )
 from config.secure_config import (
     validate_sec_user_agent,
