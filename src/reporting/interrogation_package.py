@@ -578,12 +578,13 @@ class InterrogationPackageGenerator:
         """Determine actor's specific role in violation."""
         roles_lower = [r.lower() for r in actor.roles]
         
-        if any('ceo' in r or 'cfo' in r for r in roles_lower):
+        # Check for specific roles first (most specific to least specific)
+        if any('certifying' in r for r in roles_lower):
+            return "Certifying Officer"
+        elif any('ceo' in r or 'cfo' in r for r in roles_lower):
             return "Primary Architect"
         elif any('officer' in r or 'director' in r for r in roles_lower):
             return "Key Participant"
-        elif any('certifying' in r for r in roles_lower):
-            return "Certifying Officer"
         else:
             return "Participant"
     

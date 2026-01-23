@@ -74,12 +74,13 @@ class EvidenceAttributionLinker:
     """
     
     # Signature patterns in SEC filings
+    # Note: Using [ ]+ instead of \s+ to avoid matching across lines
     SIGNATURE_PATTERNS = [
-        r'/s/\s*([A-Z][a-z]+(?:\s+[A-Z][a-z]+)+)',  # /s/ John Smith
-        r'Signature:\s*([A-Z][a-z]+(?:\s+[A-Z][a-z]+)+)',  # Signature: John Smith
-        r'By:\s*/s/\s*([A-Z][a-z]+(?:\s+[A-Z][a-z]+)+)',  # By: /s/ John Smith
-        r'Signed by:\s*([A-Z][a-z]+(?:\s+[A-Z][a-z]+)+)',  # Signed by: John Smith
-        r'Pursuant to[^:]+:\s*/s/\s*([A-Z][a-z]+(?:\s+[A-Z][a-z]+)+)'  # Pursuant to...: /s/ John Smith
+        r'/s/\s*([A-Z][a-z]+(?:[ ]+[A-Z][a-z]+)+)',  # /s/ John Smith
+        r'Signature:\s*([A-Z][a-z]+(?:[ ]+[A-Z][a-z]+)+)',  # Signature: John Smith
+        r'By:\s*/s/\s*([A-Z][a-z]+(?:[ ]+[A-Z][a-z]+)+)',  # By: /s/ John Smith
+        r'Signed by:\s*([A-Z][a-z]+(?:[ ]+[A-Z][a-z]+)+)',  # Signed by: John Smith
+        r'Pursuant to[^:]+:\s*/s/\s*([A-Z][a-z]+(?:[ ]+[A-Z][a-z]+)+)'  # Pursuant to...: /s/ John Smith
     ]
     
     # SOX certification roles
