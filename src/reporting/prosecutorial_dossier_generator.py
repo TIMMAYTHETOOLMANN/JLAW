@@ -395,8 +395,8 @@ class ProsecutorialDossierGenerator:
             "total_transaction_clusters": len(recursive_analysis.transaction_clusters),
             "total_temporal_correlations": len(recursive_analysis.temporal_correlations),
             "analysis_period": {
-                "start": str(recursive_analysis.analysis_period[0]),
-                "end": str(recursive_analysis.analysis_period[1]),
+                "start": str(recursive_analysis.analysis_period[0]) if recursive_analysis.analysis_period else "N/A",
+                "end": str(recursive_analysis.analysis_period[1]) if recursive_analysis.analysis_period else "N/A",
             },
             "primary_enforcement_agencies": self._determine_enforcement_agencies(
                 statutory_bindings
@@ -741,9 +741,9 @@ class ProsecutorialDossierGenerator:
         return {
             "appendix_a": {
                 "title": "Complete Violation Evidence Records",
-                "primary_violations": [v.to_dict() for v in recursive_analysis.primary_violations],
+                "primary_findings": [v.to_dict() for v in recursive_analysis.primary_findings],
                 "secondary_findings": len(recursive_analysis.transaction_clusters) + len(recursive_analysis.temporal_correlations),
-                "tertiary_findings": len(recursive_analysis.actor_coordination_patterns),
+                "tertiary_findings": len(recursive_analysis.tertiary_findings),
             },
             "appendix_b": {
                 "title": "15-Node Recursive Engine Analysis Matrix",
@@ -791,10 +791,10 @@ class ProsecutorialDossierGenerator:
     ) -> int:
         """Count total evidence items across all findings."""
         return (
-            len(recursive_analysis.primary_violations)
+            len(recursive_analysis.primary_findings)
             + len(recursive_analysis.transaction_clusters)
             + len(recursive_analysis.temporal_correlations)
-            + len(recursive_analysis.actor_coordination_patterns)
+            + len(recursive_analysis.tertiary_findings)
         )
     
     def _validate_rim_compliance(
@@ -814,8 +814,8 @@ class ProsecutorialDossierGenerator:
         # Convert dossier to text for scanning
         dossier_text = json.dumps(dossier.to_dict())
         
-        # Check for prohibited language
-        prohibited_terms = self.rim_validator.scan_for_prohibited_language(dossier_text)
+        # Check for prohibited language using the internal method
+        prohibited_count, _ = self.rim_validator._scan_prohibited_language(dossier_text)
         
         # Check statutory binding coverage
         statutory_coverage = (
@@ -830,14 +830,14 @@ class ProsecutorialDossierGenerator:
         )
         
         is_compliant = (
-            len(prohibited_terms) == 0
+            prohibited_count == 0
             and statutory_coverage
             and has_explicit_strength
         )
         
         return {
             "is_compliant": is_compliant,
-            "prohibited_terms_found": len(prohibited_terms),
+            "prohibited_terms_found": prohibited_count,
             "statutory_coverage": statutory_coverage,
             "explicit_evidence_strength": has_explicit_strength,
         }

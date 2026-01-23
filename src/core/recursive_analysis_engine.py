@@ -226,9 +226,12 @@ class RecursiveAnalysisResult:
     temporal_correlations: List[TemporalCorrelation]
     structuring_indicators: List[StructuringIndicator]
     analysis_timestamp: datetime = field(default_factory=datetime.utcnow)
+    analysis_period: Optional[Tuple[date, date]] = None  # (start_date, end_date)
+    case_id: Optional[str] = None
+    execution_time: float = 0.0
     
     def to_dict(self) -> Dict[str, Any]:
-        return {
+        result = {
             "primary_findings": [f.to_dict() for f in self.primary_findings],
             "secondary_findings": [f.to_dict() for f in self.secondary_findings],
             "tertiary_findings": [f.to_dict() for f in self.tertiary_findings],
@@ -245,6 +248,16 @@ class RecursiveAnalysisResult:
                 "total_structuring_indicators": len(self.structuring_indicators)
             }
         }
+        if self.analysis_period:
+            result["analysis_period"] = {
+                "start": str(self.analysis_period[0]),
+                "end": str(self.analysis_period[1])
+            }
+        if self.case_id:
+            result["case_id"] = self.case_id
+        if self.execution_time > 0:
+            result["execution_time"] = self.execution_time
+        return result
 
 
 class RecursiveForensicAnalyzer:
