@@ -1000,25 +1000,22 @@ class NodeCorrelator:
         if not node7_result or not node8_result:
             return []
         
+        def _get_attr_or_key(data, attr_name, default=None):
+            """Helper to get attribute from object or key from dict."""
+            if isinstance(data, dict):
+                return data.get(attr_name, default if default is not None else [])
+            return getattr(data, attr_name, default if default is not None else [])
+        
         # Build mock outputs - handle both dict and object inputs
         class MockNode7:
             def __init__(self, data):
-                if isinstance(data, dict):
-                    self.wolf_pack_alerts = data.get("wolf_pack_alerts", [])
-                    self.alerts = data.get("alerts", [])
-                else:
-                    # Handle object input (e.g., MockNode7Output or NodeResult)
-                    self.wolf_pack_alerts = getattr(data, 'wolf_pack_alerts', [])
-                    self.alerts = getattr(data, 'alerts', [])
+                self.wolf_pack_alerts = _get_attr_or_key(data, 'wolf_pack_alerts', [])
+                self.alerts = _get_attr_or_key(data, 'alerts', [])
                 self.high_severity_count = len(self.wolf_pack_alerts)
         
         class MockNode8:
             def __init__(self, data):
-                if isinstance(data, dict):
-                    self.alerts = data.get("alerts", [])
-                else:
-                    # Handle object input
-                    self.alerts = getattr(data, 'alerts', [])
+                self.alerts = _get_attr_or_key(data, 'alerts', [])
                 self.conversions_detected = 0
                 self.high_severity_count = len(self.alerts)
         
