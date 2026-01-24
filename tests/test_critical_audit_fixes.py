@@ -110,7 +110,7 @@ async def test_node15_executes_normally_with_api_key():
 
 def test_intelligent_orchestrator_never_skips_in_strict_mode():
     """Test that IntelligentOrchestrator does not skip nodes in strict mode."""
-    from JLAW_UNIFIED import UnifiedForensicEngine, TargetConfig
+    from JLAW_UNIFIED_DEPRECATED import UnifiedForensicEngine, TargetConfig
     
     # Create config with strict mode enabled
     config = TargetConfig(
@@ -129,7 +129,7 @@ def test_intelligent_orchestrator_never_skips_in_strict_mode():
 
 def test_intelligent_orchestrator_can_skip_in_non_strict_mode():
     """Test that IntelligentOrchestrator can skip nodes when strict mode is off."""
-    from JLAW_UNIFIED import UnifiedForensicEngine, TargetConfig
+    from JLAW_UNIFIED_DEPRECATED import UnifiedForensicEngine, TargetConfig
     
     # Create config with strict mode disabled
     config = TargetConfig(

@@ -14,12 +14,12 @@ import pytest
 def test_core_modules():
     """Test core engine imports."""
     from src.core.recursive_engine import RecursiveProsecutorialEngine
-    from src.core.linear_orchestrator import LinearExecutionOrchestrator
+    from src.core.intelligent_orchestrator import IntelligentOrchestrator
     from src.core.evidence_chain.hash_service import HashService
     from src.core.custody.custody import ChainOfCustody
     
     assert RecursiveProsecutorialEngine is not None
-    assert LinearExecutionOrchestrator is not None
+    assert IntelligentOrchestrator is not None
     assert HashService is not None
     assert ChainOfCustody is not None
 

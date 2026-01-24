@@ -47,11 +47,22 @@ class CrossNodeAlert:
     company_name: str
     company_cik: str
     
-    # Source data references
+    # Source data references (all 15 nodes)
     node1_data: Optional[Dict[str, Any]] = None  # Form 4 insider trades
+    node2_data: Optional[Dict[str, Any]] = None  # DEF 14A compensation
+    node3_data: Optional[Dict[str, Any]] = None  # 10-Q temporal consistency
+    node4_data: Optional[Dict[str, Any]] = None  # 10-K SOX certification
+    node5_data: Optional[Dict[str, Any]] = None  # IRC §83 tax exposure
+    node6_data: Optional[Dict[str, Any]] = None  # Enforcement routing
     node7_data: Optional[Dict[str, Any]] = None  # 13F institutional holdings
     node8_data: Optional[Dict[str, Any]] = None  # 13D/G beneficial ownership
     node9_data: Optional[Dict[str, Any]] = None  # 8-K material events
+    node10_data: Optional[Dict[str, Any]] = None  # Form 144 restricted sales
+    node11_data: Optional[Dict[str, Any]] = None  # Executive network
+    node12_data: Optional[Dict[str, Any]] = None  # Earnings call transcripts
+    node13_data: Optional[Dict[str, Any]] = None  # Z-score bankruptcy prediction
+    node14_data: Optional[Dict[str, Any]] = None  # F-score financial strength
+    node15_data: Optional[Dict[str, Any]] = None  # Market correlation
     
     # Correlation metrics
     correlation_score: float = 0.0  # 0.0-1.0
@@ -79,9 +90,20 @@ class CrossNodeAlert:
             "severity": self.severity.value,
             "sources": {
                 "node1_insider_trades": bool(self.node1_data),
+                "node2_compensation": bool(self.node2_data),
+                "node3_10q": bool(self.node3_data),
+                "node4_10k": bool(self.node4_data),
+                "node5_tax": bool(self.node5_data),
+                "node6_enforcement": bool(self.node6_data),
                 "node7_institutional_holdings": bool(self.node7_data),
                 "node8_beneficial_ownership": bool(self.node8_data),
-                "node9_material_events": bool(self.node9_data)
+                "node9_material_events": bool(self.node9_data),
+                "node10_form144": bool(self.node10_data),
+                "node11_network": bool(self.node11_data),
+                "node12_earnings": bool(self.node12_data),
+                "node13_zscore": bool(self.node13_data),
+                "node14_fscore": bool(self.node14_data),
+                "node15_market": bool(self.node15_data)
             },
             "temporal_analysis": {
                 "window_days": self.temporal_window_days,
@@ -978,16 +1000,22 @@ class NodeCorrelator:
         if not node7_result or not node8_result:
             return []
         
-        # Build mock outputs
+        def _get_attr_or_key(data, attr_name, default=None):
+            """Helper to get attribute from object or key from dict."""
+            if isinstance(data, dict):
+                return data.get(attr_name, default if default is not None else [])
+            return getattr(data, attr_name, default if default is not None else [])
+        
+        # Build mock outputs - handle both dict and object inputs
         class MockNode7:
             def __init__(self, data):
-                self.wolf_pack_alerts = data.get("wolf_pack_alerts", [])
-                self.alerts = data.get("alerts", [])
+                self.wolf_pack_alerts = _get_attr_or_key(data, 'wolf_pack_alerts', [])
+                self.alerts = _get_attr_or_key(data, 'alerts', [])
                 self.high_severity_count = len(self.wolf_pack_alerts)
         
         class MockNode8:
             def __init__(self, data):
-                self.alerts = data.get("alerts", [])
+                self.alerts = _get_attr_or_key(data, 'alerts', [])
                 self.conversions_detected = 0
                 self.high_severity_count = len(self.alerts)
         

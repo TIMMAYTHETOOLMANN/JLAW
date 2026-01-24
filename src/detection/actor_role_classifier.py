@@ -245,7 +245,13 @@ class ActorRoleClassifier:
             return 0.0
         
         score = 0.0
-        evidence_count = len(actor.evidence_items)
+        
+        # Combine actor evidence items and passed evidence items for counting
+        all_evidence = list(actor.evidence_items or [])
+        if evidence_items:
+            all_evidence.extend(evidence_items)
+        
+        evidence_count = len(all_evidence)
         
         # Base score from evidence count
         if evidence_count == 0:
@@ -257,7 +263,7 @@ class ActorRoleClassifier:
         else:
             score = 20.0
         
-        # Adjust based on evidence strength
+        # Adjust based on evidence strength from passed evidence_items
         if evidence_items:
             direct_evidence_count = 0
             

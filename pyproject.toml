@@ -46,7 +46,6 @@ dependencies = [
     # Cryptography & Evidence Chain
     "cryptography>=41.0.0",
     "rfc3161ng>=2.1.0",
-    "merkletools>=1.0.3",
     
     # Databases
     "neo4j>=5.15.0",
@@ -55,7 +54,7 @@ dependencies = [
     "redis>=5.0.0",
     
     # SEC/Financial Analysis
-    "benford-py>=0.6.0",
+    "benford-py>=0.5.0",
     "sec-edgar-downloader>=5.0.0",
     "edgar>=5.0.0",
     "python-xbrl>=1.1.0",
@@ -81,6 +80,9 @@ dependencies = [
     # Logging & Reporting
     "structlog>=24.1.0",
     "reportlab>=4.0.0",
+    
+    # System Monitoring
+    "psutil>=5.9.0",
     
     # Typing
     "typing-extensions>=4.12.0",

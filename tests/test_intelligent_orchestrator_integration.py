@@ -3,12 +3,15 @@ Integration Tests for IntelligentOrchestrator with JLAW_UNIFIED
 ================================================================
 
 Tests the integration between IntelligentOrchestrator and UnifiedForensicEngine.
+
+NOTE: This test imports from JLAW_UNIFIED_DEPRECATED.py as the new JLAW_UNIFIED.py
+is a redirect script. The actual classes are in the deprecated module.
 """
 
 import pytest
 from datetime import date
 from pathlib import Path
-from JLAW_UNIFIED import UnifiedForensicEngine, TargetConfig
+from JLAW_UNIFIED_DEPRECATED import UnifiedForensicEngine, TargetConfig
 from src.core.intelligent_orchestrator import IntelligentOrchestrator, InvestigationType
 
 
