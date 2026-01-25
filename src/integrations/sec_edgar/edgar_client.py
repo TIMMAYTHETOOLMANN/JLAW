@@ -434,13 +434,16 @@ class SECEdgarClient:
     
     async def __aenter__(self):
         """Async context manager entry."""
+        # NOTE: Do not set a static Host header - aiohttp automatically sets
+        # the correct Host header based on the URL being requested.
+        # Using a static Host (e.g., "www.sec.gov") will cause 404 errors
+        # when accessing data.sec.gov endpoints.
         self.session = aiohttp.ClientSession(
             headers={
                 "User-Agent": self.user_agent,
                 "Accept-Encoding": "gzip, deflate",
                 "Accept": "*/*",
                 "Connection": "keep-alive",
-                "Host": "www.sec.gov"
             }
         )
         return self
