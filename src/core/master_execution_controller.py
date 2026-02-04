@@ -170,6 +170,9 @@ class UnifiedAnalysisResult:
     actor_profiles: Optional[List[Any]] = None
     interrogation_packages: Optional[Dict[str, Any]] = None
     
+    # Phase 2.5: Enhanced SEC Data Resources
+    enhanced_data_resources: Optional[Dict[str, Any]] = None
+    
     def to_dict(self) -> Dict[str, Any]:
         result = {
             "cik": self.cik,
@@ -199,6 +202,17 @@ class UnifiedAnalysisResult:
             result["interrogation_packages"] = {
                 actor_id: pkg.to_dict() if hasattr(pkg, 'to_dict') else pkg
                 for actor_id, pkg in self.interrogation_packages.items()
+            }
+        
+        # Add Phase 2.5 enhanced data resources if available
+        if self.enhanced_data_resources:
+            result["enhanced_data_resources"] = {
+                "sources_acquired": list(self.enhanced_data_resources.keys()),
+                "ticker": self.enhanced_data_resources.get("ticker"),
+                "has_company_facts": "company_facts" in self.enhanced_data_resources,
+                "ftd_records_count": len(self.enhanced_data_resources.get("fails_to_deliver", [])),
+                "metrics_count": len(self.enhanced_data_resources.get("financial_metrics", {})),
+                "related_advisers_count": len(self.enhanced_data_resources.get("related_advisers", []))
             }
         
         return result
@@ -790,6 +804,127 @@ class MasterExecutionController:
                     logger.warning(f"Data collection gate warning: {validation_result.get_error_message()}")
         
         logger.info(f"✓ Phase 2 completed in {phase_duration:.2f}s")
+        
+        # Enhanced data collection using SEC Data Resources
+        await self._execute_phase_2_5_enhanced_data_resources()
+    
+    # ═══════════════════════════════════════════════════════════════════════
+    # PHASE 2.5: ENHANCED SEC DATA RESOURCES ACQUISITION
+    # ═══════════════════════════════════════════════════════════════════════
+    
+    async def _execute_phase_2_5_enhanced_data_resources(self):
+        """
+        Execute Phase 2.5: Enhanced SEC Data Resources Acquisition.
+        
+        This phase leverages the comprehensive SEC Data Resources from
+        https://www.sec.gov/data-research/sec-data-resources to acquire:
+        - Company Facts (XBRL data)
+        - Fails-to-Deliver data
+        - Investment Adviser relationships
+        - Full-text search results for cross-referencing
+        - Ticker/CIK mappings
+        
+        The acquired data enriches the forensic analysis by providing
+        multi-source correlation capabilities.
+        """
+        phase_start = time.time()
+        errors = []
+        
+        logger.info("\n" + "-" * 80)
+        logger.info("  Phase 2.5: Enhanced SEC Data Resources Acquisition")
+        logger.info("-" * 80)
+        
+        # Initialize storage for enhanced data
+        if not hasattr(self, 'enhanced_data_resources'):
+            self.enhanced_data_resources = {}
+        
+        try:
+            from src.integrations.sec_edgar.sec_data_resources import SECDataResourcesClient
+            
+            async with SECDataResourcesClient(user_agent=self.sec_user_agent) as client:
+                # 1. Get Company Facts (comprehensive XBRL data)
+                logger.info(f"→ Acquiring Company Facts for CIK {self.cik}...")
+                try:
+                    facts = await client.get_company_facts(self.cik)
+                    if facts:
+                        self.enhanced_data_resources['company_facts'] = facts
+                        logger.info(f"  ✓ Company Facts acquired: {facts.get('entityName', 'Unknown')}")
+                except Exception as e:
+                    errors.append(f"Company Facts acquisition failed: {e}")
+                    logger.warning(f"  ✗ Company Facts: {e}")
+                
+                # 2. Get ticker for the company
+                logger.info("→ Resolving company ticker...")
+                try:
+                    tickers = await client.get_all_company_tickers()
+                    cik_clean = self.cik.lstrip("0")
+                    ticker = None
+                    for t, info in tickers.items():
+                        if info.get("cik") == cik_clean:
+                            ticker = t
+                            self.enhanced_data_resources['ticker'] = t
+                            logger.info(f"  ✓ Ticker resolved: {t}")
+                            break
+                    
+                    # 3. Get Fails-to-Deliver data if ticker found
+                    if ticker:
+                        logger.info(f"→ Acquiring Fails-to-Deliver data for {ticker}...")
+                        try:
+                            ftd_records = await client.get_fails_to_deliver_by_symbol(
+                                ticker, self.start_date, self.end_date
+                            )
+                            if ftd_records:
+                                self.enhanced_data_resources['fails_to_deliver'] = [
+                                    r.to_dict() for r in ftd_records
+                                ]
+                                total_qty = sum(r.quantity for r in ftd_records)
+                                logger.info(f"  ✓ FTD: {len(ftd_records)} records, {total_qty:,} total shares")
+                        except Exception as e:
+                            logger.debug(f"  FTD data not available: {e}")
+                except Exception as e:
+                    errors.append(f"Ticker resolution failed: {e}")
+                    logger.warning(f"  ✗ Ticker: {e}")
+                
+                # 4. Extract financial metrics
+                logger.info(f"→ Extracting financial metrics for FY{self.end_date.year}...")
+                try:
+                    metrics = await client.extract_financial_metrics(
+                        self.cik, self.end_date.year
+                    )
+                    if metrics:
+                        self.enhanced_data_resources['financial_metrics'] = metrics
+                        logger.info(f"  ✓ Financial metrics: {len(metrics)} concepts extracted")
+                except Exception as e:
+                    logger.debug(f"  Financial metrics extraction: {e}")
+                
+                # 5. Search for related investment advisers
+                if self.company_name:
+                    logger.info("→ Searching for related investment advisers...")
+                    try:
+                        name_parts = self.company_name.split()[:2]
+                        if name_parts:
+                            advisers = await client.search_investment_advisers(
+                                firm_name=" ".join(name_parts)
+                            )
+                            if advisers:
+                                self.enhanced_data_resources['related_advisers'] = [
+                                    a.to_dict() for a in advisers[:10]
+                                ]
+                                logger.info(f"  ✓ Related advisers: {len(advisers)} found")
+                    except Exception as e:
+                        logger.debug(f"  Investment adviser search: {e}")
+        
+        except ImportError as e:
+            logger.warning(f"SEC Data Resources module not available: {e}")
+        except Exception as e:
+            errors.append(f"Enhanced data resources error: {str(e)}")
+            logger.error(f"✗ Enhanced data resources error: {e}", exc_info=True)
+        
+        phase_duration = time.time() - phase_start
+        
+        # Log summary
+        sources_acquired = len(self.enhanced_data_resources)
+        logger.info(f"✓ Phase 2.5 completed: {sources_acquired} enhanced data sources acquired in {phase_duration:.2f}s")
     
     # ═══════════════════════════════════════════════════════════════════════
     # PHASE 3: DOCUMENT PARSING & INDEXING
