@@ -645,10 +645,19 @@ class SECDataResourcesClient:
                         if len(lines) > 1:
                             headers = lines[0].split('\t')
                             rows = []
-                            for line in lines[1:]:
+                            skipped_rows = 0
+                            for line_num, line in enumerate(lines[1:], start=2):
                                 values = line.split('\t')
                                 if len(values) == len(headers):
                                     rows.append(dict(zip(headers, values)))
+                                else:
+                                    skipped_rows += 1
+                            
+                            if skipped_rows > 0:
+                                logger.warning(
+                                    f"Skipped {skipped_rows} rows in {filename} due to column count mismatch "
+                                    f"(expected {len(headers)} columns)"
+                                )
                             result[table_name] = rows
             
             # Cache the parsed data

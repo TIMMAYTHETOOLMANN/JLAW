@@ -39,7 +39,7 @@ import asyncio
 import logging
 from dataclasses import dataclass, field
 from datetime import datetime, date, timedelta, timezone
-from typing import List, Dict, Any, Optional, Tuple, Set
+from typing import List, Dict, Any, Optional, Tuple, Set, Callable
 from enum import Enum
 from pathlib import Path
 import hashlib
@@ -549,8 +549,10 @@ class SECCrossAnalysisEngine:
                 
                 # High FTD volume near insider transaction
                 if total_ftd_qty > 100000:
+                    # Use full accession number for unique alert ID
+                    accession_clean = filing['accession_number'].replace('-', '')
                     alert = ForensicAlert(
-                        alert_id=f"INSIDER-FTD-{filing['accession_number'][:15]}",
+                        alert_id=f"INSIDER-FTD-{accession_clean}",
                         severity=AlertSeverity.HIGH if total_ftd_qty > 500000 else AlertSeverity.MEDIUM,
                         analysis_type=AnalysisType.INSIDER_FTD_CORRELATION,
                         title=f"Insider Transaction Near FTD Spike",
@@ -676,8 +678,10 @@ class SECCrossAnalysisEngine:
             ]
             
             if pre_event_trades:
+                # Use full accession number for unique alert ID
+                event_accession = event['accession_number'].replace('-', '')
                 alert = ForensicAlert(
-                    alert_id=f"EVENT-TIMING-{event['accession_number'][:15]}",
+                    alert_id=f"EVENT-TIMING-{event_accession}",
                     severity=AlertSeverity.HIGH,
                     analysis_type=AnalysisType.MATERIAL_EVENT_TIMING,
                     title="Insider Transactions Preceding Material Event",
@@ -842,7 +846,7 @@ class SECCrossAnalysisEngine:
     async def monitor_real_time_filings(
         self,
         form_type: Optional[str] = None,
-        callback: Optional[callable] = None
+        callback: Optional[Callable] = None
     ) -> List[RSSFilingEntry]:
         """
         Get recent filings from RSS feed.
