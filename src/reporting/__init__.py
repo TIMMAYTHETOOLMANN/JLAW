@@ -22,6 +22,7 @@ Constants:
 """
 
 from .pdf_generator import ForensicPDFGenerator
+from .visual_report_generator import ForensicVisualReportGenerator
 from .court_pdf_generator import (
     CourtPDFGenerator,
     CaseCaption,
@@ -86,6 +87,7 @@ from .chain_of_custody_logger import (
 __all__ = [
     # PDF Generators
     'ForensicPDFGenerator',
+    'ForensicVisualReportGenerator',
     'CourtPDFGenerator',
     'DOJReportGenerator',
     
