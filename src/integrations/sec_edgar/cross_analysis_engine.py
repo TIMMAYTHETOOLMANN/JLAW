@@ -470,6 +470,34 @@ class SECCrossAnalysisEngine:
             errors.append(f"Investment adviser search failed: {e}")
             logger.error(f"Error searching investment advisers: {e}")
         
+        # 8. Get insider transactions (bulk data from Forms 3, 4, 5)
+        try:
+            logger.info(f"Acquiring insider transactions for CIK {cik}...")
+            insider_txns = await self._data_resources_client.get_insider_transactions(
+                cik, start_date=start_date, end_date=end_date
+            )
+            if insider_txns:
+                acquired_data["insider_transactions"] = [t.to_dict() for t in insider_txns]
+                records_acquired["insider_transactions"] = len(insider_txns)
+                sources_queried.append("insider_transactions_bulk")
+        except Exception as e:
+            errors.append(f"Insider transactions acquisition failed: {e}")
+            logger.error(f"Error acquiring insider transactions: {e}")
+        
+        # 9. Get Form D filings (Regulation D private placements)
+        try:
+            logger.info(f"Acquiring Form D filings for CIK {cik}...")
+            form_d_filings = await self._data_resources_client.get_form_d_filings(
+                cik=cik, start_date=start_date, end_date=end_date
+            )
+            if form_d_filings:
+                acquired_data["form_d_filings"] = [f.to_dict() for f in form_d_filings]
+                records_acquired["form_d_filings"] = len(form_d_filings)
+                sources_queried.append("form_d_offerings")
+        except Exception as e:
+            errors.append(f"Form D acquisition failed: {e}")
+            logger.error(f"Error acquiring Form D filings: {e}")
+        
         # Generate integrity hash for the acquired data
         data_json = json.dumps(acquired_data, sort_keys=True, default=str)
         integrity_hashes = {
@@ -791,6 +819,8 @@ class SECCrossAnalysisEngine:
             ),
             "related_advisers": len(data.get("related_advisers", [])),
             "metrics_extracted": len(data.get("financial_metrics", {})),
+            "insider_transactions": len(data.get("insider_transactions", [])),
+            "form_d_filings": len(data.get("form_d_filings", [])),
             "total_alerts": len(alerts),
             "critical_alerts": len([a for a in alerts if a.severity == AlertSeverity.CRITICAL]),
             "high_alerts": len([a for a in alerts if a.severity == AlertSeverity.HIGH]),
