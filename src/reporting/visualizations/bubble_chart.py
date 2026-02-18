@@ -12,12 +12,11 @@ Uses plotly for interactive bubble charts.
 """
 
 import logging
-from datetime import date, datetime
-from typing import List, Dict, Any, Optional
+from datetime import date
+from typing import List, Dict, Any
 from pathlib import Path
 
 import plotly.graph_objects as go
-import numpy as np
 
 logger = logging.getLogger(__name__)
 
@@ -125,7 +124,7 @@ class BubbleChartGenerator:
             yaxis_title="Actor",
             hovermode="closest",
             showlegend=True,
-            legend=dict(title="Category", orientation="v", yanchor="top", y=1, x=1.02),
+            legend={"title": "Category", "orientation": "v", "yanchor": "top", "y": 1, "x": 1.02},
             template="plotly_white",
             height=700,
             width=1200,
@@ -192,17 +191,17 @@ class BubbleChartGenerator:
                 x=txn_counts,
                 y=profits,
                 mode="markers+text",
-                marker=dict(
-                    size=bubble_sizes,
-                    color=risk_scores,
-                    colorscale="RdYlGn_r",
-                    colorbar=dict(title="Risk Score"),
-                    line=dict(width=2, color="white"),
-                    opacity=0.85,
-                ),
+                marker={
+                    "size": bubble_sizes,
+                    "color": risk_scores,
+                    "colorscale": "RdYlGn_r",
+                    "colorbar": {"title": "Risk Score"},
+                    "line": {"width": 2, "color": "white"},
+                    "opacity": 0.85,
+                },
                 text=names,
                 textposition="top center",
-                textfont=dict(size=10),
+                textfont={"size": 10},
                 hovertext=hover_text,
                 hoverinfo="text",
             )
@@ -217,7 +216,7 @@ class BubbleChartGenerator:
             },
             xaxis_title="Transaction Count",
             yaxis_title="Total Estimated Profit ($)",
-            yaxis=dict(tickformat="$,.0f"),
+            yaxis={"tickformat": "$,.0f"},
             hovermode="closest",
             template="plotly_white",
             height=700,
@@ -267,12 +266,12 @@ class BubbleChartGenerator:
                 y=actors,
                 mode="markers",
                 name=name,
-                marker=dict(
-                    size=sizes,
-                    color=color,
-                    line=dict(width=1.5, color="white"),
-                    opacity=0.8,
-                ),
+                marker={
+                    "size": sizes,
+                    "color": color,
+                    "line": {"width": 1.5, "color": "white"},
+                    "opacity": 0.8,
+                },
                 text=hover_text,
                 hoverinfo="text",
             )
@@ -283,7 +282,7 @@ class BubbleChartGenerator:
         fig = go.Figure()
         fig.add_annotation(
             text="No data available", xref="paper", yref="paper", x=0.5, y=0.5,
-            showarrow=False, font=dict(size=20),
+            showarrow=False, font={"size": 20},
         )
         fig.update_layout(title=title, template="plotly_white", height=400, width=800)
         return fig

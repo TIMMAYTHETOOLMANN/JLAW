@@ -12,12 +12,11 @@ Uses plotly for interactive timeline charts.
 """
 
 import logging
-from datetime import date, datetime, timedelta
-from typing import List, Dict, Any, Optional
+from datetime import datetime, timedelta
+from typing import List, Dict, Any
 from pathlib import Path
 
 import plotly.graph_objects as go
-import numpy as np
 
 logger = logging.getLogger(__name__)
 
@@ -131,13 +130,13 @@ class FilingDeadlineChart:
                     y=filing_types,
                     mode="markers",
                     name=status.replace("_", " ").title(),
-                    marker=dict(
-                        size=marker_size,
-                        color=self.STATUS_COLORS.get(status, "#888"),
-                        line=dict(width=1.5, color="white"),
-                        symbol="circle" if status != "LATE" else "x",
-                        opacity=0.85,
-                    ),
+                    marker={
+                        "size": marker_size,
+                        "color": self.STATUS_COLORS.get(status, "#888"),
+                        "line": {"width": 1.5, "color": "white"},
+                        "symbol": "circle" if status != "LATE" else "x",
+                        "opacity": 0.85,
+                    },
                     text=hover_text,
                     hoverinfo="text",
                 )
@@ -153,7 +152,7 @@ class FilingDeadlineChart:
                     line_width=2,
                     annotation_text=evt.get("description", evt.get("event_type", "")),
                     annotation_position="top",
-                    annotation_font=dict(size=9, color="#0074D9"),
+                    annotation_font={"size": 9, "color": "#0074D9"},
                 )
 
         fig.update_layout(
@@ -167,13 +166,13 @@ class FilingDeadlineChart:
             yaxis_title="Filing Type",
             hovermode="closest",
             showlegend=True,
-            legend=dict(
-                title="Compliance Status",
-                orientation="v",
-                yanchor="top",
-                y=1,
-                x=1.02,
-            ),
+            legend={
+                "title": "Compliance Status",
+                "orientation": "v",
+                "yanchor": "top",
+                "y": 1,
+                "x": 1.02,
+            },
             template="plotly_white",
             height=600,
             width=1200,
@@ -283,7 +282,7 @@ class FilingDeadlineChart:
         fig = go.Figure()
         fig.add_annotation(
             text="No filing data available", xref="paper", yref="paper",
-            x=0.5, y=0.5, showarrow=False, font=dict(size=20),
+            x=0.5, y=0.5, showarrow=False, font={"size": 20},
         )
         fig.update_layout(title=title, template="plotly_white", height=400, width=800)
         return fig

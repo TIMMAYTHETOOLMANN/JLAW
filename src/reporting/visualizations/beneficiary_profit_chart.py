@@ -11,7 +11,7 @@ Uses plotly for interactive charts.
 """
 
 import logging
-from typing import List, Dict, Any, Optional
+from typing import List, Dict, Any
 from pathlib import Path
 
 import plotly.graph_objects as go
@@ -108,7 +108,7 @@ class BeneficiaryProfitChart:
                 totals={"marker": {"color": "#0074D9"}},
                 textposition="outside",
                 text=[f"${p:,.0f}" for p in profits] + [""],
-                textfont=dict(size=10),
+                textfont={"size": 10},
             )
         )
 
@@ -120,7 +120,7 @@ class BeneficiaryProfitChart:
                 "font": {"size": 20, "family": "Arial, sans-serif"},
             },
             yaxis_title="Profit ($)",
-            yaxis=dict(tickformat="$,.0f"),
+            yaxis={"tickformat": "$,.0f"},
             showlegend=False,
             template="plotly_white",
             height=600,
@@ -163,7 +163,7 @@ class BeneficiaryProfitChart:
                 labels=roles,
                 values=profits,
                 hole=0.4,
-                marker=dict(colors=colors, line=dict(color="white", width=2)),
+                marker={"colors": colors, "line": {"color": "white", "width": 2}},
                 textinfo="label+percent+value",
                 texttemplate="%{label}<br>%{percent}<br>$%{value:,.0f}",
                 hovertemplate="<b>%{label}</b><br>Profit: $%{value:,.0f}<br>"
@@ -263,12 +263,12 @@ class BeneficiaryProfitChart:
                 labels=list(role_profits.keys()),
                 values=list(role_profits.values()),
                 hole=0.4,
-                marker=dict(
-                    colors=[
+                marker={
+                    "colors": [
                         self.ROLE_COLORS.get(r, "#778899")
                         for r in role_profits.keys()
                     ]
-                ),
+                },
                 showlegend=False,
             ),
             row=1,
@@ -288,13 +288,13 @@ class BeneficiaryProfitChart:
                 mode="markers+text",
                 text=all_names,
                 textposition="top center",
-                textfont=dict(size=8),
-                marker=dict(
-                    size=[max(8, v * 5 + 8) for v in all_viols],
-                    color=all_risks,
-                    colorscale="RdYlGn_r",
-                    line=dict(width=1, color="white"),
-                ),
+                textfont={"size": 8},
+                marker={
+                    "size": [max(8, v * 5 + 8) for v in all_viols],
+                    "color": all_risks,
+                    "colorscale": "RdYlGn_r",
+                    "line": {"width": 1, "color": "white"},
+                },
                 showlegend=False,
             ),
             row=2,
@@ -344,7 +344,7 @@ class BeneficiaryProfitChart:
         fig = go.Figure()
         fig.add_annotation(
             text="No beneficiary data available", xref="paper", yref="paper",
-            x=0.5, y=0.5, showarrow=False, font=dict(size=20),
+            x=0.5, y=0.5, showarrow=False, font={"size": 20},
         )
         fig.update_layout(title=title, template="plotly_white", height=400, width=800)
         return fig

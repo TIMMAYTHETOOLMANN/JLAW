@@ -24,19 +24,18 @@ from collections import Counter, defaultdict
 from datetime import datetime, date
 from io import BytesIO
 from pathlib import Path
-from typing import List, Dict, Any, Optional
+from typing import Dict, Any, Optional
 
 try:
     from reportlab.lib import colors
-    from reportlab.lib.pagesizes import letter, LETTER, landscape
+    from reportlab.lib.pagesizes import letter
     from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
     from reportlab.lib.units import inch
-    from reportlab.lib.enums import TA_CENTER, TA_LEFT, TA_RIGHT, TA_JUSTIFY
+    from reportlab.lib.enums import TA_CENTER, TA_JUSTIFY
     from reportlab.platypus import (
         SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle,
-        PageBreak, Image, KeepTogether, HRFlowable,
+        PageBreak, Image, HRFlowable,
     )
-    from reportlab.pdfgen import canvas as pdf_canvas
     REPORTLAB_AVAILABLE = True
 except ImportError:
     REPORTLAB_AVAILABLE = False
@@ -412,7 +411,7 @@ class ForensicVisualReportGenerator:
         high = results.get("high_alerts", 0)
         penalties = results.get("estimated_penalties", {})
         civil_max = penalties.get("civil_maximum", 0)
-        disgorgement = penalties.get("disgorgement", 0)
+        penalties.get("disgorgement", 0)
 
         # KPI row using table
         kpi_cells = [
@@ -856,7 +855,7 @@ class ForensicVisualReportGenerator:
             story.append(Spacer(1, 12))
 
         story.append(Paragraph(
-            f"<b>Report Hash (SHA-256):</b>", self.styles["BodyJustified"],
+            "<b>Report Hash (SHA-256):</b>", self.styles["BodyJustified"],
         ))
         story.append(Paragraph(report_hash, self.styles["SmallMono"]))
         story.append(Spacer(1, 12))
@@ -915,7 +914,7 @@ class ForensicVisualReportGenerator:
         fig, ax = plt.subplots(figsize=(5, 3.5))
         wedges, texts, autotexts = ax.pie(
             sizes, labels=labels, colors=chart_colors, autopct="%1.1f%%",
-            startangle=90, wedgeprops=dict(linewidth=2, edgecolor="white"),
+            startangle=90, wedgeprops={"linewidth": 2, "edgecolor": "white"},
         )
         for t in autotexts:
             t.set_fontsize(9)
@@ -947,7 +946,7 @@ class ForensicVisualReportGenerator:
             txn_date = txn.get("date", date.today())
             value = abs(txn.get("value", 0))
             risk = txn.get("risk_level", "LOW")
-            actor = txn.get("actor", "Unknown")
+            txn.get("actor", "Unknown")
             c = risk_color_map.get(risk, "#888888")
             size = max(15, min(200, value / 10000))
             ax.scatter(txn_date, value, s=size, c=c, alpha=0.7, edgecolors="white", linewidth=0.8)
@@ -1032,12 +1031,12 @@ class ForensicVisualReportGenerator:
         fig, ax = plt.subplots(figsize=(5, 3.5))
         wedges, texts, autotexts = ax.pie(
             values, labels=roles, colors=chart_colors, autopct="%1.1f%%",
-            startangle=90, wedgeprops=dict(linewidth=2, edgecolor="white"),
+            startangle=90, wedgeprops={"linewidth": 2, "edgecolor": "white"},
             pctdistance=0.8,
         )
         for t in autotexts:
             t.set_fontsize(8)
-        ax.set_title(f"Profit by Role", fontsize=12, fontweight="bold")
+        ax.set_title("Profit by Role", fontsize=12, fontweight="bold")
         plt.tight_layout()
 
         buf = BytesIO()
@@ -1260,7 +1259,7 @@ class ForensicVisualReportGenerator:
         violations = []
         if "violations" in results:
             violations.extend(results["violations"])
-        for key, value in results.items():
+        for _key, value in results.items():
             if isinstance(value, dict) and "violations" in value:
                 violations.extend(value["violations"])
         return violations
