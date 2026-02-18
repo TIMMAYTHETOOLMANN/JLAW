@@ -101,7 +101,7 @@ class SECDataEndpoint(Enum):
     SRO_FILINGS = "https://www.sec.gov/rules/sro.shtml"
     
     # Insider Transactions Data Sets (Bulk - Forms 3, 4, 5)
-    INSIDER_TRANSACTIONS = "https://www.sec.gov/data/foiadocsfailsdatahtm"
+    INSIDER_TRANSACTIONS = "https://www.sec.gov/data-research/sec-markets-data/insider-transactions-data-sets"
     OWNERSHIP_SUBMISSIONS = "https://data.sec.gov/submissions/CIK{cik}.json"
     
     # Crowdfunding Offerings (Regulation Crowdfunding)
