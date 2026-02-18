@@ -144,6 +144,12 @@ def validate_sec_configuration() -> Tuple[bool, List[str]]:
     """
     Validate SEC API configuration before making any requests.
     
+    Validates:
+    - SEC_USER_AGENT is set and properly formatted
+    - SEC rate limiting configuration is valid
+    - SEC cache directory is accessible
+    - SEC EDGAR endpoint configuration
+    
     Returns:
         Tuple of (is_valid, list_of_errors)
     """
@@ -161,6 +167,51 @@ def validate_sec_configuration() -> Tuple[bool, List[str]]:
             "  2. Edit SEC_USER_AGENT line with your info:\n"
             "     SEC_USER_AGENT=YourCompany/1.0 (your-email@company.com)\n"
             "  3. Restart the application"
+        )
+    
+    # Validate SEC rate limit configuration
+    rate_limit_str = os.environ.get('SEC_RATE_LIMIT', '6.0')
+    try:
+        rate_limit = float(rate_limit_str)
+        if rate_limit <= 0 or rate_limit > 10:
+            errors.append(
+                f"SEC_RATE_LIMIT must be between 0.1 and 10.0 (got {rate_limit}). "
+                f"SEC allows max 10 req/sec. Recommended: 6.0 for reliability."
+            )
+    except ValueError:
+        errors.append(
+            f"SEC_RATE_LIMIT must be a valid number (got '{rate_limit_str}')"
+        )
+    
+    # Validate SEC cache configuration
+    cache_enabled = os.environ.get('SEC_CACHE_ENABLED', 'true').lower() in ('true', '1', 'yes')
+    if cache_enabled:
+        cache_dir = os.environ.get('SEC_CACHE_DIR', '.jlaw_cache/sec_edgar')
+        cache_path = Path(cache_dir)
+        if cache_path.is_absolute() and not cache_path.parent.exists():
+            errors.append(
+                f"SEC_CACHE_DIR parent directory does not exist: {cache_dir}"
+            )
+    
+    # Validate retry configuration
+    max_retries_str = os.environ.get('SEC_MAX_RETRIES', '5')
+    try:
+        max_retries = int(max_retries_str)
+        if max_retries < 0 or max_retries > 20:
+            errors.append(
+                f"SEC_MAX_RETRIES must be between 0 and 20 (got {max_retries})"
+            )
+    except ValueError:
+        errors.append(
+            f"SEC_MAX_RETRIES must be a valid integer (got '{max_retries_str}')"
+        )
+    
+    # Validate retry strategy
+    valid_strategies = ('exponential', 'linear', 'fibonacci')
+    retry_strategy = os.environ.get('SEC_RETRY_STRATEGY', 'exponential').lower()
+    if retry_strategy not in valid_strategies:
+        errors.append(
+            f"SEC_RETRY_STRATEGY must be one of {valid_strategies} (got '{retry_strategy}')"
         )
     
     return len(errors) == 0, errors

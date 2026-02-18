@@ -99,6 +99,32 @@ class SECDataEndpoint(Enum):
     
     # SRO Filings (Self-Regulatory Organizations)
     SRO_FILINGS = "https://www.sec.gov/rules/sro.shtml"
+    
+    # Insider Transactions Data Sets (Bulk - Forms 3, 4, 5)
+    INSIDER_TRANSACTIONS = "https://www.sec.gov/data-research/sec-markets-data/insider-transactions-data-sets"
+    OWNERSHIP_SUBMISSIONS = "https://data.sec.gov/submissions/CIK{cik}.json"
+    
+    # Crowdfunding Offerings (Regulation Crowdfunding)
+    CROWDFUNDING_OFFERINGS = "https://www.sec.gov/files/dera/data/crowdfund-offerings.json"
+    
+    # Form D Offerings (Regulation D - Private Placements)
+    FORM_D_OFFERINGS = "https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&type=D&dateb=&owner=include&count=100&search_text=&action=getcompany&company={company}&CIK={cik}&output=atom"
+    
+    # SEC Orders and Decisions
+    SEC_ORDERS = "https://www.sec.gov/litigation/opinions.htm"
+    SEC_ALJDEC = "https://www.sec.gov/alj/aljdec.htm"
+    
+    # Registered Broker-Dealer Data
+    BROKER_DEALER_DATA = "https://www.sec.gov/help/foiadocsbdiaklist.htm"
+    
+    # Municipal Adviser Data
+    MUNICIPAL_ADVISER_DATA = "https://www.sec.gov/help/foiadocsmaList.htm"
+    
+    # XBRL Voluntary Filing Program
+    XBRL_VOLUNTARY = "https://www.sec.gov/files/dera/data/xbrl-voluntary-filing-program.html"
+    
+    # Company Search (EDGAR)
+    EDGAR_COMPANY_SEARCH = "https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&company={company}&CIK={cik}&type={form_type}&dateb=&owner=include&count=40&search_text=&action=getcompany&output=atom"
 
 
 # =============================================================================
@@ -288,6 +314,89 @@ class FullTextSearchResult:
             "document_url": self.document_url,
             "score": self.score,
             "highlights": self.highlights
+        }
+
+
+@dataclass
+class CrowdfundingOffering:
+    """Regulation Crowdfunding offering record."""
+    cik: str
+    company_name: str
+    offering_amount: Optional[float]
+    offering_date: Optional[date]
+    file_number: Optional[str]
+    state: Optional[str]
+    industry_group: Optional[str]
+    
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            "cik": self.cik,
+            "company_name": self.company_name,
+            "offering_amount": self.offering_amount,
+            "offering_date": self.offering_date.isoformat() if self.offering_date else None,
+            "file_number": self.file_number,
+            "state": self.state,
+            "industry_group": self.industry_group
+        }
+
+
+@dataclass
+class FormDOffering:
+    """Form D private placement offering record."""
+    cik: str
+    company_name: str
+    form_type: str
+    filing_date: date
+    offering_amount: Optional[float]
+    total_amount_sold: Optional[float]
+    total_remaining: Optional[float]
+    accession_number: str
+    file_number: Optional[str]
+    
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            "cik": self.cik,
+            "company_name": self.company_name,
+            "form_type": self.form_type,
+            "filing_date": self.filing_date.isoformat(),
+            "offering_amount": self.offering_amount,
+            "total_amount_sold": self.total_amount_sold,
+            "total_remaining": self.total_remaining,
+            "accession_number": self.accession_number,
+            "file_number": self.file_number
+        }
+
+
+@dataclass
+class InsiderTransactionRecord:
+    """Bulk insider transaction record from Forms 3, 4, 5 data sets."""
+    accession_number: str
+    cik: str
+    company_name: str
+    insider_cik: str
+    insider_name: str
+    form_type: str
+    filing_date: date
+    transaction_date: Optional[date]
+    transaction_code: Optional[str]
+    shares: Optional[float]
+    price_per_share: Optional[float]
+    ownership_type: str  # 'D' (direct) or 'I' (indirect)
+    
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            "accession_number": self.accession_number,
+            "cik": self.cik,
+            "company_name": self.company_name,
+            "insider_cik": self.insider_cik,
+            "insider_name": self.insider_name,
+            "form_type": self.form_type,
+            "filing_date": self.filing_date.isoformat(),
+            "transaction_date": self.transaction_date.isoformat() if self.transaction_date else None,
+            "transaction_code": self.transaction_code,
+            "shares": self.shares,
+            "price_per_share": self.price_per_share,
+            "ownership_type": self.ownership_type
         }
 
 
@@ -1274,11 +1383,284 @@ class SECDataResourcesClient:
                 }
         
         return results
-
-
-# =============================================================================
-# Convenience Functions
-# =============================================================================
+    
+    # =========================================================================
+    # Insider Transactions Data Sets (Bulk)
+    # =========================================================================
+    
+    async def get_insider_transactions(
+        self,
+        cik: str,
+        start_date: Optional[date] = None,
+        end_date: Optional[date] = None
+    ) -> List['InsiderTransactionRecord']:
+        """
+        Get insider transaction records for a company from ownership submissions.
+        
+        Retrieves Forms 3, 4, 5 filing metadata from the company's
+        EDGAR submissions history to build a complete insider trading timeline.
+        
+        Args:
+            cik: Company CIK number
+            start_date: Start date filter
+            end_date: End date filter
+            
+        Returns:
+            List of InsiderTransactionRecord objects
+        """
+        cik_padded = cik.zfill(10)
+        url = SECDataEndpoint.SUBMISSIONS.value.format(cik=cik_padded)
+        
+        data = await self._fetch(url, "json")
+        if not data:
+            return []
+        
+        records = []
+        recent_filings = data.get("filings", {}).get("recent", {})
+        
+        form_types = recent_filings.get("form", [])
+        filing_dates = recent_filings.get("filingDate", [])
+        accession_numbers = recent_filings.get("accessionNumber", [])
+        primary_docs = recent_filings.get("primaryDocument", [])
+        
+        company_name = data.get("name", "Unknown")
+        
+        for i, form_type in enumerate(form_types):
+            if form_type not in ("3", "4", "5", "3/A", "4/A", "5/A"):
+                continue
+            
+            try:
+                filing_date_str = filing_dates[i] if i < len(filing_dates) else None
+                if not filing_date_str:
+                    continue
+                
+                filing_dt = datetime.strptime(filing_date_str, "%Y-%m-%d").date()
+                
+                if start_date and filing_dt < start_date:
+                    continue
+                if end_date and filing_dt > end_date:
+                    continue
+                
+                accession = accession_numbers[i] if i < len(accession_numbers) else ""
+                
+                record = InsiderTransactionRecord(
+                    accession_number=accession,
+                    cik=cik,
+                    company_name=company_name,
+                    insider_cik="",
+                    insider_name="",
+                    form_type=form_type,
+                    filing_date=filing_dt,
+                    transaction_date=None,
+                    transaction_code=None,
+                    shares=None,
+                    price_per_share=None,
+                    ownership_type="D"
+                )
+                records.append(record)
+            except (ValueError, IndexError):
+                continue
+        
+        return records
+    
+    # =========================================================================
+    # Crowdfunding Offerings (Regulation Crowdfunding)
+    # =========================================================================
+    
+    async def get_crowdfunding_offerings(
+        self,
+        limit: int = 100
+    ) -> List['CrowdfundingOffering']:
+        """
+        Get Regulation Crowdfunding offerings data.
+        
+        Returns quarterly datasets of offerings relying on Regulation Crowdfunding
+        as published by the SEC.
+        
+        Args:
+            limit: Maximum records to return
+            
+        Returns:
+            List of CrowdfundingOffering objects
+        """
+        data = await self._fetch(SECDataEndpoint.CROWDFUNDING_OFFERINGS.value, "json")
+        if not data:
+            return []
+        
+        offerings = []
+        entries = data if isinstance(data, list) else data.get("data", data.get("offerings", []))
+        
+        for entry in entries[:limit]:
+            try:
+                offering_date = None
+                date_str = entry.get("date") or entry.get("offering_date") or entry.get("filed")
+                if date_str:
+                    try:
+                        offering_date = datetime.strptime(date_str[:10], "%Y-%m-%d").date()
+                    except (ValueError, TypeError):
+                        pass
+                
+                offering = CrowdfundingOffering(
+                    cik=str(entry.get("cik", "")),
+                    company_name=entry.get("company_name", entry.get("name", "")),
+                    offering_amount=entry.get("offering_amount"),
+                    offering_date=offering_date,
+                    file_number=entry.get("file_number"),
+                    state=entry.get("state"),
+                    industry_group=entry.get("industry_group")
+                )
+                offerings.append(offering)
+            except Exception as e:
+                logger.warning(f"Error parsing crowdfunding offering: {e}")
+                continue
+        
+        return offerings
+    
+    # =========================================================================
+    # Form D Offerings (Regulation D - Private Placements)
+    # =========================================================================
+    
+    async def get_form_d_filings(
+        self,
+        cik: Optional[str] = None,
+        company: Optional[str] = None,
+        start_date: Optional[date] = None,
+        end_date: Optional[date] = None
+    ) -> List['FormDOffering']:
+        """
+        Get Form D private placement offering filings.
+        
+        Form D filings are required for offerings under Regulation D exemptions.
+        This data reveals private capital raises and can indicate financial stress
+        or strategic expansion.
+        
+        Args:
+            cik: Company CIK number (optional)
+            company: Company name search (optional)
+            start_date: Start date filter
+            end_date: End date filter
+            
+        Returns:
+            List of FormDOffering objects
+        """
+        if cik:
+            # Use submissions API for specific CIK
+            cik_padded = cik.zfill(10)
+            url = SECDataEndpoint.SUBMISSIONS.value.format(cik=cik_padded)
+            
+            data = await self._fetch(url, "json")
+            if not data:
+                return []
+            
+            offerings = []
+            recent_filings = data.get("filings", {}).get("recent", {})
+            
+            form_types = recent_filings.get("form", [])
+            filing_dates = recent_filings.get("filingDate", [])
+            accession_numbers = recent_filings.get("accessionNumber", [])
+            
+            company_name = data.get("name", "Unknown")
+            
+            for i, form_type in enumerate(form_types):
+                if "D" not in form_type or form_type in ("SC 13D", "SC 13D/A"):
+                    continue
+                if form_type not in ("D", "D/A"):
+                    continue
+                
+                try:
+                    filing_date_str = filing_dates[i] if i < len(filing_dates) else None
+                    if not filing_date_str:
+                        continue
+                    
+                    filing_dt = datetime.strptime(filing_date_str, "%Y-%m-%d").date()
+                    
+                    if start_date and filing_dt < start_date:
+                        continue
+                    if end_date and filing_dt > end_date:
+                        continue
+                    
+                    accession = accession_numbers[i] if i < len(accession_numbers) else ""
+                    
+                    offering = FormDOffering(
+                        cik=cik,
+                        company_name=company_name,
+                        form_type=form_type,
+                        filing_date=filing_dt,
+                        offering_amount=None,
+                        total_amount_sold=None,
+                        total_remaining=None,
+                        accession_number=accession,
+                        file_number=None
+                    )
+                    offerings.append(offering)
+                except (ValueError, IndexError):
+                    continue
+            
+            return offerings
+        
+        return []
+    
+    # =========================================================================
+    # EDGAR Company Search
+    # =========================================================================
+    
+    async def search_companies(
+        self,
+        company: Optional[str] = None,
+        cik: Optional[str] = None,
+        form_type: Optional[str] = None
+    ) -> List[Dict[str, Any]]:
+        """
+        Search for companies and filings in EDGAR.
+        
+        This performs a comprehensive search across EDGAR's company database
+        supporting search by company name, CIK, or filing type.
+        
+        Args:
+            company: Company name to search for
+            cik: CIK number to search for
+            form_type: Form type filter (e.g., '10-K', '8-K')
+            
+        Returns:
+            List of matching company/filing records
+        """
+        url = SECDataEndpoint.EDGAR_COMPANY_SEARCH.value.format(
+            company=company or "",
+            cik=cik or "",
+            form_type=form_type or ""
+        )
+        
+        xml_content = await self._fetch(url, "text")
+        if not xml_content:
+            return []
+        
+        results = []
+        try:
+            entry_pattern = re.compile(r'<entry>(.*?)</entry>', re.DOTALL)
+            title_pattern = re.compile(r'<title[^>]*>(.*?)</title>')
+            link_pattern = re.compile(r'<link[^>]*href="([^"]*)"')
+            updated_pattern = re.compile(r'<updated>(.*?)</updated>')
+            summary_pattern = re.compile(r'<summary[^>]*>(.*?)</summary>', re.DOTALL)
+            
+            for entry_match in entry_pattern.finditer(xml_content):
+                entry_xml = entry_match.group(1)
+                
+                title_match = title_pattern.search(entry_xml)
+                link_match = link_pattern.search(entry_xml)
+                updated_match = updated_pattern.search(entry_xml)
+                summary_match = summary_pattern.search(entry_xml)
+                
+                result = {
+                    "title": title_match.group(1) if title_match else "",
+                    "url": link_match.group(1) if link_match else "",
+                    "updated": updated_match.group(1) if updated_match else "",
+                    "summary": summary_match.group(1).strip() if summary_match else ""
+                }
+                results.append(result)
+        except Exception as e:
+            logger.error(f"Error parsing EDGAR company search: {e}")
+        
+        return results
 
 async def get_sec_data_client(user_agent: Optional[str] = None) -> SECDataResourcesClient:
     """

@@ -68,6 +68,9 @@ from .sec_data_resources import (
     MarketStructureMetric,
     FullTextSearchResult,
     RSSFilingEntry,
+    CrowdfundingOffering,
+    FormDOffering,
+    InsiderTransactionRecord,
     get_sec_data_client
 )
 
@@ -100,6 +103,9 @@ __all__ = [
     'MarketStructureMetric',
     'FullTextSearchResult',
     'RSSFilingEntry',
+    'CrowdfundingOffering',
+    'FormDOffering',
+    'InsiderTransactionRecord',
     'get_sec_data_client',
     
     # Cross-Analysis Engine

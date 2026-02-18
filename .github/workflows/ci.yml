@@ -140,7 +140,7 @@ jobs:
         SEC_USER_AGENT: "JLAW CI/CD test@example.com"
 
     - name: Upload coverage report
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       if: always()
       with:
         name: coverage-report
@@ -249,7 +249,7 @@ jobs:
     
     - name: Upload image artifact
       if: github.ref != 'refs/heads/main'
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: jlaw-docker-image
         path: /tmp/jlaw-image.tar
@@ -267,7 +267,7 @@ jobs:
     
     - name: Download image artifact
       if: github.ref != 'refs/heads/main'
-      uses: actions/download-artifact@v3
+      uses: actions/download-artifact@v4.1.3
       with:
         name: jlaw-docker-image
         path: /tmp
