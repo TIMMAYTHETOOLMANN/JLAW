@@ -103,6 +103,7 @@ class UnifiedForensicOrchestrator:
         # Execution state
         self._current_phase = 0
         self._execution_log = []
+        self._engine_result = None  # Full RecursiveAnalysisResult for Phase 9
         
         logger.info(f"UnifiedForensicOrchestrator v{self.VERSION} initialized")
         logger.info(f"Target: {company_name} (CIK: {cik})")
@@ -232,9 +233,9 @@ class UnifiedForensicOrchestrator:
     async def _execute_phase_4(self) -> Dict[str, Any]:
         """Phase 4: 15-Node Recursive Analysis."""
         self._log("Phase 4: 15-Node Recursive Analysis")
-        
+
         from .recursive_engine import RecursiveProsecutorialEngine
-        
+
         # Execute 15-node analysis
         engine = RecursiveProsecutorialEngine(strict_mode=self.strict_mode)
         result = await engine.run_full_analysis(
@@ -243,15 +244,18 @@ class UnifiedForensicOrchestrator:
             start_date=self.start_date,
             end_date=self.end_date,
         )
-        
+
+        # Store full result for Phase 9 visual dossier generation
+        self._engine_result = result
+
         return {
             'status': 'success',
             'case_id': result.case_id,
             'total_alerts': result.total_alerts,
-            'total_violations': sum(r.violations_found for r in 
-                                   result.node_group_1_results + 
-                                   result.node_group_2_results + 
-                                   result.node_group_3_results + 
+            'total_violations': sum(r.violations_found for r in
+                                   result.node_group_1_results +
+                                   result.node_group_2_results +
+                                   result.node_group_3_results +
                                    result.node_group_4_results),
             'node_results': {
                 'group_1': len(result.node_group_1_results),
@@ -342,15 +346,197 @@ class UnifiedForensicOrchestrator:
         }
     
     async def _execute_phase_9(self) -> Dict[str, Any]:
-        """Phase 9: DOJ-Grade Dossier Generation."""
-        self._log("Phase 9: DOJ-Grade Dossier Generation")
-        
-        # Placeholder - would generate FRE 902 compliant dossier
+        """Phase 9: DOJ-Grade Visual Dossier Generation."""
+        self._log("Phase 9: DOJ-Grade Visual Dossier Generation")
+
+        if not self._engine_result:
+            self._log("No engine results available for dossier generation", level="warning")
+            return {'status': 'skipped', 'reason': 'No engine results from Phase 4'}
+
+        try:
+            from src.reporting.visual_report_generator import ForensicVisualReportGenerator
+
+            # Transform engine results into visual report format
+            analysis_results = self._transform_for_visual_report(self._engine_result)
+
+            report_dir = self.output_dir / "reports"
+            report_dir.mkdir(parents=True, exist_ok=True)
+
+            generator = ForensicVisualReportGenerator(output_dir=str(report_dir))
+            case_id = self._engine_result.case_id
+            pdf_path = generator.generate_visual_dossier(
+                case_id=case_id,
+                company_name=self.company_name,
+                cik=self.cik,
+                analysis_results=analysis_results,
+            )
+
+            self._log(f"Visual dossier generated: {pdf_path}")
+            return {
+                'status': 'success',
+                'dossier_generated': True,
+                'pdf_path': str(pdf_path),
+                'report_sections': list(analysis_results.keys()),
+            }
+
+        except ImportError as e:
+            self._log(f"Visual report dependencies unavailable: {e}", level="warning")
+            return {
+                'status': 'degraded',
+                'dossier_generated': False,
+                'reason': f'Missing dependency: {e}',
+            }
+        except Exception as e:
+            import traceback
+            error_detail = traceback.format_exc()
+            logger.error(f"Phase 9 dossier generation error: {error_detail}")
+            self._log(f"Phase 9 dossier generation error: {e}", level="error")
+            return {
+                'status': 'error',
+                'dossier_generated': False,
+                'error': str(e),
+                'traceback': error_detail,
+            }
+
+    def _transform_for_visual_report(self, engine_result) -> Dict[str, Any]:
+        """
+        Transform RecursiveAnalysisResult into the dict format expected by
+        ForensicVisualReportGenerator.generate_visual_dossier().
+
+        Extracts violations, transactions, beneficiaries, filings, actors,
+        and relationships from each node's findings dict.
+        """
+        all_nodes = (
+            engine_result.node_group_1_results
+            + engine_result.node_group_2_results
+            + engine_result.node_group_3_results
+            + engine_result.node_group_4_results
+        )
+
+        violations = []
+        transactions = []
+        beneficiaries = []
+        filings = []
+        actors = []
+        relationships = []
+        material_events = []
+        annual_events = []
+
+        for node in all_nodes:
+            findings = node.findings or {}
+
+            # --- Violations ---
+            for v in self._safe_iter(findings.get("violations", [])):
+                violations.append(v)
+            for alert in self._safe_iter(findings.get("alerts", [])):
+                violations.append({
+                    "severity": alert.get("severity", alert.get("risk_level", "MEDIUM")),
+                    "violation_type": alert.get("type", alert.get("alert_type", node.node_name)),
+                    "description": alert.get("description", alert.get("message", "")),
+                    "node_id": node.node_id,
+                })
+
+            # --- Transactions (Node 1 Form 4, Node 5 IRC, Node 10 Form 144) ---
+            for txn in self._safe_iter(findings.get("transactions", [])):
+                transactions.append(txn)
+            for txn in self._safe_iter(findings.get("insider_transactions", [])):
+                transactions.append({
+                    "date": txn.get("transaction_date", txn.get("date")),
+                    "actor": txn.get("reporting_person", txn.get("insider_name", "Unknown")),
+                    "value": abs(txn.get("value", txn.get("shares_traded", 0)) or 0),
+                    "risk_level": txn.get("risk_level", "MEDIUM"),
+                    "type": txn.get("transaction_type", ""),
+                })
+
+            # --- Beneficiaries (from compensation, IRC exposure) ---
+            for b in self._safe_iter(findings.get("beneficiaries", [])):
+                beneficiaries.append(b)
+            for exec_info in self._safe_iter(findings.get("executives", [])):
+                beneficiaries.append({
+                    "name": exec_info.get("name", "Unknown"),
+                    "role": exec_info.get("title", exec_info.get("role", "Officer")),
+                    "total_profit": exec_info.get("total_compensation", exec_info.get("profit", 0)),
+                    "transaction_count": exec_info.get("transaction_count", 0),
+                    "risk_score": exec_info.get("risk_score", 0),
+                    "violations": exec_info.get("violation_count", 0),
+                })
+
+            # --- Filings (all nodes may report filing metadata) ---
+            for f in findings.get("filings", []):
+                if isinstance(f, dict):
+                    filings.append(f)
+            filings_analyzed = findings.get("filings_analyzed", [])
+            if isinstance(filings_analyzed, list):
+                for f in filings_analyzed:
+                    if isinstance(f, dict):
+                        filings.append({
+                            "filing_type": f.get("form_type", f.get("filing_type", "Unknown")),
+                            "filing_date": f.get("filing_date", f.get("date_filed")),
+                            "accession_number": f.get("accession_number", ""),
+                        })
+
+            # --- Actors (Node 11 network mapper) ---
+            for a in self._safe_iter(findings.get("actors", [])):
+                actors.append(a)
+            for a in self._safe_iter(findings.get("network_nodes", [])):
+                actors.append({
+                    "name": a.get("name", "Unknown"),
+                    "actor_type": a.get("type", "Individual"),
+                    "risk_score": a.get("risk_score", 0),
+                    "roles": a.get("roles", []),
+                })
+
+            # --- Relationships (Node 11) ---
+            for r in self._safe_iter(findings.get("relationships", [])):
+                relationships.append(r)
+            for r in self._safe_iter(findings.get("edges", [])):
+                relationships.append({
+                    "source": r.get("source", r.get("from", "")),
+                    "target": r.get("target", r.get("to", "")),
+                })
+
+            # --- Material Events (Node 9 8-K) ---
+            for e in self._safe_iter(findings.get("material_events", [])):
+                material_events.append(e)
+            for e in self._safe_iter(findings.get("events_8k", [])):
+                material_events.append({
+                    "date": e.get("event_date", e.get("date")),
+                    "description": e.get("description", e.get("event_type", "")),
+                })
+
+        # Build penalty estimates dict
+        penalties = engine_result.estimated_penalties.to_dict() if engine_result.estimated_penalties else {}
+
         return {
-            'status': 'success',
-            'dossier_generated': False,
+            "total_violations": len(violations),
+            "critical_alerts": engine_result.critical_alerts,
+            "high_alerts": engine_result.high_alerts,
+            "violations": violations,
+            "transactions": transactions,
+            "beneficiaries": beneficiaries,
+            "filings": filings,
+            "actors": actors,
+            "relationships": relationships,
+            "material_events": material_events,
+            "annual_events": annual_events,
+            "estimated_penalties": penalties,
+            "regulatory_routing": engine_result.regulatory_routing.to_dict() if engine_result.regulatory_routing else {},
+            "evidence_chain": [],
+            "executive_summary_text": (
+                f"Forensic analysis of {engine_result.company_name} "
+                f"(CIK: {engine_result.cik}) for period {engine_result.analysis_period} "
+                f"identified {engine_result.total_alerts} alerts across all 15 nodes. "
+                f"Prosecution recommendation: {engine_result.prosecution_recommendation}."
+            ),
         }
     
+    @staticmethod
+    def _safe_iter(value):
+        """Safely iterate over a value, returning empty list for non-iterables."""
+        if isinstance(value, list):
+            return [item for item in value if isinstance(item, dict)]
+        return []
+
     def _log(self, message: str, **kwargs):
         """Log execution events."""
         log_entry = {
