@@ -140,7 +140,8 @@ class AsyncSECSessionManager:
                 "Accept": "*/*",
                 "Connection": "keep-alive",
                 "Host": "www.sec.gov"
-            }
+            },
+            trust_env=True,
         )
         return self.session
     

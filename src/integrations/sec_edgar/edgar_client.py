@@ -438,13 +438,16 @@ class SECEdgarClient:
         # the correct Host header based on the URL being requested.
         # Using a static Host (e.g., "www.sec.gov") will cause 404 errors
         # when accessing data.sec.gov endpoints.
+        # trust_env=True enables automatic HTTP_PROXY/HTTPS_PROXY detection
+        # from environment variables, required for proxied environments.
         self.session = aiohttp.ClientSession(
             headers={
                 "User-Agent": self.user_agent,
                 "Accept-Encoding": "gzip, deflate",
                 "Accept": "*/*",
                 "Connection": "keep-alive",
-            }
+            },
+            trust_env=True,
         )
         return self
     

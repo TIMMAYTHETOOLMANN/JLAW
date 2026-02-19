@@ -85,7 +85,8 @@ class EventCalendarAcquisition:
         """Async context manager entry."""
         self.session = aiohttp.ClientSession(
             timeout=self.timeout,
-            headers={'User-Agent': self.user_agent}
+            headers={'User-Agent': self.user_agent},
+            trust_env=True,
         )
         return self
     

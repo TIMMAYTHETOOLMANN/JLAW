@@ -527,7 +527,8 @@ class BulletproofSECEdgarClient:
         )
         self.session = aiohttp.ClientSession(
             headers={"User-Agent": self.config.user_agent},
-            timeout=timeout
+            timeout=timeout,
+            trust_env=True,
         )
         return self
     

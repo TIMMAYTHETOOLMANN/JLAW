@@ -404,7 +404,7 @@ class SECForensicAnalyzer:
             sec_client = await self._get_sec_client()
             try:
                 import aiohttp
-                async with aiohttp.ClientSession() as session:
+                async with aiohttp.ClientSession(trust_env=True) as session:
                     async with session.get(document_url, headers={'User-Agent': self.user_agent}) as response:
                         if response.status == 200:
                             content = await response.text()

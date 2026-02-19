@@ -47,13 +47,15 @@ FROM dependencies AS production
 COPY config/ ./config/
 COPY src/ ./src/
 COPY scripts/ ./scripts/
+COPY sql/ ./sql/
+COPY jlaw_cli.py ./
 COPY JLAW_UNIFIED.py ./
 
 # Create non-root user for security
 RUN useradd --create-home --shell /bin/bash --uid 1000 jlaw && \
     chown -R jlaw:jlaw /app && \
-    mkdir -p /app/evidence /app/reports /app/.jlaw_cache && \
-    chown -R jlaw:jlaw /app/evidence /app/reports /app/.jlaw_cache
+    mkdir -p /app/evidence /app/reports /app/.jlaw_cache /app/output /app/logs && \
+    chown -R jlaw:jlaw /app/evidence /app/reports /app/.jlaw_cache /app/output /app/logs
 
 USER jlaw
 
@@ -61,4 +63,4 @@ USER jlaw
 HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
     CMD python scripts/health_check.py || exit 1
 
-CMD ["python", "JLAW_UNIFIED.py"]
+CMD ["python", "jlaw_cli.py", "--auto"]
