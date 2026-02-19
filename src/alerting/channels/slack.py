@@ -62,7 +62,7 @@ class SlackChannel:
         payload = self._format_slack_message(alert)
         
         try:
-            async with aiohttp.ClientSession() as session:
+            async with aiohttp.ClientSession(trust_env=True) as session:
                 async with session.post(
                     self.webhook_url,
                     json=payload,

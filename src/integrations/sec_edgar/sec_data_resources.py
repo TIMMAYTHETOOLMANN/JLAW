@@ -518,7 +518,8 @@ class SECDataResourcesClient:
                 "User-Agent": self.user_agent,
                 "Accept": "application/json, text/html, application/xml, */*",
                 "Accept-Encoding": "gzip, deflate"
-            }
+            },
+            trust_env=True,
         )
         return self
     

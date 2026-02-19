@@ -239,7 +239,7 @@ class PreFlightChecker:
             # Test API key with simple completion
             import aiohttp
             
-            async with aiohttp.ClientSession() as session:
+            async with aiohttp.ClientSession(trust_env=True) as session:
                 headers = {
                     "Authorization": f"Bearer {api_key}",
                     "Content-Type": "application/json"
@@ -307,7 +307,7 @@ class PreFlightChecker:
             # Test API key with simple message
             import aiohttp
             
-            async with aiohttp.ClientSession() as session:
+            async with aiohttp.ClientSession(trust_env=True) as session:
                 headers = {
                     "x-api-key": api_key,
                     "anthropic-version": "2023-06-01",
@@ -375,7 +375,7 @@ class PreFlightChecker:
             # Test API key
             import aiohttp
             
-            async with aiohttp.ClientSession() as session:
+            async with aiohttp.ClientSession(trust_env=True) as session:
                 url = f"https://api.polygon.io/v2/aggs/ticker/AAPL/range/1/day/2023-01-01/2023-01-02?apiKey={api_key}"
                 
                 async with session.get(

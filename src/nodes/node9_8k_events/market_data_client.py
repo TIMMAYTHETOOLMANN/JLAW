@@ -146,7 +146,7 @@ class PolygonMarketDataClient:
     
     async def __aenter__(self):
         """Async context manager entry."""
-        self.session = aiohttp.ClientSession()
+        self.session = aiohttp.ClientSession(trust_env=True)
         return self
     
     async def __aexit__(self, exc_type, exc_val, exc_tb):
@@ -171,7 +171,7 @@ class PolygonMarketDataClient:
         
         async with self.rate_limiter:
             if not self.session:
-                self.session = aiohttp.ClientSession()
+                self.session = aiohttp.ClientSession(trust_env=True)
             
             try:
                 async with self.session.get(
@@ -225,7 +225,7 @@ class PolygonMarketDataClient:
         
         async with self.rate_limiter:
             if not self.session:
-                self.session = aiohttp.ClientSession()
+                self.session = aiohttp.ClientSession(trust_env=True)
             
             try:
                 async with self.session.get(
@@ -273,7 +273,7 @@ class PolygonMarketDataClient:
         
         async with self.rate_limiter:
             if not self.session:
-                self.session = aiohttp.ClientSession()
+                self.session = aiohttp.ClientSession(trust_env=True)
             
             try:
                 async with self.session.get(
@@ -315,7 +315,7 @@ class PolygonMarketDataClient:
         
         async with self.rate_limiter:
             if not self.session:
-                self.session = aiohttp.ClientSession()
+                self.session = aiohttp.ClientSession(trust_env=True)
             
             try:
                 async with self.session.get(

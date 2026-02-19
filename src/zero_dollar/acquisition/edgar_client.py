@@ -123,6 +123,7 @@ class SECEdgarAcquisition:
         self.session = aiohttp.ClientSession(
             headers=headers,
             timeout=timeout,
+            trust_env=True,
         )
         
         logger.debug(f"HTTP session created with User-Agent: {self.user_agent[:50]}...")

@@ -94,7 +94,8 @@ class SECEDGARClient:
     async def __aenter__(self):
         """Async context manager entry."""
         self.session = aiohttp.ClientSession(
-            headers={"User-Agent": self.user_agent}
+            headers={"User-Agent": self.user_agent},
+            trust_env=True,
         )
         return self
     
@@ -128,7 +129,8 @@ class SECEDGARClient:
             
             if not self.session:
                 self.session = aiohttp.ClientSession(
-                    headers={"User-Agent": self.user_agent}
+                    headers={"User-Agent": self.user_agent},
+                    trust_env=True,
                 )
             
             try:
@@ -339,7 +341,8 @@ class SECEDGARClient:
         async with self.rate_limiter:
             if not self.session:
                 self.session = aiohttp.ClientSession(
-                    headers={"User-Agent": self.user_agent}
+                    headers={"User-Agent": self.user_agent},
+                    trust_env=True,
                 )
             
             try:

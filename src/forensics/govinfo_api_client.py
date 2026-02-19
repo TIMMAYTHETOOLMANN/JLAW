@@ -170,7 +170,7 @@ class GovInfoAPIClient:
             List of collection metadata
         """
         if not self.session:
-            self.session = aiohttp.ClientSession()
+            self.session = aiohttp.ClientSession(trust_env=True)
         
         url = f"{self.base_url}/collections"
         params = {"api_key": self.api_key}
@@ -207,7 +207,7 @@ class GovInfoAPIClient:
             List of matching packages
         """
         if not self.session:
-            self.session = aiohttp.ClientSession()
+            self.session = aiohttp.ClientSession(trust_env=True)
         
         if not start_date:
             start_date = datetime.now() - timedelta(days=365)
@@ -265,7 +265,7 @@ class GovInfoAPIClient:
             Package summary with download links
         """
         if not self.session:
-            self.session = aiohttp.ClientSession()
+            self.session = aiohttp.ClientSession(trust_env=True)
         
         url = f"{self.base_url}/packages/{package_id}/summary"
         params = {"api_key": self.api_key}
@@ -299,7 +299,7 @@ class GovInfoAPIClient:
             Complete package details
         """
         if not self.session:
-            self.session = aiohttp.ClientSession()
+            self.session = aiohttp.ClientSession(trust_env=True)
         
         url = f"{self.base_url}/packages/{package_id}"
         params = {"api_key": self.api_key}
@@ -404,7 +404,7 @@ class GovInfoAPIClient:
             List of matching packages
         """
         if not self.session:
-            self.session = aiohttp.ClientSession()
+            self.session = aiohttp.ClientSession(trust_env=True)
         
         if not start_date:
             start_date = datetime.now() - timedelta(days=365)
@@ -565,7 +565,7 @@ class GovInfoAPIClient:
             )
         """
         if not self.session:
-            self.session = aiohttp.ClientSession()
+            self.session = aiohttp.ClientSession(trust_env=True)
         
         if sorts is None:
             sorts = [SearchSort(field="relevancy", sortOrder="DESC")]
@@ -757,7 +757,7 @@ class GovInfoAPIClient:
                 print(f"Related: {doc.collectionCode} - {doc.packageId}")
         """
         if not self.session:
-            self.session = aiohttp.ClientSession()
+            self.session = aiohttp.ClientSession(trust_env=True)
         
         url = f"{self.base_url}/related/{access_id}"
         params = {"api_key": self.api_key}
@@ -847,7 +847,7 @@ class GovInfoAPIClient:
             )
         """
         if not self.session:
-            self.session = aiohttp.ClientSession()
+            self.session = aiohttp.ClientSession(trust_env=True)
         
         url = f"{self.base_url}/related/{access_id}/{collection}"
         params = {"api_key": self.api_key}
@@ -1086,7 +1086,7 @@ class GovInfoAPIClient:
             )
         """
         if not self.session:
-            self.session = aiohttp.ClientSession()
+            self.session = aiohttp.ClientSession(trust_env=True)
         
         url = f"{self.base_url}/published/{date_issued_start}"
         
@@ -1480,7 +1480,7 @@ class GovInfoAPIClient:
                 print(f"Granule ID: {granule['granuleId']}")
         """
         if not self.session:
-            self.session = aiohttp.ClientSession()
+            self.session = aiohttp.ClientSession(trust_env=True)
         
         url = f"{self.base_url}/packages/{package_id}/granules"
         
@@ -1557,7 +1557,7 @@ class GovInfoAPIClient:
             print(f"Download: {granule['download']}")
         """
         if not self.session:
-            self.session = aiohttp.ClientSession()
+            self.session = aiohttp.ClientSession(trust_env=True)
         
         url = f"{self.base_url}/packages/{package_id}/granules/{granule_id}/summary"
         params = {"api_key": self.api_key}
