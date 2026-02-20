@@ -398,16 +398,24 @@ async def main() -> int:
     try:
         from src.core.unified_orchestrator import UnifiedForensicOrchestrator
         
+        # Derive ticker from company name if not explicitly provided
+        ticker = getattr(args, 'ticker', '') or ''
+        if not ticker and company_name:
+            # Common ticker derivation for well-known companies
+            ticker = company_name.split(',')[0].split(' ')[0].upper()
+
         orchestrator = UnifiedForensicOrchestrator(
             cik=cik,
             company_name=company_name or f"CIK-{cik}",
+            ticker=ticker,
             start_date=start_date,
             end_date=end_date,
             output_dir=output_dir,
             strict_mode=args.strict_mode,
             auto_mode=args.auto_mode,
             enable_dual_agent=True,
-            enable_subagents=True
+            enable_subagents=True,
+            enable_web_intelligence=True,
         )
         
         OutputFormatter.print_success(
@@ -438,7 +446,9 @@ async def main() -> int:
                     {'name': 'Phase 6: AI Validation', 'node_count': 2, 'estimated_time': 60},
                     {'name': 'Phase 7: Subagents', 'node_count': 10, 'estimated_time': 120},
                     {'name': 'Phase 8: Evidence Chain', 'node_count': 0, 'estimated_time': 30},
-                    {'name': 'Phase 9: Dossier Generation', 'node_count': 0, 'estimated_time': 45},
+                    {'name': 'Phase 9: Web Intelligence & Contradiction Mapping', 'node_count': 5, 'estimated_time': 60},
+                    {'name': 'Phase 10: Forensic Dossier Generation', 'node_count': 0, 'estimated_time': 45},
+                    {'name': 'Phase 11: Analysis Bundle Export', 'node_count': 0, 'estimated_time': 10},
                 ]
                 self.nodes = [f"Node {i}" for i in range(1, 16)]
         
