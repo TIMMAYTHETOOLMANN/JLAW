@@ -1164,7 +1164,7 @@ class RecursiveProsecutorialEngine:
                                     "shares": txn.shares,
                                     "price_per_share": float(txn.price_per_share) if txn.price_per_share else 0,
                                     "transaction_code": txn.transaction_code,
-                                    "insider_name": parsed.reporting_person.person_name
+                                    "insider_name": parsed.reporting_owner_name
                                 })
                     except Exception as filing_error:
                         logger.warning(f"Failed to parse Form 4 filing {filing.accession_number}: {filing_error}")
