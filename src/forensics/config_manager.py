@@ -45,6 +45,8 @@ class AnthropicConfig:
     api_key: Optional[str]
     model: str = "claude-3-5-sonnet-20241022"
     max_tokens: int = 8192
+    base_url: Optional[str] = None  # Set for OpenRouter routing
+    openrouter_mode: bool = False
 
 
 @dataclass
@@ -174,24 +176,33 @@ class ConfigurationManager:
             pass
 
         # Anthropic Claude Configuration (for multi-pass deep analysis)
-        # Prioritize direct ANTHROPIC_API_KEY, then fall back to OpenRouter
+        # Priority: OpenRouter (cost-effective) > Direct Anthropic API
         anthropic_api_key = self._get_env('ANTHROPIC_API_KEY', '')
         openrouter_api_key = self._get_env('OPENROUTER_API_KEY', '')
-        
-        if anthropic_api_key:
-            # Use direct Anthropic API (preferred)
-            logger.info("Anthropic Claude enabled - multi-pass deep analysis available ($15 credits)")
-        elif openrouter_api_key:
-            # Use OpenRouter key as fallback
+        openrouter_mode = False
+        anthropic_base_url = None
+
+        if openrouter_api_key:
+            # Use OpenRouter for Claude access (preferred - multi-model, cost-effective)
             anthropic_api_key = openrouter_api_key
-            logger.info("OpenRouter API key detected as Anthropic fallback")
+            anthropic_base_url = "https://openrouter.ai/api/v1"
+            openrouter_mode = True
+            logger.info("OpenRouter enabled for Claude access - routing via openrouter.ai")
+        elif anthropic_api_key:
+            # Fallback to direct Anthropic API
+            logger.info("Anthropic Claude enabled via direct API")
         else:
-            logger.info("ANTHROPIC_API_KEY not set - Anthropic features disabled")
+            logger.info("No Claude API configured - Anthropic features disabled")
+
+        # Default model: Claude Opus 4.5 via OpenRouter, or claude-3-5-sonnet direct
+        default_model = 'anthropic/claude-opus-4.5' if openrouter_mode else 'claude-3-5-sonnet-20241022'
 
         anthropic = AnthropicConfig(
             api_key=anthropic_api_key,
-            model=self._get_env('ANTHROPIC_MODEL', 'claude-3-5-sonnet-20241022'),
-            max_tokens=int(self._get_env('ANTHROPIC_MAX_TOKENS', '8192'))
+            model=self._get_env('ANTHROPIC_MODEL', default_model),
+            max_tokens=int(self._get_env('ANTHROPIC_MAX_TOKENS', '8192')),
+            base_url=anthropic_base_url,
+            openrouter_mode=openrouter_mode,
         )
 
         # AI Provider Selection Configuration

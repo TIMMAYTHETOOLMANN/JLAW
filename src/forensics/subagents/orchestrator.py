@@ -295,6 +295,7 @@ class SubagentOrchestrator:
         # Use unified SDK manager for Claude API client
         self._sdk_manager = get_sdk_manager_sync()
         self.claude_client = None  # Will be lazily accessed via SDK manager
+        self._using_openrouter = False  # Set by anthropic_client property
         
         # Initialize dynamic agent registry and intelligent router (Phase 2)
         try:
@@ -310,14 +311,27 @@ class SubagentOrchestrator:
     
     @property
     def anthropic_client(self):
-        """Lazily access Anthropic async client from SDK manager."""
+        """Lazily access Claude client from SDK manager.
+
+        Priority: OpenRouter (OpenAI-compat) > Direct Anthropic API.
+        """
         if self.claude_client is None:
-            anthropic_client = self._sdk_manager.anthropic
-            if anthropic_client:
-                self.claude_client = anthropic_client
-                logger.info("✅ Claude API client loaded from SDK manager")
+            # Try OpenRouter first (OpenAI-compatible client for Claude)
+            openrouter_client = self._sdk_manager.openrouter
+            if openrouter_client:
+                self.claude_client = openrouter_client
+                self._using_openrouter = True
+                logger.info("✅ Claude API client loaded via OpenRouter")
             else:
-                logger.warning("Anthropic client not available from SDK manager - using mock responses")
+                # Fallback to direct Anthropic SDK client
+                anthropic_client = self._sdk_manager.anthropic
+                if anthropic_client:
+                    self.claude_client = anthropic_client
+                    self._using_openrouter = False
+                    logger.info("✅ Claude API client loaded from Anthropic SDK")
+                else:
+                    self._using_openrouter = False
+                    logger.warning("No Claude client available - using mock responses")
         return self.claude_client
     
     def _verify_agents(self):
@@ -733,57 +747,99 @@ Return your analysis in JSON format with keys: violations, applicable_statutes, 
         if not client:
             logger.warning(f"Claude client not available, using mock response for {agent.value}")
             return self._get_mock_response(agent)
-        
+
+        # Resolve model from config
+        from src.forensics.config_manager import get_config
+        cfg = get_config()
+        model_id = cfg.config.anthropic.model if cfg else "anthropic/claude-3-opus"
+
         try:
-            # Load agent system prompt
             system_prompt = self._load_agent_prompt(agent)
-            
-            # Call Claude API using SDK manager client
-            response = await self.anthropic_client.messages.create(
-                model="claude-opus-4-20250514",  # Latest Opus model
-                system=system_prompt,
-                messages=[{
-                    "role": "user",
-                    "content": user_message
-                }],
-                max_tokens=max_tokens
-            )
-            
-            # Extract response text
-            response_text = response.content[0].text if response.content else ""
-            
-            # Try to parse as JSON if possible
-            try:
-                parsed = json.loads(response_text)
-                return {
-                    "status": "success",
-                    "data": parsed,
-                    "raw_response": response_text,
-                    "model": response.model,
-                    "usage": {
-                        "input_tokens": response.usage.input_tokens,
-                        "output_tokens": response.usage.output_tokens
-                    }
-                }
-            except json.JSONDecodeError:
-                # Not JSON, return as text
-                return {
-                    "status": "success",
-                    "data": {"response": response_text},
-                    "raw_response": response_text,
-                    "model": response.model,
-                    "usage": {
-                        "input_tokens": response.usage.input_tokens,
-                        "output_tokens": response.usage.output_tokens
-                    }
-                }
-        
+
+            if self._using_openrouter:
+                # OpenRouter uses OpenAI-compatible API format
+                return await self._call_via_openrouter(client, model_id, system_prompt, user_message, max_tokens, agent)
+            else:
+                # Direct Anthropic SDK format
+                return await self._call_via_anthropic(client, model_id, system_prompt, user_message, max_tokens, agent)
+
         except Exception as e:
             logger.error(f"Claude API call failed for {agent.value}: {e}")
             return {
                 "status": "error",
                 "error": str(e),
                 "data": self._get_mock_response(agent)
+            }
+
+    async def _call_via_openrouter(
+        self, client, model_id: str, system_prompt: str,
+        user_message: str, max_tokens: int, agent: 'AgentRole'
+    ) -> Dict[str, Any]:
+        """Call Claude via OpenRouter (OpenAI-compatible API)."""
+        response = await client.chat.completions.create(
+            model=model_id,
+            messages=[
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": user_message},
+            ],
+            max_tokens=max_tokens,
+            extra_headers={
+                "HTTP-Referer": "https://jlaw-forensics.com",
+                "X-Title": "JLAW Forensic Analysis Platform",
+            },
+        )
+
+        response_text = response.choices[0].message.content if response.choices else ""
+        usage = response.usage
+
+        return self._parse_agent_response(
+            response_text,
+            model=response.model or model_id,
+            input_tokens=usage.prompt_tokens if usage else 0,
+            output_tokens=usage.completion_tokens if usage else 0,
+        )
+
+    async def _call_via_anthropic(
+        self, client, model_id: str, system_prompt: str,
+        user_message: str, max_tokens: int, agent: 'AgentRole'
+    ) -> Dict[str, Any]:
+        """Call Claude via direct Anthropic SDK."""
+        response = await client.messages.create(
+            model=model_id,
+            system=system_prompt,
+            messages=[{"role": "user", "content": user_message}],
+            max_tokens=max_tokens,
+        )
+
+        response_text = response.content[0].text if response.content else ""
+
+        return self._parse_agent_response(
+            response_text,
+            model=response.model,
+            input_tokens=response.usage.input_tokens,
+            output_tokens=response.usage.output_tokens,
+        )
+
+    def _parse_agent_response(
+        self, response_text: str, model: str, input_tokens: int, output_tokens: int
+    ) -> Dict[str, Any]:
+        """Parse agent response, attempting JSON decode."""
+        try:
+            parsed = json.loads(response_text)
+            return {
+                "status": "success",
+                "data": parsed,
+                "raw_response": response_text,
+                "model": model,
+                "usage": {"input_tokens": input_tokens, "output_tokens": output_tokens},
+            }
+        except (json.JSONDecodeError, TypeError):
+            return {
+                "status": "success",
+                "data": {"response": response_text},
+                "raw_response": response_text,
+                "model": model,
+                "usage": {"input_tokens": input_tokens, "output_tokens": output_tokens},
             }
     
     def _get_mock_response(self, agent: AgentRole) -> Dict[str, Any]:
