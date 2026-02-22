@@ -510,7 +510,7 @@ Return JSON array of detected violations."""
                     {"role": "user", "content": user_prompt}
                 ],
                 response_format={"type": "json_object"},
-                max_tokens=self.max_tokens
+                max_completion_tokens=self.max_tokens
             )
             
             result_text = response.choices[0].message.content
