@@ -102,6 +102,9 @@ class UnifiedForensicOrchestrator:
         self._execution_log = []
         self._engine_result = None          # RecursiveAnalysisResult from Phase 4
         self._analysis_results = None       # Transformed dict for reporting
+        self._pattern_results = {}          # Phase 5 detection pattern results
+        self._ai_validation_report = None   # Phase 6 AI cross-validation report
+        self._subagent_results = None       # Phase 7 subagent orchestration results
         self._contradiction_map = None      # Contradiction map from Phase 9
 
         logger.info(f"UnifiedForensicOrchestrator v{self.VERSION} initialized")
@@ -253,28 +256,206 @@ class UnifiedForensicOrchestrator:
         }
 
     async def _execute_phase_5(self) -> Dict[str, Any]:
-        """Phase 5: Advanced Detection Patterns."""
+        """Phase 5: Advanced Detection Patterns.
+
+        Runs 23 fraud detection patterns including Beneish M-Score, Benford's Law,
+        options backdating, channel stuffing, and cross-node correlation.
+        """
         self._log("Phase 5: Advanced Detection Patterns")
-        return {'status': 'success', 'patterns_executed': 0}
+
+        if not self._engine_result:
+            return {'status': 'skipped', 'reason': 'No Phase 4 results'}
+
+        try:
+            from src.detection.patterns.advanced_patterns import AdvancedPatternDetector
+            detector = AdvancedPatternDetector()
+
+            all_nodes = (
+                self._engine_result.node_group_1_results
+                + self._engine_result.node_group_2_results
+                + self._engine_result.node_group_3_results
+                + self._engine_result.node_group_4_results
+            )
+
+            # Build aggregated data dict from all node findings
+            aggregated_data: Dict[str, Any] = {
+                'transactions': [],
+                'relationships': {},
+                'form13f_holdings': [],
+                'schedule13_filings': [],
+                'form4_trades': [],
+                'form8k_filings': [],
+                'filings': [],
+                'def14a_filings': [],
+                'executive_movements': [],
+                'earnings_calls': [],
+                'insider_trades': [],
+            }
+            node_findings = {}
+            for node in all_nodes:
+                findings = node.findings or {}
+                node_findings[node.node_id] = findings
+                for key in aggregated_data:
+                    if key in findings and isinstance(findings[key], list):
+                        aggregated_data[key].extend(findings[key])
+                # Also map common alternate keys
+                if 'insider_transactions' in findings:
+                    aggregated_data['form4_trades'].extend(findings['insider_transactions'])
+                if 'events_8k' in findings:
+                    aggregated_data['form8k_filings'].extend(findings['events_8k'])
+
+            pattern_results = detector.run_all_patterns(aggregated_data)
+            patterns_triggered = sum(1 for alerts in pattern_results.values()
+                                     if isinstance(alerts, list) and len(alerts) > 0)
+
+            self._pattern_results = pattern_results
+            self._log(f"Phase 5: {patterns_triggered} patterns triggered out of {len(pattern_results)}")
+
+            return {
+                'status': 'success',
+                'patterns_executed': len(pattern_results),
+                'patterns_triggered': patterns_triggered,
+            }
+        except Exception as e:
+            self._log(f"Phase 5 error: {e}", level="error")
+            self._pattern_results = {}
+            return {'status': 'degraded', 'patterns_executed': 0, 'error': str(e)}
 
     async def _execute_phase_6(self) -> Dict[str, Any]:
-        """Phase 6: Dual-Agent AI Cross-Validation."""
+        """Phase 6: Dual-Agent AI Cross-Validation.
+
+        Uses both OpenAI and Anthropic to independently validate detected patterns,
+        then computes consensus confidence scores and flags disagreements.
+        """
         self._log("Phase 6: Dual-Agent AI Cross-Validation")
+
+        if not self._engine_result:
+            return {'status': 'skipped', 'reason': 'No Phase 4 results'}
+
         try:
             from src.validation import AICrossValidator
             ai_validator = AICrossValidator()
-            if ai_validator.is_available():
-                return {'status': 'success', 'agents_responsive': 2}
-            else:
+
+            if not ai_validator.is_available():
+                self._log("Phase 6: No AI API keys configured - skipping validation")
                 return {'status': 'skipped', 'agents_responsive': 0, 'reason': 'No AI API keys configured'}
+
+            availability = ai_validator.get_availability_status()
+            self._log(
+                f"Phase 6: AI agents available - OpenAI: {availability.get('openai')}, "
+                f"Anthropic: {availability.get('anthropic')}"
+            )
+
+            pattern_results = getattr(self, '_pattern_results', {})
+            node_findings = {}
+            for node in (self._engine_result.node_group_1_results
+                         + self._engine_result.node_group_2_results
+                         + self._engine_result.node_group_3_results
+                         + self._engine_result.node_group_4_results):
+                node_findings[node.node_id] = node.findings or {}
+
+            report = await ai_validator.validate_all_patterns(
+                company_name=self.company_name,
+                cik=self.cik,
+                pattern_results=pattern_results,
+                node_results=node_findings,
+            )
+
+            self._ai_validation_report = report
+            self._log(
+                f"Phase 6: Validated {report.patterns_validated} patterns - "
+                f"{report.consensus_count} consensus, {report.disagreement_count} disagreements, "
+                f"confidence={report.overall_confidence:.2f}"
+            )
+
+            return {
+                'status': 'success',
+                'agents_responsive': 2 if availability.get('openai') and availability.get('anthropic') else 1,
+                'patterns_validated': report.patterns_validated,
+                'consensus_count': report.consensus_count,
+                'disagreement_count': report.disagreement_count,
+                'overall_confidence': round(report.overall_confidence, 3),
+                'high_confidence_violations': report.high_confidence_violations,
+                'flagged_for_review': report.flagged_for_review,
+            }
         except Exception as e:
+            import traceback
+            logger.error(f"Phase 6 error: {traceback.format_exc()}")
             self._log(f"Phase 6 error: {e}", level="error")
             return {'status': 'error', 'agents_responsive': 0, 'error': str(e)}
 
     async def _execute_phase_7(self) -> Dict[str, Any]:
-        """Phase 7: Subagent Orchestration."""
+        """Phase 7: Subagent Orchestration.
+
+        Spawns specialized Claude subagents to analyze violations detected in Phases 4-6.
+        Uses the auto_orchestrate() method which intelligently selects relevant agents.
+        """
         self._log("Phase 7: Subagent Orchestration")
-        return {'status': 'success', 'subagents_executed': 0}
+
+        if not self._engine_result:
+            self._log("Phase 7 skipped - no Phase 4 results", level="warning")
+            return {'status': 'skipped', 'reason': 'No Phase 4 results'}
+
+        try:
+            from src.forensics.subagents.orchestrator import SubagentOrchestrator
+
+            orchestrator = SubagentOrchestrator()
+
+            # Extract violations from analysis results for subagent processing
+            violations = []
+            if self._analysis_results:
+                for v in self._analysis_results.get('violations', []):
+                    if isinstance(v, dict):
+                        violations.append(v)
+
+            if not violations:
+                self._log("Phase 7: No violations to analyze with subagents")
+                return {'status': 'success', 'subagents_executed': 0, 'reason': 'No violations'}
+
+            context = {
+                'cik': self.cik,
+                'company_name': self.company_name,
+                'ticker': self.ticker,
+                'period': f"{self.start_date} to {self.end_date}",
+                'total_alerts': self._engine_result.total_alerts,
+                'prosecution_recommendation': self._engine_result.prosecution_recommendation,
+            }
+
+            result = await orchestrator.auto_orchestrate(
+                violations=violations,
+                context=context,
+                parallel=True,
+            )
+
+            agents_spawned = result.get('agents_spawned', [])
+            findings_count = len(result.get('combined_findings', []))
+
+            self._log(
+                f"Phase 7: {len(agents_spawned)} subagents executed, "
+                f"{findings_count} findings aggregated, "
+                f"consensus={result.get('consensus_score', 0):.2f}"
+            )
+
+            # Store subagent results for dossier
+            self._subagent_results = result
+
+            return {
+                'status': result.get('status', 'completed'),
+                'subagents_executed': len(agents_spawned),
+                'agents_spawned': agents_spawned,
+                'violations_analyzed': result.get('violations_analyzed', 0),
+                'findings_aggregated': findings_count,
+                'consensus_score': round(result.get('consensus_score', 0), 3),
+                'errors': result.get('errors', []),
+            }
+        except ImportError as e:
+            self._log(f"Phase 7: SubagentOrchestrator unavailable: {e}", level="warning")
+            return {'status': 'degraded', 'subagents_executed': 0, 'reason': f'Missing: {e}'}
+        except Exception as e:
+            import traceback
+            logger.error(f"Phase 7 error: {traceback.format_exc()}")
+            self._log(f"Phase 7 error: {e}", level="error")
+            return {'status': 'error', 'subagents_executed': 0, 'error': str(e)}
 
     async def _execute_phase_8(self) -> Dict[str, Any]:
         """Phase 8: Evidence Chain Finalization."""

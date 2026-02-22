@@ -728,7 +728,9 @@ Return your analysis in JSON format with keys: violations, applicable_statutes, 
         Returns:
             Dictionary with response and metadata
         """
-        if not self.claude_client:
+        # Trigger lazy initialization of Claude client via property
+        client = self.anthropic_client
+        if not client:
             logger.warning(f"Claude client not available, using mock response for {agent.value}")
             return self._get_mock_response(agent)
         

@@ -278,7 +278,7 @@ class UnifiedSDKManager:
             self._http_session = aiohttp.ClientSession(
                 connector=connector,
                 timeout=timeout,
-                raise_for_status=False  # Don't raise on 4xx/5xx, handle manually,
+                raise_for_status=False,  # Don't raise on 4xx/5xx, handle manually
                 trust_env=True,
             )
             logger.info("✅ Shared HTTP session initialized with connection pooling")

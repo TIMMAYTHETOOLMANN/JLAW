@@ -965,31 +965,49 @@ class RecursiveProsecutorialEngine:
     ) -> NodeResult:
         """Execute Node 7: 13F-HR Institutional Holdings Analysis."""
         start = time.time()
-        
+
         try:
-            # Fetch 13F-HR filings
+            from src.nodes.node7_13f_holdings.sec_edgar_client import (
+                SECEDGARClient as SEC13FClient,
+                Institution13FHoldingV2,
+            )
+
             filings = await sec_client.get_filings(
-                cik=cik,
-                form_types=["13F-HR"],
-                start_date=start_date,
-                end_date=end_date
+                cik=cik, form_types=["13F-HR"],
+                start_date=start_date, end_date=end_date
             )
-            
-            # Parse 13F holdings (simplified - would need full XML parsing in production)
-            holdings = []
-            # Note: Full 13F-HR parsing requires XML/SGML processing
-            # For now, pass filings metadata as placeholder
-            
-            node7_output = self.node7_institutional.analyze(
-                holdings if holdings else []
-            )
-            
+
+            holdings: List[Any] = []
+            parser_13f = SEC13FClient(user_agent=self.sec_user_agent)
+
+            for filing in filings[:8]:
+                try:
+                    content = await sec_client.get_filing_text(filing)
+                    if content and ('<infoTable' in content or '<informationTable' in content.lower()):
+                        parsed = parser_13f.parse_13f_xml(content, filing.cik or cik)
+                        holdings.extend(parsed)
+                        logger.info(f"Node 7: Parsed {len(parsed)} holdings from {filing.accession_number}")
+                    elif content:
+                        holdings.append(Institution13FHoldingV2(
+                            cik=filing.cik or cik,
+                            institution_name=filing.company_name or "Unknown",
+                            filing_date=filing.filing_date,
+                            reporting_period=filing.report_date or filing.filing_date,
+                            quarter=f"{(filing.report_date or filing.filing_date).year}Q{((filing.report_date or filing.filing_date).month - 1) // 3 + 1}",
+                            cusip="000000000", issuer_name="Aggregate Holdings",
+                            shares=0, value_thousands=0, investment_discretion="SOLE",
+                            voting_authority_sole=0, voting_authority_shared=0, voting_authority_none=0,
+                        ))
+                except Exception as parse_err:
+                    logger.warning(f"Node 7: Failed to parse 13F {filing.accession_number}: {parse_err}")
+                    continue
+
+            logger.info(f"Node 7: Total {len(holdings)} holdings from {len(filings)} filings")
+            node7_output = self.node7_institutional.analyze(holdings)
+
             return NodeResult(
-                node_id="NODE_7",
-                node_name="13F Holdings",
-                status="success",
-                violations_found=0,
-                alerts_generated=len(node7_output.alerts),
+                node_id="NODE_7", node_name="13F Holdings", status="success",
+                violations_found=0, alerts_generated=len(node7_output.alerts),
                 findings={
                     "filings_found": len(filings),
                     "holdings_analyzed": node7_output.holdings_analyzed,
@@ -1010,31 +1028,82 @@ class RecursiveProsecutorialEngine:
         self, sec_client, cik: str, start_date: date, end_date: date
     ) -> NodeResult:
         """Execute Node 8: SC 13D/13G Beneficial Ownership Analysis."""
+        import re
         start = time.time()
-        
+
         try:
-            # Fetch SC 13D and SC 13G filings
+            from src.nodes.node8_13d_ownership.beneficial_ownership_tracker_v2 import (
+                Schedule13Filing, Schedule13Type,
+            )
+
             filings = await sec_client.get_filings(
-                cik=cik,
-                form_types=["SC 13D", "SC 13G"],
-                start_date=start_date,
-                end_date=end_date
+                cik=cik, form_types=["SC 13D", "SC 13D/A", "SC 13G", "SC 13G/A"],
+                start_date=start_date, end_date=end_date
             )
-            
-            # Parse ownership filings (simplified)
+
             ownership_filings = []
-            # Note: Full 13D/13G parsing requires text extraction and NLP
-            # For now, pass empty list as filings metadata available
-            
-            node8_output = self.node8_ownership.analyze(
-                ownership_filings if ownership_filings else []
-            )
-            
+            for filing in filings[:10]:
+                try:
+                    content = await sec_client.get_filing_text(filing)
+                    if not content:
+                        continue
+
+                    form = filing.form_type.upper()
+                    if "13D/A" in form:
+                        ft = Schedule13Type.SC_13D_A
+                        stype, deadline = "13D", 2
+                        is_amendment = True
+                    elif "13D" in form:
+                        ft = Schedule13Type.SC_13D
+                        stype, deadline = "13D", 5
+                        is_amendment = False
+                    elif "13G/A" in form:
+                        ft = Schedule13Type.SC_13G_A
+                        stype, deadline = "13G", 2
+                        is_amendment = True
+                    else:
+                        ft = Schedule13Type.SC_13G
+                        stype, deadline = "13G", 45
+                        is_amendment = False
+
+                    pct_match = re.search(r'(?:percent|percentage)\D{0,30}(\d+\.?\d*)\s*%', content, re.I)
+                    shares_match = re.search(r'(?:aggregate\s+number|shares\s+beneficially)\D{0,40}([\d,]+)', content, re.I)
+                    filer_match = re.search(r'(?:name\s+of\s+reporting\s+person|filed\s+by)[:\s]*([A-Z][A-Za-z\s,\.]+)', content)
+                    purpose_match = re.search(r'(?:item\s*4|purpose\s+of\s+transaction)[:\s]*(.*?)(?:item\s*5|$)', content[:8000], re.I | re.S)
+
+                    pct = float(pct_match.group(1)) if pct_match else 0.0
+                    shares = int(shares_match.group(1).replace(',', '')) if shares_match else 0
+                    filer_name = filer_match.group(1).strip()[:100] if filer_match else filing.company_name or "Unknown"
+                    purpose = (purpose_match.group(1).strip()[:500] if purpose_match else "")
+
+                    event_date = filing.report_date or filing.filing_date
+                    days_gap = (filing.filing_date - event_date).days if event_date else 0
+
+                    ownership_filings.append(Schedule13Filing(
+                        filing_type=ft, cik=filing.cik or cik, filer_name=filer_name,
+                        subject_company_cik=cik, subject_company_name=filing.company_name or "",
+                        filing_date=filing.filing_date, event_date=event_date,
+                        shares_owned=shares, percent_owned=pct,
+                        voting_power=pct, investment_power=pct,
+                        purpose_of_transaction=purpose,
+                        source_of_funds="Not parsed", item4_narrative=purpose,
+                        schedule_type=stype,
+                        filing_deadline_days=deadline,
+                        days_from_event_to_filing=max(0, days_gap),
+                        is_deadline_compliant=days_gap <= deadline,
+                        is_amendment=is_amendment,
+                    ))
+                    logger.info(f"Node 8: Parsed {filing.form_type} from {filer_name} ({pct}%)")
+                except Exception as parse_err:
+                    logger.warning(f"Node 8: Failed to parse {filing.accession_number}: {parse_err}")
+                    continue
+
+            logger.info(f"Node 8: Parsed {len(ownership_filings)} ownership filings from {len(filings)} fetched")
+            node8_output = self.node8_ownership.analyze(ownership_filings)
+
             return NodeResult(
-                node_id="NODE_8",
-                node_name="13D/13G Ownership",
-                status="success",
-                violations_found=0,
+                node_id="NODE_8", node_name="13D/13G Ownership", status="success",
+                violations_found=len([a for a in node8_output.alerts if getattr(a, 'severity', '') in ('CRITICAL', 'HIGH')]),
                 alerts_generated=len(node8_output.alerts),
                 findings={
                     "filings_found": len(filings),
@@ -1056,30 +1125,103 @@ class RecursiveProsecutorialEngine:
         self, sec_client, cik: str, start_date: date, end_date: date
     ) -> NodeResult:
         """Execute Node 9: 8-K Material Event Analysis."""
+        import re
         start = time.time()
-        
+
         try:
-            # Fetch 8-K filings
+            from src.nodes.node9_8k_events.material_event_correlator_v2 import (
+                MaterialEvent8KV2, MarketHoursStatus,
+            )
+
             filings = await sec_client.get_filings(
-                cik=cik,
-                form_types=["8-K"],
-                start_date=start_date,
-                end_date=end_date
+                cik=cik, form_types=["8-K"],
+                start_date=start_date, end_date=end_date
             )
-            
-            # Parse 8-K events (simplified)
+
+            # 8-K item code patterns
+            item_pattern = re.compile(r'Item\s+(\d+\.\d+)', re.I)
+            item_descriptions_map = {
+                '1.01': 'Entry into Material Definitive Agreement',
+                '1.02': 'Termination of Material Definitive Agreement',
+                '1.03': 'Bankruptcy or Receivership',
+                '1.04': 'Mine Safety',
+                '1.05': 'Material Cybersecurity Incidents',
+                '2.01': 'Completion of Acquisition or Disposition',
+                '2.02': 'Results of Operations and Financial Condition',
+                '2.03': 'Creation of Direct Financial Obligation',
+                '2.04': 'Triggering Events for Off-Balance Sheet Arrangements',
+                '2.05': 'Costs Associated with Exit or Disposal Activities',
+                '2.06': 'Material Impairments',
+                '3.01': 'Notice of Delisting',
+                '3.02': 'Unregistered Sales of Equity Securities',
+                '3.03': 'Material Modification to Rights of Security Holders',
+                '4.01': 'Changes in Registrant Certifying Accountant',
+                '4.02': 'Non-Reliance on Previously Issued Financial Statements',
+                '5.01': 'Changes in Control of Registrant',
+                '5.02': 'Departure/Appointment of Directors or Officers',
+                '5.03': 'Amendments to Articles of Incorporation or Bylaws',
+                '5.04': 'Temporary Suspension of Trading Under Employee Benefit Plans',
+                '5.05': 'Amendment to Code of Ethics',
+                '5.06': 'Change in Shell Company Status',
+                '5.07': 'Submission of Matters to a Vote of Security Holders',
+                '5.08': 'Shareholder Nominations',
+                '7.01': 'Regulation FD Disclosure',
+                '8.01': 'Other Events',
+                '9.01': 'Financial Statements and Exhibits',
+            }
+
             events = []
-            # Note: Full 8-K parsing requires text extraction and item identification
-            # For now, pass empty list but track filings found
-            
-            node9_output = await self.node9_events.analyze(
-                events if events else []
-            )
-            
+            for filing in filings[:15]:
+                try:
+                    content = await sec_client.get_filing_text(filing)
+                    if not content:
+                        continue
+
+                    items_found = list(set(item_pattern.findall(content[:5000])))
+                    items_found = [i for i in items_found if i in item_descriptions_map]
+
+                    if not items_found:
+                        items_found = ['8.01']
+
+                    descs = [item_descriptions_map.get(i, 'Unknown') for i in items_found]
+
+                    # Extract narrative (first 500 chars after item header)
+                    narrative = ""
+                    for item_code in items_found:
+                        m = re.search(rf'Item\s+{re.escape(item_code)}[^\n]*\n(.*?)(?:Item\s+\d+\.\d+|$)',
+                                      content[:8000], re.I | re.S)
+                        if m:
+                            narrative = re.sub(r'<[^>]+>', '', m.group(1)).strip()[:500]
+                            break
+                    if not narrative:
+                        narrative = re.sub(r'<[^>]+>', '', content[:1000]).strip()[:500]
+
+                    # Determine market hours status
+                    hour = filing.filing_date.weekday()
+                    mhs = MarketHoursStatus.WEEKEND if hour >= 5 else MarketHoursStatus.AFTER_HOURS
+
+                    events.append(MaterialEvent8KV2(
+                        accession_number=filing.accession_number,
+                        cik=cik,
+                        company_name=filing.company_name or "",
+                        ticker=None,
+                        filing_date=filing.filing_date,
+                        filing_time="16:00:00",
+                        items=items_found,
+                        item_descriptions=descs,
+                        narrative=narrative,
+                        market_hours_status=mhs,
+                    ))
+                    logger.info(f"Node 9: Parsed 8-K {filing.accession_number} items={items_found}")
+                except Exception as parse_err:
+                    logger.warning(f"Node 9: Failed to parse 8-K {filing.accession_number}: {parse_err}")
+                    continue
+
+            logger.info(f"Node 9: Parsed {len(events)} 8-K events from {len(filings)} filings")
+            node9_output = await self.node9_events.analyze(events)
+
             return NodeResult(
-                node_id="NODE_9",
-                node_name="8-K Events",
-                status="success",
+                node_id="NODE_9", node_name="8-K Events", status="success",
                 violations_found=0,
                 alerts_generated=len(node9_output.alerts),
                 findings={
@@ -1164,7 +1306,7 @@ class RecursiveProsecutorialEngine:
                                     "shares": txn.shares,
                                     "price_per_share": float(txn.price_per_share) if txn.price_per_share else 0,
                                     "transaction_code": txn.transaction_code,
-                                    "insider_name": parsed.reporting_person.person_name
+                                    "insider_name": parsed.reporting_owner_name
                                 })
                     except Exception as filing_error:
                         logger.warning(f"Failed to parse Form 4 filing {filing.accession_number}: {filing_error}")
@@ -1172,10 +1314,29 @@ class RecursiveProsecutorialEngine:
             except Exception as fetch_error:
                 logger.warning(f"Failed to fetch Form 4 filings: {fetch_error}")
             
+            # Extract executives from Node 2 result if available
+            executives = []
+            if node2_result and node2_result.findings:
+                for exec_info in node2_result.findings.get('executives', []):
+                    if isinstance(exec_info, dict):
+                        executives.append(exec_info)
+
+            # Also add insiders from Form 4 trades
+            seen_names = set()
+            for trade in form4_trades:
+                name = trade.get("insider_name", "")
+                if name and name not in seen_names:
+                    seen_names.add(name)
+                    executives.append({
+                        "name": name,
+                        "source": "Form 4",
+                        "trades": [t for t in form4_trades if t.get("insider_name") == name],
+                    })
+
             node11_output = self.node11_network.analyze(
-                executives=[],
-                companies=[],
-                relationships=[]
+                executives=executives,
+                companies=[{"cik": cik, "name": node2_result.findings.get("company_name", "") if node2_result and node2_result.findings else ""}],
+                relationships=[{"from": t.get("insider_name", ""), "to": cik, "type": "insider_trade"} for t in form4_trades]
             )
             
             return NodeResult(
