@@ -298,11 +298,21 @@ class UnifiedForensicOrchestrator:
                 for key in aggregated_data:
                     if key in findings and isinstance(findings[key], list):
                         aggregated_data[key].extend(findings[key])
-                # Also map common alternate keys
-                if 'insider_transactions' in findings:
+                # Map common alternate keys
+                if 'insider_transactions' in findings and isinstance(findings['insider_transactions'], list):
                     aggregated_data['form4_trades'].extend(findings['insider_transactions'])
-                if 'events_8k' in findings:
+                    aggregated_data['insider_trades'].extend(findings['insider_transactions'])
+                if 'events_8k' in findings and isinstance(findings['events_8k'], list):
                     aggregated_data['form8k_filings'].extend(findings['events_8k'])
+
+                # Populate disclosure-timing filings from 8-K events (for Pattern 5)
+                if 'form8k_filings' in findings and isinstance(findings['form8k_filings'], list):
+                    aggregated_data['filings'].extend(findings['form8k_filings'])
+
+                # Extract violations as pseudo-alerts for further pattern analysis
+                for vkey in ('late_filing_violations', 'zero_dollar_violations', 'gift_violations'):
+                    if vkey in findings and isinstance(findings[vkey], list):
+                        aggregated_data.setdefault('violations', []).extend(findings[vkey])
 
             pattern_results = detector.run_all_patterns(aggregated_data)
             patterns_triggered = sum(1 for alerts in pattern_results.values()
@@ -352,7 +362,13 @@ class UnifiedForensicOrchestrator:
                          + self._engine_result.node_group_2_results
                          + self._engine_result.node_group_3_results
                          + self._engine_result.node_group_4_results):
-                node_findings[node.node_id] = node.findings or {}
+                # Include NodeResult metadata along with findings for evidence extraction
+                findings_with_meta = dict(node.findings or {})
+                findings_with_meta['violations_found'] = node.violations_found
+                findings_with_meta['alerts_generated'] = node.alerts_generated
+                findings_with_meta['node_name'] = node.node_name
+                findings_with_meta['status'] = node.status
+                node_findings[node.node_id] = findings_with_meta
 
             report = await ai_validator.validate_all_patterns(
                 company_name=self.company_name,
@@ -440,7 +456,7 @@ class UnifiedForensicOrchestrator:
             self._subagent_results = result
 
             return {
-                'status': result.get('status', 'completed'),
+                'status': 'success' if result.get('status') in ('completed', 'success', None) else result.get('status', 'success'),
                 'subagents_executed': len(agents_spawned),
                 'agents_spawned': agents_spawned,
                 'violations_analyzed': result.get('violations_analyzed', 0),
@@ -693,14 +709,32 @@ class UnifiedForensicOrchestrator:
 
             # --- Violations ---
             for v in self._safe_iter(findings.get("violations", [])):
+                # Ensure every violation has both 'type' and 'violation_type' for routing
+                if 'type' not in v and 'violation_type' in v:
+                    v['type'] = v['violation_type']
+                elif 'violation_type' not in v and 'type' in v:
+                    v['violation_type'] = v['type']
                 violations.append(v)
             for alert in self._safe_iter(findings.get("alerts", [])):
+                vtype = alert.get("type", alert.get("alert_type", node.node_name))
                 violations.append({
+                    "type": vtype,
                     "severity": alert.get("severity", alert.get("risk_level", "MEDIUM")),
-                    "violation_type": alert.get("type", alert.get("alert_type", node.node_name)),
+                    "violation_type": vtype,
                     "description": alert.get("description", alert.get("message", "")),
                     "node_id": node.node_id,
                 })
+            # Collect node-specific violation lists (e.g. Node 1 Form 4 violations)
+            for vkey in ('late_filing_violations', 'zero_dollar_violations', 'gift_violations'):
+                for v in self._safe_iter(findings.get(vkey, [])):
+                    vtype = v.get("type", vkey.replace("_violations", "").replace("_", " ").title())
+                    if 'type' not in v:
+                        v['type'] = vtype
+                    if 'violation_type' not in v:
+                        v['violation_type'] = vtype
+                    if 'node_id' not in v:
+                        v['node_id'] = node.node_id
+                    violations.append(v)
 
             # --- Transactions ---
             for txn in self._safe_iter(findings.get("transactions", [])):

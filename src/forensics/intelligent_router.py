@@ -139,11 +139,20 @@ class IntelligentSubagentRouter:
         )
         
         if not selected_agents:
-            logger.warning(f"No agents found for violations: {[v.get('type', 'unknown') for v in violations]}")
-            # Fallback: use forensic-compliance-auditor if available
-            fallback = self.registry.get_agent('forensic-compliance-auditor')
-            if fallback:
-                selected_agents = [fallback]
+            logger.warning(f"No agents matched violations via type registry: {[v.get('type', v.get('violation_type', 'unknown'))[:50] for v in violations[:5]]}")
+            # Fallback: use all forensic agents sorted by priority
+            forensic_agents = [
+                a for a in self.registry.agents.values()
+                if 'forensic' in a.agent_name
+            ]
+            if forensic_agents:
+                forensic_agents.sort(key=lambda a: (-a.priority, a.agent_name))
+                selected_agents = forensic_agents[:max_agents]
+                logger.info(f"Using fallback: {len(selected_agents)} forensic agents by priority")
+            else:
+                fallback = self.registry.get_agent('forensic-compliance-auditor')
+                if fallback:
+                    selected_agents = [fallback]
         
         # Calculate agent scores for tracking
         agent_scores = {}

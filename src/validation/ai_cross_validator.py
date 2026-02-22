@@ -368,23 +368,56 @@ class AICrossValidator:
         """Extract evidence for a specific pattern from results."""
         evidence = {"pattern": pattern.name, "has_findings": False}
         
-        # Check pattern-specific results
+        # Map detection pattern enum names to Phase 5 result keys
+        PATTERN_KEY_MAP = {
+            "ROUND_TRIPPING": "round_tripping",
+            "WOLF_PACK": "wolf_pack",
+            "PRE_ANNOUNCEMENT": "pre_announcement",
+            "DISCLOSURE_TIMING": "disclosure_timing",
+            "BENFORD_ANALYSIS": "benford_analysis",
+            "BENEISH_MSCORE": "beneish_mscore",
+            "CHANNEL_STUFFING": "channel_stuffing",
+            "OPTIONS_BACKDATING": "options_backdating",
+            "HOLDINGS_13F": "wolf_pack",  # Wolf pack uses 13F data
+            "OWNERSHIP_13D_13G": "13g_to_13d",
+            "EVENT_8K_TIMING": "adverse_events",
+        }
+
+        # Check pattern-specific results from Phase 5
         if pattern_results:
-            pattern_key = pattern.name.lower()
+            pattern_key = PATTERN_KEY_MAP.get(pattern.name, pattern.name.lower())
             if pattern_key in pattern_results:
                 pattern_data = pattern_results[pattern_key]
                 evidence["pattern_data"] = pattern_data
-                evidence["has_findings"] = bool(pattern_data)
+                if isinstance(pattern_data, list) and len(pattern_data) > 0:
+                    evidence["has_findings"] = True
+                elif pattern_data:
+                    evidence["has_findings"] = True
         
-        # Check node results
+        # Check node results - keys are like NODE_1, NODE_2, etc.
         if node_results:
             relevant_nodes = self.PATTERN_NODE_MAPPING.get(pattern, [])
             for node in relevant_nodes:
-                node_key = node.lower()
+                # Normalize: "Node1" -> "NODE_1", "Node12" -> "NODE_12", "Detection" -> skip
+                if node.startswith("Node"):
+                    node_num = node[4:]  # "1", "12", etc.
+                    node_key = f"NODE_{node_num}"
+                else:
+                    node_key = node.upper()
+
                 if node_key in node_results:
-                    evidence[node_key] = node_results[node_key]
-                    if node_results[node_key].get('violations_found', 0) > 0:
-                        evidence["has_findings"] = True
+                    node_data = node_results[node_key]
+                    evidence[node_key] = node_data
+                    # Check for any meaningful data in the findings
+                    if isinstance(node_data, dict):
+                        has_violations = node_data.get('violations_found', 0) > 0
+                        has_alerts = node_data.get('alerts_generated', 0) > 0
+                        has_data = any(
+                            isinstance(v, list) and len(v) > 0
+                            for v in node_data.values()
+                        )
+                        if has_violations or has_alerts or has_data:
+                            evidence["has_findings"] = True
         
         return evidence
     
@@ -432,17 +465,27 @@ Respond in JSON format:
         """Get verdict from OpenAI agent."""
         if not self._openai_available or not self._dual_agent:
             return None, None
-        
+
         try:
-            # Use dual agent coordinator's OpenAI analyzer
-            if hasattr(self._dual_agent, 'openai_analyzer') and self._dual_agent.openai_analyzer:
-                response = await self._dual_agent.openai_analyzer.analyze(prompt)
+            analyzer = self._dual_agent.openai_analyzer
+            if not analyzer:
+                return None, None
+
+            # AgentSECForensicAnalyzer uses parse_violations_from_content (sync)
+            if hasattr(analyzer, 'parse_violations_from_content'):
+                response = analyzer.parse_violations_from_content(
+                    prompt, "VALIDATION_PROMPT", "inline://cross-validation", None
+                )
+                return self._parse_verdict_response(response)
+            # Fallback: try analyze_text (async)
+            elif hasattr(analyzer, 'analyze_text'):
+                response = await analyzer.analyze_text(prompt)
                 return self._parse_verdict_response(response)
         except Exception as e:
             self.logger.debug(f"OpenAI verdict error: {e}")
-        
+
         return None, None
-    
+
     async def _get_anthropic_verdict(
         self,
         prompt: str
@@ -450,15 +493,23 @@ Respond in JSON format:
         """Get verdict from Anthropic agent."""
         if not self._anthropic_available or not self._dual_agent:
             return None, None
-        
+
         try:
-            # Use dual agent coordinator's Anthropic analyzer
-            if hasattr(self._dual_agent, 'anthropic_analyzer') and self._dual_agent.anthropic_analyzer:
-                response = await self._dual_agent.anthropic_analyzer.analyze(prompt)
+            analyzer = self._dual_agent.anthropic_analyzer
+            if not analyzer:
+                return None, None
+
+            # AnthropicAgentAnalyzer uses analyze_text (async)
+            if hasattr(analyzer, 'analyze_text'):
+                response = await analyzer.analyze_text(prompt)
+                return self._parse_verdict_response(response)
+            # Fallback: try analyze_filing_deep (async)
+            elif hasattr(analyzer, 'analyze_filing_deep'):
+                response = await analyzer.analyze_filing_deep(prompt, "cross-validation")
                 return self._parse_verdict_response(response)
         except Exception as e:
             self.logger.debug(f"Anthropic verdict error: {e}")
-        
+
         return None, None
     
     def _parse_verdict_response(

@@ -497,14 +497,34 @@ class RecursiveProsecutorialEngine:
             late_filing_violations = []
             zero_dollar_violations = []
             gift_violations = []
+            all_insider_trades = []  # All trades for Phase 5 pattern detection
             total_transactions = 0
-            
+
             for filing in filings:
                 xml = await sec_client.get_form4_xml(filing)
                 if xml:
                     parsed = self.form4_parser.parse_xml(xml, filing.accession_number, filing.filing_date)
                     total_transactions += len(parsed.transactions)
-                    
+
+                    # Collect all trades for advanced pattern detection (Phase 5)
+                    for txn in parsed.transactions:
+                        all_insider_trades.append({
+                            "reporting_person": parsed.reporting_owner_name,
+                            "transaction_date": txn.transaction_date,
+                            "filing_date": parsed.filing_date,
+                            "transaction_code": txn.transaction_code,
+                            "shares": txn.shares,
+                            "price_per_share": txn.price_per_share,
+                            "total_value": txn.total_value,
+                            "acquired_disposed": txn.acquired_disposed,
+                            "security_title": txn.security_title,
+                            "is_derivative": txn.is_derivative,
+                            "accession_number": parsed.accession_number,
+                            "is_director": parsed.is_director,
+                            "is_officer": parsed.is_officer,
+                            "officer_title": parsed.officer_title,
+                        })
+
                     # Count late filings - Section 16(a) violations
                     for txn in parsed.late_transactions:
                         late_filing_violations.append({
@@ -584,7 +604,9 @@ class RecursiveProsecutorialEngine:
                     "late_filing_violations": late_filing_violations,
                     "zero_dollar_violations": zero_dollar_violations,
                     "gift_violations": gift_violations,
-                    "estimated_penalties": len(late_filing_violations) * 25000
+                    "estimated_penalties": len(late_filing_violations) * 25000,
+                    "insider_transactions": all_insider_trades,
+                    "form4_trades": all_insider_trades,
                 },
                 execution_time_seconds=time.time() - start
             )
@@ -1101,6 +1123,24 @@ class RecursiveProsecutorialEngine:
             logger.info(f"Node 8: Parsed {len(ownership_filings)} ownership filings from {len(filings)} fetched")
             node8_output = self.node8_ownership.analyze(ownership_filings)
 
+            # Convert ownership filings to dicts for Phase 5 pattern detection
+            schedule13_dicts = []
+            for of in ownership_filings:
+                schedule13_dicts.append({
+                    "form_type": of.filing_type.value if hasattr(of.filing_type, 'value') else str(of.filing_type),
+                    "filer_name": of.filer_name,
+                    "filer_cik": of.cik,
+                    "issuer_name": of.subject_company_name,
+                    "filing_date": of.filing_date,
+                    "event_date": of.event_date,
+                    "shares_owned": of.shares_owned,
+                    "ownership_percent": of.percent_owned,
+                    "purpose": of.purpose_of_transaction,
+                    "schedule_type": of.schedule_type,
+                    "is_amendment": of.is_amendment,
+                    "is_deadline_compliant": of.is_deadline_compliant,
+                })
+
             return NodeResult(
                 node_id="NODE_8", node_name="13D/13G Ownership", status="success",
                 violations_found=len([a for a in node8_output.alerts if getattr(a, 'severity', '') in ('CRITICAL', 'HIGH')]),
@@ -1108,7 +1148,8 @@ class RecursiveProsecutorialEngine:
                 findings={
                     "filings_found": len(filings),
                     "filings_analyzed": node8_output.filings_analyzed,
-                    "unique_filers": node8_output.unique_filers
+                    "unique_filers": node8_output.unique_filers,
+                    "schedule13_filings": schedule13_dicts,
                 },
                 execution_time_seconds=time.time() - start
             )
@@ -1220,6 +1261,18 @@ class RecursiveProsecutorialEngine:
             logger.info(f"Node 9: Parsed {len(events)} 8-K events from {len(filings)} filings")
             node9_output = await self.node9_events.analyze(events)
 
+            # Convert 8-K events to dicts for Phase 5 pattern detection
+            events_8k_dicts = []
+            for ev in events:
+                events_8k_dicts.append({
+                    "accession_number": ev.accession_number,
+                    "filing_date": ev.filing_date,
+                    "items": ev.items,
+                    "item_descriptions": ev.item_descriptions,
+                    "narrative": ev.narrative,
+                    "company_name": ev.company_name,
+                })
+
             return NodeResult(
                 node_id="NODE_9", node_name="8-K Events", status="success",
                 violations_found=0,
@@ -1227,7 +1280,9 @@ class RecursiveProsecutorialEngine:
                 findings={
                     "filings_found": len(filings),
                     "events_analyzed": node9_output.events_analyzed,
-                    "high_risk_events": node9_output.high_risk_events
+                    "high_risk_events": node9_output.high_risk_events,
+                    "form8k_filings": events_8k_dicts,
+                    "events_8k": events_8k_dicts,
                 },
                 execution_time_seconds=time.time() - start
             )
