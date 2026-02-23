@@ -1509,221 +1509,275 @@ class AdvancedPatternDetector:
         data: Dict[str, Any]
     ) -> Dict[str, List[PatternAlert]]:
         """
-        Run all applicable detection patterns on provided data.
-        
+        Run all detection patterns on provided data.
+
+        All 23 patterns are always registered in results (with empty lists
+        when data is insufficient) so the caller gets an accurate total count.
+
         Args:
             data: Dictionary with various data types for analysis
-            
+
         Returns:
             Dictionary mapping pattern names to alert lists
         """
-        results = {}
-        
+        results: Dict[str, List[PatternAlert]] = {}
+
         # Pattern 1: Round-tripping
-        if 'transactions' in data and 'relationships' in data:
+        try:
             results['round_tripping'] = self.detect_round_tripping(
-                data['transactions'],
-                data['relationships']
+                data.get('transactions', []),
+                data.get('relationships', {})
             )
-        
+        except Exception as e:
+            logger.warning(f"Pattern round_tripping failed: {e}")
+            results['round_tripping'] = []
+
         # Pattern 2: Wolf Pack Formation
-        if 'form13f_holdings' in data:
+        try:
             results['wolf_pack'] = self.detect_wolf_pack_formation(
-                data['form13f_holdings']
+                data.get('form13f_holdings', [])
             )
-        
+        except Exception as e:
+            logger.warning(f"Pattern wolf_pack failed: {e}")
+            results['wolf_pack'] = []
+
         # Pattern 3: 13G-to-13D Conversion
-        if 'schedule13_filings' in data:
+        try:
             results['13g_to_13d'] = self.detect_13g_to_13d_conversion(
-                data['schedule13_filings']
+                data.get('schedule13_filings', [])
             )
-        
+        except Exception as e:
+            logger.warning(f"Pattern 13g_to_13d failed: {e}")
+            results['13g_to_13d'] = []
+
         # Pattern 4: Pre-Announcement Positioning
-        if 'form4_trades' in data and 'form8k_filings' in data:
+        try:
             results['pre_announcement'] = self.detect_pre_announcement_positioning(
-                data['form4_trades'],
-                data['form8k_filings']
+                data.get('form4_trades', []),
+                data.get('form8k_filings', [])
             )
-        
+        except Exception as e:
+            logger.warning(f"Pattern pre_announcement failed: {e}")
+            results['pre_announcement'] = []
+
         # Pattern 5: Disclosure timing
-        if 'filings' in data:
+        try:
             results['disclosure_timing'] = self.detect_disclosure_timing_anomalies(
-                data['filings']
+                data.get('filings', [])
             )
-        
+        except Exception as e:
+            logger.warning(f"Pattern disclosure_timing failed: {e}")
+            results['disclosure_timing'] = []
+
         # Pattern 6: Sequential Adverse Events
-        if 'form8k_filings' in data:
+        try:
             results['adverse_events'] = self.detect_sequential_adverse_events(
-                data['form8k_filings']
+                data.get('form8k_filings', [])
             )
-        
+        except Exception as e:
+            logger.warning(f"Pattern adverse_events failed: {e}")
+            results['adverse_events'] = []
+
         # Pattern 7: Board Interlocks
-        if 'def14a_filings' in data:
+        try:
             results['board_interlocks'] = self.detect_board_interlocks(
-                data['def14a_filings']
+                data.get('def14a_filings', [])
             )
-        
+        except Exception as e:
+            logger.warning(f"Pattern board_interlocks failed: {e}")
+            results['board_interlocks'] = []
+
         # Pattern 8: Revolving Door Patterns
-        if 'executive_movements' in data:
+        try:
             results['revolving_door'] = self.detect_revolving_door_patterns(
-                data['executive_movements']
+                data.get('executive_movements', [])
             )
-        
+        except Exception as e:
+            logger.warning(f"Pattern revolving_door failed: {e}")
+            results['revolving_door'] = []
+
         # Pattern 9: Earnings Sentiment Shift
-        if 'earnings_calls' in data:
+        try:
             results['sentiment_shift'] = self.detect_earnings_sentiment_shift(
-                data['earnings_calls']
+                data.get('earnings_calls', [])
             )
-        
+        except Exception as e:
+            logger.warning(f"Pattern sentiment_shift failed: {e}")
+            results['sentiment_shift'] = []
+
         # Pattern 10: Hedging language
-        if 'document_text' in data:
-            result = self.detect_hedging_language(
-                data['document_text'],
-                data.get('document_type', '10-K')
-            )
-            results['hedging_language'] = [result]
-        
+        doc_text = data.get('document_text', '')
+        if doc_text and isinstance(doc_text, str) and len(doc_text) > 100:
+            try:
+                result = self.detect_hedging_language(
+                    doc_text,
+                    data.get('document_type', '10-K')
+                )
+                results['hedging_language'] = [result] if result else []
+            except Exception as e:
+                logger.warning(f"Pattern hedging_language failed: {e}")
+                results['hedging_language'] = []
+        else:
+            results['hedging_language'] = []
+
         # Pattern 11: Holding period
-        if 'form144_filings' in data:
+        try:
             results['holding_period'] = self.detect_holding_period_violations(
-                data['form144_filings'],
+                data.get('form144_filings', []),
                 data.get('is_reporting_company', True)
             )
-        
+        except Exception as e:
+            logger.warning(f"Pattern holding_period failed: {e}")
+            results['holding_period'] = []
+
         # Pattern 12: Volume Limit Exceeded (Rule 144(e))
-        if 'form144_filings' in data and 'trading_volume' in data:
+        try:
             results['volume_limit'] = self.detect_volume_limit_exceeded(
-                data['form144_filings'],
-                data['trading_volume']
+                data.get('form144_filings', []),
+                data.get('trading_volume', [])
             )
-        
+        except Exception as e:
+            logger.warning(f"Pattern volume_limit failed: {e}")
+            results['volume_limit'] = []
+
         # Pattern 13: Clustered disposals
-        if 'insider_trades' in data:
+        try:
             results['clustered_disposals'] = self.detect_clustered_disposals(
-                data['insider_trades']
+                data.get('insider_trades', [])
             )
-        
+        except Exception as e:
+            logger.warning(f"Pattern clustered_disposals failed: {e}")
+            results['clustered_disposals'] = []
+
         # Pattern 14: CAR Event Study
-        if 'events' in data and 'price_data' in data and 'market_data' in data:
-            results['car_event_study'] = self.detect_car_event_study(
-                data['events'],
-                data['price_data'],
-                data['market_data']
-            )
-        
+        events = data.get('events', [])
+        if events:
+            try:
+                results['car_event_study'] = self.detect_car_event_study(
+                    events,
+                    data.get('price_data', {}),
+                    data.get('market_data', {})
+                )
+            except Exception as e:
+                logger.warning(f"Pattern car_event_study failed: {e}")
+                results['car_event_study'] = []
+        else:
+            results['car_event_study'] = []
+
         # Pattern 15: Volume anomalies
-        if 'volume_data' in data:
+        try:
             results['volume_anomalies'] = self.detect_volume_anomalies(
-                data['volume_data']
+                data.get('volume_data', [])
             )
-        
+        except Exception as e:
+            logger.warning(f"Pattern volume_anomalies failed: {e}")
+            results['volume_anomalies'] = []
+
         # ═══════════════════════════════════════════════════════════════════
         # STANDALONE DETECTOR INTEGRATIONS (P2 Priority)
         # ═══════════════════════════════════════════════════════════════════
-        
+
         # Beneish M-Score (Earnings Manipulation Detection)
-        if 'financial_statements' in data:
+        results['beneish_mscore'] = []
+        fin_stmts = data.get('financial_statements', {})
+        if isinstance(fin_stmts, dict) and fin_stmts:
             try:
                 from src.detection.financial.beneish_mscore import BeneishMScoreCalculator
                 mscore_calc = BeneishMScoreCalculator()
-                
-                # Extract current and prior year data
-                current_year = data['financial_statements'].get('current_year', {})
-                prior_year = data['financial_statements'].get('prior_year', {})
-                
+
+                current_year = fin_stmts.get('current_year', {})
+                prior_year = fin_stmts.get('prior_year', {})
+
                 if current_year and prior_year:
                     mscore_result = mscore_calc.calculate(current_year, prior_year)
-                    
+
                     if mscore_result.manipulation_likely:
                         alert = self._create_mscore_alert(mscore_result)
                         results['beneish_mscore'] = [alert]
-                    else:
-                        results['beneish_mscore'] = []
             except Exception as e:
                 logger.warning(f"Beneish M-Score detection failed: {e}")
-        
+
         # Benford's Law Analysis
-        if 'financial_data' in data:
+        results['benford_law'] = []
+        numbers = data.get('financial_data', [])
+        if isinstance(numbers, list) and len(numbers) >= 10:
             try:
                 from src.detection.financial.benford_analysis import BenfordAnalyzer
                 benford = BenfordAnalyzer()
-                
-                # Extract numeric values for analysis
-                numbers = data['financial_data']
-                if isinstance(numbers, list) and numbers:
-                    benford_result = benford.analyze(numbers)
-                    
-                    if benford_result.has_anomalies:
-                        alert = self._create_benford_alert(benford_result)
-                        results['benford_law'] = [alert]
-                    else:
-                        results['benford_law'] = []
+
+                benford_result = benford.analyze(numbers)
+
+                if benford_result.chi_square_significant or benford_result.suspicious_digits:
+                    alert = self._create_benford_alert(benford_result)
+                    results['benford_law'] = [alert]
             except Exception as e:
                 logger.warning(f"Benford's Law analysis failed: {e}")
-        
+
         # Options Backdating Detection
-        if 'form4_grants' in data and 'price_history' in data:
+        results['options_backdating'] = []
+        grants = data.get('form4_grants', [])
+        price_hist = data.get('price_history', {})
+        if grants and price_hist:
             try:
                 from src.detection.patterns.options_backdating_detector import OptionsBackdatingDetector
                 backdating = OptionsBackdatingDetector()
-                
-                alerts = backdating.analyze_grants(
-                    data['form4_grants'],
-                    data['price_history']
-                )
+
+                alerts = backdating.analyze_grants(grants, price_hist)
                 results['options_backdating'] = alerts
             except Exception as e:
                 logger.warning(f"Options backdating detection failed: {e}")
-        
+
         # Channel Stuffing Detection
-        if 'quarterly_financials' in data:
+        results['channel_stuffing'] = []
+        q_fin = data.get('quarterly_financials', {})
+        if isinstance(q_fin, dict) and q_fin:
             try:
                 from src.detection.patterns.channel_stuffing_detector import ChannelStuffingDetector
                 stuffing = ChannelStuffingDetector()
-                
-                alerts = stuffing.analyze_quarters(data['quarterly_financials'])
+
+                alerts = stuffing.analyze_quarters(q_fin)
                 results['channel_stuffing'] = alerts
             except Exception as e:
                 logger.warning(f"Channel stuffing detection failed: {e}")
-        
+
         # XGBoost Fraud Detection
-        if 'xgboost_features' in data:
+        results['xgboost_fraud'] = []
+        xg_features = data.get('xgboost_features', [])
+        if xg_features:
             try:
                 from src.detection.ml.xgboost_fraud import XGBoostFraudDetector
                 xgboost = XGBoostFraudDetector()
-                
-                predictions = xgboost.predict(data['xgboost_features'])
+
+                predictions = xgboost.predict(xg_features)
                 if predictions and any(p.get('fraud_probability', 0) > 0.7 for p in predictions):
                     alert = self._create_xgboost_alert(predictions)
                     results['xgboost_fraud'] = [alert]
-                else:
-                    results['xgboost_fraud'] = []
             except Exception as e:
                 logger.warning(f"XGBoost fraud detection failed: {e}")
-        
+
         # DeBERTa Contradiction Detection
-        if 'document_pairs' in data:
+        results['deberta_contradiction'] = []
+        doc_pairs = data.get('document_pairs', [])
+        if doc_pairs:
             try:
                 from src.detection.ml.deberta_contradiction import DeBERTaContradictionEngine
                 deberta = DeBERTaContradictionEngine()
-                
+
                 contradictions = []
-                for pair in data['document_pairs']:
+                for pair in doc_pairs:
                     result = deberta.detect_contradiction(
                         pair.get('text1', ''),
                         pair.get('text2', '')
                     )
                     if result.get('is_contradiction'):
                         contradictions.append(result)
-                
+
                 if contradictions:
                     alert = self._create_contradiction_alert(contradictions)
                     results['deberta_contradiction'] = [alert]
-                else:
-                    results['deberta_contradiction'] = []
             except Exception as e:
                 logger.warning(f"DeBERTa contradiction detection failed: {e}")
-        
+
         return results
     
     # ═══════════════════════════════════════════════════════════════════
@@ -1759,23 +1813,26 @@ class AdvancedPatternDetector:
     def _create_benford_alert(self, benford_result) -> PatternAlert:
         """Create alert from Benford's Law analysis result."""
         evidence_data = {
-            "chi_squared": benford_result.chi_squared,
-            "p_value": benford_result.p_value,
-            "observed_distribution": benford_result.observed_distribution,
-            "deviations": benford_result.deviations
+            "chi_square_statistic": benford_result.chi_square_statistic,
+            "chi_square_p_value": benford_result.chi_square_p_value,
+            "mad": benford_result.mad,
+            "conformity_level": benford_result.conformity_level.value,
+            "suspicious_digits": benford_result.suspicious_digits,
+            "sample_size": benford_result.sample_size,
         }
-        
+
         return PatternAlert(
             pattern_name="Benford's Law Violation",
             pattern_id="BENFORD-001",
-            description=f"Financial data violates Benford's Law (χ² = {benford_result.chi_squared:.3f}, p = {benford_result.p_value:.4f})",
+            description=f"Financial data violates Benford's Law (χ² = {benford_result.chi_square_statistic:.3f}, p = {benford_result.chi_square_p_value:.4f}, MAD = {benford_result.mad:.6f})",
             confidence=0.89,
             severity=PatternSeverity.MEDIUM,
             evidence=evidence_data,
             risk_indicators=[
                 "Numeric distribution deviates from Benford's Law",
-                f"Chi-squared test: {benford_result.chi_squared:.3f}",
-                f"P-value: {benford_result.p_value:.4f}"
+                f"Chi-squared test: {benford_result.chi_square_statistic:.3f}",
+                f"P-value: {benford_result.chi_square_p_value:.4f}",
+                f"Suspicious digits: {benford_result.suspicious_digits}",
             ],
             regulatory_implications=[
                 "Potential data manipulation or fabrication",

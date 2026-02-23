@@ -278,41 +278,115 @@ class UnifiedForensicOrchestrator:
             )
 
             # Build aggregated data dict from all node findings
+            # Keys cover all 23 detection patterns in AdvancedPatternDetector
             aggregated_data: Dict[str, Any] = {
+                # Pattern 1: Round-tripping
                 'transactions': [],
                 'relationships': {},
+                # Pattern 2: Wolf Pack Formation
                 'form13f_holdings': [],
+                # Pattern 3: 13G-to-13D Conversion
                 'schedule13_filings': [],
+                # Pattern 4: Pre-Announcement Positioning
                 'form4_trades': [],
                 'form8k_filings': [],
+                # Pattern 5: Disclosure Timing
                 'filings': [],
+                # Pattern 7: Board Interlocks
                 'def14a_filings': [],
+                # Pattern 8: Revolving Door
                 'executive_movements': [],
+                # Pattern 9: Earnings Sentiment Shift
                 'earnings_calls': [],
+                # Pattern 10: Hedging Language Detection
+                'document_text': '',
+                'document_type': '10-K',
+                # Pattern 11-12: Form 144 / Volume Limit
+                'form144_filings': [],
+                'trading_volume': [],
+                # Pattern 13: Clustered Disposals
                 'insider_trades': [],
+                # Pattern 14: CAR Event Study
+                'events': [],
+                # Pattern 15: Volume Anomalies
+                'volume_data': [],
+                # Beneish M-Score
+                'financial_statements': {},
+                # Benford's Law
+                'financial_data': [],
+                # Options Backdating
+                'form4_grants': [],
+                'price_history': {},
+                # Channel Stuffing
+                'quarterly_financials': {},
+                # Violations accumulator
+                'violations': [],
             }
             node_findings = {}
             for node in all_nodes:
                 findings = node.findings or {}
                 node_findings[node.node_id] = findings
+
+                # Auto-extend list keys that match directly
                 for key in aggregated_data:
-                    if key in findings and isinstance(findings[key], list):
-                        aggregated_data[key].extend(findings[key])
+                    if key in findings:
+                        val = findings[key]
+                        agg_val = aggregated_data[key]
+                        if isinstance(val, list) and isinstance(agg_val, list):
+                            agg_val.extend(val)
+                        elif isinstance(val, str) and isinstance(agg_val, str):
+                            if val:
+                                aggregated_data[key] = (agg_val + ' ' + val).strip()
+                        elif isinstance(val, dict) and isinstance(agg_val, dict):
+                            agg_val.update(val)
+
                 # Map common alternate keys
                 if 'insider_transactions' in findings and isinstance(findings['insider_transactions'], list):
                     aggregated_data['form4_trades'].extend(findings['insider_transactions'])
                     aggregated_data['insider_trades'].extend(findings['insider_transactions'])
                 if 'events_8k' in findings and isinstance(findings['events_8k'], list):
                     aggregated_data['form8k_filings'].extend(findings['events_8k'])
+                    # Also map 8-K events to 'events' for CAR Event Study (Pattern 14)
+                    for ev in findings['events_8k']:
+                        aggregated_data['events'].append({
+                            'event_date': ev.get('filing_date'),
+                            'event_type': ', '.join(ev.get('items', [])) if ev.get('items') else 'material_event',
+                            'description': ev.get('narrative', ''),
+                        })
 
                 # Populate disclosure-timing filings from 8-K events (for Pattern 5)
                 if 'form8k_filings' in findings and isinstance(findings['form8k_filings'], list):
                     aggregated_data['filings'].extend(findings['form8k_filings'])
 
+                # Extract option grants from Form 4 trades (for Options Backdating pattern)
+                for trade in findings.get('form4_trades', findings.get('insider_transactions', [])) or []:
+                    if isinstance(trade, dict) and trade.get('transaction_code') in ('A', 'G', 'M'):
+                        aggregated_data['form4_grants'].append(trade)
+
                 # Extract violations as pseudo-alerts for further pattern analysis
-                for vkey in ('late_filing_violations', 'zero_dollar_violations', 'gift_violations'):
+                for vkey in ('late_filing_violations', 'zero_dollar_violations', 'gift_violations',
+                             'violations', 'temporal_violations'):
                     if vkey in findings and isinstance(findings[vkey], list):
-                        aggregated_data.setdefault('violations', []).extend(findings[vkey])
+                        aggregated_data['violations'].extend(findings[vkey])
+
+                # Extract financial data for Benford's Law from numeric findings
+                for fkey in ('revenue', 'net_income', 'total_assets', 'total_liabilities',
+                             'operating_income', 'gross_profit'):
+                    val = findings.get(fkey)
+                    if isinstance(val, (int, float)) and val != 0:
+                        aggregated_data['financial_data'].append(val)
+
+                # Node 3 quarterly data for Channel Stuffing detection
+                if 'quarters' in findings and isinstance(findings['quarters'], list):
+                    aggregated_data['quarterly_financials']['quarters'] = findings['quarters']
+
+                # Build relationships dict from network mapper edges
+                if 'edges' in findings and isinstance(findings['edges'], list):
+                    for edge in findings['edges']:
+                        src = edge.get('source', edge.get('from', ''))
+                        tgt = edge.get('target', edge.get('to', ''))
+                        if src and tgt:
+                            aggregated_data['relationships'].setdefault(src, []).append(tgt)
 
             pattern_results = detector.run_all_patterns(aggregated_data)
             patterns_triggered = sum(1 for alerts in pattern_results.values()
@@ -423,6 +497,70 @@ class UnifiedForensicOrchestrator:
                 for v in self._analysis_results.get('violations', []):
                     if isinstance(v, dict):
                         violations.append(v)
+
+            # Normalize violation types for intelligent agent routing
+            # Agent registry expects snake_case types like 'late_filing', 'sec_violation'
+            _TYPE_MAP = {
+                'Late Filing': 'late_filing',
+                'late filing': 'late_filing',
+                'Zero Dollar Transaction': 'zero_dollar_transaction',
+                'Gift Transaction': 'insider_trading',
+                'Form 4 Analysis': 'late_form_4',
+                'DEF 14A Compensation': 'disclosure_violation',
+                '10-K SOX Analysis': 'sox_violation',
+                '10-Q Analysis': 'financial_statement_fraud',
+                'IRC §83 Analysis': 'sec_violation',
+                '8-K Events': 'disclosure_violation',
+                '13F Holdings': 'wolf_pack',
+                '13D/13G Ownership': 'insider_trading',
+                'Enforcement Router': 'regulatory_violation',
+                'Network Mapper': 'executive_network',
+                'Earnings Calls': 'sentiment_shift',
+                'Z-Score': 'bankruptcy_risk',
+                'F-Score': 'financial_fraud',
+                'Market Correlation': 'trading_pattern',
+                'Customs & Trade Fraud': 'securities_fraud',
+            }
+            for v in violations:
+                raw_type = v.get('type', v.get('violation_type', ''))
+                normalized = _TYPE_MAP.get(raw_type, raw_type.lower().replace(' ', '_').replace('-', '_'))
+                v['type'] = normalized
+                v['violation_type'] = normalized
+
+            # Inject Phase 5 triggered patterns as additional violations for routing
+            pattern_results = getattr(self, '_pattern_results', {})
+            _PATTERN_VTYPE = {
+                'round_tripping': 'financial_fraud',
+                'wolf_pack': 'insider_trading',
+                '13g_to_13d': 'insider_trading',
+                'pre_announcement': 'pre_announcement_positioning',
+                'disclosure_timing': 'disclosure_violation',
+                'adverse_events': 'disclosure_violation',
+                'board_interlocks': 'executive_network',
+                'revolving_door': 'revolving_door',
+                'sentiment_shift': 'sentiment_shift',
+                'hedging_language': 'hedging_language',
+                'clustered_disposals': 'insider_trading',
+                'car_event_study': 'trading_pattern',
+                'volume_anomalies': 'trading_pattern',
+                'beneish_mscore': 'earnings_manipulation',
+                'benford_law': 'benford_anomaly',
+                'options_backdating': 'insider_trading',
+                'channel_stuffing': 'financial_fraud',
+                'xgboost_fraud': 'financial_fraud',
+                'deberta_contradiction': 'contradiction_detection',
+            }
+            for pattern_name, alerts in pattern_results.items():
+                if isinstance(alerts, list) and len(alerts) > 0:
+                    vtype = _PATTERN_VTYPE.get(pattern_name, pattern_name)
+                    violations.append({
+                        'type': vtype,
+                        'violation_type': vtype,
+                        'severity': 'HIGH',
+                        'description': f"Phase 5 pattern: {pattern_name} ({len(alerts)} alerts)",
+                        'source': 'phase_5_patterns',
+                        'pattern_name': pattern_name,
+                    })
 
             if not violations:
                 self._log("Phase 7: No violations to analyze with subagents")

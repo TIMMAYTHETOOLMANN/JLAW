@@ -823,7 +823,13 @@ class RecursiveProsecutorialEngine:
             
             company_info = {"cik": cik, "name": company_name}
             results = self.node4_sox.analyze_annual_report(annual_text, company_info)
-            
+
+            # Include document text for Phase 5 hedging language detection (Pattern 10)
+            if annual_text:
+                # Truncate to 500KB to avoid memory bloat
+                results['document_text'] = annual_text[:500_000]
+                results['document_type'] = '10-K'
+
             return NodeResult(
                 node_id="NODE_4",
                 node_name="10-K SOX Analysis",
