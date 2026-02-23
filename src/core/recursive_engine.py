@@ -661,8 +661,12 @@ class RecursiveProsecutorialEngine:
                             "notes": f"Zero-dollar transaction flagged for scrutiny. {suspicion_level}"
                         })
                     
-                    # Count gift transactions
+                    # Count gift transactions (only non-zero-dollar gifts;
+                    # $0 gifts are already captured in zero_dollar_violations
+                    # to prevent double-counting the same transaction)
                     for txn in parsed.gift_transactions:
+                        if txn.is_zero_dollar:
+                            continue
                         gift_violations.append({
                             "type": "Gift Transaction",
                             "severity": "MEDIUM",
