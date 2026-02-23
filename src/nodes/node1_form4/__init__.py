@@ -1,4 +1,4 @@
-"""Node 1: Form 4 Insider Transaction Parser."""
+"""Node 1: Form 4 Insider Transaction Parser - ENHANCED."""
 from .form4_parser import (
     Form4Parser,
     Form4Filing,
@@ -18,7 +18,14 @@ from .zero_value_detector import (
     ZeroValueAnalysis,
     ZeroValueAlert,
     ZeroValuePattern,
-    ZeroValueSeverity
+    ZeroValueSeverity,
+    ForensicFindings
+)
+from .financial_benefit_extractor import (
+    FinancialBenefitExtractor,
+    BenefitExtraction,
+    InsiderBenefitProfile,
+    IssuerBenefitSummary
 )
 
 __all__ = [
@@ -36,5 +43,10 @@ __all__ = [
     'ZeroValueAnalysis',
     'ZeroValueAlert',
     'ZeroValuePattern',
-    'ZeroValueSeverity'
+    'ZeroValueSeverity',
+    'ForensicFindings',
+    'FinancialBenefitExtractor',
+    'BenefitExtraction',
+    'InsiderBenefitProfile',
+    'IssuerBenefitSummary'
 ]

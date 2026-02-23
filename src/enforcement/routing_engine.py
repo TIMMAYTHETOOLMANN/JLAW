@@ -202,7 +202,25 @@ class EnforcementRoutingEngine:
             "min_violations": 3,
             "min_damages": 0,
             "description": "3+ beneficial ownership violations"
-        }
+        },
+        # ENHANCED: Zero-dollar transaction violations
+        # Count-based trigger - $0 damages is expected for these transactions,
+        # but the implied market value and pattern of conduct are what matter
+        "zero_dollar_suspicious": {
+            "min_violations": 2,
+            "min_damages": 0,  # $0 threshold - trigger on pattern, not reported value
+            "description": "2+ suspicious $0 transactions (any code) with forensic indicators"
+        },
+        "zero_dollar_event_proximity": {
+            "min_violations": 1,
+            "min_damages": 0,
+            "description": "Any $0 transaction within 30 days of material event"
+        },
+        "zero_dollar_recidivist": {
+            "min_violations": 3,
+            "min_damages": 0,
+            "description": "3+ $0 transactions by same insider (recidivist pattern)"
+        },
     }
     
     # ═══════════════════════════════════════════════════════════════════════
@@ -275,6 +293,25 @@ class EnforcementRoutingEngine:
             "civil_max": 1000000,
             "criminal_max_years": 0,
             "basis": "17 CFR § 240.13d-1, 17 CFR § 240.13d-2"
+        },
+        # Zero-dollar transaction violations (based on implied value)
+        "zero_dollar_suspicious": {
+            "civil_min": 100000,
+            "civil_max": 10000000,
+            "criminal_max_years": 20,
+            "basis": "15 USC § 78j(b), 17 CFR § 229.402, 17 CFR § 229.404"
+        },
+        "zero_dollar_event_proximity": {
+            "civil_min": 250000,
+            "civil_max": 25000000,
+            "criminal_max_years": 20,
+            "basis": "15 USC § 78j(b), 17 CFR § 240.10b-5"
+        },
+        "zero_dollar_recidivist": {
+            "civil_min": 500000,
+            "civil_max": 50000000,
+            "criminal_max_years": 25,
+            "basis": "15 USC § 78j(b), 18 USC § 1348, 17 CFR § 229.402"
         }
     }
     
@@ -695,7 +732,16 @@ class EnforcementRoutingEngine:
     def _normalize_violation_type(self, violation_type: str) -> str:
         """Normalize violation type for threshold lookup."""
         vtype_lower = violation_type.lower()
-        
+
+        # ENHANCED: Zero-dollar violations route first (highest priority matching)
+        if 'zero_dollar' in vtype_lower or 'zero-dollar' in vtype_lower or 'zero dollar' in vtype_lower:
+            if 'proximity' in vtype_lower or 'event' in vtype_lower:
+                return 'zero_dollar_event_proximity'
+            elif 'recidivist' in vtype_lower or 'repeat' in vtype_lower:
+                return 'zero_dollar_recidivist'
+            else:
+                return 'zero_dollar_suspicious'
+
         # Map to standard categories
         if 'insider' in vtype_lower or '10b' in vtype_lower or '16a' in vtype_lower:
             return 'insider_trading'
@@ -727,18 +773,28 @@ class EnforcementRoutingEngine:
         agencies = []
         
         # Primary agency mapping
-        if normalized in ['insider_trading', 'securities_fraud', 'disclosure_violation', 
-                         'market_manipulation', 'sox_violation', 'beneficial_ownership', 'late_filing']:
+        if normalized in ['insider_trading', 'securities_fraud', 'disclosure_violation',
+                         'market_manipulation', 'sox_violation', 'beneficial_ownership', 'late_filing',
+                         'zero_dollar_suspicious', 'zero_dollar_event_proximity', 'zero_dollar_recidivist']:
             agencies.append('SEC')
-        
+
         if normalized == 'tax_violation':
             agencies.append('IRS')
-        
+
+        # Zero-dollar recidivist patterns warrant IRS referral for IRC 83 taxation
+        if normalized == 'zero_dollar_recidivist':
+            agencies.append('IRS')
+
         # Criminal referral for fraud with high damages
         has_high_damages = any(v.get('estimated_damages', 0) > 1000000 for v in violations)
         has_scienter = any(v.get('scienter_evidence', False) for v in violations)
-        
-        if normalized in ['securities_fraud', 'market_manipulation'] and (has_high_damages or has_scienter):
+
+        # Zero-dollar event proximity is inherently scienter-laden
+        if normalized == 'zero_dollar_event_proximity':
+            has_scienter = True
+
+        if normalized in ['securities_fraud', 'market_manipulation',
+                         'zero_dollar_event_proximity', 'zero_dollar_recidivist'] and (has_high_damages or has_scienter):
             if 'DOJ' not in agencies:
                 agencies.append('DOJ')
         
@@ -874,7 +930,27 @@ class EnforcementRoutingEngine:
             actions.append("Execute trade timing analysis")
             actions.append("Subpoena email and communication records")
             actions.append("Interview individuals with access to material information")
-        
+
+        # Zero-dollar specific enforcement actions
+        if normalized in ('zero_dollar_suspicious', 'zero_dollar_event_proximity', 'zero_dollar_recidivist'):
+            actions.append("Extract implied market value of all $0 transactions")
+            actions.append("Cross-reference $0 transfers against DEF 14A compensation disclosures")
+            actions.append("Analyze all transaction codes used by filing party")
+            actions.append("Map beneficial ownership chain for indirect transfers")
+            actions.append("Correlate $0 transaction dates with material events (8-K)")
+
+        if normalized == 'zero_dollar_event_proximity':
+            actions.append("PRIORITY: $0 transaction within 30 days of material event")
+            actions.append("Investigate whether filing party had access to MNPI")
+            actions.append("Review 10b5-1 plan existence and modification dates")
+
+        if normalized == 'zero_dollar_recidivist':
+            actions.append("PRIORITY: Repeat $0 transaction pattern detected")
+            actions.append("Compile complete $0 transaction history across all issuers")
+            actions.append("Analyze code rotation pattern for evasion indicators")
+            actions.append("Calculate cumulative implied value of all $0 transfers")
+            actions.append("IRS referral for potential IRC 83 tax evasion")
+
         return actions
 
 
