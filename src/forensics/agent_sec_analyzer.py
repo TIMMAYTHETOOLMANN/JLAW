@@ -4,6 +4,7 @@ Uses OpenAI Agent SDK for semantic document understanding and self-healing extra
 """
 
 import asyncio
+import json
 import logging
 from datetime import datetime, timezone
 from typing import Dict, Optional, Any
