@@ -454,7 +454,13 @@ class RecursiveProsecutorialEngine:
                          node_group_1_results + node_group_2_results + node_group_3_results + node_group_4_results)
         
         self._print_footer(total_alerts, total_violations, total_time)
-        
+
+        # Calculate penalties from actual violation types instead of flat-rate
+        penalties = self._calculate_statutory_penalties(
+            node_group_1_results + node_group_2_results +
+            node_group_3_results + node_group_4_results
+        )
+
         return RecursiveAnalysisResult(
             case_id=case_id,
             company_name=company_name,
@@ -471,19 +477,98 @@ class RecursiveProsecutorialEngine:
             critical_alerts=0,
             high_alerts=0,
             prosecution_recommendation=self._generate_recommendation(total_violations),
-            estimated_penalties=PenaltyEstimate(
-                civil_minimum=total_violations * 50000,
-                civil_maximum=total_violations * 500000,
-                criminal_exposure=total_violations >= 5,
-                prison_years_maximum=5 if total_violations >= 5 else 0
-            ),
+            estimated_penalties=penalties,
             regulatory_routing=RegulatoryRouting(
                 sec=total_violations > 0,
-                doj=total_violations >= 5,
+                doj=penalties.criminal_exposure,
                 irs=False
             )
         )
     
+    # Per-violation-type statutory penalty caps grounded in U.S. Code.
+    # Sources:
+    #   - 15 U.S.C. § 78p(a): Section 16(a) late filing, up to $25K per violation
+    #   - 15 U.S.C. § 78j(b) / Rule 10b-5: Securities fraud, up to $5M civil
+    #   - 15 U.S.C. § 7241: SOX 302 certification, up to $1M civil
+    #   - 15 U.S.C. § 7241 (906): SOX 906 certification, up to $5M civil
+    #   - 15 U.S.C. § 7262: SOX 404 internal controls, up to $500K civil
+    #   - 17 C.F.R. § 243.100: Reg FD, up to $500K civil
+    #   - 26 U.S.C. § 83: IRC 83, up to $250K civil
+    # Scrutiny flags (zero-dollar transactions, auditor changes) are
+    # investigative indicators, not confirmed violations — they carry $0 penalty.
+    _VIOLATION_PENALTY_MAP = {
+        # Confirmed violations with statutory basis
+        "section_16(a)_late_form_4_filing": (5000, 25000, False),     # 15 USC §78p(a)
+        "section 16(a) late form 4 filing": (5000, 25000, False),     # raw Node 1 format
+        "late_form4": (5000, 25000, False),                           # alias
+        "insider_trading": (100000, 5000000, True),                   # 15 USC §78j(b)
+        "securities_fraud": (100000, 5000000, True),                  # 15 USC §78j(b)
+        "section_302_certification_omission": (100000, 1000000, True),# 15 USC §7241
+        "section_906_certification_omission": (100000, 5000000, True),# 15 USC §7241
+        "material_weakness_disclosed": (50000, 500000, False),        # 15 USC §7262
+        "inconsistent_management_disclosure": (50000, 500000, False), # 15 USC §78j(b)
+        "sox_302_failure": (100000, 1000000, True),                   # 15 USC §7241
+        "sox_404_weakness": (50000, 500000, False),                   # 15 USC §7262
+        "beneficial_ownership_failure": (50000, 500000, False),       # 15 USC §78m(d)
+        "reg_fd_violation": (50000, 500000, False),                   # 17 CFR §243.100
+        "irc_83b_failure": (25000, 250000, True),                     # 26 USC §83
+        "deferred_compensation_violation": (25000, 250000, True),     # 26 USC §83
+        "short_swing_profit": (0, 0, False),                          # Disgorgement only
+        "gift_transaction": (0, 0, False),                            # Routine §16 disclosure
+        "gift transaction": (0, 0, False),                            # raw Node 1 format
+        # Scrutiny/investigative flags — NOT confirmed violations
+        "zero_dollar_transaction___requires_scrutiny": (0, 0, False),
+        "zero-dollar transaction - requires scrutiny": (0, 0, False), # raw Node 1 format
+        "zero_dollar_transaction": (0, 0, False),
+        "auditor_change_near_weakness": (0, 0, False),
+    }
+
+    def _calculate_statutory_penalties(
+        self, all_node_results: List['NodeResult']
+    ) -> 'PenaltyEstimate':
+        """
+        Calculate civil exposure from actual violation types using statutory
+        penalty caps rather than a flat per-violation multiplier.
+
+        Scrutiny flags (zero-dollar transactions, auditor changes) are excluded
+        from penalty totals because they are investigative indicators, not
+        confirmed violations.
+        """
+        civil_min = 0.0
+        civil_max = 0.0
+        has_criminal = False
+
+        for node in all_node_results:
+            findings = node.findings or {}
+            # Check all violation source keys
+            for key in ("violations", "alerts", "late_filing_violations",
+                        "zero_dollar_violations", "gift_violations"):
+                for v in (findings.get(key) or []):
+                    if not isinstance(v, dict):
+                        continue
+                    vtype = v.get("type", v.get("violation_type", "")).lower()
+                    penalty = self._VIOLATION_PENALTY_MAP.get(vtype)
+                    if penalty:
+                        civil_min += penalty[0]
+                        civil_max += penalty[1]
+                        if penalty[2]:
+                            has_criminal = True
+                    elif "scrutiny" in vtype or "requires_scrutiny" in vtype:
+                        # Explicit exclusion for any scrutiny flag variant
+                        pass
+                    else:
+                        # Unknown violation type — use conservative default
+                        # ($10K–$100K, matching Rule 144 base)
+                        civil_min += 10000
+                        civil_max += 100000
+
+        return PenaltyEstimate(
+            civil_minimum=civil_min,
+            civil_maximum=civil_max,
+            criminal_exposure=has_criminal,
+            prison_years_maximum=20 if has_criminal else 0
+        )
+
     async def _execute_node1(
         self, sec_client, cik: str, start_date: date, end_date: date
     ) -> NodeResult:

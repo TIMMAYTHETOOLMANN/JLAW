@@ -491,12 +491,15 @@ class UnifiedForensicOrchestrator:
 
             orchestrator = SubagentOrchestrator()
 
-            # Extract violations from analysis results for subagent processing
+            # Extract violations from analysis results for subagent processing.
+            # IMPORTANT: Use shallow copies to avoid mutating the original
+            # analysis_results dicts, which would corrupt penalty calculations
+            # and the final report output.
             violations = []
             if self._analysis_results:
                 for v in self._analysis_results.get('violations', []):
                     if isinstance(v, dict):
-                        violations.append(v)
+                        violations.append(dict(v))
 
             # Normalize violation types for intelligent agent routing
             # Agent registry expects snake_case types like 'late_filing', 'sec_violation'
@@ -504,7 +507,7 @@ class UnifiedForensicOrchestrator:
                 'Late Filing': 'late_filing',
                 'late filing': 'late_filing',
                 'Zero Dollar Transaction': 'zero_dollar_transaction',
-                'Gift Transaction': 'insider_trading',
+                'Gift Transaction': 'gift_transaction',
                 'Form 4 Analysis': 'late_form_4',
                 'DEF 14A Compensation': 'disclosure_violation',
                 '10-K SOX Analysis': 'sox_violation',
@@ -512,7 +515,7 @@ class UnifiedForensicOrchestrator:
                 'IRC §83 Analysis': 'sec_violation',
                 '8-K Events': 'disclosure_violation',
                 '13F Holdings': 'wolf_pack',
-                '13D/13G Ownership': 'insider_trading',
+                '13D/13G Ownership': 'beneficial_ownership',
                 'Enforcement Router': 'regulatory_violation',
                 'Network Mapper': 'executive_network',
                 'Earnings Calls': 'sentiment_shift',
