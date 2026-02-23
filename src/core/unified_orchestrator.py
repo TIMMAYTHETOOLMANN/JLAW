@@ -228,7 +228,10 @@ class UnifiedForensicOrchestrator:
         """Phase 4: 15-Node Recursive Analysis."""
         self._log("Phase 4: 15-Node Recursive Analysis")
         from .recursive_engine import RecursiveProsecutorialEngine
-        engine = RecursiveProsecutorialEngine(strict_mode=self.strict_mode)
+        engine = RecursiveProsecutorialEngine(
+            strict_mode=self.strict_mode,
+            config={'output_dir': str(self.output_dir)}
+        )
         result = await engine.run_full_analysis(
             cik=self.cik,
             company_name=self.company_name,

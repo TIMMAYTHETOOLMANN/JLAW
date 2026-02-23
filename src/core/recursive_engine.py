@@ -229,11 +229,12 @@ class RecursiveProsecutorialEngine:
         self.short_swing_calc = ShortSwingCalculator()
         self.gift_detector = GiftPatternDetector()
         
-        # Initialize Nodes 2-5
-        self.node2_def14a = DEF14ACompensationAnalyzer()
-        self.node3_10q = TemporalConsistencyValidator()
-        self.node4_sox = SOXCertificationAnalyzer()
-        self.node5_irc83 = IRC83TaxCalculator()
+        # Initialize Nodes 2-5 with output_dir from config if available
+        base_output = self.config.get('output_dir', './output')
+        self.node2_def14a = DEF14ACompensationAnalyzer(output_dir=f"{base_output}/node2_def14a")
+        self.node3_10q = TemporalConsistencyValidator(output_dir=f"{base_output}/node3_10q")
+        self.node4_sox = SOXCertificationAnalyzer(output_dir=f"{base_output}/node4_sox")
+        self.node5_irc83 = IRC83TaxCalculator(output_dir=f"{base_output}/node5_irs")
         self.enforcement_router = EnforcementRouter()
         
         # Phase 2 nodes - USE V2 VERSIONS for Nodes 7-12
