@@ -1095,7 +1095,7 @@ class UnifiedForensicOrchestrator:
         # ── Filter out null/empty material events ──
         material_events = [
             e for e in material_events
-            if e.get("date") is not None and e.get("description")
+            if e.get("date") is not None and e.get("description", "").strip()
         ]
 
         return {

@@ -656,7 +656,6 @@ class ForensicDossierGenerator:
             penalty_str = f"${penalty:,.0f}" if penalty else "—"
             acc = v.get("accession_number", "")
             if acc:
-                edgar_url = f"https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK={acc}&type=&dateb=&owner=include&count=10"
                 filing_link = Paragraph(
                     f'<font color="#2980B9"><u>{acc[:20]}</u></font>',
                     ParagraphStyle("link", parent=self.styles["SmallBody"],
@@ -934,15 +933,30 @@ class ForensicDossierGenerator:
         story.append(self._section_bar())
         story.append(Spacer(1, 8))
 
-        sorted_bens = sorted(beneficiaries, key=lambda b: b.get("total_profit", 0), reverse=True)[:15]
+        # Determine best metric for sorting
+        has_profit = any(b.get("total_profit", 0) > 0 for b in beneficiaries)
+        has_shares = any(b.get("total_shares", 0) > 0 for b in beneficiaries)
+        sort_key = "total_profit" if has_profit else "total_shares" if has_shares else "violations"
 
-        header = ["Name", "Role", "Total Profit", "Transactions", "Risk Score", "Violations"]
+        sorted_bens = sorted(
+            beneficiaries, key=lambda b: abs(b.get(sort_key, 0) or 0), reverse=True
+        )[:15]
+
+        if has_profit:
+            header = ["Name", "Role", "Total Profit", "Transactions", "Risk Score", "Violations"]
+        else:
+            header = ["Name", "Role", "Total Shares", "Transactions", "Risk Score", "Violations"]
+
         rows = [header]
         for b in sorted_bens:
+            if has_profit:
+                amount = f"${b.get('total_profit', 0):,.0f}"
+            else:
+                amount = f"{b.get('total_shares', 0):,.0f}"
             rows.append([
                 b.get("name", "Unknown")[:25],
                 b.get("role", "—")[:15],
-                f"${b.get('total_profit', 0):,.0f}",
+                amount,
                 str(b.get("transaction_count", 0)),
                 f"{b.get('risk_score', 0):.0f}",
                 str(b.get("violations", 0)),
@@ -957,13 +971,13 @@ class ForensicDossierGenerator:
         if MATPLOTLIB_AVAILABLE and sorted_bens:
             chart = self._generate_profit_waterfall(sorted_bens, company)
             if chart:
-                story.append(Paragraph("Profit by Beneficiary", self.styles["SubSection"]))
+                story.append(Paragraph("Beneficiary Analysis", self.styles["SubSection"]))
                 story.append(Image(chart, width=6.0 * inch, height=3.0 * inch))
                 story.append(Spacer(1, 10))
 
             role_chart = self._generate_role_distribution(beneficiaries, company)
             if role_chart:
-                story.append(Paragraph("Profit Distribution by Role", self.styles["SubSection"]))
+                story.append(Paragraph("Distribution by Role", self.styles["SubSection"]))
                 story.append(Image(role_chart, width=4.5 * inch, height=3.0 * inch))
 
         return story
@@ -1649,7 +1663,7 @@ class ForensicDossierGenerator:
         # ── Filter null material events ──
         results["material_events"] = [
             e for e in results.get("material_events", [])
-            if e.get("date") is not None and e.get("description")
+            if e.get("date") is not None and e.get("description", "").strip()
         ]
 
         return results

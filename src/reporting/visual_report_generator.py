@@ -1434,16 +1434,12 @@ class ForensicVisualReportGenerator:
             return val.date()
         if isinstance(val, date):
             return val
-        if isinstance(val, str):
-            for fmt in ("%Y-%m-%d", "%Y-%m-%dT%H:%M:%S", "%m/%d/%Y"):
+        if isinstance(val, str) and val.strip():
+            for fmt in ("%Y-%m-%d", "%m/%d/%Y"):
                 try:
-                    return datetime.strptime(val[:10], fmt[:len(val[:10])+2]).date()
+                    return datetime.strptime(val[:10], fmt).date()
                 except (ValueError, TypeError):
                     continue
-            try:
-                return datetime.strptime(val[:10], "%Y-%m-%d").date()
-            except (ValueError, TypeError):
-                pass
         return date.today()
 
     def _extract_violations(self, results: Dict) -> list:
@@ -1567,7 +1563,7 @@ class ForensicVisualReportGenerator:
         # ── Filter null material events ──
         results["material_events"] = [
             e for e in results.get("material_events", [])
-            if e.get("date") is not None and e.get("description")
+            if e.get("date") is not None and e.get("description", "").strip()
         ]
 
         return results
