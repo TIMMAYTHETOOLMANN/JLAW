@@ -24,7 +24,8 @@ from collections import Counter, defaultdict
 from datetime import datetime, date
 from io import BytesIO
 from pathlib import Path
-from typing import Dict, Any, Optional
+from typing import Dict, Any, List, Optional
+import copy
 
 try:
     from reportlab.lib import colors
@@ -245,15 +246,14 @@ class ForensicVisualReportGenerator:
         Returns:
             Path to the generated PDF file.
         """
+        # Enrich / synthesize missing collections before any rendering
+        analysis_results = self._enrich_analysis_results(analysis_results)
+
         if not output_filename:
             ts = datetime.now().strftime("%Y%m%d_%H%M%S")
             output_filename = f"VISUAL_DOSSIER_{case_id}_{ts}.pdf"
 
         output_path = self.output_dir / output_filename
-
-        # Enrich analysis results: synthesize transaction/actor/beneficiary data
-        # from violations when those collections are empty or lack values
-        analysis_results = self._enrich_analysis_results(analysis_results)
 
         doc = SimpleDocTemplate(
             str(output_path),
@@ -276,6 +276,12 @@ class ForensicVisualReportGenerator:
 
         # ── VIOLATION SEVERITY BREAKDOWN ──
         story.extend(self._build_severity_breakdown(analysis_results))
+
+        # ── VIOLATION REGISTER ──
+        register_elements = self._build_violation_register(analysis_results)
+        if register_elements:
+            story.append(Spacer(1, 14))
+            story.extend(register_elements)
 
         # ── TRANSACTION TIMELINE ──
         transactions = analysis_results.get("transactions", [])
@@ -523,74 +529,6 @@ class ForensicVisualReportGenerator:
 
         tbl.setStyle(TableStyle(style_cmds))
         story.append(tbl)
-        story.append(Spacer(1, 14))
-
-        # ── Violation Register with penalties and SEC links ──
-        story.append(Paragraph("VIOLATION REGISTER", self.styles["SubHead"]))
-        story.append(Spacer(1, 6))
-
-        # Deduplicate violations
-        seen_keys = set()
-        unique_viols = []
-        for v in all_violations:
-            vkey = (
-                v.get("accession_number", ""),
-                v.get("reporting_owner", ""),
-                v.get("transaction_date", ""),
-                v.get("violation_type", ""),
-            )
-            if vkey not in seen_keys:
-                seen_keys.add(vkey)
-                unique_viols.append(v)
-
-        sorted_viols = sorted(unique_viols, key=lambda v: (
-            {"CRITICAL": 0, "HIGH": 1, "MEDIUM": 2, "LOW": 3}.get(
-                str(v.get("severity", v.get("risk_level", "LOW"))).upper(), 4
-            ),
-        ))[:25]
-
-        if sorted_viols:
-            reg_rows = [["#", "Violation", "Owner", "Date", "Shares", "Penalty", "Filing"]]
-            for i, v in enumerate(sorted_viols, 1):
-                vtype = v.get("violation_type", "Unknown")
-                if len(vtype) > 25:
-                    vtype = vtype[:22] + "..."
-                owner = v.get("reporting_owner", v.get("actor", "—"))
-                if len(owner) > 18:
-                    owner = owner[:15] + "..."
-                txn_date = str(v.get("transaction_date", "—"))[:10]
-                shares = v.get("shares", 0) or 0
-                shares_str = f"{shares:,.0f}" if shares else "—"
-                penalty = v.get("estimated_penalty", 0) or 0
-                penalty_str = f"${penalty:,.0f}" if penalty else "—"
-                acc = v.get("accession_number", "—")
-                if len(acc) > 18:
-                    acc = acc[:15] + "..."
-                reg_rows.append([
-                    str(i), vtype, owner, txn_date,
-                    shares_str, penalty_str, acc,
-                ])
-
-            reg_tbl = Table(
-                reg_rows,
-                colWidths=[0.3*inch, 1.4*inch, 1.1*inch, 0.7*inch, 0.65*inch, 0.65*inch, 1.2*inch],
-            )
-            reg_style = [
-                ("FONT", (0, 0), (-1, 0), self.TITLE_FONT, 8),
-                ("FONT", (0, 1), (-1, -1), self.BODY_FONT, 7),
-                ("BACKGROUND", (0, 0), (-1, 0), HEADER_BG),
-                ("TEXTCOLOR", (0, 0), (-1, 0), colors.whitesmoke),
-                ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
-                ("GRID", (0, 0), (-1, -1), 0.3, colors.HexColor("#DEE2E6")),
-                ("TOPPADDING", (0, 0), (-1, -1), 3),
-                ("BOTTOMPADDING", (0, 0), (-1, -1), 3),
-                ("LEFTPADDING", (0, 0), (-1, -1), 4),
-                ("ROWBACKGROUNDS", (0, 1), (-1, -1),
-                 [colors.white, colors.HexColor("#F8F9FA")]),
-            ]
-            reg_tbl.setStyle(TableStyle(reg_style))
-            story.append(reg_tbl)
-
         return story
 
     # ─── TIMELINE SECTION ────────────────────────────────────────────
@@ -622,38 +560,38 @@ class ForensicVisualReportGenerator:
     # ─── BENEFICIARY SECTION ─────────────────────────────────────────
 
     def _build_beneficiary_section(self, beneficiaries: list, company: str) -> list:
-        """Build beneficiary analysis with charts and tables."""
+        """Build beneficiary profit analysis with charts and tables."""
         story: list = []
         story.append(Paragraph(
             "FINANCIAL BENEFICIARY ANALYSIS", self.styles["SectionHead"],
         ))
         story.append(HRFlowable(width="100%", thickness=2, color=ACCENT_COLOR, spaceAfter=12))
 
-        # Determine best metric for sorting
-        has_profit = any(b.get("total_profit", 0) > 0 for b in beneficiaries)
-        has_shares = any(b.get("total_shares", 0) > 0 for b in beneficiaries)
-        sort_key = "total_profit" if has_profit else "total_shares" if has_shares else "violations"
+        # Top beneficiaries table
+        # Determine whether profit or shares is the available metric
+        has_profit = any(b.get("total_profit", 0) for b in beneficiaries)
+        if has_profit:
+            metric_label = "Profit ($)"
+            sort_key = "total_profit"
+        else:
+            metric_label = "Shares"
+            sort_key = "total_shares"
 
         sorted_bens = sorted(
-            beneficiaries, key=lambda b: abs(b.get(sort_key, 0) or 0), reverse=True,
+            beneficiaries, key=lambda b: b.get(sort_key, 0), reverse=True,
         )[:10]
 
-        # Build table with appropriate columns
-        if has_profit:
-            header = ["Name", "Role", "Profit ($)", "Transactions", "Risk Score", "Violations"]
-        else:
-            header = ["Name", "Role", "Shares", "Transactions", "Risk Score", "Violations"]
-
+        header = ["Name", "Role", metric_label, "Transactions", "Risk Score", "Violations"]
         rows = [header]
         for b in sorted_bens:
             if has_profit:
-                amount = f"${b.get('total_profit', 0):,.0f}"
+                metric_value = f"${b.get('total_profit', 0):,.0f}"
             else:
-                amount = f"{b.get('total_shares', 0):,.0f}"
+                metric_value = f"{b.get('total_shares', 0):,.0f}"
             rows.append([
-                b.get("name", "Unknown")[:22],
+                b.get("name", "Unknown"),
                 b.get("role", "—"),
-                amount,
+                metric_value,
                 str(b.get("transaction_count", 0)),
                 f"{b.get('risk_score', 0):.0f}",
                 str(b.get("violations", 0)),
@@ -685,17 +623,17 @@ class ForensicVisualReportGenerator:
         story.append(tbl)
         story.append(Spacer(1, 12))
 
-        # Charts
+        # Profit bar chart
         if MATPLOTLIB_AVAILABLE and sorted_bens:
             img = self._generate_profit_bar(sorted_bens, company)
             if img:
-                story.append(Paragraph("Beneficiary Analysis", self.styles["SubHead"]))
+                story.append(Paragraph("Profit by Beneficiary", self.styles["SubHead"]))
                 story.append(Image(img, width=6.0 * inch, height=3.0 * inch))
 
             img2 = self._generate_role_pie(beneficiaries, company)
             if img2:
                 story.append(Spacer(1, 8))
-                story.append(Paragraph("Distribution by Role", self.styles["SubHead"]))
+                story.append(Paragraph("Profit Distribution by Role", self.styles["SubHead"]))
                 story.append(Image(img2, width=4.5 * inch, height=3.0 * inch))
 
         return story
@@ -772,17 +710,13 @@ class ForensicVisualReportGenerator:
                 story.append(Image(img, width=6.5 * inch, height=3.5 * inch))
 
         # Compliance summary table
-        try:
-            from .visualizations.filing_deadline_chart import FilingDeadlineChart
-            fdc = FilingDeadlineChart()
-            enriched = fdc._enrich_filings(filings)
-            late_count = sum(1 for f in enriched if f.get("status") == "LATE")
-            on_time_count = sum(1 for f in enriched if f.get("status") == "ON_TIME")
-            total = len(enriched)
-        except (ImportError, Exception):
-            total = len(filings)
-            late_count = 0
-            on_time_count = total
+        from .visualizations.filing_deadline_chart import FilingDeadlineChart
+
+        fdc = FilingDeadlineChart()
+        enriched = fdc._enrich_filings(filings)
+        late_count = sum(1 for f in enriched if f.get("status") == "LATE")
+        on_time_count = sum(1 for f in enriched if f.get("status") == "ON_TIME")
+        total = len(enriched)
 
         story.append(Spacer(1, 8))
         summary_data = [
@@ -954,6 +888,270 @@ class ForensicVisualReportGenerator:
         ))
         return story
 
+    # ─── DATA ENRICHMENT ─────────────────────────────────────────────
+
+    @staticmethod
+    def _enrich_analysis_results(results: Dict) -> Dict:
+        """
+        Synthesize missing collections from available data.
+
+        When running standalone report generation from raw JSON, the full
+        analysis pipeline may not have populated every collection. This
+        method fills in transactions, beneficiaries, actors, and filings
+        by extracting what it can from the violations list, and performs
+        lightweight cleanup on material_events and transaction values.
+
+        Args:
+            results: The analysis results dict (will be deep-copied).
+
+        Returns:
+            A new dict with enriched / synthesized collections.
+        """
+        r = copy.deepcopy(results)
+        violations = r.get("violations", [])
+
+        # 1. Synthesize transactions from violations that carry date/shares/value
+        if not r.get("transactions"):
+            synthesized_txns: List[Dict[str, Any]] = []
+            for v in violations:
+                v_date = v.get("transaction_date") or v.get("date") or v.get("filing_date")
+                v_shares = v.get("shares") or v.get("shares_traded", 0)
+                v_value = v.get("value") or v.get("transaction_value", 0)
+                if v_date or v_shares or v_value:
+                    synthesized_txns.append({
+                        "date": v_date,
+                        "shares": v_shares,
+                        "value": v_value,
+                        "actor": v.get("reporting_owner") or v.get("owner") or v.get("owner_name") or v.get("insider_name") or v.get("node_id", "Unknown"),
+                        "risk_level": v.get("severity", v.get("risk_level", "LOW")),
+                        "accession_number": v.get("accession_number", ""),
+                        "violation_type": v.get("violation_type", ""),
+                    })
+            if synthesized_txns:
+                r["transactions"] = synthesized_txns
+                logger.info("Enrichment: synthesized %d transactions from violations", len(synthesized_txns))
+
+        # 2. Synthesize beneficiaries by grouping violations by owner name
+        if not r.get("beneficiaries"):
+            owner_map: Dict[str, Dict[str, Any]] = {}
+            for v in violations:
+                name = v.get("reporting_owner") or v.get("owner") or v.get("owner_name") or v.get("insider_name") or v.get("node_id")
+                if not name:
+                    continue
+                if name not in owner_map:
+                    owner_map[name] = {
+                        "name": name,
+                        "role": v.get("role", v.get("insider_role", "")),
+                        "total_shares": 0,
+                        "total_profit": 0,
+                        "transaction_count": 0,
+                        "risk_score": 0,
+                        "violations": 0,
+                    }
+                entry = owner_map[name]
+                entry["total_shares"] += v.get("shares", v.get("shares_traded", 0)) or 0
+                entry["total_profit"] += v.get("value", v.get("transaction_value", 0)) or 0
+                entry["transaction_count"] += 1
+                entry["violations"] += 1
+                sev = v.get("severity", v.get("risk_level", "LOW"))
+                sev_score = {"CRITICAL": 100, "HIGH": 75, "MEDIUM": 50, "LOW": 25}.get(
+                    str(sev).upper(), 25
+                )
+                entry["risk_score"] = max(entry["risk_score"], sev_score)
+            if owner_map:
+                r["beneficiaries"] = list(owner_map.values())
+                logger.info("Enrichment: synthesized %d beneficiaries from violations", len(owner_map))
+
+        # 3. Synthesize actors from unique names in violations
+        if not r.get("actors"):
+            actor_map: Dict[str, Dict[str, Any]] = {}
+            for v in violations:
+                name = v.get("reporting_owner") or v.get("owner") or v.get("owner_name") or v.get("insider_name") or v.get("node_id")
+                if not name:
+                    continue
+                if name not in actor_map:
+                    actor_map[name] = {
+                        "name": name,
+                        "actor_id": name,
+                        "actor_type": "insider",
+                        "roles": [],
+                        "risk_score": 0,
+                    }
+                role = v.get("role", v.get("insider_role", ""))
+                if role and role not in actor_map[name]["roles"]:
+                    actor_map[name]["roles"].append(role)
+                sev = v.get("severity", v.get("risk_level", "LOW"))
+                sev_score = {"CRITICAL": 100, "HIGH": 75, "MEDIUM": 50, "LOW": 25}.get(
+                    str(sev).upper(), 25
+                )
+                actor_map[name]["risk_score"] = max(actor_map[name]["risk_score"], sev_score)
+            if actor_map:
+                r["actors"] = list(actor_map.values())
+                logger.info("Enrichment: synthesized %d actors from violations", len(actor_map))
+
+        # 4. Synthesize filings from unique accession numbers in violations
+        if not r.get("filings"):
+            seen_accessions: Dict[str, Dict[str, Any]] = {}
+            for v in violations:
+                acc = v.get("accession_number", "")
+                if acc and acc not in seen_accessions:
+                    seen_accessions[acc] = {
+                        "accession_number": acc,
+                        "filing_type": v.get("filing_type", v.get("form_type", "Unknown")),
+                        "filing_date": v.get("date") or v.get("transaction_date", ""),
+                    }
+            if seen_accessions:
+                r["filings"] = list(seen_accessions.values())
+                logger.info("Enrichment: synthesized %d filings from violations", len(seen_accessions))
+
+        # 5. Filter material_events -- remove entries with null dates or empty descriptions
+        if r.get("material_events"):
+            r["material_events"] = [
+                evt for evt in r["material_events"]
+                if evt.get("date") and (evt.get("description") or "").strip()
+            ]
+
+        # 6. For each transaction, compute value from shares * price_per_share when value is 0
+        for txn in r.get("transactions", []):
+            if not txn.get("value"):
+                shares = txn.get("shares", 0) or 0
+                price = txn.get("price_per_share", 0) or 0
+                if shares and price:
+                    txn["value"] = shares * price
+
+        return r
+
+    # ─── VIOLATION REGISTER ──────────────────────────────────────────
+
+    def _build_violation_register(self, results: Dict) -> list:
+        """
+        Build a deduplicated, severity-coded violation register table.
+
+        Each row is color-coded by severity:
+            CRITICAL = red, HIGH = orange, MEDIUM = yellow, LOW = green.
+
+        Returns:
+            List of ReportLab flowables (empty list when no violations).
+        """
+        violations = self._extract_violations(results)
+        if not violations:
+            return []
+
+        story: list = []
+        story.append(Paragraph("VIOLATION REGISTER", self.styles["SubHead"]))
+        story.append(HRFlowable(width="100%", thickness=1, color=ACCENT_COLOR, spaceAfter=8))
+
+        # Deduplicate by (violation_type, owner, accession_number)
+        seen: set = set()
+        unique_violations: list = []
+        for v in violations:
+            key = (
+                v.get("violation_type", ""),
+                v.get("reporting_owner") or v.get("owner") or v.get("owner_name") or v.get("insider_name") or v.get("node_id", ""),
+                v.get("accession_number", ""),
+            )
+            if key not in seen:
+                seen.add(key)
+                unique_violations.append(v)
+
+        # Sort by severity priority
+        sev_order = {"CRITICAL": 0, "HIGH": 1, "MEDIUM": 2, "LOW": 3}
+        unique_violations.sort(key=lambda v: sev_order.get(
+            self._normalize_severity(v.get("severity", v.get("risk_level", "LOW"))), 4
+        ))
+
+        # Build table data
+        header = [
+            "Violation Type", "Owner/Insider", "Date", "Shares",
+            "Penalty Estimate", "SEC Filing", "Statutory Reference",
+        ]
+        rows = [header]
+        row_severities: list = []  # track severity per data row for coloring
+
+        for v in unique_violations:
+            sev = self._normalize_severity(v.get("severity", v.get("risk_level", "LOW")))
+            owner = v.get("reporting_owner") or v.get("owner") or v.get("owner_name") or v.get("insider_name") or v.get("node_id", "")
+            vdate = v.get("transaction_date") or v.get("date") or v.get("filing_date", "")
+            if vdate and not isinstance(vdate, str):
+                vdate = str(vdate)
+            shares = v.get("shares") or v.get("shares_traded", 0)
+            penalty = v.get("penalty_estimate") or v.get("estimated_penalty", 0)
+            accession = v.get("accession_number", "")
+            statute = v.get("statutory_reference") or v.get("statute", "")
+
+            rows.append([
+                (v.get("violation_type", "Unknown"))[:28],
+                owner[:22],
+                str(vdate)[:10] if vdate else "",
+                f"{int(shares):,}" if shares else "",
+                f"${penalty:,.0f}" if penalty else "",
+                accession[:20] if accession else "",
+                statute[:22] if statute else "",
+            ])
+            row_severities.append(sev)
+
+        col_widths = [
+            1.3 * inch, 1.1 * inch, 0.7 * inch, 0.6 * inch,
+            0.8 * inch, 1.0 * inch, 1.1 * inch,
+        ]
+        tbl = Table(rows, colWidths=col_widths)
+
+        # Base style commands
+        style_cmds = [
+            ("FONT", (0, 0), (-1, 0), self.TITLE_FONT, 8),
+            ("FONT", (0, 1), (-1, -1), self.BODY_FONT, 7),
+            ("BACKGROUND", (0, 0), (-1, 0), HEADER_BG),
+            ("TEXTCOLOR", (0, 0), (-1, 0), colors.whitesmoke),
+            ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
+            ("GRID", (0, 0), (-1, -1), 0.5, colors.HexColor("#DEE2E6")),
+            ("TOPPADDING", (0, 0), (-1, -1), 4),
+            ("BOTTOMPADDING", (0, 0), (-1, -1), 4),
+            ("LEFTPADDING", (0, 0), (-1, -1), 4),
+        ]
+
+        # Severity row coloring
+        sev_bg = {
+            "CRITICAL": colors.HexColor("#FFCCCC"),
+            "HIGH": colors.HexColor("#FFE0CC"),
+            "MEDIUM": colors.HexColor("#FFFACC"),
+            "LOW": colors.HexColor("#CCFFCC"),
+        }
+        sev_left_stripe = {
+            "CRITICAL": SEVERITY_COLORS_RL.get("CRITICAL", colors.red),
+            "HIGH": SEVERITY_COLORS_RL.get("HIGH", colors.orange),
+            "MEDIUM": SEVERITY_COLORS_RL.get("MEDIUM", colors.yellow),
+            "LOW": SEVERITY_COLORS_RL.get("LOW", colors.green),
+        }
+        for i, sev in enumerate(row_severities):
+            row_idx = i + 1  # account for header row
+            bg = sev_bg.get(sev)
+            if bg:
+                style_cmds.append(("BACKGROUND", (0, row_idx), (-1, row_idx), bg))
+            stripe = sev_left_stripe.get(sev)
+            if stripe:
+                style_cmds.append(("BACKGROUND", (0, row_idx), (0, row_idx), stripe))
+                style_cmds.append(("TEXTCOLOR", (0, row_idx), (0, row_idx), colors.white))
+                style_cmds.append(("FONT", (0, row_idx), (0, row_idx), self.TITLE_FONT, 7))
+
+        tbl.setStyle(TableStyle(style_cmds))
+        story.append(tbl)
+        return story
+
+    # ─── SEVERITY NORMALIZER ─────────────────────────────────────────
+
+    @staticmethod
+    def _normalize_severity(sev) -> str:
+        """Normalize a severity value to one of CRITICAL/HIGH/MEDIUM/LOW."""
+        if isinstance(sev, (int, float)):
+            if sev >= 8:
+                return "CRITICAL"
+            elif sev >= 6:
+                return "HIGH"
+            elif sev >= 4:
+                return "MEDIUM"
+            return "LOW"
+        return str(sev).upper() if sev else "LOW"
+
     # ─── PAGE FOOTER ─────────────────────────────────────────────────
 
     def _page_footer(self, canvas_obj, doc):
@@ -971,476 +1169,504 @@ class ForensicVisualReportGenerator:
     # MATPLOTLIB CHART GENERATORS (produce BytesIO for PDF embedding)
     # ═══════════════════════════════════════════════════════════════════
 
+    @staticmethod
+    def _parse_date(value):
+        """Convert date-like values to datetime.date objects for matplotlib."""
+        from datetime import date as _date, datetime as _dt
+        if isinstance(value, _dt):
+            return value.date()
+        if isinstance(value, _date):
+            return value
+        if isinstance(value, str):
+            for fmt in ('%Y-%m-%d', '%Y-%m-%dT%H:%M:%S', '%m/%d/%Y'):
+                try:
+                    return _dt.strptime(value, fmt).date()
+                except (ValueError, TypeError):
+                    continue
+        return _date.today()
+
     def _generate_severity_pie(self, results: Dict) -> Optional[BytesIO]:
         """Generate severity distribution pie chart."""
-        all_violations = self._extract_violations(results)
-        if not all_violations:
+        try:
+            all_violations = self._extract_violations(results)
+            if not all_violations:
+                return None
+
+            counts: Dict[str, int] = Counter()
+            for v in all_violations:
+                sev = v.get("severity", v.get("risk_level", "LOW"))
+                if isinstance(sev, (int, float)):
+                    if sev >= 8:
+                        sev = "CRITICAL"
+                    elif sev >= 6:
+                        sev = "HIGH"
+                    elif sev >= 4:
+                        sev = "MEDIUM"
+                    else:
+                        sev = "LOW"
+                counts[sev] += 1
+
+            labels = []
+            sizes = []
+            chart_colors = []
+            for sev in ["CRITICAL", "HIGH", "MEDIUM", "LOW"]:
+                if counts.get(sev, 0) > 0:
+                    labels.append(f"{sev} ({counts[sev]})")
+                    sizes.append(counts[sev])
+                    chart_colors.append(SEVERITY_COLORS_HEX.get(sev, "#888"))
+
+            if not sizes:
+                return None
+
+            fig, ax = plt.subplots(figsize=(5, 3.5))
+            wedges, texts, autotexts = ax.pie(
+                sizes, labels=labels, colors=chart_colors, autopct="%1.1f%%",
+                startangle=90, wedgeprops={"linewidth": 2, "edgecolor": "white"},
+            )
+            for t in autotexts:
+                t.set_fontsize(9)
+                t.set_fontweight("bold")
+            ax.set_title("Violation Severity Distribution", fontsize=12, fontweight="bold")
+            plt.tight_layout()
+
+            buf = BytesIO()
+            fig.savefig(buf, format="png", dpi=150, bbox_inches="tight")
+            plt.close(fig)
+            buf.seek(0)
+            return buf
+        except Exception as e:
+            logger.warning(f"Chart generation failed (_generate_severity_pie): {e}")
+            plt.close('all')
             return None
-
-        counts: Dict[str, int] = Counter()
-        for v in all_violations:
-            sev = v.get("severity", v.get("risk_level", "LOW"))
-            if isinstance(sev, (int, float)):
-                if sev >= 8:
-                    sev = "CRITICAL"
-                elif sev >= 6:
-                    sev = "HIGH"
-                elif sev >= 4:
-                    sev = "MEDIUM"
-                else:
-                    sev = "LOW"
-            counts[sev] += 1
-
-        labels = []
-        sizes = []
-        chart_colors = []
-        for sev in ["CRITICAL", "HIGH", "MEDIUM", "LOW"]:
-            if counts.get(sev, 0) > 0:
-                labels.append(f"{sev} ({counts[sev]})")
-                sizes.append(counts[sev])
-                chart_colors.append(SEVERITY_COLORS_HEX.get(sev, "#888"))
-
-        fig, ax = plt.subplots(figsize=(5, 3.5))
-        wedges, texts, autotexts = ax.pie(
-            sizes, labels=labels, colors=chart_colors, autopct="%1.1f%%",
-            startangle=90, wedgeprops={"linewidth": 2, "edgecolor": "white"},
-        )
-        for t in autotexts:
-            t.set_fontsize(9)
-            t.set_fontweight("bold")
-        ax.set_title("Violation Severity Distribution", fontsize=12, fontweight="bold")
-        plt.tight_layout()
-
-        buf = BytesIO()
-        fig.savefig(buf, format="png", dpi=150, bbox_inches="tight")
-        plt.close(fig)
-        buf.seek(0)
-        return buf
 
     def _generate_timeline_chart(
         self, transactions: list, material_events: list, company: str,
     ) -> Optional[BytesIO]:
         """Generate transaction timeline chart using matplotlib."""
-        if not transactions:
+        try:
+            if not transactions:
+                return None
+
+            risk_color_map = {
+                "CRITICAL": "#DC143C", "HIGH": "#FF6347",
+                "MEDIUM": "#FFD700", "LOW": "#32CD32",
+            }
+
+            # Determine y-axis metric: prefer value, fall back to shares if all values are 0
+            all_values = [abs(txn.get("value", 0) or 0) for txn in transactions]
+            use_shares = all(v == 0 for v in all_values)
+            if use_shares:
+                y_label = "Shares"
+                y_formatter = mticker.FuncFormatter(lambda x, _: f"{x:,.0f}")
+            else:
+                y_label = "Transaction Value ($)"
+                y_formatter = mticker.FuncFormatter(lambda x, _: f"${x:,.0f}")
+
+            fig, ax = plt.subplots(figsize=(9, 4))
+
+            for txn in transactions:
+                txn_date = self._parse_date(txn.get("date"))
+                if use_shares:
+                    y_val = abs(txn.get("shares", 0) or 0)
+                else:
+                    y_val = abs(txn.get("value", 0) or 0)
+                risk = txn.get("risk_level", "LOW")
+                c = risk_color_map.get(risk, "#888888")
+                size = max(15, min(200, y_val / (10 if use_shares else 10000)))
+                ax.scatter(txn_date, y_val, s=size, c=c, alpha=0.7, edgecolors="white", linewidth=0.8)
+
+            # Material events
+            for evt in (material_events or []):
+                evt_date = evt.get("date")
+                if evt_date:
+                    ax.axvline(x=self._parse_date(evt_date), color="#7FDBFF", linestyle="--", linewidth=1, alpha=0.7)
+
+            ax.set_xlabel("Date", fontsize=10)
+            ax.set_ylabel(y_label, fontsize=10)
+            ax.set_title(f"{company} — Transaction Timeline", fontsize=12, fontweight="bold")
+            ax.yaxis.set_major_formatter(y_formatter)
+
+            # Legend
+            for level, c in risk_color_map.items():
+                ax.scatter([], [], c=c, s=40, label=level, edgecolors="white")
+            ax.legend(title="Risk Level", loc="upper left", fontsize=8, title_fontsize=9)
+
+            ax.grid(True, alpha=0.3)
+            fig.autofmt_xdate()
+            plt.tight_layout()
+
+            buf = BytesIO()
+            fig.savefig(buf, format="png", dpi=150, bbox_inches="tight")
+            plt.close(fig)
+            buf.seek(0)
+            return buf
+        except Exception as e:
+            logger.warning(f"Chart generation failed (_generate_timeline_chart): {e}")
+            plt.close('all')
             return None
-
-        risk_color_map = {
-            "CRITICAL": "#DC143C", "HIGH": "#FF6347",
-            "MEDIUM": "#FFD700", "LOW": "#32CD32",
-        }
-
-        # Determine if we have dollar values or should use shares
-        has_dollar_values = any(abs(t.get("value", 0)) > 0 for t in transactions)
-        y_field = "value" if has_dollar_values else "shares"
-        y_label = "Transaction Value ($)" if has_dollar_values else "Shares Transacted"
-
-        fig, ax = plt.subplots(figsize=(10, 4.5))
-
-        # Compute max for relative sizing
-        max_y = max((abs(t.get(y_field, 0)) for t in transactions), default=1) or 1
-
-        for txn in transactions:
-            txn_date = self._parse_date(txn.get("date"))
-            y_val = abs(txn.get(y_field, 0))
-            risk = txn.get("risk_level", "LOW")
-            c = risk_color_map.get(risk, "#888888")
-            size = max(20, min(250, (y_val / max_y) * 200 + 20))
-            ax.scatter(txn_date, y_val, s=size, c=c, alpha=0.7,
-                       edgecolors="white", linewidth=0.8, zorder=3)
-
-        # Material events
-        for evt in material_events:
-            evt_date = evt.get("date")
-            if evt_date:
-                ax.axvline(x=evt_date, color="#7FDBFF", linestyle="--", linewidth=1, alpha=0.7)
-
-        ax.set_xlabel("Date", fontsize=10)
-        ax.set_ylabel(y_label, fontsize=10)
-        ax.set_title(f"{company} — Insider Transaction Timeline", fontsize=12, fontweight="bold")
-
-        if has_dollar_values:
-            ax.yaxis.set_major_formatter(mticker.FuncFormatter(lambda x, _: f"${x:,.0f}"))
-        else:
-            ax.yaxis.set_major_formatter(mticker.FuncFormatter(lambda x, _: f"{x:,.0f}"))
-
-        # Legend
-        for level, c in risk_color_map.items():
-            ax.scatter([], [], c=c, s=40, label=level, edgecolors="white")
-        ax.legend(title="Risk Level", loc="upper right", fontsize=8, title_fontsize=9)
-
-        ax.grid(True, alpha=0.3)
-        fig.autofmt_xdate(rotation=30, ha='right')
-        plt.tight_layout()
-
-        buf = BytesIO()
-        fig.savefig(buf, format="png", dpi=150, bbox_inches="tight")
-        plt.close(fig)
-        buf.seek(0)
-        return buf
 
     def _generate_profit_bar(self, beneficiaries: list, company: str) -> Optional[BytesIO]:
-        """Generate horizontal bar chart of beneficiary profits/shares."""
-        if not beneficiaries:
-            return None
+        """Generate horizontal bar chart of beneficiary profits."""
+        try:
+            if not beneficiaries:
+                return None
 
-        # Determine best metric
-        has_profit = any(b.get("total_profit", 0) > 0 for b in beneficiaries)
-        has_shares = any(b.get("total_shares", 0) > 0 for b in beneficiaries)
-
-        if has_profit:
-            metric = "total_profit"
-            x_label = "Estimated Profit ($)"
-            fmt = lambda x, _: f"${x:,.0f}"
-        elif has_shares:
-            metric = "total_shares"
-            x_label = "Total Shares"
-            fmt = lambda x, _: f"{x:,.0f}"
-        else:
-            metric = "violations"
-            x_label = "Violation Count"
-            fmt = lambda x, _: f"{x:,.0f}"
-
-        names = [b.get("name", "Unknown")[:20] for b in beneficiaries]
-        values = [abs(b.get(metric, 0) or 0) for b in beneficiaries]
-        risk_scores = [b.get("risk_score", 0) for b in beneficiaries]
-
-        # Filter out zero values
-        filtered = [(n, v, rs) for n, v, rs in zip(names, values, risk_scores) if v > 0]
-        if not filtered:
-            return None
-        names, values, risk_scores = zip(*filtered)
-
-        bar_colors = []
-        for rs in risk_scores:
-            if rs >= 80:
-                bar_colors.append("#DC143C")
-            elif rs >= 60:
-                bar_colors.append("#FF6347")
-            elif rs >= 40:
-                bar_colors.append("#FFD700")
+            # Determine metric: prefer total_profit, fall back to total_shares or transaction_count
+            all_profits = [b.get("total_profit", 0) or 0 for b in beneficiaries]
+            if all(p == 0 for p in all_profits):
+                all_shares = [b.get("total_shares", 0) or 0 for b in beneficiaries]
+                if any(s != 0 for s in all_shares):
+                    metric_key = "total_shares"
+                    x_label = "Total Shares"
+                    x_formatter = mticker.FuncFormatter(lambda x, _: f"{x:,.0f}")
+                else:
+                    metric_key = "transaction_count"
+                    x_label = "Transaction Count"
+                    x_formatter = mticker.FuncFormatter(lambda x, _: f"{x:,.0f}")
             else:
-                bar_colors.append("#32CD32")
+                metric_key = "total_profit"
+                x_label = "Estimated Profit ($)"
+                x_formatter = mticker.FuncFormatter(lambda x, _: f"${x:,.0f}")
 
-        fig, ax = plt.subplots(figsize=(8, max(3, len(names) * 0.4)))
-        y_pos = np.arange(len(names))
-        ax.barh(y_pos, values, color=bar_colors, edgecolor="white", linewidth=0.5)
-        ax.set_yticks(y_pos)
-        ax.set_yticklabels(names, fontsize=8)
-        ax.set_xlabel(x_label, fontsize=10)
-        ax.set_title(f"{company} — Beneficiary Analysis", fontsize=12, fontweight="bold")
-        ax.xaxis.set_major_formatter(mticker.FuncFormatter(fmt))
-        ax.invert_yaxis()
-        ax.grid(True, axis="x", alpha=0.3)
-        plt.tight_layout()
+            # Filter out entries with zero metric value
+            filtered = [b for b in beneficiaries if (b.get(metric_key, 0) or 0) != 0]
+            if not filtered:
+                return None
 
-        buf = BytesIO()
-        fig.savefig(buf, format="png", dpi=150, bbox_inches="tight")
-        plt.close(fig)
-        buf.seek(0)
-        return buf
+            names = [b.get("name", "Unknown")[:20] for b in filtered]
+            values = [b.get(metric_key, 0) or 0 for b in filtered]
+            risk_scores = [b.get("risk_score", 0) for b in filtered]
+
+            bar_colors = []
+            for rs in risk_scores:
+                if rs >= 80:
+                    bar_colors.append("#DC143C")
+                elif rs >= 60:
+                    bar_colors.append("#FF6347")
+                elif rs >= 40:
+                    bar_colors.append("#FFD700")
+                else:
+                    bar_colors.append("#32CD32")
+
+            fig, ax = plt.subplots(figsize=(8, 3.5))
+            y_pos = np.arange(len(names))
+            ax.barh(y_pos, values, color=bar_colors, edgecolor="white", linewidth=0.5)
+            ax.set_yticks(y_pos)
+            ax.set_yticklabels(names, fontsize=8)
+            ax.set_xlabel(x_label, fontsize=10)
+            ax.set_title(f"{company} — Beneficiary Analysis", fontsize=12, fontweight="bold")
+            ax.xaxis.set_major_formatter(x_formatter)
+            ax.invert_yaxis()
+            ax.grid(True, axis="x", alpha=0.3)
+            plt.tight_layout()
+
+            buf = BytesIO()
+            fig.savefig(buf, format="png", dpi=150, bbox_inches="tight")
+            plt.close(fig)
+            buf.seek(0)
+            return buf
+        except Exception as e:
+            logger.warning(f"Chart generation failed (_generate_profit_bar): {e}")
+            plt.close('all')
+            return None
 
     def _generate_role_pie(self, beneficiaries: list, company: str) -> Optional[BytesIO]:
         """Generate role-based distribution pie chart."""
-        if not beneficiaries:
+        try:
+            if not beneficiaries:
+                return None
+
+            # Determine metric: prefer total_profit, fall back to violations or transaction_count
+            all_profits = [b.get("total_profit", 0) or 0 for b in beneficiaries]
+            if all(p == 0 for p in all_profits):
+                all_violations = [b.get("violations", 0) or 0 for b in beneficiaries]
+                if any(v != 0 for v in all_violations):
+                    metric_key = "violations"
+                    chart_title = "Violations by Role"
+                else:
+                    metric_key = "transaction_count"
+                    chart_title = "Transactions by Role"
+            else:
+                metric_key = "total_profit"
+                chart_title = "Profit by Role"
+
+            role_values: Dict[str, float] = {}
+            for b in beneficiaries:
+                role = b.get("role", "Other") or "Other"
+                role_values[role] = role_values.get(role, 0) + (b.get(metric_key, 0) or 0)
+
+            # Filter out zero values
+            role_values = {r: v for r, v in role_values.items() if v > 0}
+            if not role_values:
+                return None
+
+            roles = list(role_values.keys())
+            values = list(role_values.values())
+            chart_colors = [ROLE_COLORS_HEX.get(r, "#778899") for r in roles]
+
+            fig, ax = plt.subplots(figsize=(5, 3.5))
+            wedges, texts, autotexts = ax.pie(
+                values, labels=roles, colors=chart_colors, autopct="%1.1f%%",
+                startangle=90, wedgeprops={"linewidth": 2, "edgecolor": "white"},
+                pctdistance=0.8,
+            )
+            for t in autotexts:
+                t.set_fontsize(8)
+            ax.set_title(chart_title, fontsize=12, fontweight="bold")
+            plt.tight_layout()
+
+            buf = BytesIO()
+            fig.savefig(buf, format="png", dpi=150, bbox_inches="tight")
+            plt.close(fig)
+            buf.seek(0)
+            return buf
+        except Exception as e:
+            logger.warning(f"Chart generation failed (_generate_role_pie): {e}")
+            plt.close('all')
             return None
-
-        # Determine best metric
-        has_profit = any(b.get("total_profit", 0) > 0 for b in beneficiaries)
-        has_shares = any(b.get("total_shares", 0) > 0 for b in beneficiaries)
-
-        if has_profit:
-            metric = "total_profit"
-            title_suffix = "Profit"
-        elif has_shares:
-            metric = "total_shares"
-            title_suffix = "Shares"
-        else:
-            metric = "violations"
-            title_suffix = "Violations"
-
-        role_totals: Dict[str, float] = {}
-        for b in beneficiaries:
-            role = b.get("role", "Other")
-            role_totals[role] = role_totals.get(role, 0) + abs(b.get(metric, 0) or 0)
-
-        # Filter zero values
-        role_totals = {k: v for k, v in role_totals.items() if v > 0}
-        if not role_totals:
-            return None
-
-        roles = list(role_totals.keys())
-        values = list(role_totals.values())
-        chart_colors = [ROLE_COLORS_HEX.get(r, "#778899") for r in roles]
-
-        fig, ax = plt.subplots(figsize=(5, 3.5))
-        wedges, texts, autotexts = ax.pie(
-            values, labels=roles, colors=chart_colors, autopct="%1.1f%%",
-            startangle=90, wedgeprops={"linewidth": 2, "edgecolor": "white"},
-            pctdistance=0.8,
-        )
-        for t in autotexts:
-            t.set_fontsize(8)
-        ax.set_title(f"{title_suffix} by Role", fontsize=12, fontweight="bold")
-        plt.tight_layout()
-
-        buf = BytesIO()
-        fig.savefig(buf, format="png", dpi=150, bbox_inches="tight")
-        plt.close(fig)
-        buf.seek(0)
-        return buf
 
     def _generate_heatmap_chart(self, transactions: list, company: str) -> Optional[BytesIO]:
         """Generate trading intensity heatmap."""
-        if not transactions:
-            return None
+        try:
+            if not transactions:
+                return None
 
-        # Determine best metric
-        has_dollar_values = any(abs(t.get("value", 0)) > 0 for t in transactions)
-        metric_field = "value" if has_dollar_values else "shares"
-        metric_label = "Transaction Value ($)" if has_dollar_values else "Shares Transacted"
+            actor_date_data: Dict[str, Dict[str, float]] = defaultdict(lambda: defaultdict(float))
+            actors_set: set = set()
+            dates_set: set = set()
 
-        actor_date_data: Dict[str, Dict[str, float]] = defaultdict(lambda: defaultdict(float))
-        actors_set: set = set()
-        dates_set: set = set()
+            for txn in transactions:
+                actor = txn.get("actor", "Unknown")
+                txn_date = str(self._parse_date(txn.get("date")))
+                value = abs(txn.get("value", 0) or 0)
+                actor_date_data[actor][txn_date] += value
+                actors_set.add(actor)
+                dates_set.add(txn_date)
 
-        for txn in transactions:
-            actor = txn.get("actor", "Unknown")
-            txn_date = str(txn.get("date", ""))
-            val = abs(txn.get(metric_field, 0))
-            actor_date_data[actor][txn_date] += val
-            actors_set.add(actor)
-            dates_set.add(txn_date)
+            sorted_actors = sorted(actors_set)[:15]  # Limit actors for readability
+            sorted_dates = sorted(dates_set)
 
-        # Sort actors by total activity and limit for readability
-        actor_totals = {a: sum(actor_date_data[a].values()) for a in actors_set}
-        sorted_actors = sorted(actors_set, key=lambda a: actor_totals[a], reverse=True)[:15]
-        sorted_dates = sorted(dates_set)
+            if not sorted_actors or not sorted_dates:
+                return None
 
-        z = np.zeros((len(sorted_actors), len(sorted_dates)))
-        for i, actor in enumerate(sorted_actors):
-            for j, dt in enumerate(sorted_dates):
-                z[i, j] = actor_date_data[actor].get(dt, 0)
+            z = np.zeros((len(sorted_actors), len(sorted_dates)))
+            for i, actor in enumerate(sorted_actors):
+                for j, dt in enumerate(sorted_dates):
+                    z[i, j] = actor_date_data[actor].get(dt, 0)
 
-        fig, ax = plt.subplots(figsize=(10, max(3.5, len(sorted_actors) * 0.35)))
-        im = ax.imshow(z, aspect="auto", cmap="Reds", interpolation="nearest")
-
-        # Y-axis: truncate long names
-        display_actors = [a[:18] + "..." if len(a) > 18 else a for a in sorted_actors]
-        ax.set_yticks(range(len(sorted_actors)))
-        ax.set_yticklabels(display_actors, fontsize=7)
-
-        # X-axis: show subset of date labels to prevent overlap
-        step = max(1, len(sorted_dates) // 8)
-        ax.set_xticks(range(0, len(sorted_dates), step))
-        ax.set_xticklabels(
-            [sorted_dates[i][:10] for i in range(0, len(sorted_dates), step)],
-            rotation=45, ha="right", fontsize=7,
-        )
-        ax.set_title(f"{company} — Trading Intensity Heatmap", fontsize=12, fontweight="bold")
-        cbar = fig.colorbar(im, ax=ax, label=metric_label, shrink=0.8)
-        if has_dollar_values:
+            fig, ax = plt.subplots(figsize=(9, 4))
+            im = ax.imshow(z, aspect="auto", cmap="Reds", interpolation="nearest")
+            ax.set_yticks(range(len(sorted_actors)))
+            ax.set_yticklabels(sorted_actors, fontsize=7)
+            # Show subset of date labels
+            step = max(1, len(sorted_dates) // 10)
+            ax.set_xticks(range(0, len(sorted_dates), step))
+            ax.set_xticklabels(
+                [sorted_dates[i] for i in range(0, len(sorted_dates), step)],
+                rotation=45, ha="right", fontsize=7,
+            )
+            ax.set_title(f"{company} — Trading Intensity Heatmap", fontsize=12, fontweight="bold")
+            cbar = fig.colorbar(im, ax=ax, label="Transaction Value ($)")
             cbar.ax.yaxis.set_major_formatter(mticker.FuncFormatter(lambda x, _: f"${x:,.0f}"))
-        else:
-            cbar.ax.yaxis.set_major_formatter(mticker.FuncFormatter(lambda x, _: f"{x:,.0f}"))
-        plt.tight_layout()
+            plt.tight_layout()
 
-        buf = BytesIO()
-        fig.savefig(buf, format="png", dpi=150, bbox_inches="tight")
-        plt.close(fig)
-        buf.seek(0)
-        return buf
+            buf = BytesIO()
+            fig.savefig(buf, format="png", dpi=150, bbox_inches="tight")
+            plt.close(fig)
+            buf.seek(0)
+            return buf
+        except Exception as e:
+            logger.warning(f"Chart generation failed (_generate_heatmap_chart): {e}")
+            plt.close('all')
+            return None
 
     def _generate_bubble_chart(self, transactions: list, company: str) -> Optional[BytesIO]:
         """Generate transaction bubble chart."""
-        if not transactions:
-            return None
+        try:
+            if not transactions:
+                return None
 
-        risk_color_map = {
-            "CRITICAL": "#DC143C", "HIGH": "#FF6347",
-            "MEDIUM": "#FFD700", "LOW": "#32CD32",
-        }
+            risk_color_map = {
+                "CRITICAL": "#DC143C", "HIGH": "#FF6347",
+                "MEDIUM": "#FFD700", "LOW": "#32CD32",
+            }
 
-        # Determine best metric
-        has_dollar_values = any(abs(t.get("value", 0)) > 0 for t in transactions)
-        size_field = "value" if has_dollar_values else "shares"
-        max_size_val = max((abs(t.get(size_field, 0)) for t in transactions), default=1) or 1
+            # Determine sizing metric: prefer value, fall back to shares
+            all_values = [abs(txn.get("value", 0) or 0) for txn in transactions]
+            use_shares = all(v == 0 for v in all_values)
 
-        fig, ax = plt.subplots(figsize=(10, 5))
+            fig, ax = plt.subplots(figsize=(9, 4.5))
 
-        # Truncate long actor names for display
-        for txn in transactions:
-            txn_date = self._parse_date(txn.get("date"))
-            actor = txn.get("actor", "Unknown")
-            if len(actor) > 18:
-                actor = actor[:15] + "..."
-            size_val = abs(txn.get(size_field, 0))
-            risk = txn.get("risk_level", "LOW")
-            c = risk_color_map.get(risk, "#888888")
-            size = max(25, (size_val / max_size_val) * 400 + 25)
-            ax.scatter(
-                txn_date, actor, s=size, c=c, alpha=0.65,
-                edgecolors="white", linewidth=0.8, zorder=3,
+            for txn in transactions:
+                txn_date = self._parse_date(txn.get("date"))
+                actor = txn.get("actor", "Unknown")
+                if use_shares:
+                    metric = abs(txn.get("shares", 0) or 0)
+                    size = max(20, min(500, metric / 10))
+                else:
+                    metric = abs(txn.get("value", 0) or 0)
+                    size = max(20, min(500, metric / 5000))
+                risk = txn.get("risk_level", "LOW")
+                c = risk_color_map.get(risk, "#888888")
+                ax.scatter(
+                    txn_date, actor, s=size, c=c, alpha=0.7,
+                    edgecolors="white", linewidth=0.8,
+                )
+
+            ax.set_xlabel("Date", fontsize=10)
+            ax.set_ylabel("Actor", fontsize=10)
+            size_label = "Shares" if use_shares else "Value"
+            ax.set_title(
+                f"{company} — Transaction Magnitude (Bubble Size = {size_label})",
+                fontsize=12, fontweight="bold",
             )
 
-        ax.set_xlabel("Date", fontsize=10)
-        ax.set_ylabel("Actor", fontsize=9)
-        size_label = "Dollar Value" if has_dollar_values else "Shares"
-        ax.set_title(
-            f"{company} — Transaction Magnitude (Bubble Size = {size_label})",
-            fontsize=12, fontweight="bold",
-        )
+            for level, c in risk_color_map.items():
+                ax.scatter([], [], c=c, s=60, label=level, edgecolors="white")
+            ax.legend(title="Risk Level", loc="upper left", fontsize=8, title_fontsize=9)
+            ax.grid(True, alpha=0.3)
+            fig.autofmt_xdate()
+            plt.tight_layout()
 
-        for level, c in risk_color_map.items():
-            ax.scatter([], [], c=c, s=60, label=level, edgecolors="white")
-        ax.legend(title="Risk Level", loc="upper right", fontsize=8, title_fontsize=9)
-        ax.grid(True, alpha=0.3)
-        ax.tick_params(axis='y', labelsize=7)
-        fig.autofmt_xdate(rotation=30, ha='right')
-        plt.tight_layout()
-
-        buf = BytesIO()
-        fig.savefig(buf, format="png", dpi=150, bbox_inches="tight")
-        plt.close(fig)
-        buf.seek(0)
-        return buf
+            buf = BytesIO()
+            fig.savefig(buf, format="png", dpi=150, bbox_inches="tight")
+            plt.close(fig)
+            buf.seek(0)
+            return buf
+        except Exception as e:
+            logger.warning(f"Chart generation failed (_generate_bubble_chart): {e}")
+            plt.close('all')
+            return None
 
     def _generate_deadline_chart(
         self, filings: list, annual_events: list, company: str,
     ) -> Optional[BytesIO]:
         """Generate filing deadline compliance chart."""
-        if not filings:
-            return None
-
         try:
+            if not filings:
+                return None
+
             from .visualizations.filing_deadline_chart import FilingDeadlineChart
+
             fdc = FilingDeadlineChart()
             enriched = fdc._enrich_filings(filings)
-        except (ImportError, Exception):
-            # Fallback: use raw filings
-            enriched = filings
 
-        status_colors = {"ON_TIME": "#2ECC40", "LATE": "#FF4136", "UNKNOWN": "#AAAAAA"}
+            status_colors = {"ON_TIME": "#2ECC40", "LATE": "#FF4136", "UNKNOWN": "#AAAAAA"}
 
-        fig, ax = plt.subplots(figsize=(9, 4))
+            fig, ax = plt.subplots(figsize=(9, 4))
 
-        for f in enriched:
-            fdate = self._parse_date(f.get("filing_date"))
-            ftype = f.get("filing_type", "Unknown")
-            status = f.get("status", "UNKNOWN")
-            c = status_colors.get(status, "#AAAAAA")
-            marker = "o" if status != "LATE" else "x"
-            edge_kw = {"edgecolors": "white"} if marker == "o" else {}
-            ax.scatter(fdate, ftype, c=c, marker=marker, s=60, linewidth=0.8, **edge_kw)
+            for f in enriched:
+                fdate = self._parse_date(f.get("filing_date"))
+                ftype = f.get("filing_type", "Unknown")
+                status = f.get("status", "UNKNOWN")
+                c = status_colors.get(status, "#AAAAAA")
+                marker = "o" if status != "LATE" else "x"
+                edge_kw = {"edgecolors": "white"} if marker == "o" else {}
+                ax.scatter(fdate, ftype, c=c, marker=marker, s=60, linewidth=0.8, **edge_kw)
 
-        for evt in (annual_events or []):
-            evt_date = evt.get("date")
-            if evt_date:
-                ax.axvline(x=self._parse_date(evt_date), color="#7FDBFF",
-                           linestyle="--", linewidth=1, alpha=0.6)
+            for evt in (annual_events or []):
+                evt_date = evt.get("date")
+                if evt_date:
+                    ax.axvline(x=self._parse_date(evt_date), color="#7FDBFF", linestyle="--", linewidth=1, alpha=0.6)
 
-        ax.set_xlabel("Date", fontsize=10)
-        ax.set_ylabel("Filing Type", fontsize=10)
-        ax.set_title(f"{company} — Filing Deadline Compliance", fontsize=12, fontweight="bold")
+            ax.set_xlabel("Date", fontsize=10)
+            ax.set_ylabel("Filing Type", fontsize=10)
+            ax.set_title(f"{company} — Filing Deadline Compliance", fontsize=12, fontweight="bold")
 
-        for status, c in status_colors.items():
-            marker = "o" if status != "LATE" else "x"
-            ax.scatter([], [], c=c, marker=marker, s=40, label=status.replace("_", " ").title())
-        ax.legend(title="Status", loc="upper left", fontsize=8, title_fontsize=9)
-        ax.grid(True, alpha=0.3)
-        plt.tight_layout()
+            for status, c in status_colors.items():
+                marker = "o" if status != "LATE" else "x"
+                ax.scatter([], [], c=c, marker=marker, s=40, label=status.replace("_", " ").title())
+            ax.legend(title="Status", loc="upper left", fontsize=8, title_fontsize=9)
+            ax.grid(True, alpha=0.3)
+            fig.autofmt_xdate()
+            plt.tight_layout()
 
-        buf = BytesIO()
-        fig.savefig(buf, format="png", dpi=150, bbox_inches="tight")
-        plt.close(fig)
-        buf.seek(0)
-        return buf
+            buf = BytesIO()
+            fig.savefig(buf, format="png", dpi=150, bbox_inches="tight")
+            plt.close(fig)
+            buf.seek(0)
+            return buf
+        except Exception as e:
+            logger.warning(f"Chart generation failed (_generate_deadline_chart): {e}")
+            plt.close('all')
+            return None
 
     def _generate_network_chart(
         self, actors: list, relationships: list, company: str,
     ) -> Optional[BytesIO]:
         """Generate actor network graph."""
-        if not actors:
-            return None
-
         try:
-            import networkx as nx
-        except ImportError:
-            return None
+            if not actors:
+                return None
 
-        G = nx.Graph()
-        for actor in actors:
-            G.add_node(
-                actor.get("actor_id", actor.get("name", "Unknown")),
-                name=actor.get("name", "Unknown"),
-                risk_score=actor.get("risk_score", 0),
+            try:
+                import networkx as nx
+            except ImportError:
+                return None
+
+            G = nx.Graph()
+            for actor in actors:
+                G.add_node(
+                    actor.get("actor_id", actor.get("name", "Unknown")),
+                    name=actor.get("name", "Unknown"),
+                    risk_score=actor.get("risk_score", 0),
+                )
+
+            for rel in (relationships or []):
+                G.add_edge(rel.get("source", ""), rel.get("target", ""))
+
+            if len(G.nodes()) == 0:
+                return None
+
+            pos = nx.spring_layout(G, k=0.8, iterations=50, seed=42)
+
+            fig, ax = plt.subplots(figsize=(8, 5))
+
+            # Draw edges
+            nx.draw_networkx_edges(G, pos, ax=ax, alpha=0.3, edge_color="#888888")
+
+            # Draw nodes colored by risk score
+            node_colors = []
+            node_sizes = []
+            for node in G.nodes():
+                rs = G.nodes[node].get("risk_score", 0)
+                if rs >= 80:
+                    node_colors.append("#DC143C")
+                elif rs >= 60:
+                    node_colors.append("#FF6347")
+                elif rs >= 40:
+                    node_colors.append("#FFD700")
+                else:
+                    node_colors.append("#32CD32")
+                node_sizes.append(200 + len(list(G.neighbors(node))) * 80)
+
+            nx.draw_networkx_nodes(
+                G, pos, ax=ax, node_color=node_colors, node_size=node_sizes,
+                edgecolors="white", linewidths=1.5,
             )
+            labels = {n: G.nodes[n].get("name", n)[:15] for n in G.nodes()}
+            nx.draw_networkx_labels(G, pos, labels=labels, ax=ax, font_size=7)
 
-        for rel in (relationships or []):
-            G.add_edge(rel.get("source", ""), rel.get("target", ""))
+            ax.set_title(
+                f"{company} — Filing Party Association Network",
+                fontsize=12, fontweight="bold",
+            )
+            ax.axis("off")
+            plt.tight_layout()
 
-        if len(G.nodes()) == 0:
+            buf = BytesIO()
+            fig.savefig(buf, format="png", dpi=150, bbox_inches="tight")
+            plt.close(fig)
+            buf.seek(0)
+            return buf
+        except Exception as e:
+            logger.warning(f"Chart generation failed (_generate_network_chart): {e}")
+            plt.close('all')
             return None
-
-        pos = nx.spring_layout(G, k=0.8, iterations=50, seed=42)
-
-        fig, ax = plt.subplots(figsize=(8, 5))
-
-        # Draw edges
-        nx.draw_networkx_edges(G, pos, ax=ax, alpha=0.3, edge_color="#888888")
-
-        # Draw nodes colored by risk score
-        node_colors = []
-        node_sizes = []
-        for node in G.nodes():
-            rs = G.nodes[node].get("risk_score", 0)
-            if rs >= 80:
-                node_colors.append("#DC143C")
-            elif rs >= 60:
-                node_colors.append("#FF6347")
-            elif rs >= 40:
-                node_colors.append("#FFD700")
-            else:
-                node_colors.append("#32CD32")
-            node_sizes.append(200 + len(list(G.neighbors(node))) * 80)
-
-        nx.draw_networkx_nodes(
-            G, pos, ax=ax, node_color=node_colors, node_size=node_sizes,
-            edgecolors="white", linewidths=1.5,
-        )
-        labels = {n: G.nodes[n].get("name", n)[:15] for n in G.nodes()}
-        nx.draw_networkx_labels(G, pos, labels=labels, ax=ax, font_size=7)
-
-        ax.set_title(
-            f"{company} — Filing Party Association Network",
-            fontsize=12, fontweight="bold",
-        )
-        ax.axis("off")
-        plt.tight_layout()
-
-        buf = BytesIO()
-        fig.savefig(buf, format="png", dpi=150, bbox_inches="tight")
-        plt.close(fig)
-        buf.seek(0)
-        return buf
 
     # ═══════════════════════════════════════════════════════════════════
     # UTILITY METHODS
     # ═══════════════════════════════════════════════════════════════════
-
-    @staticmethod
-    def _parse_date(val) -> date:
-        """Parse a date value from string, date, or datetime."""
-        if isinstance(val, datetime):
-            return val.date()
-        if isinstance(val, date):
-            return val
-        if isinstance(val, str) and val.strip():
-            for fmt in ("%Y-%m-%d", "%m/%d/%Y"):
-                try:
-                    return datetime.strptime(val[:10], fmt).date()
-                except (ValueError, TypeError):
-                    continue
-        return date.today()
 
     def _extract_violations(self, results: Dict) -> list:
         """Extract all violations from analysis results."""
@@ -1451,119 +1677,3 @@ class ForensicVisualReportGenerator:
             if isinstance(value, dict) and "violations" in value:
                 violations.extend(value["violations"])
         return violations
-
-    def _enrich_analysis_results(self, results: Dict) -> Dict:
-        """Enrich analysis results by synthesizing data from violations.
-
-        When transactions, actors, beneficiaries, or filings are empty or
-        contain only zero-value entries, this method builds them from the
-        rich violation data that the forensic engine always produces.
-        """
-        results = dict(results)  # shallow copy
-        violations = self._extract_violations(results)
-        if not violations:
-            return results
-
-        # ── Enrich transactions ──
-        txns = results.get("transactions", [])
-        has_values = any(abs(t.get("value", 0)) > 0 or abs(t.get("shares", 0)) > 0 for t in txns)
-
-        if not has_values:
-            seen = set()
-            enriched_txns = []
-            for v in violations:
-                owner = v.get("reporting_owner", v.get("actor", "Unknown"))
-                txn_date = v.get("transaction_date", v.get("date"))
-                shares = abs(v.get("shares", 0) or 0)
-                price = abs(v.get("price_per_share", 0) or 0)
-                ex_price = abs(v.get("exercise_price", 0) or 0)
-                value = shares * price if price else shares * ex_price
-                key = (owner, str(txn_date), shares)
-                if key in seen:
-                    continue
-                seen.add(key)
-                sev = v.get("severity", v.get("risk_level", "MEDIUM"))
-                if isinstance(sev, (int, float)):
-                    sev = "CRITICAL" if sev >= 8 else "HIGH" if sev >= 6 else "MEDIUM" if sev >= 4 else "LOW"
-                enriched_txns.append({
-                    "date": txn_date,
-                    "actor": owner,
-                    "value": value,
-                    "shares": shares,
-                    "risk_level": str(sev).upper() if sev else "MEDIUM",
-                    "type": v.get("transaction_code", v.get("type", "")),
-                    "accession_number": v.get("accession_number", ""),
-                })
-            results["transactions"] = enriched_txns
-
-        # Ensure all transactions have shares field
-        for t in results.get("transactions", []):
-            if "shares" not in t:
-                t["shares"] = 0
-
-        # ── Enrich actors ──
-        if not results.get("actors"):
-            actor_map: dict = {}
-            for v in violations:
-                owner = v.get("reporting_owner", v.get("actor", "Unknown"))
-                if owner == "Unknown":
-                    continue
-                if owner not in actor_map:
-                    actor_map[owner] = {
-                        "name": owner, "actor_id": owner,
-                        "actor_type": "Individual", "risk_score": 0,
-                        "roles": [], "violation_count": 0,
-                    }
-                sev = str(v.get("severity", "LOW")).upper()
-                score = {"CRITICAL": 30, "HIGH": 20, "MEDIUM": 10, "LOW": 5}.get(sev, 5)
-                actor_map[owner]["risk_score"] = min(100, actor_map[owner]["risk_score"] + score)
-                actor_map[owner]["violation_count"] += 1
-            results["actors"] = list(actor_map.values())
-
-        # ── Enrich beneficiaries ──
-        if not results.get("beneficiaries"):
-            ben_map: dict = {}
-            for v in violations:
-                owner = v.get("reporting_owner", v.get("actor", "Unknown"))
-                if owner == "Unknown":
-                    continue
-                if owner not in ben_map:
-                    ben_map[owner] = {
-                        "name": owner, "role": "Officer",
-                        "total_profit": 0, "total_shares": 0,
-                        "transaction_count": 0, "risk_score": 0, "violations": 0,
-                    }
-                shares = abs(v.get("shares", 0) or 0)
-                price = abs(v.get("price_per_share", 0) or 0)
-                ben_map[owner]["total_shares"] += shares
-                ben_map[owner]["total_profit"] += shares * price
-                ben_map[owner]["transaction_count"] += 1
-                ben_map[owner]["violations"] += 1
-                sev = str(v.get("severity", "LOW")).upper()
-                score = {"CRITICAL": 30, "HIGH": 20, "MEDIUM": 10, "LOW": 5}.get(sev, 5)
-                ben_map[owner]["risk_score"] = min(100, ben_map[owner]["risk_score"] + score)
-            results["beneficiaries"] = list(ben_map.values())
-
-        # ── Enrich filings ──
-        if not results.get("filings"):
-            seen_acc = set()
-            enriched_filings = []
-            for v in violations:
-                acc = v.get("accession_number", "")
-                if not acc or acc in seen_acc:
-                    continue
-                seen_acc.add(acc)
-                enriched_filings.append({
-                    "filing_type": "Form 4",
-                    "filing_date": v.get("filing_date", v.get("transaction_date")),
-                    "accession_number": acc,
-                })
-            results["filings"] = enriched_filings
-
-        # ── Filter null material events ──
-        results["material_events"] = [
-            e for e in results.get("material_events", [])
-            if e.get("date") is not None and e.get("description", "").strip()
-        ]
-
-        return results

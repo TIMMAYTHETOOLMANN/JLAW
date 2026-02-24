@@ -1,0 +1,146 @@
+================================================================================
+TOP FORENSIC SIGNALS — ITEMS REQUIRING IMMEDIATE INVESTIGATION
+================================================================================
+
+──────────────────────────────────────────────────────────────────────
+  #1  KNIGHT PHILIP H
+  Date: 2020-10-23  |  Code: C (Conversion of derivative security)
+  Shares: 10,000,000  |  Security: Class B Common Stock
+  Derivative: No  |  Direct/Indirect: D
+  Price Required: YES  |  Price Source: missing
+  Footnote Present: Yes  |  10b5-1 Mentioned: No
+  Late Filed: No  |  Repeat Offender: No
+  FSL Disposition: [C] Needs price reconciliation — price should exist
+  Signal Score: 0.400
+  Reasons:
+    • Code C requires price but price_value_source=missing
+
+──────────────────────────────────────────────────────────────────────
+  #2  KNIGHT PHILIP H
+  Date: 2020-10-23  |  Code: C (Conversion of derivative security)
+  Shares: 10,000,000  |  Security: Class A Common Convertible
+  Derivative: Yes  |  Direct/Indirect: D
+  Price Required: YES  |  Price Source: missing
+  Footnote Present: Yes  |  10b5-1 Mentioned: No
+  Late Filed: No  |  Repeat Offender: No
+  FSL Disposition: [C] Needs price reconciliation — price should exist
+  Signal Score: 0.400
+  Reasons:
+    • Code C requires price but price_value_source=missing
+
+──────────────────────────────────────────────────────────────────────
+  #3  SPRUNK ERIC D
+  Date: 2019-12-24  |  Code: G (Gift)
+  Shares: 124  |  Security: Class B Common Stock
+  Derivative: No  |  Direct/Indirect: D
+  Price Required: No  |  Price Source: missing
+  Footnote Present: Yes  |  10b5-1 Mentioned: Yes
+  Late Filed: YES (141 days)  |  Repeat Offender: YES
+  FSL Disposition: [A] Likely benign (comp/admin) — document why
+  Signal Score: 0.400
+  Reasons:
+    • Footnotes present and no adverse signals detected
+    • Insider is a repeat late filer
+    • Filed 141 business days late
+    • References 10b5-1 plan but no adoption date disclosed
+
+──────────────────────────────────────────────────────────────────────
+  #4  SPRUNK ERIC D
+  Date: 2019-12-26  |  Code: G (Gift)
+  Shares: 562  |  Security: Class B Common Stock
+  Derivative: No  |  Direct/Indirect: D
+  Price Required: No  |  Price Source: missing
+  Footnote Present: Yes  |  10b5-1 Mentioned: Yes
+  Late Filed: YES (139 days)  |  Repeat Offender: YES
+  FSL Disposition: [A] Likely benign (comp/admin) — document why
+  Signal Score: 0.400
+  Reasons:
+    • Footnotes present and no adverse signals detected
+    • Insider is a repeat late filer
+    • Filed 139 business days late
+    • References 10b5-1 plan but no adoption date disclosed
+
+──────────────────────────────────────────────────────────────────────
+  #5  KNIGHT PHILIP H
+  Date: 2020-09-25  |  Code: G (Gift)
+  Shares: 7,250,000  |  Security: Class B Common Stock
+  Derivative: No  |  Direct/Indirect: D
+  Price Required: No  |  Price Source: missing
+  Footnote Present: Yes  |  10b5-1 Mentioned: No
+  Late Filed: YES (5 days)  |  Repeat Offender: No
+  FSL Disposition: [D] Needs cross-form reconciliation — material ownership change
+  Signal Score: 0.350
+  Reasons:
+    • Footnote suggests beneficial control retained despite transfer
+    • Filed 5 business days late
+
+──────────────────────────────────────────────────────────────────────
+  #6  Comstock Elizabeth J
+  Date: 2020-12-23  |  Code: G (Gift)
+  Shares: 800  |  Security: Class B Common Stock
+  Derivative: No  |  Direct/Indirect: D
+  Price Required: No  |  Price Source: missing
+  Footnote Present: Yes  |  10b5-1 Mentioned: Yes
+  Late Filed: YES (4 days)  |  Repeat Offender: No
+  FSL Disposition: [A] Likely benign (comp/admin) — document why
+  Signal Score: 0.250
+  Reasons:
+    • Footnotes present and no adverse signals detected
+    • Filed 4 business days late
+    • References 10b5-1 plan but no adoption date disclosed
+
+──────────────────────────────────────────────────────────────────────
+  #7  KNIGHT PHILIP H
+  Date: 2020-07-17  |  Code: J (Other acquisition or disposition)
+  Shares: 2,250,000  |  Security: Class A Common Convertible
+  Derivative: Yes  |  Direct/Indirect: D
+  Price Required: No  |  Price Source: missing
+  Footnote Present: Yes  |  10b5-1 Mentioned: No
+  Late Filed: No  |  Repeat Offender: No
+  FSL Disposition: [D] Needs cross-form reconciliation — material ownership change
+  Signal Score: 0.250
+  Reasons:
+    • Footnote references entity transfer (trust/LLC/partnership)
+
+──────────────────────────────────────────────────────────────────────
+  #8  Knight Travis A
+  Date: 2020-07-17  |  Code: J (Other acquisition or disposition)
+  Shares: 2,500,000  |  Security: Class A Common Convertible
+  Derivative: Yes  |  Direct/Indirect: D
+  Price Required: No  |  Price Source: missing
+  Footnote Present: Yes  |  10b5-1 Mentioned: No
+  Late Filed: No  |  Repeat Offender: No
+  FSL Disposition: [D] Needs cross-form reconciliation — material ownership change
+  Signal Score: 0.250
+  Reasons:
+    • Footnote references entity transfer (trust/LLC/partnership)
+    • Footnote suggests beneficial control retained despite transfer
+
+──────────────────────────────────────────────────────────────────────
+  #9  Knight Travis A
+  Date: 2020-07-17  |  Code: J (Other acquisition or disposition)
+  Shares: 250,000  |  Security: Class A Common Convertible
+  Derivative: Yes  |  Direct/Indirect: D
+  Price Required: No  |  Price Source: missing
+  Footnote Present: Yes  |  10b5-1 Mentioned: No
+  Late Filed: No  |  Repeat Offender: No
+  FSL Disposition: [D] Needs cross-form reconciliation — material ownership change
+  Signal Score: 0.250
+  Reasons:
+    • Footnote references entity transfer (trust/LLC/partnership)
+    • Footnote suggests beneficial control retained despite transfer
+
+──────────────────────────────────────────────────────────────────────
+  #10  Swoosh, LLC
+  Date: 2020-07-17  |  Code: J (Other acquisition or disposition)
+  Shares: 2,500,000  |  Security: Class A Common Convertible
+  Derivative: Yes  |  Direct/Indirect: D
+  Price Required: No  |  Price Source: missing
+  Footnote Present: Yes  |  10b5-1 Mentioned: No
+  Late Filed: No  |  Repeat Offender: No
+  FSL Disposition: [D] Needs cross-form reconciliation — material ownership change
+  Signal Score: 0.250
+  Reasons:
+    • Footnote references entity transfer (trust/LLC/partnership)
+
+================================================================================

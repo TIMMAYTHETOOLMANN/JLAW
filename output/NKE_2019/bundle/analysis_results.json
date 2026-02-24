@@ -2898,7 +2898,7 @@
       "evidence_text": "t-size:8.5pt;\"><a style=\"text-decoration:none;color:#000000;-sec-extract:exhibit;\" href=\"nke-5312019exhibit311.htm\"><font style=\"font-family:Arial;font-size:8.5pt;color:#000000;text-decoration:none;\">Rule 13a-14(a)/15d-14(a) Certification of Chief Executive Officer.</font></a></div></td></tr><tr><td style=\"vertical-align:top;padding-left:2px;padding-top:2px;padding-bottom:2px;padding-right:2px;border-top:1px solid #808080;\"><div style=\"text-align:left;font-size:8.5pt;\"><font style=\"font-family:A",
       "evidence_hash": "509ddefa118cff37164cc11290794dac9cd526ed56315feb486262a33e566923",
       "potential_penalties": {},
-      "detected_at": "2026-02-24T06:31:20.538405+00:00",
+      "detected_at": "2026-02-24T14:31:57.264625+00:00",
       "source_node": "NODE_4",
       "type": "section_302_certification_omission"
     },
@@ -2915,7 +2915,7 @@
       "evidence_text": "t-size:8.5pt;\"><a style=\"text-decoration:none;color:#000000;-sec-extract:exhibit;\" href=\"nke-5312019exhibit312.htm\"><font style=\"font-family:Arial;font-size:8.5pt;color:#000000;text-decoration:none;\">Rule 13a-14(a)/15d-14(a) Certification of Chief Financial Officer.</font></a></div></td></tr><tr><td style=\"vertical-align:top;padding-left:2px;padding-top:2px;padding-bottom:2px;padding-right:2px;border-top:1px solid #808080;\"><div style=\"text-align:left;font-size:8.5pt;\"><font style=\"font-family:A",
       "evidence_hash": "cf4821658b9e95595832de5791477e78e8abd08290ad123aef2d0db3a7bb8648",
       "potential_penalties": {},
-      "detected_at": "2026-02-24T06:31:20.538420+00:00",
+      "detected_at": "2026-02-24T14:31:57.264636+00:00",
       "source_node": "NODE_4",
       "type": "section_302_certification_omission"
     },
@@ -2936,7 +2936,7 @@
         "criminal_knowing": "$1M fine, up to 10 years imprisonment",
         "criminal_willful": "$5M fine, up to 20 years imprisonment"
       },
-      "detected_at": "2026-02-24T06:31:20.538432+00:00",
+      "detected_at": "2026-02-24T14:31:57.264644+00:00",
       "source_node": "NODE_4",
       "type": "section_906_certification_omission"
     },
@@ -2953,7 +2953,7 @@
       "evidence_text": "Effectiveness conclusion unclear",
       "evidence_hash": "a8ef73c1c14612923ed7bece32cc61fcd847d4b1d869fafa793392a7f59b9814",
       "potential_penalties": {},
-      "detected_at": "2026-02-24T06:31:20.565738+00:00",
+      "detected_at": "2026-02-24T14:31:57.290766+00:00",
       "source_node": "NODE_4",
       "type": "inconsistent_management_disclosure"
     },
@@ -2972,7 +2972,7 @@
       "evidence_text": "ocedures included examining, on a test basis, evidence regarding the amounts and disclosures in the consolidated financial statements. Our audits also included evaluating the accounting principles used and significant estimates made by management, as well as evaluating the overall presentation of the consolidated financial statements. Our audit of internal control over financial reporting included obtaining an understanding of internal control over financial reporting, assessing the risk that a ",
       "evidence_hash": "d6a1748927aa3e1bba79fb7a9dbe1a4bc4d59bec09b63d6a89284fa570332688",
       "potential_penalties": {},
-      "detected_at": "2026-02-24T06:31:20.589903+00:00",
+      "detected_at": "2026-02-24T14:31:57.313737+00:00",
       "source_node": "NODE_4",
       "type": "material_weakness_disclosed"
     },
@@ -2991,7 +2991,7 @@
       "evidence_text": "e terminated and the maturity of amounts owed may be accelerated. In addition, macroeconomic conditions, such as increased volatility or disruption in the credit markets, could adversely affect our ability to refinance existing debt.</font></div><div style=\"line-height:110%;padding-bottom:4px;padding-top:12px;text-align:left;padding-left:0px;text-indent:0px;font-size:8.5pt;\"><font style=\"font-family:Arial;font-size:8.5pt;color:#e87722;font-style:normal;font-weight:bold;text-decoration:none;\">If ",
       "evidence_hash": "eb532dceefad370019872a1e34c3cc871e0bb328cd23b59084d3bdb3d53b7be1",
       "potential_penalties": {},
-      "detected_at": "2026-02-24T06:31:20.613929+00:00",
+      "detected_at": "2026-02-24T14:31:57.336835+00:00",
       "source_node": "NODE_4",
       "type": "material_weakness_disclosed"
     },
@@ -3010,7 +3010,7 @@
       "evidence_text": "s-serif;font-size:9pt;font-weight:bold;color:#000000;text-decoration:none;\">ITEM 7.</font></a></div></td><td style=\"vertical-align:bottom;padding-left:2px;padding-top:2px;padding-bottom:2px;padding-right:2px;border-top:1px solid #808080;\"><div style=\"font-size:8pt;\"><a style=\"font-family:Open Sans,sans-serif;font-size:8pt;color:#000000;text-decoration:none;\" href=\"#s7A536678047C5DEEBADEBCDA08BFE19F\"><font style=\"font-family:Open Sans,sans-serif;font-size:8pt;color:#000000;text-decoration:none;\">",
       "evidence_hash": "61998d2c658c8e5902439923d0c52888161843546739c4caef5d9360d948503b",
       "potential_penalties": {},
-      "detected_at": "2026-02-24T06:31:20.818910+00:00",
+      "detected_at": "2026-02-24T14:31:57.540241+00:00",
       "source_node": "NODE_4",
       "type": "material_weakness_disclosed"
     },
@@ -3028,7 +3028,7 @@
       "evidence_text": "Auditor change concurrent with MW",
       "evidence_hash": "acdcc5e91f27431729f409530d3ae3d8e968e0cfac79b74442216c55f61438f4",
       "potential_penalties": {},
-      "detected_at": "2026-02-24T06:31:20.839435+00:00",
+      "detected_at": "2026-02-24T14:31:57.561819+00:00",
       "source_node": "NODE_4",
       "type": "auditor_change_near_weakness"
     }
@@ -4057,48 +4057,630 @@
       "type": ""
     }
   ],
-  "beneficiaries": [],
-  "filings": [],
-  "actors": [],
-  "relationships": [],
-  "material_events": [
+  "beneficiaries": [
     {
-      "date": null,
-      "description": ""
+      "name": "Comstock Elizabeth J",
+      "role": "Insider",
+      "total_profit": 0.0,
+      "transaction_count": 6,
+      "risk_score": 7,
+      "violations": 6
     },
     {
-      "date": null,
-      "description": ""
+      "name": "SPRUNK ERIC D",
+      "role": "Insider",
+      "total_profit": 0.0,
+      "transaction_count": 11,
+      "risk_score": 7,
+      "violations": 11
     },
     {
-      "date": null,
-      "description": ""
+      "name": "Abston Chris L",
+      "role": "Insider",
+      "total_profit": 0.0,
+      "transaction_count": 2,
+      "risk_score": 7,
+      "violations": 2
     },
     {
-      "date": null,
-      "description": ""
+      "name": "Matheson Monique S.",
+      "role": "Insider",
+      "total_profit": 0.0,
+      "transaction_count": 6,
+      "risk_score": 7,
+      "violations": 6
     },
     {
-      "date": null,
-      "description": ""
+      "name": "PARKER MARK G",
+      "role": "Insider",
+      "total_profit": 0.0,
+      "transaction_count": 10,
+      "risk_score": 4,
+      "violations": 10
     },
     {
-      "date": null,
-      "description": ""
+      "name": "Duckett Thasunda",
+      "role": "Insider",
+      "total_profit": 0.0,
+      "transaction_count": 1,
+      "risk_score": 4,
+      "violations": 1
     },
     {
-      "date": null,
-      "description": ""
+      "name": "GRAF ALAN B JR",
+      "role": "Insider",
+      "total_profit": 0.0,
+      "transaction_count": 2,
+      "risk_score": 7,
+      "violations": 2
     },
     {
-      "date": null,
-      "description": ""
+      "name": "Krane Hilary K",
+      "role": "Insider",
+      "total_profit": 0.0,
+      "transaction_count": 4,
+      "risk_score": 7,
+      "violations": 4
     },
     {
-      "date": null,
-      "description": ""
+      "name": "Knight Travis A",
+      "role": "Insider",
+      "total_profit": 0.0,
+      "transaction_count": 3,
+      "risk_score": 7,
+      "violations": 3
+    },
+    {
+      "name": "KNIGHT PHILIP H",
+      "role": "Insider",
+      "total_profit": 0.0,
+      "transaction_count": 2,
+      "risk_score": 7,
+      "violations": 2
+    },
+    {
+      "name": "Swoosh, LLC",
+      "role": "Insider",
+      "total_profit": 0.0,
+      "transaction_count": 1,
+      "risk_score": 7,
+      "violations": 1
+    },
+    {
+      "name": "Hill Elliott",
+      "role": "Insider",
+      "total_profit": 0.0,
+      "transaction_count": 4,
+      "risk_score": 4,
+      "violations": 4
+    },
+    {
+      "name": "Campion Andrew",
+      "role": "Insider",
+      "total_profit": 0.0,
+      "transaction_count": 3,
+      "risk_score": 4,
+      "violations": 3
+    },
+    {
+      "name": "COOK TIMOTHY D",
+      "role": "Insider",
+      "total_profit": 0.0,
+      "transaction_count": 1,
+      "risk_score": 4,
+      "violations": 1
+    },
+    {
+      "name": "Donahoe John J",
+      "role": "Insider",
+      "total_profit": 0.0,
+      "transaction_count": 1,
+      "risk_score": 4,
+      "violations": 1
+    },
+    {
+      "name": "Henry Peter B.",
+      "role": "Insider",
+      "total_profit": 0.0,
+      "transaction_count": 1,
+      "risk_score": 4,
+      "violations": 1
+    },
+    {
+      "name": "ROGERS JOHN W JR",
+      "role": "Insider",
+      "total_profit": 0.0,
+      "transaction_count": 1,
+      "risk_score": 4,
+      "violations": 1
+    },
+    {
+      "name": "Benko Cathleen A",
+      "role": "Insider",
+      "total_profit": 0.0,
+      "transaction_count": 1,
+      "risk_score": 4,
+      "violations": 1
+    },
+    {
+      "name": "THOMPSON JOHN R JR",
+      "role": "Insider",
+      "total_profit": 0.0,
+      "transaction_count": 1,
+      "risk_score": 4,
+      "violations": 1
+    },
+    {
+      "name": "PELUSO MICHELLE A",
+      "role": "Insider",
+      "total_profit": 0.0,
+      "transaction_count": 1,
+      "risk_score": 4,
+      "violations": 1
+    },
+    {
+      "name": "Connors John G",
+      "role": "Insider",
+      "total_profit": 0.0,
+      "transaction_count": 1,
+      "risk_score": 4,
+      "violations": 1
+    },
+    {
+      "name": "Slusher John F",
+      "role": "Insider",
+      "total_profit": 0.0,
+      "transaction_count": 8,
+      "risk_score": 7,
+      "violations": 8
+    },
+    {
+      "name": "LECHLEITER JOHN C",
+      "role": "Insider",
+      "total_profit": 0.0,
+      "transaction_count": 2,
+      "risk_score": 4,
+      "violations": 2
     }
   ],
+  "filings": [
+    {
+      "accession_number": "0001127602-19-035840",
+      "filing_type": "4",
+      "filing_date": "2019-12-26"
+    },
+    {
+      "accession_number": "0000320187-19-000036",
+      "filing_type": "4",
+      "filing_date": "2019-05-06"
+    },
+    {
+      "accession_number": "0000320187-19-000032",
+      "filing_type": "4",
+      "filing_date": "2019-04-17"
+    },
+    {
+      "accession_number": "0000320187-19-000019",
+      "filing_type": "4",
+      "filing_date": "2019-02-19"
+    },
+    {
+      "accession_number": "0001127602-19-035995",
+      "filing_type": "4",
+      "filing_date": "2019-12-30"
+    },
+    {
+      "accession_number": "0001127602-19-035842",
+      "filing_type": "4",
+      "filing_date": "2019-12-24"
+    },
+    {
+      "accession_number": "0001127602-19-034173",
+      "filing_type": "4",
+      "filing_date": "2019-12-02"
+    },
+    {
+      "accession_number": "0001127602-19-032863",
+      "filing_type": "4",
+      "filing_date": "2019-11-14"
+    },
+    {
+      "accession_number": "0001127602-19-031375",
+      "filing_type": "4",
+      "filing_date": "2019-10-30"
+    },
+    {
+      "accession_number": "0001127602-19-031373",
+      "filing_type": "4",
+      "filing_date": "2019-10-30"
+    },
+    {
+      "accession_number": "0001127602-19-031371",
+      "filing_type": "4",
+      "filing_date": "2019-10-29"
+    },
+    {
+      "accession_number": "0001127602-19-031367",
+      "filing_type": "4",
+      "filing_date": "2019-10-29"
+    },
+    {
+      "accession_number": "0000320187-19-000077",
+      "filing_type": "4",
+      "filing_date": "2019-10-29"
+    },
+    {
+      "accession_number": "0001127602-19-031360",
+      "filing_type": "4",
+      "filing_date": "2019-10-30"
+    },
+    {
+      "accession_number": "0001127602-19-030151",
+      "filing_type": "4",
+      "filing_date": "2019-10-03"
+    },
+    {
+      "accession_number": "0001127602-19-029694",
+      "filing_type": "4",
+      "filing_date": "2019-09-30"
+    },
+    {
+      "accession_number": "0001127602-19-029186",
+      "filing_type": "4",
+      "filing_date": "2019-09-25"
+    },
+    {
+      "accession_number": "0001127602-19-029185",
+      "filing_type": "4",
+      "filing_date": "2019-09-25"
+    },
+    {
+      "accession_number": "0001127602-19-028946",
+      "filing_type": "4",
+      "filing_date": "2019-09-19"
+    },
+    {
+      "accession_number": "0001127602-19-028945",
+      "filing_type": "4",
+      "filing_date": "2019-09-19"
+    },
+    {
+      "accession_number": "0001127602-19-028944",
+      "filing_type": "4",
+      "filing_date": "2019-09-19"
+    },
+    {
+      "accession_number": "0001127602-19-028943",
+      "filing_type": "4",
+      "filing_date": "2019-09-19"
+    },
+    {
+      "accession_number": "0001127602-19-028942",
+      "filing_type": "4",
+      "filing_date": "2019-09-19"
+    },
+    {
+      "accession_number": "0001127602-19-028941",
+      "filing_type": "4",
+      "filing_date": "2019-09-19"
+    },
+    {
+      "accession_number": "0001127602-19-028938",
+      "filing_type": "4",
+      "filing_date": "2019-09-19"
+    },
+    {
+      "accession_number": "0001127602-19-028937",
+      "filing_type": "4",
+      "filing_date": "2019-09-19"
+    },
+    {
+      "accession_number": "0001127602-19-028936",
+      "filing_type": "4",
+      "filing_date": "2019-09-19"
+    },
+    {
+      "accession_number": "0001127602-19-028935",
+      "filing_type": "4",
+      "filing_date": "2019-09-19"
+    },
+    {
+      "accession_number": "0001127602-19-028934",
+      "filing_type": "4",
+      "filing_date": "2019-09-19"
+    },
+    {
+      "accession_number": "0001127602-19-027760",
+      "filing_type": "4",
+      "filing_date": "2019-09-01"
+    },
+    {
+      "accession_number": "0001127602-19-026077",
+      "filing_type": "4",
+      "filing_date": "2019-08-01"
+    },
+    {
+      "accession_number": "0001127602-19-026072",
+      "filing_type": "4",
+      "filing_date": "2019-08-01"
+    },
+    {
+      "accession_number": "0001127602-19-026069",
+      "filing_type": "4",
+      "filing_date": "2019-08-01"
+    },
+    {
+      "accession_number": "0001127602-19-026067",
+      "filing_type": "4",
+      "filing_date": "2019-08-01"
+    },
+    {
+      "accession_number": "0001127602-19-026064",
+      "filing_type": "4",
+      "filing_date": "2019-08-01"
+    },
+    {
+      "accession_number": "0001127602-19-026062",
+      "filing_type": "4",
+      "filing_date": "2019-08-01"
+    },
+    {
+      "accession_number": "0001127602-19-026060",
+      "filing_type": "4",
+      "filing_date": "2019-08-01"
+    },
+    {
+      "accession_number": "0001127602-19-025344",
+      "filing_type": "4",
+      "filing_date": "2019-07-26"
+    },
+    {
+      "accession_number": "0001127602-19-024387",
+      "filing_type": "4",
+      "filing_date": "2019-07-09"
+    },
+    {
+      "accession_number": "0001127602-19-023905",
+      "filing_type": "4",
+      "filing_date": "2019-07-02"
+    },
+    {
+      "accession_number": "0000320187-19-000026",
+      "filing_type": "4",
+      "filing_date": "2019-04-01"
+    },
+    {
+      "accession_number": "0000320187-19-000022",
+      "filing_type": "4",
+      "filing_date": "2019-03-19"
+    },
+    {
+      "accession_number": "0000320187-19-000017",
+      "filing_type": "4",
+      "filing_date": "2019-02-04"
+    },
+    {
+      "accession_number": "0000320187-19-000015",
+      "filing_type": "4",
+      "filing_date": "2019-01-18"
+    },
+    {
+      "accession_number": "0000320187-19-000013",
+      "filing_type": "4",
+      "filing_date": "2019-01-18"
+    },
+    {
+      "accession_number": "0000320187-19-000011",
+      "filing_type": "4",
+      "filing_date": "2019-01-16"
+    },
+    {
+      "accession_number": "0000320187-19-000009",
+      "filing_type": "4",
+      "filing_date": "2019-01-08"
+    },
+    {
+      "accession_number": "0000320187-19-000004",
+      "filing_type": "4",
+      "filing_date": "2019-01-02"
+    },
+    {
+      "accession_number": "0000320187-19-000003",
+      "filing_type": "4",
+      "filing_date": "2019-01-02"
+    }
+  ],
+  "actors": [
+    {
+      "name": "Comstock Elizabeth J",
+      "actor_type": "Individual",
+      "risk_score": 7,
+      "roles": [
+        "Zero-Dollar Transaction - Requires Scrutiny",
+        "Section 16(a) Late Form 4 Filing"
+      ]
+    },
+    {
+      "name": "SPRUNK ERIC D",
+      "actor_type": "Individual",
+      "risk_score": 7,
+      "roles": [
+        "Zero-Dollar Transaction - Requires Scrutiny",
+        "Section 16(a) Late Form 4 Filing"
+      ]
+    },
+    {
+      "name": "Abston Chris L",
+      "actor_type": "Individual",
+      "risk_score": 7,
+      "roles": [
+        "Zero-Dollar Transaction - Requires Scrutiny",
+        "Section 16(a) Late Form 4 Filing"
+      ]
+    },
+    {
+      "name": "Matheson Monique S.",
+      "actor_type": "Individual",
+      "risk_score": 7,
+      "roles": [
+        "Zero-Dollar Transaction - Requires Scrutiny"
+      ]
+    },
+    {
+      "name": "PARKER MARK G",
+      "actor_type": "Individual",
+      "risk_score": 4,
+      "roles": [
+        "Zero-Dollar Transaction - Requires Scrutiny"
+      ]
+    },
+    {
+      "name": "Duckett Thasunda",
+      "actor_type": "Individual",
+      "risk_score": 4,
+      "roles": [
+        "Zero-Dollar Transaction - Requires Scrutiny"
+      ]
+    },
+    {
+      "name": "GRAF ALAN B JR",
+      "actor_type": "Individual",
+      "risk_score": 7,
+      "roles": [
+        "Zero-Dollar Transaction - Requires Scrutiny"
+      ]
+    },
+    {
+      "name": "Krane Hilary K",
+      "actor_type": "Individual",
+      "risk_score": 7,
+      "roles": [
+        "Zero-Dollar Transaction - Requires Scrutiny"
+      ]
+    },
+    {
+      "name": "Knight Travis A",
+      "actor_type": "Individual",
+      "risk_score": 7,
+      "roles": [
+        "Zero-Dollar Transaction - Requires Scrutiny"
+      ]
+    },
+    {
+      "name": "KNIGHT PHILIP H",
+      "actor_type": "Individual",
+      "risk_score": 7,
+      "roles": [
+        "Zero-Dollar Transaction - Requires Scrutiny"
+      ]
+    },
+    {
+      "name": "Swoosh, LLC",
+      "actor_type": "Individual",
+      "risk_score": 7,
+      "roles": [
+        "Zero-Dollar Transaction - Requires Scrutiny"
+      ]
+    },
+    {
+      "name": "Hill Elliott",
+      "actor_type": "Individual",
+      "risk_score": 4,
+      "roles": [
+        "Zero-Dollar Transaction - Requires Scrutiny"
+      ]
+    },
+    {
+      "name": "Campion Andrew",
+      "actor_type": "Individual",
+      "risk_score": 4,
+      "roles": [
+        "Zero-Dollar Transaction - Requires Scrutiny"
+      ]
+    },
+    {
+      "name": "COOK TIMOTHY D",
+      "actor_type": "Individual",
+      "risk_score": 4,
+      "roles": [
+        "Zero-Dollar Transaction - Requires Scrutiny"
+      ]
+    },
+    {
+      "name": "Donahoe John J",
+      "actor_type": "Individual",
+      "risk_score": 4,
+      "roles": [
+        "Zero-Dollar Transaction - Requires Scrutiny"
+      ]
+    },
+    {
+      "name": "Henry Peter B.",
+      "actor_type": "Individual",
+      "risk_score": 4,
+      "roles": [
+        "Zero-Dollar Transaction - Requires Scrutiny"
+      ]
+    },
+    {
+      "name": "ROGERS JOHN W JR",
+      "actor_type": "Individual",
+      "risk_score": 4,
+      "roles": [
+        "Zero-Dollar Transaction - Requires Scrutiny"
+      ]
+    },
+    {
+      "name": "Benko Cathleen A",
+      "actor_type": "Individual",
+      "risk_score": 4,
+      "roles": [
+        "Zero-Dollar Transaction - Requires Scrutiny"
+      ]
+    },
+    {
+      "name": "THOMPSON JOHN R JR",
+      "actor_type": "Individual",
+      "risk_score": 4,
+      "roles": [
+        "Zero-Dollar Transaction - Requires Scrutiny"
+      ]
+    },
+    {
+      "name": "PELUSO MICHELLE A",
+      "actor_type": "Individual",
+      "risk_score": 4,
+      "roles": [
+        "Zero-Dollar Transaction - Requires Scrutiny"
+      ]
+    },
+    {
+      "name": "Connors John G",
+      "actor_type": "Individual",
+      "risk_score": 4,
+      "roles": [
+        "Zero-Dollar Transaction - Requires Scrutiny"
+      ]
+    },
+    {
+      "name": "Slusher John F",
+      "actor_type": "Individual",
+      "risk_score": 7,
+      "roles": [
+        "Zero-Dollar Transaction - Requires Scrutiny"
+      ]
+    },
+    {
+      "name": "LECHLEITER JOHN C",
+      "actor_type": "Individual",
+      "risk_score": 4,
+      "roles": [
+        "Zero-Dollar Transaction - Requires Scrutiny"
+      ]
+    }
+  ],
+  "relationships": [],
+  "material_events": [],
   "annual_events": [],
   "estimated_penalties": {
     "civil_minimum": 535000.0,
@@ -6464,5 +7046,5 @@
       }
     }
   },
-  "executive_summary_text": "Forensic analysis of Nike Inc (CIK: 0000320187) for period 2019-01-01 to 2019-12-31 identified 90 alerts across all 15 nodes. Prosecution recommendation: STRONG - Criminal referral recommended."
+  "executive_summary_text": "Forensic analysis of NIKE Inc (CIK: 0000320187) for period 2019-01-01 to 2019-12-31 identified 90 alerts across all 15 nodes. Prosecution recommendation: STRONG - Criminal referral recommended."
 }

@@ -74,13 +74,46 @@ class BeneficiaryProfitChart:
         if not beneficiaries:
             return self._empty_figure(title)
 
-        # Sort by profit descending
+        # Detect all-zero profits and fall back to shares or transaction count
+        all_profits = [b.get("total_profit", 0) for b in beneficiaries]
+        use_profit = not all(p == 0 for p in all_profits)
+
+        if use_profit:
+            metric_key = "total_profit"
+            metric_label = "Profit ($)"
+            tick_fmt = "$,.0f"
+            fmt_fn = lambda v: f"${v:,.0f}"
+        else:
+            # Try total_shares first, then transaction_count
+            all_shares = [b.get("total_shares", 0) for b in beneficiaries]
+            if any(s != 0 for s in all_shares):
+                metric_key = "total_shares"
+                metric_label = "Total Shares"
+                tick_fmt = ",.0f"
+                fmt_fn = lambda v: f"{v:,.0f}"
+                self.logger.info(
+                    "All total_profit values are 0 -- falling back to total_shares"
+                )
+            else:
+                metric_key = "transaction_count"
+                metric_label = "Transaction Count"
+                tick_fmt = ",.0f"
+                fmt_fn = lambda v: f"{v:,.0f}"
+                self.logger.info(
+                    "All total_profit values are 0 -- falling back to transaction_count"
+                )
+
+        # Sort by the chosen metric descending; filter out zero-value entries
         sorted_bens = sorted(
-            beneficiaries, key=lambda x: x.get("total_profit", 0), reverse=True
+            beneficiaries, key=lambda x: x.get(metric_key, 0), reverse=True
         )
+        sorted_bens = [b for b in sorted_bens if b.get(metric_key, 0) != 0]
+
+        if not sorted_bens:
+            return self._empty_figure(title)
 
         names = [f"{b['name']}\n({b.get('role', 'Unknown')})" for b in sorted_bens]
-        profits = [b.get("total_profit", 0) for b in sorted_bens]
+        metric_values = [b.get(metric_key, 0) for b in sorted_bens]
         risk_scores = [b.get("risk_score", 0) for b in sorted_bens]
 
         # Color by risk score
@@ -97,17 +130,17 @@ class BeneficiaryProfitChart:
 
         fig = go.Figure(
             go.Waterfall(
-                name="Profit",
+                name=metric_label,
                 orientation="v",
                 measure=["relative"] * len(names) + ["total"],
                 x=names + ["TOTAL"],
-                y=profits + [0],
+                y=metric_values + [0],
                 connector={"line": {"color": "rgb(63, 63, 63)"}},
                 decreasing={"marker": {"color": "#FF6347"}},
                 increasing={"marker": {"color": "#2ECC40"}},
                 totals={"marker": {"color": "#0074D9"}},
                 textposition="outside",
-                text=[f"${p:,.0f}" for p in profits] + [""],
+                text=[fmt_fn(v) for v in metric_values] + [""],
                 textfont={"size": 10},
             )
         )
@@ -119,8 +152,8 @@ class BeneficiaryProfitChart:
                 "xanchor": "center",
                 "font": {"size": 20, "family": "Arial, sans-serif"},
             },
-            yaxis_title="Profit ($)",
-            yaxis={"tickformat": "$,.0f"},
+            yaxis_title=metric_label,
+            yaxis={"tickformat": tick_fmt},
             showlegend=False,
             template="plotly_white",
             height=600,
@@ -138,6 +171,11 @@ class BeneficiaryProfitChart:
         """
         Generate a donut chart showing profit distribution by role.
 
+        When all ``total_profit`` values are 0 the chart automatically falls
+        back to ``total_shares`` (then ``violations``, then ``transaction_count``)
+        so that the pie chart is still meaningful for Form 4 data where dollar
+        values are unavailable.
+
         Args:
             beneficiaries: List of beneficiary dicts with 'role' and 'total_profit'
             title: Chart title
@@ -148,32 +186,89 @@ class BeneficiaryProfitChart:
         if not beneficiaries:
             return self._empty_figure(title)
 
-        # Aggregate by role
-        role_profits: Dict[str, float] = {}
+        # Determine which metric to use -----------------------------------------
+        all_profits = [b.get("total_profit", 0) for b in beneficiaries]
+        if any(p != 0 for p in all_profits):
+            metric_key = "total_profit"
+            metric_label = "Profit"
+            val_tpl = "$%{value:,.0f}"
+            hover_tpl = (
+                "<b>%{label}</b><br>Profit: $%{value:,.0f}<br>"
+                "Share: %{percent}<extra></extra>"
+            )
+        else:
+            # Try total_shares, then violations, then transaction_count
+            all_shares = [b.get("total_shares", 0) for b in beneficiaries]
+            all_viols = [b.get("violations", 0) for b in beneficiaries]
+            all_txns = [b.get("transaction_count", 0) for b in beneficiaries]
+            if any(s != 0 for s in all_shares):
+                metric_key = "total_shares"
+                metric_label = "Shares"
+                val_tpl = "%{value:,.0f}"
+                hover_tpl = (
+                    "<b>%{label}</b><br>Shares: %{value:,.0f}<br>"
+                    "Share: %{percent}<extra></extra>"
+                )
+                self.logger.info(
+                    "All total_profit values are 0 -- role distribution falling back to total_shares"
+                )
+            elif any(v != 0 for v in all_viols):
+                metric_key = "violations"
+                metric_label = "Violations"
+                val_tpl = "%{value:,.0f}"
+                hover_tpl = (
+                    "<b>%{label}</b><br>Violations: %{value:,.0f}<br>"
+                    "Share: %{percent}<extra></extra>"
+                )
+                self.logger.info(
+                    "All total_profit values are 0 -- role distribution falling back to violations"
+                )
+            else:
+                metric_key = "transaction_count"
+                metric_label = "Transactions"
+                val_tpl = "%{value:,.0f}"
+                hover_tpl = (
+                    "<b>%{label}</b><br>Transactions: %{value:,.0f}<br>"
+                    "Share: %{percent}<extra></extra>"
+                )
+                self.logger.info(
+                    "All total_profit values are 0 -- role distribution falling back to transaction_count"
+                )
+
+        # Aggregate by role using the chosen metric -----------------------------
+        role_values: Dict[str, float] = {}
         for b in beneficiaries:
             role = b.get("role", "Other")
-            role_profits[role] = role_profits.get(role, 0) + b.get("total_profit", 0)
+            role_values[role] = role_values.get(role, 0) + b.get(metric_key, 0)
 
-        roles = list(role_profits.keys())
-        profits = list(role_profits.values())
+        # Filter out zero-value roles to avoid empty slices
+        role_values = {r: v for r, v in role_values.items() if v != 0}
+        if not role_values:
+            return self._empty_figure(title)
+
+        roles = list(role_values.keys())
+        values = list(role_values.values())
         colors = [self.ROLE_COLORS.get(r, "#778899") for r in roles]
 
         fig = go.Figure(
             go.Pie(
                 labels=roles,
-                values=profits,
+                values=values,
                 hole=0.4,
                 marker={"colors": colors, "line": {"color": "white", "width": 2}},
                 textinfo="label+percent+value",
-                texttemplate="%{label}<br>%{percent}<br>$%{value:,.0f}",
-                hovertemplate="<b>%{label}</b><br>Profit: $%{value:,.0f}<br>"
-                "Share: %{percent}<extra></extra>",
+                texttemplate=f"%{{label}}<br>%{{percent}}<br>{val_tpl}",
+                hovertemplate=hover_tpl,
             )
         )
 
+        chart_title = title
+        if metric_key != "total_profit":
+            chart_title = title.replace("Profit", metric_label) if "Profit" in title else title
+
         fig.update_layout(
             title={
-                "text": title,
+                "text": chart_title,
                 "x": 0.5,
                 "xanchor": "center",
                 "font": {"size": 20, "family": "Arial, sans-serif"},

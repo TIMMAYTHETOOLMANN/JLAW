@@ -16,7 +16,12 @@ from datetime import datetime, timedelta
 from typing import List, Dict, Any
 from pathlib import Path
 
-import plotly.graph_objects as go
+try:
+    import plotly.graph_objects as go
+    HAS_PLOTLY = True
+except ImportError:
+    go = None
+    HAS_PLOTLY = False
 
 logger = logging.getLogger(__name__)
 
@@ -64,7 +69,7 @@ class FilingDeadlineChart:
         filings: List[Dict[str, Any]],
         annual_events: List[Dict[str, Any]] = None,
         title: str = "Filing Deadline Compliance",
-    ) -> go.Figure:
+    ):
         """
         Generate a filing deadline compliance chart.
 
@@ -84,8 +89,12 @@ class FilingDeadlineChart:
             title: Chart title
 
         Returns:
-            Plotly figure object
+            Plotly figure object, or None if plotly is not installed
         """
+        if not HAS_PLOTLY:
+            self.logger.warning("plotly is not installed -- skipping deadline chart generation")
+            return None
+
         self.logger.info(f"Generating deadline chart with {len(filings)} filings")
 
         if annual_events is None:
@@ -185,7 +194,7 @@ class FilingDeadlineChart:
         self,
         filings: List[Dict[str, Any]],
         title: str = "Filing Compliance Summary",
-    ) -> go.Figure:
+    ):
         """
         Generate a compliance summary bar chart.
 
@@ -194,8 +203,13 @@ class FilingDeadlineChart:
             title: Chart title
 
         Returns:
-            Plotly figure with stacked bar chart of compliance by filing type
+            Plotly figure with stacked bar chart of compliance by filing type,
+            or None if plotly is not installed
         """
+        if not HAS_PLOTLY:
+            self.logger.warning("plotly is not installed -- skipping compliance summary generation")
+            return None
+
         if not filings:
             return self._empty_figure(title)
 
@@ -277,8 +291,10 @@ class FilingDeadlineChart:
             enriched.append(enriched_f)
         return enriched
 
-    def _empty_figure(self, title: str) -> go.Figure:
-        """Return an empty figure with a message."""
+    def _empty_figure(self, title: str):
+        """Return an empty figure with a message, or None if plotly is unavailable."""
+        if not HAS_PLOTLY:
+            return None
         fig = go.Figure()
         fig.add_annotation(
             text="No filing data available", xref="paper", yref="paper",
@@ -288,9 +304,13 @@ class FilingDeadlineChart:
         return fig
 
     def save_chart(
-        self, fig: go.Figure, output_path: Path, format: str = "html",
-    ) -> Path:
-        """Save chart figure to file."""
+        self, fig, output_path: Path, format: str = "html",
+    ):
+        """Save chart figure to file. Returns None if plotly is unavailable."""
+        if not HAS_PLOTLY or fig is None:
+            self.logger.warning("plotly is not installed or figure is None -- cannot save chart")
+            return None
+
         if format == "html":
             fig.write_html(str(output_path))
         elif format == "png":

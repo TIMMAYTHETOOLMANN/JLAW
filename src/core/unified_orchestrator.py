@@ -983,119 +983,163 @@ class UnifiedForensicOrchestrator:
                 }
                 break
 
-        # ── Synthesize transactions from violations when transaction data is sparse ──
-        all_txn_values = [abs(t.get("value", 0)) for t in transactions]
-        has_dollar_values = any(v > 0 for v in all_txn_values)
-
-        if not has_dollar_values and violations:
-            seen_txn_keys = set()
-            for v in violations:
-                owner = v.get("reporting_owner", v.get("actor", "Unknown"))
-                txn_date = v.get("transaction_date", v.get("date"))
-                shares = v.get("shares", 0) or 0
-                price = v.get("price_per_share", 0) or 0
-                exercise_price = v.get("exercise_price", 0) or 0
-                computed_value = abs(shares * price) if price else abs(shares * exercise_price)
-                txn_key = (owner, str(txn_date), shares)
-                if txn_key in seen_txn_keys:
-                    continue
-                seen_txn_keys.add(txn_key)
-                transactions.append({
-                    "date": txn_date,
-                    "actor": owner,
-                    "value": computed_value,
-                    "shares": abs(shares),
-                    "risk_level": self._normalize_severity_str(
-                        v.get("severity", v.get("risk_level", "MEDIUM"))
-                    ),
-                    "type": v.get("transaction_code", v.get("type", "")),
-                    "accession_number": v.get("accession_number", ""),
-                    "security_title": v.get("security_title", ""),
-                })
-
-        # ── Ensure all transactions have a shares field ──
+        # ── Synthesize transaction values from violation data ──
         for txn in transactions:
-            if "shares" not in txn:
-                txn["shares"] = 0
+            current_val = txn.get("value") or 0
+            if current_val == 0:
+                shares = txn.get("shares") or txn.get("shares_traded") or 0
+                price = txn.get("price_per_share") or txn.get("price") or 0
+                try:
+                    computed = abs(float(shares) * float(price))
+                except (TypeError, ValueError):
+                    computed = 0
+                if computed > 0:
+                    txn["value"] = computed
 
-        # ── Synthesize actors from violations when actor data is empty ──
-        if not actors and violations:
-            actor_map: dict = {}
+        # Enrich zero-value transactions with shares from violations by matching date+actor
+        for v in violations:
+            v_shares = v.get("shares") or v.get("shares_traded") or 0
+            v_date = v.get("transaction_date") or v.get("date") or v.get("filing_date")
+            v_actor = (
+                v.get("reporting_owner") or v.get("owner")
+                or v.get("reporting_person") or v.get("insider_name")
+            )
+            v_penalty = v.get("estimated_penalty") or 0
+            for txn in transactions:
+                if txn.get("date") == v_date and txn.get("actor") == v_actor:
+                    if not txn.get("shares") and v_shares:
+                        txn["shares"] = v_shares
+                    if not txn.get("estimated_penalty") and v_penalty:
+                        txn["estimated_penalty"] = v_penalty
+                    if not txn.get("accession_number") and v.get("accession_number"):
+                        txn["accession_number"] = v["accession_number"]
+
+        # If ALL transaction values are 0 but we have share data, use shares as primary metric
+        all_zero_val = all((t.get("value") or 0) == 0 for t in transactions) if transactions else True
+        if all_zero_val and transactions:
+            for txn in transactions:
+                shares = txn.get("shares") or 0
+                if shares:
+                    txn["value"] = float(shares)  # Use shares as the metric
+                    txn["_value_is_shares"] = True
+
+        # ── Synthesize transactions from violations when transactions list is empty ──
+        if not transactions and violations:
             for v in violations:
-                owner = v.get("reporting_owner", v.get("actor", "Unknown"))
-                if owner == "Unknown":
-                    continue
-                if owner not in actor_map:
-                    actor_map[owner] = {
-                        "name": owner,
-                        "actor_id": owner,
-                        "actor_type": "Individual",
-                        "risk_score": 0,
-                        "roles": [],
-                        "violation_count": 0,
-                        "total_shares": 0,
-                    }
-                sev = self._normalize_severity_str(
-                    v.get("severity", v.get("risk_level", "LOW"))
+                v_date = v.get("transaction_date") or v.get("date") or v.get("filing_date")
+                v_shares = v.get("shares") or v.get("shares_traded") or 0
+                actor = (
+                    v.get("reporting_owner") or v.get("owner")
+                    or v.get("reporting_person") or v.get("insider_name")
+                    or v.get("actor") or "Unknown"
                 )
-                sev_score = {"CRITICAL": 30, "HIGH": 20, "MEDIUM": 10, "LOW": 5}.get(sev, 5)
-                actor_map[owner]["risk_score"] = min(
-                    100, actor_map[owner]["risk_score"] + sev_score
-                )
-                actor_map[owner]["violation_count"] += 1
-                actor_map[owner]["total_shares"] += abs(v.get("shares", 0) or 0)
-            actors = list(actor_map.values())
+                # Use shares as value when dollar amounts unavailable
+                try:
+                    v_value = abs(float(v_shares)) if v_shares else 0
+                except (TypeError, ValueError):
+                    v_value = 0
+                if v_date or v_value:
+                    transactions.append({
+                        "date": v_date,
+                        "actor": actor,
+                        "value": v_value,
+                        "shares": v_shares,
+                        "estimated_penalty": v.get("estimated_penalty"),
+                        "accession_number": v.get("accession_number"),
+                        "risk_level": v.get("severity") or v.get("risk_level") or "MEDIUM",
+                        "type": v.get("type") or v.get("violation_type") or "",
+                        "source": "violation_synthesis",
+                        "_value_is_shares": True,
+                    })
 
-        # ── Synthesize beneficiaries from violations when beneficiary data is empty ──
+        # ── Synthesize beneficiaries from violations when empty ──
         if not beneficiaries and violations:
-            ben_map: dict = {}
+            owner_map = {}
             for v in violations:
-                owner = v.get("reporting_owner", v.get("actor", "Unknown"))
-                if owner == "Unknown":
+                owner = (
+                    v.get("reporting_owner") or v.get("owner")
+                    or v.get("reporting_person") or v.get("insider_name")
+                    or v.get("actor")
+                )
+                if not owner:
                     continue
-                if owner not in ben_map:
-                    ben_map[owner] = {
+                if owner not in owner_map:
+                    owner_map[owner] = {
                         "name": owner,
-                        "role": "Officer",
+                        "role": v.get("role") or v.get("relationship") or "Insider",
                         "total_profit": 0,
-                        "total_shares": 0,
                         "transaction_count": 0,
                         "risk_score": 0,
                         "violations": 0,
                     }
-                shares = abs(v.get("shares", 0) or 0)
-                price = abs(v.get("price_per_share", 0) or 0)
-                ben_map[owner]["total_shares"] += shares
-                ben_map[owner]["total_profit"] += shares * price
-                ben_map[owner]["transaction_count"] += 1
-                ben_map[owner]["violations"] += 1
-                sev = self._normalize_severity_str(
-                    v.get("severity", v.get("risk_level", "LOW"))
-                )
-                sev_score = {"CRITICAL": 30, "HIGH": 20, "MEDIUM": 10, "LOW": 5}.get(sev, 5)
-                ben_map[owner]["risk_score"] = min(
-                    100, ben_map[owner]["risk_score"] + sev_score
-                )
-            beneficiaries = list(ben_map.values())
+                entry = owner_map[owner]
+                entry["violations"] += 1
+                entry["transaction_count"] += 1
+                v_shares = v.get("shares") or v.get("shares_traded") or 0
+                v_price = v.get("price_per_share") or v.get("price") or 0
+                try:
+                    profit = abs(float(v_shares) * float(v_price))
+                except (TypeError, ValueError):
+                    profit = 0
+                if not profit:
+                    try:
+                        profit = abs(float(v.get("value") or v.get("estimated_damages") or 0))
+                    except (TypeError, ValueError):
+                        profit = 0
+                entry["total_profit"] += profit
+                sev = (v.get("severity") or "").upper()
+                sev_score = {"CRITICAL": 10, "HIGH": 7, "MEDIUM": 4, "LOW": 1}.get(sev, 0)
+                entry["risk_score"] = max(entry["risk_score"], sev_score)
+            beneficiaries = list(owner_map.values())
 
-        # ── Synthesize filings from violations when filing data is empty ──
-        if not filings and violations:
-            seen_accessions = set()
+        # ── Synthesize actors from violations when empty ──
+        if not actors and violations:
+            actor_map = {}
             for v in violations:
-                acc = v.get("accession_number", "")
-                if not acc or acc in seen_accessions:
+                name = (
+                    v.get("reporting_owner") or v.get("owner")
+                    or v.get("reporting_person") or v.get("insider_name")
+                    or v.get("actor")
+                )
+                if not name:
                     continue
-                seen_accessions.add(acc)
-                filings.append({
-                    "filing_type": "Form 4",
-                    "filing_date": v.get("filing_date", v.get("transaction_date")),
-                    "accession_number": acc,
-                })
+                if name not in actor_map:
+                    actor_map[name] = {
+                        "name": name,
+                        "actor_type": "Individual",
+                        "risk_score": 0,
+                        "roles": set(),
+                    }
+                role = v.get("role") or v.get("relationship") or v.get("type") or ""
+                if role:
+                    actor_map[name]["roles"].add(role)
+                sev = (v.get("severity") or "").upper()
+                sev_score = {"CRITICAL": 10, "HIGH": 7, "MEDIUM": 4, "LOW": 1}.get(sev, 0)
+                actor_map[name]["risk_score"] = max(actor_map[name]["risk_score"], sev_score)
+            # Convert role sets to lists for JSON serialization
+            for entry in actor_map.values():
+                entry["roles"] = list(entry["roles"])
+            actors = list(actor_map.values())
 
-        # ── Filter out null/empty material events ──
+        # ── Synthesize filings from violations when empty ──
+        if not filings and violations:
+            filing_map = {}
+            for v in violations:
+                acc = v.get("accession_number") or v.get("accession") or ""
+                if not acc:
+                    continue
+                if acc not in filing_map:
+                    filing_map[acc] = {
+                        "accession_number": acc,
+                        "filing_type": v.get("form_type") or v.get("filing_type") or "4",
+                        "filing_date": v.get("filing_date") or v.get("date") or v.get("transaction_date"),
+                    }
+            filings = list(filing_map.values())
+
+        # ── Filter null material events ──
         material_events = [
             e for e in material_events
-            if e.get("date") is not None and e.get("description", "").strip()
+            if e.get("date") is not None and (e.get("description") or "").strip()
         ]
 
         return {
@@ -1121,19 +1165,6 @@ class UnifiedForensicOrchestrator:
                 f"Prosecution recommendation: {engine_result.prosecution_recommendation}."
             ),
         }
-
-    @staticmethod
-    def _normalize_severity_str(sev) -> str:
-        """Normalize severity to a standard string."""
-        if isinstance(sev, (int, float)):
-            if sev >= 8:
-                return "CRITICAL"
-            elif sev >= 6:
-                return "HIGH"
-            elif sev >= 4:
-                return "MEDIUM"
-            return "LOW"
-        return str(sev).upper() if sev else "LOW"
 
     @staticmethod
     def _safe_iter(value):
