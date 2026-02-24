@@ -136,6 +136,7 @@ class Form4Filing:
     zero_dollar_transactions: List[Form4Transaction] = field(default_factory=list)
     gift_transactions: List[Form4Transaction] = field(default_factory=list)
     late_transactions: List[Form4Transaction] = field(default_factory=list)
+    filing_footnotes: Dict[str, str] = field(default_factory=dict)  # id → text
     
     def to_dict(self) -> Dict[str, Any]:
         return {
@@ -255,19 +256,38 @@ class Form4Parser:
         # Extract period of report
         period_of_report = self._parse_date(self._get_text(root, 'periodOfReport'))
         
+        # Extract filing-level footnotes (id → text)
+        filing_footnotes = {}
+        footnotes_elem = root.find('footnotes')
+        if footnotes_elem is not None:
+            for fn in footnotes_elem.findall('footnote'):
+                fn_id = fn.get('id', '')
+                fn_text = (fn.text or '').strip()
+                if fn_id and fn_text:
+                    filing_footnotes[fn_id] = fn_text
+
         # Parse non-derivative transactions
         transactions = []
         for trans in root.findall('.//nonDerivativeTransaction'):
             parsed = self._parse_non_derivative_transaction(trans, filing_date)
             if parsed:
+                # Resolve footnote IDs from transactionCoding and transactionAmounts
+                fn_ids = self._extract_footnote_ids(trans)
+                parsed.footnotes = [
+                    filing_footnotes.get(fid, fid) for fid in fn_ids
+                ]
                 transactions.append(parsed)
-        
+
         # Parse derivative transactions
         for trans in root.findall('.//derivativeTransaction'):
             parsed = self._parse_derivative_transaction(trans, filing_date)
             if parsed:
+                fn_ids = self._extract_footnote_ids(trans)
+                parsed.footnotes = [
+                    filing_footnotes.get(fid, fid) for fid in fn_ids
+                ]
                 transactions.append(parsed)
-        
+
         # Create filing object
         filing = Form4Filing(
             accession_number=accession_number,
@@ -281,7 +301,8 @@ class Form4Parser:
             is_officer=is_officer,
             is_ten_percent_owner=is_ten_percent,
             officer_title=officer_title,
-            transactions=transactions
+            transactions=transactions,
+            filing_footnotes=filing_footnotes,
         )
         
         # Compute aggregates
@@ -535,4 +556,22 @@ class Form4Parser:
                 return datetime.strptime(date_str, '%m/%d/%Y').date()
             except ValueError:
                 return None
+
+    @staticmethod
+    def _extract_footnote_ids(trans_element: ET.Element) -> List[str]:
+        """
+        Extract all footnoteId references from a transaction element.
+
+        Form 4 XML uses <footnoteId id="F1"/> refs inside transaction
+        sub-elements (transactionCoding, transactionAmounts, ownershipNature,
+        postTransactionAmounts, etc.).
+        """
+        ids = []
+        seen = set()
+        for fn_ref in trans_element.iter('footnoteId'):
+            fid = fn_ref.get('id', '')
+            if fid and fid not in seen:
+                ids.append(fid)
+                seen.add(fid)
+        return ids
 

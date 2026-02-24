@@ -815,6 +815,25 @@ class UnifiedForensicOrchestrator:
                 json.dump(self._contradiction_map, f, indent=2, default=str)
             exports.append(str(cmap_path))
 
+        # Export Forensic Sufficiency Layer reports
+        if self._analysis_results:
+            fsl = self._analysis_results.get("forensic_sufficiency_layer", {})
+            if fsl.get("fsl_diagnostic_table"):
+                table_path = bundle_dir / "fsl_diagnostic_table.txt"
+                with open(table_path, "w") as f:
+                    f.write(fsl["fsl_diagnostic_table"])
+                exports.append(str(table_path))
+            if fsl.get("fsl_top_signals_report"):
+                signals_path = bundle_dir / "fsl_top_signals.txt"
+                with open(signals_path, "w") as f:
+                    f.write(fsl["fsl_top_signals_report"])
+                exports.append(str(signals_path))
+            if fsl.get("fsl_assessments"):
+                fsl_json_path = bundle_dir / "fsl_assessments.json"
+                with open(fsl_json_path, "w") as f:
+                    json.dump(fsl["fsl_assessments"], f, indent=2, default=str)
+                exports.append(str(fsl_json_path))
+
         self._log(f"Analysis bundle exported: {len(exports)} files")
         return {
             'status': 'success',
@@ -950,6 +969,20 @@ class UnifiedForensicOrchestrator:
 
         penalties = engine_result.estimated_penalties.to_dict() if engine_result.estimated_penalties else {}
 
+        # Collect FSL data from Node 1 findings
+        fsl_data = {}
+        for node in all_nodes:
+            findings = node.findings or {}
+            if findings.get("fsl_assessments"):
+                fsl_data = {
+                    "fsl_assessments": findings["fsl_assessments"],
+                    "fsl_diagnostic_table": findings.get("fsl_diagnostic_table", ""),
+                    "fsl_top_signals": findings.get("fsl_top_signals", []),
+                    "fsl_top_signals_report": findings.get("fsl_top_signals_report", ""),
+                    "repeat_offender_profiles": findings.get("repeat_offender_profiles", {}),
+                }
+                break
+
         return {
             "total_violations": len(violations),
             "critical_alerts": engine_result.critical_alerts,
@@ -965,6 +998,7 @@ class UnifiedForensicOrchestrator:
             "estimated_penalties": penalties,
             "regulatory_routing": engine_result.regulatory_routing.to_dict() if engine_result.regulatory_routing else {},
             "evidence_chain": [],
+            "forensic_sufficiency_layer": fsl_data,
             "executive_summary_text": (
                 f"Forensic analysis of {engine_result.company_name} "
                 f"(CIK: {engine_result.cik}) for period {engine_result.analysis_period} "

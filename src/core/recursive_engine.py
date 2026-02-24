@@ -579,18 +579,27 @@ class RecursiveProsecutorialEngine:
         try:
             filings = await sec_client.get_form4_filings(cik, start_date, end_date)
             
+            # FSL imports (Forensic Sufficiency Layer)
+            from src.detection.forensic_sufficiency import (
+                classify_footnotes, classify_fsl, build_repeat_offender_profiles,
+                generate_fsl_diagnostic_table, extract_top_signals,
+                format_top_signals_report,
+            )
+
             # Track all violation types
             late_filing_violations = []
             zero_dollar_violations = []
             gift_violations = []
             all_insider_trades = []  # All trades for Phase 5 pattern detection
             total_transactions = 0
+            parsed_filings = []     # Retain parsed filings for FSL analysis
 
             for filing in filings:
                 xml = await sec_client.get_form4_xml(filing)
                 if xml:
                     parsed = self.form4_parser.parse_xml(xml, filing.accession_number, filing.filing_date)
                     total_transactions += len(parsed.transactions)
+                    parsed_filings.append(parsed)
 
                     # Collect all trades for advanced pattern detection (Phase 5)
                     for txn in parsed.transactions:
@@ -625,7 +634,7 @@ class RecursiveProsecutorialEngine:
                             "estimated_penalty": 25000,
                             "statutory_reference": "15 U.S.C. § 78p(a) - Section 16(a)"
                         })
-                    
+
                     # Count ALL zero-dollar transactions for forensic scrutiny
                     # ANY Form 4 transaction at $0 is suspicious and warrants investigation
                     for txn in parsed.zero_dollar_transactions:
@@ -633,7 +642,7 @@ class RecursiveProsecutorialEngine:
                         high_suspicion_codes = {'S', 'P'}  # Sale/Purchase at $0 = highly abnormal
                         medium_suspicion_codes = {'G', 'J', 'W', 'L'}  # Gift/Other at $0 = requires scrutiny
                         # All others (V, A, F, M, X, etc.) = requires review
-                        
+
                         if txn.transaction_code in high_suspicion_codes:
                             severity = "CRITICAL"
                             suspicion_level = "EXTREMELY HIGH - Sale/Purchase at $0 is highly abnormal"
@@ -643,7 +652,7 @@ class RecursiveProsecutorialEngine:
                         else:
                             severity = "MEDIUM"
                             suspicion_level = "MODERATE - Compensation event at $0, verify legitimacy"
-                        
+
                         zero_dollar_violations.append({
                             "type": "Zero-Dollar Transaction - Requires Scrutiny",
                             "severity": severity,
@@ -657,10 +666,15 @@ class RecursiveProsecutorialEngine:
                             "transaction_date": txn.transaction_date.isoformat() if txn.transaction_date else None,
                             "is_derivative": txn.is_derivative,
                             "security_title": txn.security_title,
+                            "direct_indirect": txn.direct_indirect,
+                            "exercise_price": txn.exercise_price,
+                            "footnotes": txn.footnotes,
+                            "is_late_filed": txn.is_late_filed,
+                            "days_late": txn.days_late,
                             "statutory_reference": "15 U.S.C. § 78p(a)",
                             "notes": f"Zero-dollar transaction flagged for scrutiny. {suspicion_level}"
                         })
-                    
+
                     # Count gift transactions (only non-zero-dollar gifts;
                     # $0 gifts are already captured in zero_dollar_violations
                     # to prevent double-counting the same transaction)
@@ -676,9 +690,35 @@ class RecursiveProsecutorialEngine:
                             "transaction_date": txn.transaction_date.isoformat() if txn.transaction_date else None,
                             "statutory_reference": "15 U.S.C. § 78p(a)"
                         })
-            
+
+            # ── Forensic Sufficiency Layer (FSL) ──────────────────────────
+            repeat_profiles = build_repeat_offender_profiles(parsed_filings)
+            fsl_assessments = []
+            for v in zero_dollar_violations:
+                fn_cls = classify_footnotes(v.get('footnotes', []))
+                owner = v.get('reporting_owner', '')
+                is_repeat = repeat_profiles.get(owner, None)
+                is_repeat_offender = is_repeat.is_repeat_offender if is_repeat else False
+
+                assessment = classify_fsl(
+                    txn_data=v,
+                    footnote_cls=fn_cls,
+                    repeat_offender=is_repeat_offender,
+                )
+                fsl_assessments.append(assessment)
+                # Enrich the violation dict with FSL data
+                v['fsl_disposition'] = assessment.disposition
+                v['fsl_disposition_label'] = assessment.disposition_label
+                v['fsl_signal_score'] = assessment.signal_score
+                v['fsl_reasons'] = assessment.disposition_reasons
+                v['footnote_classification'] = fn_cls.to_dict()
+
+            fsl_diagnostic_table = generate_fsl_diagnostic_table(fsl_assessments)
+            fsl_top_signals = extract_top_signals(fsl_assessments, n=10)
+            fsl_top_signals_report = format_top_signals_report(fsl_top_signals)
+
             total_violations = len(late_filing_violations) + len(zero_dollar_violations) + len(gift_violations)
-            
+
             result = NodeResult(
                 node_id="NODE_1",
                 node_name="Form 4 Analysis",
@@ -697,6 +737,13 @@ class RecursiveProsecutorialEngine:
                     "estimated_penalties": len(late_filing_violations) * 25000,
                     "insider_transactions": all_insider_trades,
                     "form4_trades": all_insider_trades,
+                    "fsl_assessments": [a.to_dict() for a in fsl_assessments],
+                    "fsl_diagnostic_table": fsl_diagnostic_table,
+                    "fsl_top_signals": [a.to_dict() for a in fsl_top_signals],
+                    "fsl_top_signals_report": fsl_top_signals_report,
+                    "repeat_offender_profiles": {
+                        k: v.to_dict() for k, v in repeat_profiles.items()
+                    },
                 },
                 execution_time_seconds=time.time() - start
             )
