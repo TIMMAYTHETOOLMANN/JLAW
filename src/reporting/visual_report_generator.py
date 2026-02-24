@@ -251,6 +251,10 @@ class ForensicVisualReportGenerator:
 
         output_path = self.output_dir / output_filename
 
+        # Enrich analysis results: synthesize transaction/actor/beneficiary data
+        # from violations when those collections are empty or lack values
+        analysis_results = self._enrich_analysis_results(analysis_results)
+
         doc = SimpleDocTemplate(
             str(output_path),
             pagesize=letter,
@@ -618,25 +622,38 @@ class ForensicVisualReportGenerator:
     # ─── BENEFICIARY SECTION ─────────────────────────────────────────
 
     def _build_beneficiary_section(self, beneficiaries: list, company: str) -> list:
-        """Build beneficiary profit analysis with charts and tables."""
+        """Build beneficiary analysis with charts and tables."""
         story: list = []
         story.append(Paragraph(
             "FINANCIAL BENEFICIARY ANALYSIS", self.styles["SectionHead"],
         ))
         story.append(HRFlowable(width="100%", thickness=2, color=ACCENT_COLOR, spaceAfter=12))
 
-        # Top beneficiaries table
+        # Determine best metric for sorting
+        has_profit = any(b.get("total_profit", 0) > 0 for b in beneficiaries)
+        has_shares = any(b.get("total_shares", 0) > 0 for b in beneficiaries)
+        sort_key = "total_profit" if has_profit else "total_shares" if has_shares else "violations"
+
         sorted_bens = sorted(
-            beneficiaries, key=lambda b: b.get("total_profit", 0), reverse=True,
+            beneficiaries, key=lambda b: abs(b.get(sort_key, 0) or 0), reverse=True,
         )[:10]
 
-        header = ["Name", "Role", "Profit ($)", "Transactions", "Risk Score", "Violations"]
+        # Build table with appropriate columns
+        if has_profit:
+            header = ["Name", "Role", "Profit ($)", "Transactions", "Risk Score", "Violations"]
+        else:
+            header = ["Name", "Role", "Shares", "Transactions", "Risk Score", "Violations"]
+
         rows = [header]
         for b in sorted_bens:
+            if has_profit:
+                amount = f"${b.get('total_profit', 0):,.0f}"
+            else:
+                amount = f"{b.get('total_shares', 0):,.0f}"
             rows.append([
-                b.get("name", "Unknown"),
+                b.get("name", "Unknown")[:22],
                 b.get("role", "—"),
-                f"${b.get('total_profit', 0):,.0f}",
+                amount,
                 str(b.get("transaction_count", 0)),
                 f"{b.get('risk_score', 0):.0f}",
                 str(b.get("violations", 0)),
@@ -668,17 +685,17 @@ class ForensicVisualReportGenerator:
         story.append(tbl)
         story.append(Spacer(1, 12))
 
-        # Profit bar chart
+        # Charts
         if MATPLOTLIB_AVAILABLE and sorted_bens:
             img = self._generate_profit_bar(sorted_bens, company)
             if img:
-                story.append(Paragraph("Profit by Beneficiary", self.styles["SubHead"]))
+                story.append(Paragraph("Beneficiary Analysis", self.styles["SubHead"]))
                 story.append(Image(img, width=6.0 * inch, height=3.0 * inch))
 
             img2 = self._generate_role_pie(beneficiaries, company)
             if img2:
                 story.append(Spacer(1, 8))
-                story.append(Paragraph("Profit Distribution by Role", self.styles["SubHead"]))
+                story.append(Paragraph("Distribution by Role", self.styles["SubHead"]))
                 story.append(Image(img2, width=4.5 * inch, height=3.0 * inch))
 
         return story
@@ -755,13 +772,17 @@ class ForensicVisualReportGenerator:
                 story.append(Image(img, width=6.5 * inch, height=3.5 * inch))
 
         # Compliance summary table
-        from .visualizations.filing_deadline_chart import FilingDeadlineChart
-
-        fdc = FilingDeadlineChart()
-        enriched = fdc._enrich_filings(filings)
-        late_count = sum(1 for f in enriched if f.get("status") == "LATE")
-        on_time_count = sum(1 for f in enriched if f.get("status") == "ON_TIME")
-        total = len(enriched)
+        try:
+            from .visualizations.filing_deadline_chart import FilingDeadlineChart
+            fdc = FilingDeadlineChart()
+            enriched = fdc._enrich_filings(filings)
+            late_count = sum(1 for f in enriched if f.get("status") == "LATE")
+            on_time_count = sum(1 for f in enriched if f.get("status") == "ON_TIME")
+            total = len(enriched)
+        except (ImportError, Exception):
+            total = len(filings)
+            late_count = 0
+            on_time_count = total
 
         story.append(Spacer(1, 8))
         summary_data = [
@@ -1019,7 +1040,7 @@ class ForensicVisualReportGenerator:
         max_y = max((abs(t.get(y_field, 0)) for t in transactions), default=1) or 1
 
         for txn in transactions:
-            txn_date = txn.get("date", date.today())
+            txn_date = self._parse_date(txn.get("date"))
             y_val = abs(txn.get(y_field, 0))
             risk = txn.get("risk_level", "LOW")
             c = risk_color_map.get(risk, "#888888")
@@ -1058,13 +1079,36 @@ class ForensicVisualReportGenerator:
         return buf
 
     def _generate_profit_bar(self, beneficiaries: list, company: str) -> Optional[BytesIO]:
-        """Generate horizontal bar chart of beneficiary profits."""
+        """Generate horizontal bar chart of beneficiary profits/shares."""
         if not beneficiaries:
             return None
 
+        # Determine best metric
+        has_profit = any(b.get("total_profit", 0) > 0 for b in beneficiaries)
+        has_shares = any(b.get("total_shares", 0) > 0 for b in beneficiaries)
+
+        if has_profit:
+            metric = "total_profit"
+            x_label = "Estimated Profit ($)"
+            fmt = lambda x, _: f"${x:,.0f}"
+        elif has_shares:
+            metric = "total_shares"
+            x_label = "Total Shares"
+            fmt = lambda x, _: f"{x:,.0f}"
+        else:
+            metric = "violations"
+            x_label = "Violation Count"
+            fmt = lambda x, _: f"{x:,.0f}"
+
         names = [b.get("name", "Unknown")[:20] for b in beneficiaries]
-        profits = [b.get("total_profit", 0) for b in beneficiaries]
+        values = [abs(b.get(metric, 0) or 0) for b in beneficiaries]
         risk_scores = [b.get("risk_score", 0) for b in beneficiaries]
+
+        # Filter out zero values
+        filtered = [(n, v, rs) for n, v, rs in zip(names, values, risk_scores) if v > 0]
+        if not filtered:
+            return None
+        names, values, risk_scores = zip(*filtered)
 
         bar_colors = []
         for rs in risk_scores:
@@ -1077,14 +1121,14 @@ class ForensicVisualReportGenerator:
             else:
                 bar_colors.append("#32CD32")
 
-        fig, ax = plt.subplots(figsize=(8, 3.5))
+        fig, ax = plt.subplots(figsize=(8, max(3, len(names) * 0.4)))
         y_pos = np.arange(len(names))
-        ax.barh(y_pos, profits, color=bar_colors, edgecolor="white", linewidth=0.5)
+        ax.barh(y_pos, values, color=bar_colors, edgecolor="white", linewidth=0.5)
         ax.set_yticks(y_pos)
         ax.set_yticklabels(names, fontsize=8)
-        ax.set_xlabel("Estimated Profit ($)", fontsize=10)
-        ax.set_title(f"{company} — Beneficiary Profits", fontsize=12, fontweight="bold")
-        ax.xaxis.set_major_formatter(mticker.FuncFormatter(lambda x, _: f"${x:,.0f}"))
+        ax.set_xlabel(x_label, fontsize=10)
+        ax.set_title(f"{company} — Beneficiary Analysis", fontsize=12, fontweight="bold")
+        ax.xaxis.set_major_formatter(mticker.FuncFormatter(fmt))
         ax.invert_yaxis()
         ax.grid(True, axis="x", alpha=0.3)
         plt.tight_layout()
@@ -1096,17 +1140,36 @@ class ForensicVisualReportGenerator:
         return buf
 
     def _generate_role_pie(self, beneficiaries: list, company: str) -> Optional[BytesIO]:
-        """Generate role-based profit distribution pie chart."""
+        """Generate role-based distribution pie chart."""
         if not beneficiaries:
             return None
 
-        role_profits: Dict[str, float] = {}
+        # Determine best metric
+        has_profit = any(b.get("total_profit", 0) > 0 for b in beneficiaries)
+        has_shares = any(b.get("total_shares", 0) > 0 for b in beneficiaries)
+
+        if has_profit:
+            metric = "total_profit"
+            title_suffix = "Profit"
+        elif has_shares:
+            metric = "total_shares"
+            title_suffix = "Shares"
+        else:
+            metric = "violations"
+            title_suffix = "Violations"
+
+        role_totals: Dict[str, float] = {}
         for b in beneficiaries:
             role = b.get("role", "Other")
-            role_profits[role] = role_profits.get(role, 0) + b.get("total_profit", 0)
+            role_totals[role] = role_totals.get(role, 0) + abs(b.get(metric, 0) or 0)
 
-        roles = list(role_profits.keys())
-        values = list(role_profits.values())
+        # Filter zero values
+        role_totals = {k: v for k, v in role_totals.items() if v > 0}
+        if not role_totals:
+            return None
+
+        roles = list(role_totals.keys())
+        values = list(role_totals.values())
         chart_colors = [ROLE_COLORS_HEX.get(r, "#778899") for r in roles]
 
         fig, ax = plt.subplots(figsize=(5, 3.5))
@@ -1117,7 +1180,7 @@ class ForensicVisualReportGenerator:
         )
         for t in autotexts:
             t.set_fontsize(8)
-        ax.set_title("Profit by Role", fontsize=12, fontweight="bold")
+        ax.set_title(f"{title_suffix} by Role", fontsize=12, fontweight="bold")
         plt.tight_layout()
 
         buf = BytesIO()
@@ -1206,7 +1269,7 @@ class ForensicVisualReportGenerator:
 
         # Truncate long actor names for display
         for txn in transactions:
-            txn_date = txn.get("date", date.today())
+            txn_date = self._parse_date(txn.get("date"))
             actor = txn.get("actor", "Unknown")
             if len(actor) > 18:
                 actor = actor[:15] + "..."
@@ -1248,17 +1311,20 @@ class ForensicVisualReportGenerator:
         if not filings:
             return None
 
-        from .visualizations.filing_deadline_chart import FilingDeadlineChart
-
-        fdc = FilingDeadlineChart()
-        enriched = fdc._enrich_filings(filings)
+        try:
+            from .visualizations.filing_deadline_chart import FilingDeadlineChart
+            fdc = FilingDeadlineChart()
+            enriched = fdc._enrich_filings(filings)
+        except (ImportError, Exception):
+            # Fallback: use raw filings
+            enriched = filings
 
         status_colors = {"ON_TIME": "#2ECC40", "LATE": "#FF4136", "UNKNOWN": "#AAAAAA"}
 
         fig, ax = plt.subplots(figsize=(9, 4))
 
         for f in enriched:
-            fdate = f.get("filing_date")
+            fdate = self._parse_date(f.get("filing_date"))
             ftype = f.get("filing_type", "Unknown")
             status = f.get("status", "UNKNOWN")
             c = status_colors.get(status, "#AAAAAA")
@@ -1269,7 +1335,8 @@ class ForensicVisualReportGenerator:
         for evt in (annual_events or []):
             evt_date = evt.get("date")
             if evt_date:
-                ax.axvline(x=evt_date, color="#7FDBFF", linestyle="--", linewidth=1, alpha=0.6)
+                ax.axvline(x=self._parse_date(evt_date), color="#7FDBFF",
+                           linestyle="--", linewidth=1, alpha=0.6)
 
         ax.set_xlabel("Date", fontsize=10)
         ax.set_ylabel("Filing Type", fontsize=10)
@@ -1360,6 +1427,25 @@ class ForensicVisualReportGenerator:
     # UTILITY METHODS
     # ═══════════════════════════════════════════════════════════════════
 
+    @staticmethod
+    def _parse_date(val) -> date:
+        """Parse a date value from string, date, or datetime."""
+        if isinstance(val, datetime):
+            return val.date()
+        if isinstance(val, date):
+            return val
+        if isinstance(val, str):
+            for fmt in ("%Y-%m-%d", "%Y-%m-%dT%H:%M:%S", "%m/%d/%Y"):
+                try:
+                    return datetime.strptime(val[:10], fmt[:len(val[:10])+2]).date()
+                except (ValueError, TypeError):
+                    continue
+            try:
+                return datetime.strptime(val[:10], "%Y-%m-%d").date()
+            except (ValueError, TypeError):
+                pass
+        return date.today()
+
     def _extract_violations(self, results: Dict) -> list:
         """Extract all violations from analysis results."""
         violations = []
@@ -1369,3 +1455,119 @@ class ForensicVisualReportGenerator:
             if isinstance(value, dict) and "violations" in value:
                 violations.extend(value["violations"])
         return violations
+
+    def _enrich_analysis_results(self, results: Dict) -> Dict:
+        """Enrich analysis results by synthesizing data from violations.
+
+        When transactions, actors, beneficiaries, or filings are empty or
+        contain only zero-value entries, this method builds them from the
+        rich violation data that the forensic engine always produces.
+        """
+        results = dict(results)  # shallow copy
+        violations = self._extract_violations(results)
+        if not violations:
+            return results
+
+        # ── Enrich transactions ──
+        txns = results.get("transactions", [])
+        has_values = any(abs(t.get("value", 0)) > 0 or abs(t.get("shares", 0)) > 0 for t in txns)
+
+        if not has_values:
+            seen = set()
+            enriched_txns = []
+            for v in violations:
+                owner = v.get("reporting_owner", v.get("actor", "Unknown"))
+                txn_date = v.get("transaction_date", v.get("date"))
+                shares = abs(v.get("shares", 0) or 0)
+                price = abs(v.get("price_per_share", 0) or 0)
+                ex_price = abs(v.get("exercise_price", 0) or 0)
+                value = shares * price if price else shares * ex_price
+                key = (owner, str(txn_date), shares)
+                if key in seen:
+                    continue
+                seen.add(key)
+                sev = v.get("severity", v.get("risk_level", "MEDIUM"))
+                if isinstance(sev, (int, float)):
+                    sev = "CRITICAL" if sev >= 8 else "HIGH" if sev >= 6 else "MEDIUM" if sev >= 4 else "LOW"
+                enriched_txns.append({
+                    "date": txn_date,
+                    "actor": owner,
+                    "value": value,
+                    "shares": shares,
+                    "risk_level": str(sev).upper() if sev else "MEDIUM",
+                    "type": v.get("transaction_code", v.get("type", "")),
+                    "accession_number": v.get("accession_number", ""),
+                })
+            results["transactions"] = enriched_txns
+
+        # Ensure all transactions have shares field
+        for t in results.get("transactions", []):
+            if "shares" not in t:
+                t["shares"] = 0
+
+        # ── Enrich actors ──
+        if not results.get("actors"):
+            actor_map: dict = {}
+            for v in violations:
+                owner = v.get("reporting_owner", v.get("actor", "Unknown"))
+                if owner == "Unknown":
+                    continue
+                if owner not in actor_map:
+                    actor_map[owner] = {
+                        "name": owner, "actor_id": owner,
+                        "actor_type": "Individual", "risk_score": 0,
+                        "roles": [], "violation_count": 0,
+                    }
+                sev = str(v.get("severity", "LOW")).upper()
+                score = {"CRITICAL": 30, "HIGH": 20, "MEDIUM": 10, "LOW": 5}.get(sev, 5)
+                actor_map[owner]["risk_score"] = min(100, actor_map[owner]["risk_score"] + score)
+                actor_map[owner]["violation_count"] += 1
+            results["actors"] = list(actor_map.values())
+
+        # ── Enrich beneficiaries ──
+        if not results.get("beneficiaries"):
+            ben_map: dict = {}
+            for v in violations:
+                owner = v.get("reporting_owner", v.get("actor", "Unknown"))
+                if owner == "Unknown":
+                    continue
+                if owner not in ben_map:
+                    ben_map[owner] = {
+                        "name": owner, "role": "Officer",
+                        "total_profit": 0, "total_shares": 0,
+                        "transaction_count": 0, "risk_score": 0, "violations": 0,
+                    }
+                shares = abs(v.get("shares", 0) or 0)
+                price = abs(v.get("price_per_share", 0) or 0)
+                ben_map[owner]["total_shares"] += shares
+                ben_map[owner]["total_profit"] += shares * price
+                ben_map[owner]["transaction_count"] += 1
+                ben_map[owner]["violations"] += 1
+                sev = str(v.get("severity", "LOW")).upper()
+                score = {"CRITICAL": 30, "HIGH": 20, "MEDIUM": 10, "LOW": 5}.get(sev, 5)
+                ben_map[owner]["risk_score"] = min(100, ben_map[owner]["risk_score"] + score)
+            results["beneficiaries"] = list(ben_map.values())
+
+        # ── Enrich filings ──
+        if not results.get("filings"):
+            seen_acc = set()
+            enriched_filings = []
+            for v in violations:
+                acc = v.get("accession_number", "")
+                if not acc or acc in seen_acc:
+                    continue
+                seen_acc.add(acc)
+                enriched_filings.append({
+                    "filing_type": "Form 4",
+                    "filing_date": v.get("filing_date", v.get("transaction_date")),
+                    "accession_number": acc,
+                })
+            results["filings"] = enriched_filings
+
+        # ── Filter null material events ──
+        results["material_events"] = [
+            e for e in results.get("material_events", [])
+            if e.get("date") is not None and e.get("description")
+        ]
+
+        return results
