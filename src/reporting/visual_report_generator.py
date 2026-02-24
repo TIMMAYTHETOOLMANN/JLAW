@@ -519,6 +519,74 @@ class ForensicVisualReportGenerator:
 
         tbl.setStyle(TableStyle(style_cmds))
         story.append(tbl)
+        story.append(Spacer(1, 14))
+
+        # ── Violation Register with penalties and SEC links ──
+        story.append(Paragraph("VIOLATION REGISTER", self.styles["SubHead"]))
+        story.append(Spacer(1, 6))
+
+        # Deduplicate violations
+        seen_keys = set()
+        unique_viols = []
+        for v in all_violations:
+            vkey = (
+                v.get("accession_number", ""),
+                v.get("reporting_owner", ""),
+                v.get("transaction_date", ""),
+                v.get("violation_type", ""),
+            )
+            if vkey not in seen_keys:
+                seen_keys.add(vkey)
+                unique_viols.append(v)
+
+        sorted_viols = sorted(unique_viols, key=lambda v: (
+            {"CRITICAL": 0, "HIGH": 1, "MEDIUM": 2, "LOW": 3}.get(
+                str(v.get("severity", v.get("risk_level", "LOW"))).upper(), 4
+            ),
+        ))[:25]
+
+        if sorted_viols:
+            reg_rows = [["#", "Violation", "Owner", "Date", "Shares", "Penalty", "Filing"]]
+            for i, v in enumerate(sorted_viols, 1):
+                vtype = v.get("violation_type", "Unknown")
+                if len(vtype) > 25:
+                    vtype = vtype[:22] + "..."
+                owner = v.get("reporting_owner", v.get("actor", "—"))
+                if len(owner) > 18:
+                    owner = owner[:15] + "..."
+                txn_date = str(v.get("transaction_date", "—"))[:10]
+                shares = v.get("shares", 0) or 0
+                shares_str = f"{shares:,.0f}" if shares else "—"
+                penalty = v.get("estimated_penalty", 0) or 0
+                penalty_str = f"${penalty:,.0f}" if penalty else "—"
+                acc = v.get("accession_number", "—")
+                if len(acc) > 18:
+                    acc = acc[:15] + "..."
+                reg_rows.append([
+                    str(i), vtype, owner, txn_date,
+                    shares_str, penalty_str, acc,
+                ])
+
+            reg_tbl = Table(
+                reg_rows,
+                colWidths=[0.3*inch, 1.4*inch, 1.1*inch, 0.7*inch, 0.65*inch, 0.65*inch, 1.2*inch],
+            )
+            reg_style = [
+                ("FONT", (0, 0), (-1, 0), self.TITLE_FONT, 8),
+                ("FONT", (0, 1), (-1, -1), self.BODY_FONT, 7),
+                ("BACKGROUND", (0, 0), (-1, 0), HEADER_BG),
+                ("TEXTCOLOR", (0, 0), (-1, 0), colors.whitesmoke),
+                ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
+                ("GRID", (0, 0), (-1, -1), 0.3, colors.HexColor("#DEE2E6")),
+                ("TOPPADDING", (0, 0), (-1, -1), 3),
+                ("BOTTOMPADDING", (0, 0), (-1, -1), 3),
+                ("LEFTPADDING", (0, 0), (-1, -1), 4),
+                ("ROWBACKGROUNDS", (0, 1), (-1, -1),
+                 [colors.white, colors.HexColor("#F8F9FA")]),
+            ]
+            reg_tbl.setStyle(TableStyle(reg_style))
+            story.append(reg_tbl)
+
         return story
 
     # ─── TIMELINE SECTION ────────────────────────────────────────────
@@ -940,16 +1008,24 @@ class ForensicVisualReportGenerator:
             "MEDIUM": "#FFD700", "LOW": "#32CD32",
         }
 
-        fig, ax = plt.subplots(figsize=(9, 4))
+        # Determine if we have dollar values or should use shares
+        has_dollar_values = any(abs(t.get("value", 0)) > 0 for t in transactions)
+        y_field = "value" if has_dollar_values else "shares"
+        y_label = "Transaction Value ($)" if has_dollar_values else "Shares Transacted"
+
+        fig, ax = plt.subplots(figsize=(10, 4.5))
+
+        # Compute max for relative sizing
+        max_y = max((abs(t.get(y_field, 0)) for t in transactions), default=1) or 1
 
         for txn in transactions:
             txn_date = txn.get("date", date.today())
-            value = abs(txn.get("value", 0))
+            y_val = abs(txn.get(y_field, 0))
             risk = txn.get("risk_level", "LOW")
-            txn.get("actor", "Unknown")
             c = risk_color_map.get(risk, "#888888")
-            size = max(15, min(200, value / 10000))
-            ax.scatter(txn_date, value, s=size, c=c, alpha=0.7, edgecolors="white", linewidth=0.8)
+            size = max(20, min(250, (y_val / max_y) * 200 + 20))
+            ax.scatter(txn_date, y_val, s=size, c=c, alpha=0.7,
+                       edgecolors="white", linewidth=0.8, zorder=3)
 
         # Material events
         for evt in material_events:
@@ -958,16 +1034,21 @@ class ForensicVisualReportGenerator:
                 ax.axvline(x=evt_date, color="#7FDBFF", linestyle="--", linewidth=1, alpha=0.7)
 
         ax.set_xlabel("Date", fontsize=10)
-        ax.set_ylabel("Transaction Value ($)", fontsize=10)
-        ax.set_title(f"{company} — Transaction Timeline", fontsize=12, fontweight="bold")
-        ax.yaxis.set_major_formatter(mticker.FuncFormatter(lambda x, _: f"${x:,.0f}"))
+        ax.set_ylabel(y_label, fontsize=10)
+        ax.set_title(f"{company} — Insider Transaction Timeline", fontsize=12, fontweight="bold")
+
+        if has_dollar_values:
+            ax.yaxis.set_major_formatter(mticker.FuncFormatter(lambda x, _: f"${x:,.0f}"))
+        else:
+            ax.yaxis.set_major_formatter(mticker.FuncFormatter(lambda x, _: f"{x:,.0f}"))
 
         # Legend
         for level, c in risk_color_map.items():
             ax.scatter([], [], c=c, s=40, label=level, edgecolors="white")
-        ax.legend(title="Risk Level", loc="upper left", fontsize=8, title_fontsize=9)
+        ax.legend(title="Risk Level", loc="upper right", fontsize=8, title_fontsize=9)
 
         ax.grid(True, alpha=0.3)
+        fig.autofmt_xdate(rotation=30, ha='right')
         plt.tight_layout()
 
         buf = BytesIO()
@@ -1050,6 +1131,11 @@ class ForensicVisualReportGenerator:
         if not transactions:
             return None
 
+        # Determine best metric
+        has_dollar_values = any(abs(t.get("value", 0)) > 0 for t in transactions)
+        metric_field = "value" if has_dollar_values else "shares"
+        metric_label = "Transaction Value ($)" if has_dollar_values else "Shares Transacted"
+
         actor_date_data: Dict[str, Dict[str, float]] = defaultdict(lambda: defaultdict(float))
         actors_set: set = set()
         dates_set: set = set()
@@ -1057,12 +1143,14 @@ class ForensicVisualReportGenerator:
         for txn in transactions:
             actor = txn.get("actor", "Unknown")
             txn_date = str(txn.get("date", ""))
-            value = abs(txn.get("value", 0))
-            actor_date_data[actor][txn_date] += value
+            val = abs(txn.get(metric_field, 0))
+            actor_date_data[actor][txn_date] += val
             actors_set.add(actor)
             dates_set.add(txn_date)
 
-        sorted_actors = sorted(actors_set)[:15]  # Limit actors for readability
+        # Sort actors by total activity and limit for readability
+        actor_totals = {a: sum(actor_date_data[a].values()) for a in actors_set}
+        sorted_actors = sorted(actors_set, key=lambda a: actor_totals[a], reverse=True)[:15]
         sorted_dates = sorted(dates_set)
 
         z = np.zeros((len(sorted_actors), len(sorted_dates)))
@@ -1070,20 +1158,27 @@ class ForensicVisualReportGenerator:
             for j, dt in enumerate(sorted_dates):
                 z[i, j] = actor_date_data[actor].get(dt, 0)
 
-        fig, ax = plt.subplots(figsize=(9, 4))
+        fig, ax = plt.subplots(figsize=(10, max(3.5, len(sorted_actors) * 0.35)))
         im = ax.imshow(z, aspect="auto", cmap="Reds", interpolation="nearest")
+
+        # Y-axis: truncate long names
+        display_actors = [a[:18] + "..." if len(a) > 18 else a for a in sorted_actors]
         ax.set_yticks(range(len(sorted_actors)))
-        ax.set_yticklabels(sorted_actors, fontsize=7)
-        # Show subset of date labels
-        step = max(1, len(sorted_dates) // 10)
+        ax.set_yticklabels(display_actors, fontsize=7)
+
+        # X-axis: show subset of date labels to prevent overlap
+        step = max(1, len(sorted_dates) // 8)
         ax.set_xticks(range(0, len(sorted_dates), step))
         ax.set_xticklabels(
-            [sorted_dates[i] for i in range(0, len(sorted_dates), step)],
+            [sorted_dates[i][:10] for i in range(0, len(sorted_dates), step)],
             rotation=45, ha="right", fontsize=7,
         )
         ax.set_title(f"{company} — Trading Intensity Heatmap", fontsize=12, fontweight="bold")
-        cbar = fig.colorbar(im, ax=ax, label="Transaction Value ($)")
-        cbar.ax.yaxis.set_major_formatter(mticker.FuncFormatter(lambda x, _: f"${x:,.0f}"))
+        cbar = fig.colorbar(im, ax=ax, label=metric_label, shrink=0.8)
+        if has_dollar_values:
+            cbar.ax.yaxis.set_major_formatter(mticker.FuncFormatter(lambda x, _: f"${x:,.0f}"))
+        else:
+            cbar.ax.yaxis.set_major_formatter(mticker.FuncFormatter(lambda x, _: f"{x:,.0f}"))
         plt.tight_layout()
 
         buf = BytesIO()
@@ -1102,31 +1197,42 @@ class ForensicVisualReportGenerator:
             "MEDIUM": "#FFD700", "LOW": "#32CD32",
         }
 
-        fig, ax = plt.subplots(figsize=(9, 4.5))
+        # Determine best metric
+        has_dollar_values = any(abs(t.get("value", 0)) > 0 for t in transactions)
+        size_field = "value" if has_dollar_values else "shares"
+        max_size_val = max((abs(t.get(size_field, 0)) for t in transactions), default=1) or 1
 
+        fig, ax = plt.subplots(figsize=(10, 5))
+
+        # Truncate long actor names for display
         for txn in transactions:
             txn_date = txn.get("date", date.today())
             actor = txn.get("actor", "Unknown")
-            value = abs(txn.get("value", 0))
+            if len(actor) > 18:
+                actor = actor[:15] + "..."
+            size_val = abs(txn.get(size_field, 0))
             risk = txn.get("risk_level", "LOW")
             c = risk_color_map.get(risk, "#888888")
-            size = max(20, min(500, value / 5000))
+            size = max(25, (size_val / max_size_val) * 400 + 25)
             ax.scatter(
-                txn_date, actor, s=size, c=c, alpha=0.7,
-                edgecolors="white", linewidth=0.8,
+                txn_date, actor, s=size, c=c, alpha=0.65,
+                edgecolors="white", linewidth=0.8, zorder=3,
             )
 
         ax.set_xlabel("Date", fontsize=10)
-        ax.set_ylabel("Actor", fontsize=10)
+        ax.set_ylabel("Actor", fontsize=9)
+        size_label = "Dollar Value" if has_dollar_values else "Shares"
         ax.set_title(
-            f"{company} — Transaction Magnitude (Bubble Size = Value)",
+            f"{company} — Transaction Magnitude (Bubble Size = {size_label})",
             fontsize=12, fontweight="bold",
         )
 
         for level, c in risk_color_map.items():
             ax.scatter([], [], c=c, s=60, label=level, edgecolors="white")
-        ax.legend(title="Risk Level", loc="upper left", fontsize=8, title_fontsize=9)
+        ax.legend(title="Risk Level", loc="upper right", fontsize=8, title_fontsize=9)
         ax.grid(True, alpha=0.3)
+        ax.tick_params(axis='y', labelsize=7)
+        fig.autofmt_xdate(rotation=30, ha='right')
         plt.tight_layout()
 
         buf = BytesIO()
