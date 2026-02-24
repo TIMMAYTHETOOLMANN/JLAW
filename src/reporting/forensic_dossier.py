@@ -170,6 +170,9 @@ class ForensicDossierGenerator:
         pdf_path = self.output_dir / output_filename
         standalone_charts: List[Path] = []
 
+        # Enrich analysis results: synthesize missing data from violations
+        analysis_results = self._enrich_analysis_results(analysis_results)
+
         doc = SimpleDocTemplate(
             str(pdf_path), pagesize=letter,
             rightMargin=48, leftMargin=48, topMargin=48, bottomMargin=48,
@@ -596,32 +599,130 @@ class ForensicDossierGenerator:
         story.append(tbl)
         story.append(Spacer(1, 16))
 
-        # Detailed violation list (top 20)
-        story.append(Paragraph("Top Violations Detail", self.styles["SubSection"]))
-        sorted_viols = sorted(violations, key=lambda v: (
+        # ── Comprehensive Violation Register ──
+        story.append(Paragraph("Violation Register", self.styles["SubSection"]))
+        story.append(Paragraph(
+            "Complete listing of detected violations with penalty estimates, "
+            "filing dates, and SEC EDGAR filing references.",
+            self.styles["BodyText2"],
+        ))
+        story.append(Spacer(1, 6))
+
+        # Deduplicate violations by accession + owner + date
+        seen_keys = set()
+        unique_viols = []
+        for v in violations:
+            vkey = (
+                v.get("accession_number", ""),
+                v.get("reporting_owner", ""),
+                v.get("transaction_date", ""),
+                v.get("violation_type", ""),
+            )
+            if vkey not in seen_keys:
+                seen_keys.add(vkey)
+                unique_viols.append(v)
+
+        sorted_viols = sorted(unique_viols, key=lambda v: (
             {"CRITICAL": 0, "HIGH": 1, "MEDIUM": 2, "LOW": 3}.get(
                 self._normalize_severity(v.get("severity", "LOW")), 4
-            )
-        ))[:20]
+            ),
+            str(v.get("transaction_date", "")),
+        ))
 
-        detail_rows = [["#", "Severity", "Type", "Description", "Node"]]
-        for i, v in enumerate(sorted_viols, 1):
+        # Build detailed register table
+        register_header = [
+            Paragraph("<b>#</b>", self.styles["SmallBody"]),
+            Paragraph("<b>Violation</b>", self.styles["SmallBody"]),
+            Paragraph("<b>Owner</b>", self.styles["SmallBody"]),
+            Paragraph("<b>Date</b>", self.styles["SmallBody"]),
+            Paragraph("<b>Shares</b>", self.styles["SmallBody"]),
+            Paragraph("<b>Penalty</b>", self.styles["SmallBody"]),
+            Paragraph("<b>SEC Filing</b>", self.styles["SmallBody"]),
+        ]
+        register_rows = [register_header]
+
+        for i, v in enumerate(sorted_viols[:30], 1):
             sev = self._normalize_severity(v.get("severity", "LOW"))
-            desc = v.get("description", "")
-            if len(desc) > 60:
-                desc = desc[:57] + "..."
-            detail_rows.append([
-                str(i), sev,
-                v.get("violation_type", "Unknown")[:25],
-                desc,
-                v.get("node_id", ""),
+            vtype = v.get("violation_type", "Unknown")
+            if len(vtype) > 28:
+                vtype = vtype[:25] + "..."
+            owner = v.get("reporting_owner", v.get("actor", "—"))
+            if len(owner) > 20:
+                owner = owner[:17] + "..."
+            txn_date = str(v.get("transaction_date", "—"))[:10]
+            shares = v.get("shares", 0) or 0
+            shares_str = f"{shares:,.0f}" if shares else "—"
+            penalty = v.get("estimated_penalty", 0) or 0
+            penalty_str = f"${penalty:,.0f}" if penalty else "—"
+            acc = v.get("accession_number", "")
+            if acc:
+                filing_link = Paragraph(
+                    f'<font color="#2980B9"><u>{acc[:20]}</u></font>',
+                    ParagraphStyle("link", parent=self.styles["SmallBody"],
+                                   fontSize=6, textColor=colors.HexColor("#2980B9")),
+                )
+            else:
+                filing_link = Paragraph("—", self.styles["SmallBody"])
+
+            sev_color = SEV_COLORS.get(sev, SEV_LOW)
+            row_num = Paragraph(
+                f'<font color="{sev_color}"><b>{i}</b></font>',
+                self.styles["SmallBody"],
+            )
+
+            register_rows.append([
+                row_num,
+                Paragraph(vtype, ParagraphStyle("vt", parent=self.styles["SmallBody"], fontSize=7)),
+                Paragraph(owner, ParagraphStyle("own", parent=self.styles["SmallBody"], fontSize=7)),
+                Paragraph(txn_date, ParagraphStyle("dt", parent=self.styles["SmallBody"], fontSize=7)),
+                Paragraph(shares_str, ParagraphStyle("sh", parent=self.styles["SmallBody"], fontSize=7, alignment=TA_RIGHT)),
+                Paragraph(penalty_str, ParagraphStyle("pen", parent=self.styles["SmallBody"], fontSize=7, alignment=TA_RIGHT)),
+                filing_link,
             ])
 
-        detail_tbl = self._styled_table(
-            detail_rows, [0.4*inch, 0.8*inch, 1.5*inch, 2.8*inch, 1.0*inch],
-            color_col=1, font_size=8,
+        register_tbl = Table(
+            register_rows,
+            colWidths=[0.3*inch, 1.5*inch, 1.1*inch, 0.7*inch, 0.7*inch, 0.7*inch, 1.4*inch],
         )
-        story.append(detail_tbl)
+        register_style = [
+            ("FONT", (0, 0), (-1, 0), self.TITLE_FONT, 8),
+            ("FONT", (0, 1), (-1, -1), self.BODY_FONT, 7),
+            ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor(BRAND_NAVY)),
+            ("TEXTCOLOR", (0, 0), (-1, 0), colors.whitesmoke),
+            ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
+            ("GRID", (0, 0), (-1, -1), 0.3, colors.HexColor("#DEE2E6")),
+            ("TOPPADDING", (0, 0), (-1, -1), 3),
+            ("BOTTOMPADDING", (0, 0), (-1, -1), 3),
+            ("LEFTPADDING", (0, 0), (-1, -1), 4),
+            ("RIGHTPADDING", (0, 0), (-1, -1), 4),
+            ("ROWBACKGROUNDS", (0, 1), (-1, -1), [colors.white, colors.HexColor("#F8F9FA")]),
+        ]
+        # Color-code severity rows
+        for i, v in enumerate(sorted_viols[:30], 1):
+            sev = self._normalize_severity(v.get("severity", "LOW"))
+            if sev == "CRITICAL":
+                register_style.append(("BACKGROUND", (0, i), (0, i), colors.HexColor(SEV_CRITICAL)))
+            elif sev == "HIGH":
+                register_style.append(("BACKGROUND", (0, i), (0, i), colors.HexColor(SEV_HIGH)))
+
+        register_tbl.setStyle(TableStyle(register_style))
+        story.append(register_tbl)
+        story.append(Spacer(1, 10))
+
+        # Statutory reference summary
+        stat_refs = set()
+        for v in violations:
+            ref = v.get("statutory_reference", "")
+            if ref:
+                stat_refs.add(ref)
+        if stat_refs:
+            story.append(Paragraph("Applicable Statutes", self.styles["SubSection"]))
+            for ref in sorted(stat_refs):
+                story.append(Paragraph(
+                    f"• {ref}",
+                    ParagraphStyle("stat_ref", parent=self.styles["SmallBody"],
+                                   fontSize=8, leftIndent=15, spaceAfter=2),
+                ))
 
         return story
 
@@ -802,14 +903,18 @@ class ForensicDossierGenerator:
 
         # Transaction summary table
         story.append(Paragraph("Transaction Summary", self.styles["SubSection"]))
+        has_dollar_values = any(abs(t.get("value", 0)) > 0 for t in transactions)
         total_val = sum(abs(t.get("value", 0)) for t in transactions)
+        total_shares = sum(abs(t.get("shares", 0)) for t in transactions)
         by_risk = Counter(t.get("risk_level", "LOW") for t in transactions)
 
         summary_data = [
             ["Metric", "Value"],
             ["Total Transactions", str(len(transactions))],
-            ["Total Value", f"${total_val:,.0f}"],
+            ["Total Shares Transacted", f"{total_shares:,.0f}"],
         ]
+        if has_dollar_values:
+            summary_data.append(["Total Dollar Value", f"${total_val:,.0f}"])
         for risk in ["CRITICAL", "HIGH", "MEDIUM", "LOW"]:
             if by_risk.get(risk, 0) > 0:
                 summary_data.append([f"{risk} Risk Transactions", str(by_risk[risk])])
@@ -828,15 +933,30 @@ class ForensicDossierGenerator:
         story.append(self._section_bar())
         story.append(Spacer(1, 8))
 
-        sorted_bens = sorted(beneficiaries, key=lambda b: b.get("total_profit", 0), reverse=True)[:15]
+        # Determine best metric for sorting
+        has_profit = any(b.get("total_profit", 0) > 0 for b in beneficiaries)
+        has_shares = any(b.get("total_shares", 0) > 0 for b in beneficiaries)
+        sort_key = "total_profit" if has_profit else "total_shares" if has_shares else "violations"
 
-        header = ["Name", "Role", "Total Profit", "Transactions", "Risk Score", "Violations"]
+        sorted_bens = sorted(
+            beneficiaries, key=lambda b: abs(b.get(sort_key, 0) or 0), reverse=True
+        )[:15]
+
+        if has_profit:
+            header = ["Name", "Role", "Total Profit", "Transactions", "Risk Score", "Violations"]
+        else:
+            header = ["Name", "Role", "Total Shares", "Transactions", "Risk Score", "Violations"]
+
         rows = [header]
         for b in sorted_bens:
+            if has_profit:
+                amount = f"${b.get('total_profit', 0):,.0f}"
+            else:
+                amount = f"{b.get('total_shares', 0):,.0f}"
             rows.append([
                 b.get("name", "Unknown")[:25],
                 b.get("role", "—")[:15],
-                f"${b.get('total_profit', 0):,.0f}",
+                amount,
                 str(b.get("transaction_count", 0)),
                 f"{b.get('risk_score', 0):.0f}",
                 str(b.get("violations", 0)),
@@ -851,13 +971,13 @@ class ForensicDossierGenerator:
         if MATPLOTLIB_AVAILABLE and sorted_bens:
             chart = self._generate_profit_waterfall(sorted_bens, company)
             if chart:
-                story.append(Paragraph("Profit by Beneficiary", self.styles["SubSection"]))
+                story.append(Paragraph("Beneficiary Analysis", self.styles["SubSection"]))
                 story.append(Image(chart, width=6.0 * inch, height=3.0 * inch))
                 story.append(Spacer(1, 10))
 
             role_chart = self._generate_role_distribution(beneficiaries, company)
             if role_chart:
-                story.append(Paragraph("Profit Distribution by Role", self.styles["SubSection"]))
+                story.append(Paragraph("Distribution by Role", self.styles["SubSection"]))
                 story.append(Image(role_chart, width=4.5 * inch, height=3.0 * inch))
 
         return story
@@ -1109,7 +1229,7 @@ class ForensicDossierGenerator:
     def _generate_timeline_chart(
         self, transactions: list, events: list, company: str,
     ) -> Optional[BytesIO]:
-        """Transaction timeline scatter plot."""
+        """Transaction timeline scatter plot with shares or value on y-axis."""
         if not transactions:
             return None
 
@@ -1118,32 +1238,47 @@ class ForensicDossierGenerator:
             "MEDIUM": SEV_MEDIUM, "LOW": SEV_LOW,
         }
 
-        fig, ax = plt.subplots(figsize=(9, 4))
+        # Determine if we have dollar values or should use shares
+        has_dollar_values = any(abs(t.get("value", 0)) > 0 for t in transactions)
+        y_field = "value" if has_dollar_values else "shares"
+        y_label = "Transaction Value ($)" if has_dollar_values else "Shares Transacted"
+
+        fig, ax = plt.subplots(figsize=(10, 4.5))
+
+        # Compute max for relative sizing
+        max_y = max((abs(t.get(y_field, 0)) for t in transactions), default=1) or 1
 
         for txn in transactions:
-            txn_date = txn.get("date", date.today())
-            value = abs(txn.get("value", 0))
+            txn_date = self._parse_date(txn.get("date"))
+            y_val = abs(txn.get(y_field, 0))
             risk = txn.get("risk_level", "LOW")
             c = risk_colors.get(risk, "#888888")
-            size = max(15, min(200, value / 10000))
-            ax.scatter(txn_date, value, s=size, c=c, alpha=0.7,
-                       edgecolors="white", linewidth=0.8)
+            # Scale marker size relative to data
+            size = max(20, min(250, (y_val / max_y) * 200 + 20))
+            ax.scatter(txn_date, y_val, s=size, c=c, alpha=0.7,
+                       edgecolors="white", linewidth=0.8, zorder=3)
 
         for evt in (events or []):
             evt_date = evt.get("date")
             if evt_date:
-                ax.axvline(x=evt_date, color="#7FDBFF", linestyle="--", linewidth=1, alpha=0.7)
+                ax.axvline(x=self._parse_date(evt_date), color="#7FDBFF",
+                           linestyle="--", linewidth=1, alpha=0.7)
 
         ax.set_xlabel("Date", fontsize=10)
-        ax.set_ylabel("Transaction Value ($)", fontsize=10)
+        ax.set_ylabel(y_label, fontsize=10)
         ax.set_title(f"{company} — Insider Transaction Timeline",
                       fontsize=12, fontweight="bold", color=BRAND_NAVY)
-        ax.yaxis.set_major_formatter(mticker.FuncFormatter(lambda x, _: f"${x:,.0f}"))
+
+        if has_dollar_values:
+            ax.yaxis.set_major_formatter(mticker.FuncFormatter(lambda x, _: f"${x:,.0f}"))
+        else:
+            ax.yaxis.set_major_formatter(mticker.FuncFormatter(lambda x, _: f"{x:,.0f}"))
 
         for level, c in risk_colors.items():
             ax.scatter([], [], c=c, s=40, label=level, edgecolors="white")
-        ax.legend(title="Risk Level", loc="upper left", fontsize=8, title_fontsize=9)
+        ax.legend(title="Risk Level", loc="upper right", fontsize=8, title_fontsize=9)
         ax.grid(True, alpha=0.3)
+        fig.autofmt_xdate(rotation=30, ha='right')
         plt.tight_layout()
 
         buf = BytesIO()
@@ -1155,13 +1290,39 @@ class ForensicDossierGenerator:
     def _generate_profit_waterfall(
         self, beneficiaries: list, company: str,
     ) -> Optional[BytesIO]:
-        """Beneficiary profit horizontal bar chart."""
+        """Beneficiary profit/shares horizontal bar chart."""
         if not beneficiaries:
             return None
 
+        # Determine best metric
+        has_profit = any(b.get("total_profit", 0) > 0 for b in beneficiaries)
+        has_shares = any(b.get("total_shares", 0) > 0 for b in beneficiaries)
+
+        if has_profit:
+            metric = "total_profit"
+            x_label = "Estimated Profit ($)"
+            title_suffix = "Profit Analysis"
+            fmt = lambda x, _: f"${x:,.0f}"
+        elif has_shares:
+            metric = "total_shares"
+            x_label = "Total Shares"
+            title_suffix = "Share Volume Analysis"
+            fmt = lambda x, _: f"{x:,.0f}"
+        else:
+            metric = "violations"
+            x_label = "Violation Count"
+            title_suffix = "Violation Count"
+            fmt = lambda x, _: f"{x:,.0f}"
+
         names = [b.get("name", "Unknown")[:20] for b in beneficiaries]
-        profits = [b.get("total_profit", 0) for b in beneficiaries]
+        values = [abs(b.get(metric, 0) or 0) for b in beneficiaries]
         risk_scores = [b.get("risk_score", 0) for b in beneficiaries]
+
+        # Filter out zero values
+        filtered = [(n, v, rs) for n, v, rs in zip(names, values, risk_scores) if v > 0]
+        if not filtered:
+            return None
+        names, values, risk_scores = zip(*filtered)
 
         bar_colors = []
         for rs in risk_scores:
@@ -1176,13 +1337,13 @@ class ForensicDossierGenerator:
 
         fig, ax = plt.subplots(figsize=(8, max(3, len(names) * 0.4)))
         y_pos = np.arange(len(names))
-        bars = ax.barh(y_pos, profits, color=bar_colors, edgecolor="white", linewidth=0.5)
+        bars = ax.barh(y_pos, values, color=bar_colors, edgecolor="white", linewidth=0.5)
         ax.set_yticks(y_pos)
         ax.set_yticklabels(names, fontsize=8)
-        ax.set_xlabel("Estimated Profit ($)", fontsize=10)
-        ax.set_title(f"{company} — Beneficiary Profit Analysis",
+        ax.set_xlabel(x_label, fontsize=10)
+        ax.set_title(f"{company} — Beneficiary {title_suffix}",
                       fontsize=12, fontweight="bold", color=BRAND_NAVY)
-        ax.xaxis.set_major_formatter(mticker.FuncFormatter(lambda x, _: f"${x:,.0f}"))
+        ax.xaxis.set_major_formatter(mticker.FuncFormatter(fmt))
         ax.invert_yaxis()
         ax.grid(True, axis="x", alpha=0.3)
         plt.tight_layout()
@@ -1196,20 +1357,36 @@ class ForensicDossierGenerator:
     def _generate_role_distribution(
         self, beneficiaries: list, company: str,
     ) -> Optional[BytesIO]:
-        """Role-based profit distribution pie chart."""
+        """Role-based distribution pie chart (by profit, shares, or count)."""
         if not beneficiaries:
             return None
 
-        role_profits: Dict[str, float] = {}
+        # Determine best metric - profit first, then shares, then count
+        has_profit = any(b.get("total_profit", 0) > 0 for b in beneficiaries)
+        has_shares = any(b.get("total_shares", 0) > 0 for b in beneficiaries)
+
+        if has_profit:
+            metric_field = "total_profit"
+            title_suffix = "Profit"
+        elif has_shares:
+            metric_field = "total_shares"
+            title_suffix = "Shares"
+        else:
+            metric_field = "violations"
+            title_suffix = "Violations"
+
+        role_totals: Dict[str, float] = {}
         for b in beneficiaries:
             role = b.get("role", "Other")
-            role_profits[role] = role_profits.get(role, 0) + b.get("total_profit", 0)
+            role_totals[role] = role_totals.get(role, 0) + abs(b.get(metric_field, 0) or 0)
 
-        if not role_profits:
+        # Filter out zero-value roles
+        role_totals = {k: v for k, v in role_totals.items() if v > 0}
+        if not role_totals:
             return None
 
-        roles = list(role_profits.keys())
-        values = list(role_profits.values())
+        roles = list(role_totals.keys())
+        values = list(role_totals.values())
         role_colors = {
             "CEO": SEV_CRITICAL, "CFO": SEV_HIGH, "COO": "#FF8C00",
             "Director": "#4169E1", "VP": "#9370DB", "Officer": "#20B2AA",
@@ -1220,7 +1397,8 @@ class ForensicDossierGenerator:
         fig, ax = plt.subplots(figsize=(5, 3.5))
         ax.pie(values, labels=roles, colors=chart_colors, autopct="%1.1f%%",
                startangle=90, wedgeprops={"linewidth": 2, "edgecolor": "white"})
-        ax.set_title("Profit by Executive Role", fontsize=12, fontweight="bold", color=BRAND_NAVY)
+        ax.set_title(f"{title_suffix} by Executive Role", fontsize=12,
+                      fontweight="bold", color=BRAND_NAVY)
         plt.tight_layout()
 
         buf = BytesIO()
@@ -1352,6 +1530,20 @@ class ForensicDossierGenerator:
             return "LOW"
         return str(sev).upper() if sev else "LOW"
 
+    @staticmethod
+    def _parse_date(val):
+        """Parse a date value from string, date, or datetime."""
+        if isinstance(val, datetime):
+            return val.date()
+        if isinstance(val, date):
+            return val
+        if isinstance(val, str):
+            try:
+                return datetime.strptime(val[:10], "%Y-%m-%d").date()
+            except (ValueError, TypeError):
+                pass
+        return date.today()
+
     def _save_standalone_chart(self, chart_buf: Optional[BytesIO], filename: str) -> Optional[Path]:
         """Save a chart buffer as a standalone PNG file."""
         if not chart_buf:
@@ -1362,6 +1554,119 @@ class ForensicDossierGenerator:
         chart_buf.seek(0)  # Reset for PDF embedding
         logger.info(f"Standalone chart saved: {path}")
         return path
+
+    def _enrich_analysis_results(self, results: Dict) -> Dict:
+        """Enrich analysis results by synthesizing data from violations.
+
+        When transactions, actors, beneficiaries, or filings are empty or
+        contain only zero-value entries, this method builds them from the
+        rich violation data that the forensic engine always produces.
+        """
+        results = dict(results)  # shallow copy
+        violations = results.get("violations", [])
+        if not violations:
+            return results
+
+        # ── Enrich transactions ──
+        txns = results.get("transactions", [])
+        has_values = any(
+            abs(t.get("value", 0)) > 0 or abs(t.get("shares", 0)) > 0
+            for t in txns
+        )
+        if not has_values:
+            seen = set()
+            enriched = []
+            for v in violations:
+                owner = v.get("reporting_owner", v.get("actor", "Unknown"))
+                txn_date = v.get("transaction_date", v.get("date"))
+                shares = abs(v.get("shares", 0) or 0)
+                price = abs(v.get("price_per_share", 0) or 0)
+                ex_price = abs(v.get("exercise_price", 0) or 0)
+                value = shares * price if price else shares * ex_price
+                key = (owner, str(txn_date), shares)
+                if key in seen:
+                    continue
+                seen.add(key)
+                sev = self._normalize_severity(v.get("severity", "MEDIUM"))
+                enriched.append({
+                    "date": txn_date, "actor": owner,
+                    "value": value, "shares": shares,
+                    "risk_level": sev,
+                    "type": v.get("transaction_code", v.get("type", "")),
+                    "accession_number": v.get("accession_number", ""),
+                })
+            results["transactions"] = enriched
+
+        for t in results.get("transactions", []):
+            if "shares" not in t:
+                t["shares"] = 0
+
+        # ── Enrich actors ──
+        if not results.get("actors"):
+            actor_map: dict = {}
+            for v in violations:
+                owner = v.get("reporting_owner", v.get("actor", "Unknown"))
+                if owner == "Unknown":
+                    continue
+                if owner not in actor_map:
+                    actor_map[owner] = {
+                        "name": owner, "actor_id": owner,
+                        "actor_type": "Individual", "risk_score": 0,
+                        "roles": [], "violation_count": 0,
+                    }
+                sev = self._normalize_severity(v.get("severity", "LOW"))
+                score = {"CRITICAL": 30, "HIGH": 20, "MEDIUM": 10, "LOW": 5}.get(sev, 5)
+                actor_map[owner]["risk_score"] = min(100, actor_map[owner]["risk_score"] + score)
+                actor_map[owner]["violation_count"] += 1
+            results["actors"] = list(actor_map.values())
+
+        # ── Enrich beneficiaries ──
+        if not results.get("beneficiaries"):
+            ben_map: dict = {}
+            for v in violations:
+                owner = v.get("reporting_owner", v.get("actor", "Unknown"))
+                if owner == "Unknown":
+                    continue
+                if owner not in ben_map:
+                    ben_map[owner] = {
+                        "name": owner, "role": "Officer",
+                        "total_profit": 0, "total_shares": 0,
+                        "transaction_count": 0, "risk_score": 0, "violations": 0,
+                    }
+                shares = abs(v.get("shares", 0) or 0)
+                price = abs(v.get("price_per_share", 0) or 0)
+                ben_map[owner]["total_shares"] += shares
+                ben_map[owner]["total_profit"] += shares * price
+                ben_map[owner]["transaction_count"] += 1
+                ben_map[owner]["violations"] += 1
+                sev = self._normalize_severity(v.get("severity", "LOW"))
+                score = {"CRITICAL": 30, "HIGH": 20, "MEDIUM": 10, "LOW": 5}.get(sev, 5)
+                ben_map[owner]["risk_score"] = min(100, ben_map[owner]["risk_score"] + score)
+            results["beneficiaries"] = list(ben_map.values())
+
+        # ── Enrich filings ──
+        if not results.get("filings"):
+            seen_acc = set()
+            enriched_filings = []
+            for v in violations:
+                acc = v.get("accession_number", "")
+                if not acc or acc in seen_acc:
+                    continue
+                seen_acc.add(acc)
+                enriched_filings.append({
+                    "filing_type": "Form 4",
+                    "filing_date": v.get("filing_date", v.get("transaction_date")),
+                    "accession_number": acc,
+                })
+            results["filings"] = enriched_filings
+
+        # ── Filter null material events ──
+        results["material_events"] = [
+            e for e in results.get("material_events", [])
+            if e.get("date") is not None and e.get("description", "").strip()
+        ]
+
+        return results
 
     def _draw_page(self, canvas_obj, doc):
         """Page header/footer with branding."""

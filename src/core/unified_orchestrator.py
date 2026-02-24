@@ -983,6 +983,121 @@ class UnifiedForensicOrchestrator:
                 }
                 break
 
+        # ── Synthesize transactions from violations when transaction data is sparse ──
+        all_txn_values = [abs(t.get("value", 0)) for t in transactions]
+        has_dollar_values = any(v > 0 for v in all_txn_values)
+
+        if not has_dollar_values and violations:
+            seen_txn_keys = set()
+            for v in violations:
+                owner = v.get("reporting_owner", v.get("actor", "Unknown"))
+                txn_date = v.get("transaction_date", v.get("date"))
+                shares = v.get("shares", 0) or 0
+                price = v.get("price_per_share", 0) or 0
+                exercise_price = v.get("exercise_price", 0) or 0
+                computed_value = abs(shares * price) if price else abs(shares * exercise_price)
+                txn_key = (owner, str(txn_date), shares)
+                if txn_key in seen_txn_keys:
+                    continue
+                seen_txn_keys.add(txn_key)
+                transactions.append({
+                    "date": txn_date,
+                    "actor": owner,
+                    "value": computed_value,
+                    "shares": abs(shares),
+                    "risk_level": self._normalize_severity_str(
+                        v.get("severity", v.get("risk_level", "MEDIUM"))
+                    ),
+                    "type": v.get("transaction_code", v.get("type", "")),
+                    "accession_number": v.get("accession_number", ""),
+                    "security_title": v.get("security_title", ""),
+                })
+
+        # ── Ensure all transactions have a shares field ──
+        for txn in transactions:
+            if "shares" not in txn:
+                txn["shares"] = 0
+
+        # ── Synthesize actors from violations when actor data is empty ──
+        if not actors and violations:
+            actor_map: dict = {}
+            for v in violations:
+                owner = v.get("reporting_owner", v.get("actor", "Unknown"))
+                if owner == "Unknown":
+                    continue
+                if owner not in actor_map:
+                    actor_map[owner] = {
+                        "name": owner,
+                        "actor_id": owner,
+                        "actor_type": "Individual",
+                        "risk_score": 0,
+                        "roles": [],
+                        "violation_count": 0,
+                        "total_shares": 0,
+                    }
+                sev = self._normalize_severity_str(
+                    v.get("severity", v.get("risk_level", "LOW"))
+                )
+                sev_score = {"CRITICAL": 30, "HIGH": 20, "MEDIUM": 10, "LOW": 5}.get(sev, 5)
+                actor_map[owner]["risk_score"] = min(
+                    100, actor_map[owner]["risk_score"] + sev_score
+                )
+                actor_map[owner]["violation_count"] += 1
+                actor_map[owner]["total_shares"] += abs(v.get("shares", 0) or 0)
+            actors = list(actor_map.values())
+
+        # ── Synthesize beneficiaries from violations when beneficiary data is empty ──
+        if not beneficiaries and violations:
+            ben_map: dict = {}
+            for v in violations:
+                owner = v.get("reporting_owner", v.get("actor", "Unknown"))
+                if owner == "Unknown":
+                    continue
+                if owner not in ben_map:
+                    ben_map[owner] = {
+                        "name": owner,
+                        "role": "Officer",
+                        "total_profit": 0,
+                        "total_shares": 0,
+                        "transaction_count": 0,
+                        "risk_score": 0,
+                        "violations": 0,
+                    }
+                shares = abs(v.get("shares", 0) or 0)
+                price = abs(v.get("price_per_share", 0) or 0)
+                ben_map[owner]["total_shares"] += shares
+                ben_map[owner]["total_profit"] += shares * price
+                ben_map[owner]["transaction_count"] += 1
+                ben_map[owner]["violations"] += 1
+                sev = self._normalize_severity_str(
+                    v.get("severity", v.get("risk_level", "LOW"))
+                )
+                sev_score = {"CRITICAL": 30, "HIGH": 20, "MEDIUM": 10, "LOW": 5}.get(sev, 5)
+                ben_map[owner]["risk_score"] = min(
+                    100, ben_map[owner]["risk_score"] + sev_score
+                )
+            beneficiaries = list(ben_map.values())
+
+        # ── Synthesize filings from violations when filing data is empty ──
+        if not filings and violations:
+            seen_accessions = set()
+            for v in violations:
+                acc = v.get("accession_number", "")
+                if not acc or acc in seen_accessions:
+                    continue
+                seen_accessions.add(acc)
+                filings.append({
+                    "filing_type": "Form 4",
+                    "filing_date": v.get("filing_date", v.get("transaction_date")),
+                    "accession_number": acc,
+                })
+
+        # ── Filter out null/empty material events ──
+        material_events = [
+            e for e in material_events
+            if e.get("date") is not None and e.get("description", "").strip()
+        ]
+
         return {
             "total_violations": len(violations),
             "critical_alerts": engine_result.critical_alerts,
@@ -1006,6 +1121,19 @@ class UnifiedForensicOrchestrator:
                 f"Prosecution recommendation: {engine_result.prosecution_recommendation}."
             ),
         }
+
+    @staticmethod
+    def _normalize_severity_str(sev) -> str:
+        """Normalize severity to a standard string."""
+        if isinstance(sev, (int, float)):
+            if sev >= 8:
+                return "CRITICAL"
+            elif sev >= 6:
+                return "HIGH"
+            elif sev >= 4:
+                return "MEDIUM"
+            return "LOW"
+        return str(sev).upper() if sev else "LOW"
 
     @staticmethod
     def _safe_iter(value):
