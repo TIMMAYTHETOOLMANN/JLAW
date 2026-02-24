@@ -1,0 +1,155 @@
+================================================================================
+TOP FORENSIC SIGNALS — ITEMS REQUIRING IMMEDIATE INVESTIGATION
+================================================================================
+
+──────────────────────────────────────────────────────────────────────
+  #1  SPRUNK ERIC D
+  Date: 2019-04-30  |  Code: G (Gift)
+  Shares: 489  |  Security: Class B Common Stock
+  Derivative: No  |  Direct/Indirect: D
+  Price Required: No  |  Price Source: missing
+  Footnote Present: Yes  |  10b5-1 Mentioned: Yes
+  Late Filed: YES (2 days)  |  Repeat Offender: YES
+  FSL Disposition: [A] Likely benign (comp/admin) — document why
+  Signal Score: 0.400
+  Reasons:
+    • Footnotes present and no adverse signals detected
+    • Insider is a repeat late filer
+    • Filed 2 business days late
+    • References 10b5-1 plan but no adoption date disclosed
+
+──────────────────────────────────────────────────────────────────────
+  #2  SPRUNK ERIC D
+  Date: 2019-04-09  |  Code: G (Gift)
+  Shares: 8,036  |  Security: Class B Common Stock
+  Derivative: No  |  Direct/Indirect: D
+  Price Required: No  |  Price Source: missing
+  Footnote Present: Yes  |  10b5-1 Mentioned: Yes
+  Late Filed: YES (4 days)  |  Repeat Offender: YES
+  FSL Disposition: [A] Likely benign (comp/admin) — document why
+  Signal Score: 0.400
+  Reasons:
+    • Footnotes present and no adverse signals detected
+    • Insider is a repeat late filer
+    • Filed 4 business days late
+    • References 10b5-1 plan but no adoption date disclosed
+
+──────────────────────────────────────────────────────────────────────
+  #3  SPRUNK ERIC D
+  Date: 2019-04-11  |  Code: G (Gift)
+  Shares: 408  |  Security: Class B Common Stock
+  Derivative: No  |  Direct/Indirect: D
+  Price Required: No  |  Price Source: missing
+  Footnote Present: Yes  |  10b5-1 Mentioned: Yes
+  Late Filed: YES (2 days)  |  Repeat Offender: YES
+  FSL Disposition: [A] Likely benign (comp/admin) — document why
+  Signal Score: 0.400
+  Reasons:
+    • Footnotes present and no adverse signals detected
+    • Insider is a repeat late filer
+    • Filed 2 business days late
+    • References 10b5-1 plan but no adoption date disclosed
+
+──────────────────────────────────────────────────────────────────────
+  #4  Comstock Elizabeth J
+  Date: 2019-12-23  |  Code: M (Exercise or conversion of derivative security)
+  Shares: 24,000  |  Security: Non-Qualified Stock Option (Right to Buy)
+  Derivative: Yes  |  Direct/Indirect: D
+  Price Required: YES  |  Price Source: derived
+  Footnote Present: Yes  |  10b5-1 Mentioned: No
+  Late Filed: YES (1 days)  |  Repeat Offender: YES
+  FSL Disposition: [A] Likely benign (comp/admin) — document why
+  Signal Score: 0.300
+  Reasons:
+    • Footnotes present and no adverse signals detected
+    • Insider is a repeat late filer
+    • Filed 1 business days late
+
+──────────────────────────────────────────────────────────────────────
+  #5  SPRUNK ERIC D
+  Date: 2019-10-03  |  Code: G (Gift)
+  Shares: 820  |  Security: Class B Common Stock
+  Derivative: No  |  Direct/Indirect: D
+  Price Required: No  |  Price Source: missing
+  Footnote Present: Yes  |  10b5-1 Mentioned: Yes
+  Late Filed: No  |  Repeat Offender: YES
+  FSL Disposition: [A] Likely benign (comp/admin) — document why
+  Signal Score: 0.300
+  Reasons:
+    • Footnotes present and no adverse signals detected
+    • Insider is a repeat late filer
+    • References 10b5-1 plan but no adoption date disclosed
+
+──────────────────────────────────────────────────────────────────────
+  #6  Comstock Elizabeth J
+  Date: 2019-07-02  |  Code: M (Exercise or conversion of derivative security)
+  Shares: 24,000  |  Security: Non-Qualified Stock Option (Right to Buy)
+  Derivative: Yes  |  Direct/Indirect: D
+  Price Required: YES  |  Price Source: derived
+  Footnote Present: Yes  |  10b5-1 Mentioned: Yes
+  Late Filed: No  |  Repeat Offender: YES
+  FSL Disposition: [A] Likely benign (comp/admin) — document why
+  Signal Score: 0.300
+  Reasons:
+    • Footnotes present and no adverse signals detected
+    • Insider is a repeat late filer
+    • References 10b5-1 plan but no adoption date disclosed
+
+──────────────────────────────────────────────────────────────────────
+  #7  SPRUNK ERIC D
+  Date: 2019-04-16  |  Code: M (Exercise or conversion of derivative security)
+  Shares: 40,000  |  Security: Non-Qualified Stock Option (right to buy)
+  Derivative: Yes  |  Direct/Indirect: D
+  Price Required: YES  |  Price Source: derived
+  Footnote Present: Yes  |  10b5-1 Mentioned: Yes
+  Late Filed: No  |  Repeat Offender: YES
+  FSL Disposition: [A] Likely benign (comp/admin) — document why
+  Signal Score: 0.300
+  Reasons:
+    • Footnotes present and no adverse signals detected
+    • Insider is a repeat late filer
+    • References 10b5-1 plan but no adoption date disclosed
+
+──────────────────────────────────────────────────────────────────────
+  #8  SPRUNK ERIC D
+  Date: 2019-12-24  |  Code: M (Exercise or conversion of derivative security)
+  Shares: 120,000  |  Security: Non-Qualified Stock Option (Right to Buy)
+  Derivative: Yes  |  Direct/Indirect: D
+  Price Required: YES  |  Price Source: derived
+  Footnote Present: Yes  |  10b5-1 Mentioned: No
+  Late Filed: No  |  Repeat Offender: YES
+  FSL Disposition: [A] Likely benign (comp/admin) — document why
+  Signal Score: 0.200
+  Reasons:
+    • Footnotes present and no adverse signals detected
+    • Insider is a repeat late filer
+
+──────────────────────────────────────────────────────────────────────
+  #9  Comstock Elizabeth J
+  Date: 2019-09-19  |  Code: A (Grant, award, or other acquisition from issuer)
+  Shares: 1,996  |  Security: Class B Common Stock
+  Derivative: No  |  Direct/Indirect: D
+  Price Required: No  |  Price Source: missing
+  Footnote Present: Yes  |  10b5-1 Mentioned: No
+  Late Filed: No  |  Repeat Offender: YES
+  FSL Disposition: [A] Likely benign (comp/admin) — document why
+  Signal Score: 0.200
+  Reasons:
+    • Code A is standard compensation/admin event
+    • Insider is a repeat late filer
+
+──────────────────────────────────────────────────────────────────────
+  #10  SPRUNK ERIC D
+  Date: 2019-08-01  |  Code: A (Grant, award, or other acquisition from issuer)
+  Shares: 15,641  |  Security: Class B Common Stock
+  Derivative: No  |  Direct/Indirect: D
+  Price Required: No  |  Price Source: missing
+  Footnote Present: Yes  |  10b5-1 Mentioned: No
+  Late Filed: No  |  Repeat Offender: YES
+  FSL Disposition: [A] Likely benign (comp/admin) — document why
+  Signal Score: 0.200
+  Reasons:
+    • Code A is standard compensation/admin event
+    • Insider is a repeat late filer
+
+================================================================================

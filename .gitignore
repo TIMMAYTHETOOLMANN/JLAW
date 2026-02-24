@@ -52,14 +52,12 @@ coverage.xml
 .hypothesis/
 .pytest_cache/
 cover/
-coverage_report/
 
 # Translations
 *.mo
 *.pot
 
 # Django stuff:
-*.log
 local_settings.py
 db.sqlite3
 db.sqlite3-journal
@@ -100,9 +98,13 @@ celerybeat.pid
 # SageMath parsed files
 *.sage.py
 
-# Environments
+# Environment files with raw secrets (use restore_env.sh to decode env.encoded)
+.env
+.env.local
+env.keys.backup
+
+# Virtual Environments
 .python-version
-.env*
 .venv
 .venv*
 env/
@@ -147,25 +149,5 @@ cython_debug/
 .pypirc
 .aider*
 
-# Redis database files
+# Redis database files
 dump.rdb
-
-# JLAW Forensic Analysis Output
-output/
-forensic_storage/
-jlaw_forensic_*.log
-
-# JLAW Cache Directory
-.jlaw_cache/
-
-# Test output directory
-tests/output/
-
-# Evidence packages
-*.zip
-evidence_package_*.zip
-
-# Kubernetes Secrets (never commit actual secrets!)
-k8s/secrets.yaml
-**/secrets.yaml
-!k8s/secrets.yaml.example
