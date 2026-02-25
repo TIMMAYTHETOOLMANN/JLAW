@@ -68,6 +68,9 @@ from .output_documentation_config import (
     DocumentationProfile,
     SectionRequirement,
     VisualRequirement,
+    ComplianceStandard,
+    OutputFileRequirement,
+    PipelineStageAudit,
     FORENSIC_OUTPUT_DOCUMENTATION_PROFILE,
     get_output_documentation_profile,
 )
@@ -132,6 +135,9 @@ __all__ = [
     'DocumentationProfile',
     'SectionRequirement',
     'VisualRequirement',
+    'ComplianceStandard',
+    'OutputFileRequirement',
+    'PipelineStageAudit',
     'FORENSIC_OUTPUT_DOCUMENTATION_PROFILE',
     
     # Evidence Packaging
