@@ -480,5 +480,291 @@ class TestViolationModels:
         assert consensus.agreement_ratio == 0.8
 
 
+class TestDocumentationProfileV3:
+    """Tests for v3.0 documentation profile structure."""
+
+    def test_profile_version_is_3(self):
+        """Profile version must be 3.0."""
+        from src.reporting.output_documentation_config import get_output_documentation_profile
+        profile = get_output_documentation_profile()
+        assert profile.profile_version == "3.0"
+
+    def test_profile_has_15_required_sections(self):
+        """Profile must declare exactly 15 required sections."""
+        from src.reporting.output_documentation_config import get_output_documentation_profile
+        profile = get_output_documentation_profile()
+        assert len(profile.required_sections) == 15
+
+    def test_required_sections_are_numbered(self):
+        """Every required section must have a unique positive section_number."""
+        from src.reporting.output_documentation_config import get_output_documentation_profile
+        profile = get_output_documentation_profile()
+        numbers = [s.section_number for s in profile.required_sections]
+        assert all(n > 0 for n in numbers)
+        assert len(set(numbers)) == len(numbers), "Section numbers must be unique"
+
+    def test_required_sections_have_phase_alignment(self):
+        """Every required section must declare a pipeline phase alignment."""
+        from src.reporting.output_documentation_config import get_output_documentation_profile
+        profile = get_output_documentation_profile()
+        for section in profile.required_sections:
+            assert section.phase_alignment, f"Section {section.name} lacks phase_alignment"
+
+    def test_profile_has_8_visual_requirements(self):
+        """Profile must declare exactly 8 visual requirements."""
+        from src.reporting.output_documentation_config import get_output_documentation_profile
+        profile = get_output_documentation_profile()
+        assert len(profile.visual_requirements) == 8
+
+    def test_visual_requirements_have_generator_module(self):
+        """Every visual requirement must reference a generator module."""
+        from src.reporting.output_documentation_config import get_output_documentation_profile
+        profile = get_output_documentation_profile()
+        for visual in profile.visual_requirements:
+            assert visual.generator_module, f"Visual {visual.key} lacks generator_module"
+
+    def test_profile_has_compliance_standards(self):
+        """Profile must declare at least 4 compliance standards."""
+        from src.reporting.output_documentation_config import get_output_documentation_profile
+        profile = get_output_documentation_profile()
+        assert len(profile.compliance_standards) >= 4
+
+    def test_compliance_standards_include_fre_902(self):
+        """FRE 902(13) and FRE 902(14) must be in compliance standards."""
+        from src.reporting.output_documentation_config import get_output_documentation_profile
+        profile = get_output_documentation_profile()
+        ids = {std.standard_id for std in profile.compliance_standards}
+        assert "FRE_902_13" in ids
+        assert "FRE_902_14" in ids
+
+    def test_profile_has_pipeline_stage_audits(self):
+        """Profile must declare 9 pipeline stage audits."""
+        from src.reporting.output_documentation_config import get_output_documentation_profile
+        profile = get_output_documentation_profile()
+        assert len(profile.pipeline_stage_audits) == 9
+
+    def test_profile_has_output_file_requirements(self):
+        """Profile must declare output file requirements with at least 5 required files."""
+        from src.reporting.output_documentation_config import get_output_documentation_profile
+        profile = get_output_documentation_profile()
+        required = [f for f in profile.output_file_requirements if f.required]
+        assert len(required) >= 5
+
+    def test_quality_thresholds_expanded(self):
+        """Quality thresholds must include pipeline and compliance gates."""
+        from src.reporting.output_documentation_config import get_output_documentation_profile
+        profile = get_output_documentation_profile()
+        qt = profile.quality_thresholds
+        assert "minimum_pipeline_phases_completed" in qt
+        assert "minimum_node_success_rate" in qt
+        assert "minimum_detection_patterns_executed" in qt
+        assert "evidence_hash_algorithms_required" in qt
+        assert "compliance_standards_referenced" in qt
+        assert qt["evidence_hash_algorithms_required"] == 3
+
+    def test_profile_to_dict_includes_new_fields(self):
+        """to_dict() must include compliance_standards and pipeline_stage_audits."""
+        from src.reporting.output_documentation_config import get_output_documentation_profile
+        profile = get_output_documentation_profile()
+        d = profile.to_dict()
+        assert "compliance_standards" in d
+        assert "pipeline_stage_audits" in d
+        assert "output_file_requirements" in d
+        assert len(d["compliance_standards"]) == len(profile.compliance_standards)
+        assert len(d["pipeline_stage_audits"]) == len(profile.pipeline_stage_audits)
+
+    def test_section_requirement_fields_include_section_number(self):
+        """to_dict() section entries must include section_number and phase_alignment."""
+        from src.reporting.output_documentation_config import get_output_documentation_profile
+        profile = get_output_documentation_profile()
+        d = profile.to_dict()
+        for section in d["required_sections"]:
+            assert "section_number" in section
+            assert "phase_alignment" in section
+
+
+class TestMarkdownReportNewSections:
+    """Tests for new v3.0 sections in Markdown report output."""
+
+    @pytest.fixture
+    def output_dir(self, tmp_path: Path) -> Path:
+        output = tmp_path / "reports"
+        output.mkdir(parents=True, exist_ok=True)
+        return output
+
+    @pytest.fixture
+    def sample_filing_report(self) -> FilingAnalysisReport:
+        return FilingAnalysisReport(
+            accession_number="0001234567-19-000001",
+            filing_type="Form 4",
+            filing_date="2019-03-22",
+            company_name="NIKE, Inc.",
+            cik="320187",
+            document_url="https://www.sec.gov/example",
+            violations=[
+                ViolationEvidence(
+                    violation_id="V-TEST-001",
+                    violation_type="LATE_FORM4",
+                    severity=SeverityLevel.HIGH,
+                    statutory_reference=StatutoryReference(
+                        citation="15 U.S.C. § 78p(a)",
+                        title="Section 16(a)",
+                        summary="Insider reporting",
+                    ),
+                    description="Late Form 4 filing",
+                    exact_quotes=[
+                        ExactQuote(
+                            quote_text="Transaction Date: 2019-03-15",
+                            document_url="https://www.sec.gov/ex",
+                            document_section="Transactions",
+                        )
+                    ],
+                    document_url="https://www.sec.gov/example",
+                    document_section="Transactions",
+                    filing_accession="0001234567-19-000001",
+                    filing_date="2019-03-22",
+                    prosecutorial_merit=ProsecutorialMerit.STRONG,
+                    damage_estimate=DamageEstimate(
+                        civil_minimum=5000.0,
+                        civil_maximum=25000.0,
+                        disgorgement_estimate=0.0,
+                        criminal_exposure=False,
+                        prison_years_maximum=0,
+                        calculation_methodology="Standard"
+                    ),
+                    detected_by=AgentSource.OPENAI,
+                    confirmed_by=[AgentSource.ANTHROPIC],
+                    evidence_hash="abc123",
+                ),
+            ],
+            red_flags=[],
+            dual_agent_consensus=DualAgentConsensus(
+                openai_findings_count=1,
+                anthropic_findings_count=1,
+                overlap_count=1,
+                openai_unique_count=0,
+                anthropic_unique_count=0,
+                confidence_level=0.95,
+            ),
+        )
+
+    @pytest.fixture
+    def sample_custody_records(self) -> list:
+        return [
+            ChainOfCustodyRecord(
+                record_id="COC-001",
+                evidence_type="document",
+                evidence_description="Form 4 filing",
+                collected_at=datetime.utcnow(),
+                collected_by="JLAW SEC Client",
+                storage_location="/data/filings",
+                sha256_hash="abcdef123456789",
+                verification_status="verified",
+            ),
+        ]
+
+    def test_markdown_contains_detection_pattern_section(
+        self, output_dir, sample_filing_report, sample_custody_records
+    ):
+        """Markdown report must include Detection Pattern Analysis section."""
+        generator = DOJReportGenerator(output_dir=str(output_dir))
+        outputs = generator.generate_comprehensive_report(
+            case_id="JLAW-TEST",
+            company_name="NIKE, Inc.",
+            cik="320187",
+            filing_reports=[sample_filing_report],
+            chain_of_custody=sample_custody_records,
+            output_formats=["markdown"],
+        )
+        content = outputs["markdown"].read_text(encoding="utf-8")
+        assert "DETECTION PATTERN ANALYSIS" in content
+
+    def test_markdown_contains_penalty_assessment_section(
+        self, output_dir, sample_filing_report, sample_custody_records
+    ):
+        """Markdown report must include Penalty Assessment Matrix section."""
+        generator = DOJReportGenerator(output_dir=str(output_dir))
+        outputs = generator.generate_comprehensive_report(
+            case_id="JLAW-TEST",
+            company_name="NIKE, Inc.",
+            cik="320187",
+            filing_reports=[sample_filing_report],
+            chain_of_custody=sample_custody_records,
+            output_formats=["markdown"],
+        )
+        content = outputs["markdown"].read_text(encoding="utf-8")
+        assert "PENALTY ASSESSMENT MATRIX" in content
+
+    def test_markdown_contains_compliance_standards_section(
+        self, output_dir, sample_filing_report, sample_custody_records
+    ):
+        """Markdown report must include Compliance Standards Declaration section."""
+        generator = DOJReportGenerator(output_dir=str(output_dir))
+        outputs = generator.generate_comprehensive_report(
+            case_id="JLAW-TEST",
+            company_name="NIKE, Inc.",
+            cik="320187",
+            filing_reports=[sample_filing_report],
+            chain_of_custody=sample_custody_records,
+            output_formats=["markdown"],
+        )
+        content = outputs["markdown"].read_text(encoding="utf-8")
+        assert "COMPLIANCE STANDARDS DECLARATION" in content
+        assert "FRE_902_13" in content
+
+    def test_markdown_documentation_profile_header(
+        self, output_dir, sample_filing_report, sample_custody_records
+    ):
+        """Markdown report header must include documentation profile version."""
+        generator = DOJReportGenerator(output_dir=str(output_dir))
+        outputs = generator.generate_comprehensive_report(
+            case_id="JLAW-TEST",
+            company_name="NIKE, Inc.",
+            cik="320187",
+            filing_reports=[sample_filing_report],
+            chain_of_custody=sample_custody_records,
+            output_formats=["markdown"],
+        )
+        content = outputs["markdown"].read_text(encoding="utf-8")
+        assert "v3.0" in content
+
+    def test_json_report_includes_compliance_and_pipeline_metadata(
+        self, output_dir, sample_filing_report, sample_custody_records
+    ):
+        """JSON report metadata must include compliance_standards and pipeline_stage_audits."""
+        generator = DOJReportGenerator(output_dir=str(output_dir))
+        outputs = generator.generate_comprehensive_report(
+            case_id="JLAW-TEST",
+            company_name="NIKE, Inc.",
+            cik="320187",
+            filing_reports=[sample_filing_report],
+            chain_of_custody=sample_custody_records,
+            output_formats=["json"],
+        )
+        data = json.loads(outputs["json"].read_text())
+        assert "compliance_standards" in data["metadata"]
+        assert "pipeline_stage_audits" in data["metadata"]
+        assert len(data["metadata"]["compliance_standards"]) >= 4
+        assert len(data["metadata"]["pipeline_stage_audits"]) == 9
+
+    def test_manifest_includes_compliance_and_pipeline(
+        self, output_dir, sample_filing_report, sample_custody_records
+    ):
+        """Output manifest must include compliance_standards and pipeline_stage_audits."""
+        generator = DOJReportGenerator(output_dir=str(output_dir))
+        outputs = generator.generate_comprehensive_report(
+            case_id="JLAW-TEST",
+            company_name="NIKE, Inc.",
+            cik="320187",
+            filing_reports=[sample_filing_report],
+            chain_of_custody=sample_custody_records,
+            output_formats=["json"],
+        )
+        manifest_data = json.loads(outputs["manifest"].read_text())
+        assert "compliance_standards" in manifest_data
+        assert "pipeline_stage_audits" in manifest_data
+        assert len(manifest_data["compliance_standards"]) >= 4
+
+
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])
