@@ -28,6 +28,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
+from .output_documentation_config import get_output_documentation_profile
 from .models import (
     AgentSource,
     ChainOfCustodyRecord,
@@ -197,6 +198,7 @@ class DOJReportGenerator:
         """
         self.output_dir = Path(output_dir)
         self.output_dir.mkdir(parents=True, exist_ok=True)
+        self.documentation_profile = get_output_documentation_profile()
     
     def generate_comprehensive_report(
         self,
@@ -277,6 +279,16 @@ class DOJReportGenerator:
             except Exception as e:
                 logger.error(f"Failed to generate Court PDF: {e}", exc_info=True)
                 logger.warning("Court PDF generation failed - continuing with other formats")
+
+        manifest_path = self._generate_output_manifest(
+            case_id=case_id,
+            summary=summary,
+            filing_reports=filing_reports,
+            chain_of_custody=chain_of_custody,
+            outputs=outputs,
+            base_filename=base_filename,
+        )
+        outputs['manifest'] = manifest_path
         
         return outputs
     
@@ -438,6 +450,8 @@ class DOJReportGenerator:
             "",
         ])
         
+        lines.extend(self._generate_documentation_control_plane_section(summary, filing_reports, chain_of_custody))
+
         # Executive Summary
         lines.extend(self._generate_executive_summary_section(summary))
         
@@ -1227,8 +1241,9 @@ class DOJReportGenerator:
         report_data = {
             "metadata": {
                 "report_type": "DOJ_FORENSIC_REPORT",
-                "version": "1.0",
+                "version": "2.0",
                 "generated": datetime.utcnow().isoformat(),
+                "documentation_profile": self.documentation_profile.to_dict(),
             },
             "summary": summary.to_dict(),
             "filing_reports": [r.to_dict() for r in filing_reports],
@@ -1255,6 +1270,129 @@ class DOJReportGenerator:
         with open(output_path, 'w', encoding='utf-8') as f:
             json.dump(report_data, f, indent=2, default=str)
     
+    def _generate_documentation_control_plane_section(
+        self,
+        summary: ForensicReportSummary,
+        filing_reports: List[FilingAnalysisReport],
+        chain_of_custody: List[ChainOfCustodyRecord],
+    ) -> List[str]:
+        """Generate profile/quality/visual governance section."""
+        profile = self.documentation_profile
+        violations_total = max(summary.total_violations, 1)
+        filing_count = len(filing_reports)
+        custody_count = len(chain_of_custody)
+        quotes_count = sum(len(v.exact_quotes) for r in filing_reports for v in r.violations)
+        citations_count = sum(
+            1
+            for r in filing_reports
+            for v in r.violations
+            if getattr(v, "statutory_reference", None) and v.statutory_reference.citation
+        )
+        quotes_ratio = quotes_count / violations_total
+        citation_ratio = citations_count / violations_total
+
+        lines = [
+            "## OUTPUT DOCUMENTATION CONTROL PLANE",
+            "",
+            f"Profile: **{profile.profile_id} v{profile.profile_version}**",
+            f"Reference: {profile.reference_document}",
+            "",
+            "### Required Sections",
+            "",
+            "| Section | Objective | Minimum Fields |",
+            "|---------|-----------|----------------|",
+        ]
+
+        for section in profile.required_sections:
+            lines.append(
+                f"| {section.name} | {section.objective} | {', '.join(section.minimum_fields)} |"
+            )
+
+        lines.extend([
+            "",
+            "### Visual Representation Matrix",
+            "",
+            "| Visual | Purpose | Status |",
+            "|--------|---------|--------|",
+        ])
+
+        visual_status = {
+            "severity_distribution": "ready" if summary.total_violations > 0 else "pending",
+            "transaction_timeline": "ready" if filing_count > 0 else "pending",
+            "beneficiary_profits": "ready" if summary.total_estimated_damages_max > 0 else "pending",
+            "actor_network": "ready" if filing_count > 0 else "pending",
+        }
+        for visual in profile.visual_requirements:
+            lines.append(
+                f"| {visual.title} | {visual.rationale} | {visual_status.get(visual.key, 'pending')} |"
+            )
+
+        lines.extend([
+            "",
+            "### Quality Gate Snapshot",
+            "",
+            f"- Exact quotes per violation: **{quotes_ratio:.2f}** (min {profile.quality_thresholds['exact_quotes_per_violation']})",
+            f"- Statutory citations per violation: **{citation_ratio:.2f}** (min {profile.quality_thresholds['statutory_citations_per_violation']})",
+            f"- Chain of custody records: **{custody_count}** (required={profile.quality_thresholds['chain_of_custody_records_required']})",
+            f"- Dual-agent active: **{summary.dual_agent_active}** (required={profile.quality_thresholds['dual_agent_validation_required']})",
+            "",
+            "---",
+            "",
+        ])
+        return lines
+
+    def _generate_output_manifest(
+        self,
+        case_id: str,
+        summary: ForensicReportSummary,
+        filing_reports: List[FilingAnalysisReport],
+        chain_of_custody: List[ChainOfCustodyRecord],
+        outputs: Dict[str, Path],
+        base_filename: str,
+    ) -> Path:
+        """Generate machine-readable output manifest for documentation governance."""
+        violations_total = max(summary.total_violations, 1)
+        quotes_count = sum(len(v.exact_quotes) for r in filing_reports for v in r.violations)
+        citations_count = sum(
+            1
+            for r in filing_reports
+            for v in r.violations
+            if getattr(v, "statutory_reference", None) and v.statutory_reference.citation
+        )
+
+        profile = self.documentation_profile
+        manifest = {
+            "case_id": case_id,
+            "generated_at": datetime.utcnow().isoformat(),
+            "documentation_profile": profile.to_dict(),
+            "output_files": {k: str(v) for k, v in outputs.items()},
+            "coverage": {
+                "required_sections": [s.name for s in profile.required_sections],
+                "files_generated": list(outputs.keys()),
+                "filings_count": len(filing_reports),
+                "chain_of_custody_count": len(chain_of_custody),
+            },
+            "quality_metrics": {
+                "exact_quotes_per_violation": quotes_count / violations_total,
+                "statutory_citations_per_violation": citations_count / violations_total,
+                "dual_agent_active": summary.dual_agent_active,
+                "overall_confidence": summary.overall_confidence,
+            },
+            "visual_representation": [
+                {
+                    "key": visual.key,
+                    "title": visual.title,
+                    "rationale": visual.rationale,
+                }
+                for visual in profile.visual_requirements
+            ],
+        }
+
+        manifest_path = self.output_dir / f"{base_filename}.manifest.json"
+        with open(manifest_path, "w", encoding="utf-8") as f:
+            json.dump(manifest, f, indent=2)
+        return manifest_path
+
     def _generate_html_report(
         self,
         output_path: Path,

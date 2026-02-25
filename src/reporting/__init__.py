@@ -64,6 +64,13 @@ from .constants import (
     calculate_penalty_range,
     determine_regulatory_routing,
 )
+from .output_documentation_config import (
+    DocumentationProfile,
+    SectionRequirement,
+    VisualRequirement,
+    FORENSIC_OUTPUT_DOCUMENTATION_PROFILE,
+    get_output_documentation_profile,
+)
 from .evidence_packager import (
     EvidenceItem as EvidencePackageItem,
     EvidencePackage,
@@ -122,6 +129,10 @@ __all__ = [
     'REGULATORY_ROUTING',
     'PROSECUTORIAL_MERIT_FACTORS',
     'NIKE_2019_BASELINE',
+    'DocumentationProfile',
+    'SectionRequirement',
+    'VisualRequirement',
+    'FORENSIC_OUTPUT_DOCUMENTATION_PROFILE',
     
     # Evidence Packaging
     'EvidencePackageItem',
@@ -146,6 +157,7 @@ __all__ = [
     'get_all_statutes_for_violation',
     'calculate_penalty_range',
     'determine_regulatory_routing',
+    'get_output_documentation_profile',
     'create_citation_engine',
     'create_custody_logger',
 ]
