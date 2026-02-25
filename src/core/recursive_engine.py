@@ -241,6 +241,7 @@ class RecursiveProsecutorialEngine:
         from src.nodes import (
             InstitutionalHoldingsAnalyzerV2,
             BeneficialOwnershipTrackerV2,
+            MaterialEventCorrelator,
             MaterialEventCorrelatorV2,
             RestrictedSaleMonitorV2,
             ExecutiveNetworkAnalyzerV2,
@@ -249,7 +250,15 @@ class RecursiveProsecutorialEngine:
         
         self.node7_institutional = InstitutionalHoldingsAnalyzerV2()
         self.node8_ownership = BeneficialOwnershipTrackerV2()
-        self.node9_events = MaterialEventCorrelatorV2()
+        # MaterialEventCorrelatorV2 can be unavailable when optional dependencies
+        # (e.g., market data integrations) are missing; fall back to V1.
+        if MaterialEventCorrelatorV2 is not None:
+            self.node9_events = MaterialEventCorrelatorV2()
+        else:
+            logger.warning(
+                "MaterialEventCorrelatorV2 unavailable; falling back to MaterialEventCorrelator (V1)"
+            )
+            self.node9_events = MaterialEventCorrelator()
         self.node10_form144 = RestrictedSaleMonitorV2()
         self.node11_network = ExecutiveNetworkAnalyzerV2()
         self.node12_transcripts = TranscriptAnalyzerV2()
