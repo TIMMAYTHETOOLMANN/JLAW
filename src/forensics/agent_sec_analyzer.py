@@ -4,7 +4,6 @@ Uses OpenAI Agent SDK for semantic document understanding and self-healing extra
 """
 
 import asyncio
-import json
 import logging
 from datetime import datetime, timezone
 from typing import Dict, Optional, Any
@@ -511,7 +510,7 @@ Return JSON array of detected violations."""
                     {"role": "user", "content": user_prompt}
                 ],
                 response_format={"type": "json_object"},
-                max_completion_tokens=self.max_tokens
+                max_tokens=self.max_tokens
             )
             
             result_text = response.choices[0].message.content

@@ -1,12 +1,12 @@
 """
-Advanced Detection Patterns - ENHANCED
-========================================
+Advanced Detection Patterns
+===========================
 
-Implements 16 advanced fraud/manipulation detection patterns:
+Implements 15 advanced fraud/manipulation detection patterns:
 1. Round-Tripping Detection (87% accuracy)
 2. Wolf Pack Formation (91% accuracy)
 3. 13G-to-13D Conversion (94% accuracy)
-4. Pre-Announcement Positioning (89%/93% accuracy) - ENHANCED: includes ALL transaction codes
+4. Pre-Announcement Positioning (89% accuracy)
 5. Disclosure Timing Anomaly (92% accuracy)
 6. Sequential Adverse Events (85% accuracy)
 7. Board Interlock Detection (93% accuracy)
@@ -15,20 +15,11 @@ Implements 16 advanced fraud/manipulation detection patterns:
 10. Management Hedging Language (90% accuracy)
 11. Holding Period Violations (97% accuracy)
 12. Volume Limit Exceeded (96% accuracy)
-13. Clustered Disposals (91% accuracy) - ENHANCED: includes ALL disposal codes, fixed key mismatches
+13. Clustered Disposals (91% accuracy)
 14. CAR Event Study (88% accuracy)
 15. Volume Anomaly (Isolation Forest) (94% accuracy)
-16. Zero-Dollar Forensic Deep Analysis (93% accuracy) - NEW: Core forensic pattern
 
-CRITICAL ENHANCEMENT (Feb 2026):
-- Pattern 4 now detects ALL transaction codes near material 8-K events, not just P/S
-- Pattern 13 key mismatches fixed (date->transaction_date, insider_name->owner_name)
-- Pattern 13 now includes ALL disposal-type codes including $0 transactions
-- NEW Pattern 16: Zero-Dollar Forensic Deep Analysis - the system's core detection pattern
-  Analyzes every $0 transaction regardless of code with financial benefit extraction,
-  event proximity, recidivism detection, and code rotation analysis
-
-Previous fixes (Dec 2024):
+CRITICAL FIX (Dec 2024):
 - Updated detect_disclosure_timing_anomalies() to handle both dict and SECFiling objects
 - Added defensive type checking to prevent AttributeError: 'SECFiling' object has no attribute 'get'
 - Pattern detector now accepts mixed list of dicts and objects
@@ -433,111 +424,45 @@ class AdvancedPatternDetector:
         alerts = []
         
         # Group by company
-        # CRITICAL FIX: Include ALL disposal-type transactions, not just
-        # code 'S'. Zero-dollar dispositions (G, D, J, W, F) are the
-        # primary exploitation vector for clustered insider activity.
-        disposal_codes = {'S', 'G', 'D', 'J', 'W', 'F', 'K', 'Z'}
         by_company = defaultdict(list)
         for trade in insider_trades:
-            code = trade.get('transaction_code', '')
-            acquired_disposed = trade.get('acquired_disposed', '')
-            # Include explicit sales AND dispositions of any code
-            if code in disposal_codes or acquired_disposed == 'D':
-                cik = trade.get('issuer_cik', trade.get('company_cik', ''))
+            if trade.get('transaction_code') == 'S':  # Sales only
+                cik = trade.get('issuer_cik')
                 if cik:
                     by_company[cik].append(trade)
-
+        
         for cik, company_sales in by_company.items():
-            # Sort by date - handle both 'date' and 'transaction_date' keys
-            sorted_sales = sorted(
-                company_sales,
-                key=lambda x: x.get('transaction_date', x.get('date', date.min))
-            )
-
+            # Sort by date
+            sorted_sales = sorted(company_sales, key=lambda x: x.get('date', date.min))
+            
             # Find clusters
             i = 0
             while i < len(sorted_sales):
                 cluster = [sorted_sales[i]]
-                # Handle both 'insider_name', 'owner_name', and 'reporting_owner_name' keys
-                first_insider = (
-                    sorted_sales[i].get('owner_name') or
-                    sorted_sales[i].get('reporting_owner_name') or
-                    sorted_sales[i].get('insider_name') or
-                    sorted_sales[i].get('reporting_owner', '')
-                )
-                cluster_insiders = {first_insider}
-                first_date = sorted_sales[i].get('transaction_date', sorted_sales[i].get('date'))
-
+                cluster_insiders = {sorted_sales[i].get('insider_name')}
+                
                 for j in range(i + 1, len(sorted_sales)):
-                    j_date = sorted_sales[j].get('transaction_date', sorted_sales[j].get('date'))
-                    if first_date and j_date:
-                        days_diff = (j_date - first_date).days
-                    else:
-                        break
-
+                    days_diff = (sorted_sales[j].get('date') - sorted_sales[i].get('date')).days
+                    
                     if days_diff <= window_days:
                         cluster.append(sorted_sales[j])
-                        j_insider = (
-                            sorted_sales[j].get('owner_name') or
-                            sorted_sales[j].get('reporting_owner_name') or
-                            sorted_sales[j].get('insider_name') or
-                            sorted_sales[j].get('reporting_owner', '')
-                        )
-                        cluster_insiders.add(j_insider)
+                        cluster_insiders.add(sorted_sales[j].get('insider_name'))
                     else:
                         break
-
+                
                 if len(cluster_insiders) >= min_insiders:
                     total_shares = sum(t.get('shares', 0) for t in cluster)
                     total_value = sum(
-                        t.get('shares', 0) * t.get('price_per_share', t.get('price', 0))
+                        t.get('shares', 0) * t.get('price', 0) 
                         for t in cluster
                     )
-                    zero_dollar_in_cluster = sum(
-                        1 for t in cluster
-                        if t.get('price_per_share', t.get('price', -1)) == 0
-                    )
                     
-                    # Determine severity - escalate if $0 transactions in cluster
-                    if zero_dollar_in_cluster > 0 or len(cluster_insiders) >= 4:
-                        cluster_severity = PatternSeverity.HIGH
-                    else:
-                        cluster_severity = PatternSeverity.MEDIUM
-
-                    if zero_dollar_in_cluster > 0 and len(cluster_insiders) >= 4:
-                        cluster_severity = PatternSeverity.CRITICAL
-
-                    start_date = cluster[0].get('transaction_date', cluster[0].get('date'))
-                    end_date = cluster[-1].get('transaction_date', cluster[-1].get('date'))
-
-                    cluster_risk_indicators = [
-                        f'{len(cluster_insiders)} unique insiders disposing',
-                        f'{len(cluster)} total transactions',
-                        f'${total_value:,.0f} aggregate value',
-                        f'Within {window_days}-day window'
-                    ]
-                    if zero_dollar_in_cluster > 0:
-                        cluster_risk_indicators.append(
-                            f'{zero_dollar_in_cluster} ZERO-DOLLAR transactions in cluster'
-                        )
-
-                    cluster_reg_implications = [
-                        'Pattern may indicate undisclosed negative information',
-                        'Potential Rule 10b5-1 plan abuse',
-                        'Review for MNPI trading'
-                    ]
-                    if zero_dollar_in_cluster > 0:
-                        cluster_reg_implications.extend([
-                            '$0 dispositions in cluster suggest coordinated pre-event positioning',
-                            '17 CFR 229.404 - Related party transaction scrutiny required',
-                        ])
-
                     alerts.append(PatternAlert(
                         pattern_name="Clustered Insider Disposals",
                         pattern_id="PATTERN_13",
-                        description=f"{len(cluster_insiders)} insiders disposed within {window_days} days ({zero_dollar_in_cluster} at $0)",
+                        description=f"{len(cluster_insiders)} insiders sold within {window_days} days",
                         confidence=0.91,
-                        severity=cluster_severity,
+                        severity=PatternSeverity.HIGH if len(cluster_insiders) >= 4 else PatternSeverity.MEDIUM,
                         evidence={
                             'company_cik': cik,
                             'insiders': list(cluster_insiders),
@@ -545,13 +470,21 @@ class AdvancedPatternDetector:
                             'transaction_count': len(cluster),
                             'total_shares': total_shares,
                             'total_value': total_value,
-                            'zero_dollar_count': zero_dollar_in_cluster,
                             'window_days': window_days,
-                            'start_date': str(start_date),
-                            'end_date': str(end_date)
+                            'start_date': str(cluster[0].get('date')),
+                            'end_date': str(cluster[-1].get('date'))
                         },
-                        risk_indicators=cluster_risk_indicators,
-                        regulatory_implications=cluster_reg_implications,
+                        risk_indicators=[
+                            f'{len(cluster_insiders)} unique insiders selling',
+                            f'{len(cluster)} total transactions',
+                            f'${total_value:,.0f} aggregate value',
+                            f'Within {window_days}-day window'
+                        ],
+                        regulatory_implications=[
+                            'Pattern may indicate undisclosed negative information',
+                            'Potential Rule 10b5-1 plan abuse',
+                            'Review for MNPI trading'
+                        ],
                         evidence_hash=self._generate_hash(cluster)
                     ))
                 
@@ -870,125 +803,47 @@ class AdvancedPatternDetector:
             if not is_material:
                 continue
             
-            # Find ALL trades in lookback window before 8-K
-            # CRITICAL FIX: Include ALL transaction codes, not just P/S.
-            # $0 transactions (G, A, V, F, M, X, etc.) near material events
-            # are the primary exploitation vector.
+            # Find trades in lookback window before 8-K
             suspicious_trades = []
-            zero_dollar_trades = []
             for trade in form4_trades:
                 trade_date = trade.get('transaction_date')
                 if not trade_date:
                     continue
-
+                
                 days_before = (filing_date - trade_date).days
-
+                
                 if 0 <= days_before <= lookback_days:
                     transaction_code = trade.get('transaction_code', '')
                     shares = trade.get('shares', 0)
-                    price = trade.get('price_per_share', trade.get('price', -1))
-                    is_zero_dollar = False
-                    try:
-                        is_zero_dollar = (float(price) == 0.0 and shares > 0)
-                    except (ValueError, TypeError):
-                        pass
-
-                    # Classify transaction type
-                    if transaction_code == 'P':
-                        txn_type = 'Purchase'
-                    elif transaction_code == 'S':
-                        txn_type = 'Sale'
-                    elif transaction_code == 'G':
-                        txn_type = 'Gift ($0)'
-                    elif transaction_code in ('A', 'I'):
-                        txn_type = 'Award/Grant ($0)'
-                    elif transaction_code == 'V':
-                        txn_type = 'Vesting ($0)'
-                    elif transaction_code == 'F':
-                        txn_type = 'Tax Withholding ($0)'
-                    elif transaction_code in ('M', 'C', 'X', 'E', 'O', 'H'):
-                        txn_type = f'Derivative Exercise ({transaction_code})'
-                    elif transaction_code in ('J', 'K', 'L', 'W', 'Z', 'D'):
-                        txn_type = f'Transfer ({transaction_code})'
-                    else:
-                        txn_type = f'Other ({transaction_code})'
-
-                    trade_record = {
-                        'insider': trade.get('reporting_owner', trade.get('owner_name', trade.get('reporting_owner_name', ''))),
-                        'title': trade.get('title', trade.get('officer_title', '')),
+                    
+                    suspicious_trades.append({
+                        'insider': trade.get('reporting_owner', ''),
+                        'title': trade.get('title', ''),
                         'trade_date': trade_date,
                         'days_before_8k': days_before,
                         'transaction_code': transaction_code,
                         'shares': shares,
-                        'transaction_type': txn_type,
-                        'is_zero_dollar': is_zero_dollar,
-                        'price': float(price) if price is not None else 0.0,
-                    }
-                    suspicious_trades.append(trade_record)
-
-                    if is_zero_dollar:
-                        zero_dollar_trades.append(trade_record)
-
+                        'transaction_type': 'Purchase' if transaction_code == 'P' else 'Sale'
+                    })
+            
             # Generate alert if suspicious trades found
             if suspicious_trades:
                 # Determine pattern type
                 purchases = [t for t in suspicious_trades if t['transaction_code'] == 'P']
                 sales = [t for t in suspicious_trades if t['transaction_code'] == 'S']
-                zero_dollars = [t for t in suspicious_trades if t.get('is_zero_dollar', False)]
-
+                
                 pattern_type = "Unknown"
-                if len(zero_dollars) > 0 and len(zero_dollars) >= len(purchases) + len(sales):
-                    pattern_type = "Zero-Dollar Positioning (pre-event $0 transfers)"
-                elif len(purchases) > len(sales):
+                if len(purchases) > len(sales):
                     pattern_type = "Spring Loading (pre-good-news buying)"
                 elif len(sales) > len(purchases):
                     pattern_type = "Bullet Dodging (pre-bad-news selling)"
-                elif len(zero_dollars) > 0:
-                    pattern_type = "Mixed Positioning with $0 transfers"
-
-                # Severity escalation for $0 transactions near material events
-                severity = PatternSeverity.CRITICAL
-                confidence = 0.89
-                if len(zero_dollars) > 0:
-                    confidence = 0.93  # Higher confidence when $0 near events
-
-                risk_indicators = [
-                    f'{len(suspicious_trades)} trades before material disclosure',
-                    f'{len(purchases)} purchases, {len(sales)} sales',
-                    pattern_type,
-                    'Potential insider trading violation'
-                ]
-
-                if len(zero_dollars) > 0:
-                    risk_indicators.append(
-                        f'{len(zero_dollars)} ZERO-DOLLAR transactions within '
-                        f'{lookback_days} days of material event'
-                    )
-                    risk_indicators.append(
-                        'Zero-dollar transactions near material events are the '
-                        'PRIMARY exploitation vector regardless of transaction code'
-                    )
-
-                reg_implications = [
-                    'Section 10(b) / Rule 10b-5 violation (insider trading)',
-                    'Section 16(b) short-swing profit analysis required',
-                    'Recommend DOJ criminal referral if scienter evident',
-                    'SEC Division of Enforcement notification'
-                ]
-
-                if len(zero_dollars) > 0:
-                    reg_implications.extend([
-                        '17 CFR 229.402 - Undisclosed compensation via $0 transfer',
-                        '17 CFR 229.404 - Related party transaction disclosure',
-                        '26 USC 83 - IRC compensation taxation on $0 transfers',
-                    ])
-
+                
                 alerts.append(PatternAlert(
                     pattern_name="Pre-Announcement Positioning",
                     pattern_id="PATTERN_04",
-                    description=f"{len(suspicious_trades)} insider trades ({len(zero_dollars)} at $0) within {lookback_days} days before material 8-K",
-                    confidence=confidence,
-                    severity=severity,
+                    description=f"{len(suspicious_trades)} insider trades within {lookback_days} days before material 8-K",
+                    confidence=0.89,
+                    severity=PatternSeverity.CRITICAL,
                     evidence={
                         '8k_filing_date': str(filing_date),
                         '8k_items': items,
@@ -996,16 +851,23 @@ class AdvancedPatternDetector:
                         'total_trades': len(suspicious_trades),
                         'purchases': len(purchases),
                         'sales': len(sales),
-                        'zero_dollar_trades': len(zero_dollars),
-                        'zero_dollar_details': zero_dollars,
                         'pattern_type': pattern_type
                     },
-                    risk_indicators=risk_indicators,
-                    regulatory_implications=reg_implications,
+                    risk_indicators=[
+                        f'{len(suspicious_trades)} trades before material disclosure',
+                        f'{len(purchases)} purchases, {len(sales)} sales',
+                        pattern_type,
+                        'Potential insider trading violation'
+                    ],
+                    regulatory_implications=[
+                        'Section 10(b) / Rule 10b-5 violation (insider trading)',
+                        'Section 16(b) short-swing profit analysis required',
+                        'Recommend DOJ criminal referral if scienter evident',
+                        'SEC Division of Enforcement notification'
+                    ],
                     evidence_hash=self._generate_hash({
                         'filing_date': str(filing_date),
-                        'trades': len(suspicious_trades),
-                        'zero_dollar': len(zero_dollars)
+                        'trades': len(suspicious_trades)
                     })
                 ))
         
@@ -1611,191 +1473,9 @@ class AdvancedPatternDetector:
         return alerts
     
     # ═══════════════════════════════════════════════════════════════════
-    # PATTERN 16: Zero-Dollar Forensic Deep Analysis (93% accuracy)
-    # ═══════════════════════════════════════════════════════════════════
-
-    def detect_zero_dollar_forensic(
-        self,
-        form4_trades: List[Dict[str, Any]],
-        form8k_filings: List[Dict[str, Any]],
-        compensation_data: Optional[Dict[str, Any]] = None,
-        market_prices: Optional[Dict[str, float]] = None,
-    ) -> List[PatternAlert]:
-        """
-        CORE PATTERN: Comprehensive zero-dollar transaction forensic analysis.
-
-        This is the system's primary detection pattern. It analyzes ALL $0
-        transactions across ALL transaction codes and correlates with:
-        - Material events (8-K filings)
-        - Compensation disclosures (DEF 14A)
-        - Multi-insider clustering
-        - Repeat offender patterns
-        - Financial benefit extraction
-
-        Args:
-            form4_trades: ALL Form 4 transactions (not filtered)
-            form8k_filings: Material event filings
-            compensation_data: Proxy compensation data
-            market_prices: Security price data
-
-        Returns:
-            List of PatternAlert for every forensic finding
-        """
-        alerts = []
-
-        # Filter to $0 transactions
-        zero_dollar_txns = []
-        for trade in form4_trades:
-            price = trade.get('price_per_share', trade.get('price', -1))
-            shares = trade.get('shares', 0)
-            try:
-                if float(price) == 0.0 and shares > 0:
-                    zero_dollar_txns.append(trade)
-            except (ValueError, TypeError):
-                continue
-
-        if not zero_dollar_txns:
-            return alerts
-
-        # Build material event dates
-        event_dates = []
-        for filing in (form8k_filings or []):
-            event_date = filing.get('filing_date')
-            event_type = filing.get('items', ['unknown'])
-            if event_date:
-                event_dates.append({
-                    'date': event_date,
-                    'type': event_type if isinstance(event_type, str) else ', '.join(str(i) for i in event_type),
-                })
-
-        # Build per-insider profile
-        insider_profiles = defaultdict(lambda: {
-            'count': 0, 'total_shares': 0, 'codes': set(), 'dates': []
-        })
-        for txn in zero_dollar_txns:
-            owner = (
-                txn.get('owner_name') or
-                txn.get('reporting_owner_name') or
-                txn.get('reporting_owner', '')
-            )
-            insider_profiles[owner]['count'] += 1
-            insider_profiles[owner]['total_shares'] += txn.get('shares', 0)
-            insider_profiles[owner]['codes'].add(txn.get('transaction_code', ''))
-            txn_date = txn.get('transaction_date', txn.get('date'))
-            if txn_date:
-                insider_profiles[owner]['dates'].append(txn_date)
-
-        # Analyze each $0 transaction
-        for txn in zero_dollar_txns:
-            code = txn.get('transaction_code', '')
-            shares = txn.get('shares', 0)
-            owner = (
-                txn.get('owner_name') or
-                txn.get('reporting_owner_name') or
-                txn.get('reporting_owner', '')
-            )
-            security = txn.get('security_title', 'Unknown')
-            txn_date = txn.get('transaction_date', txn.get('date'))
-            profile = insider_profiles.get(owner, {})
-
-            # Financial benefit extraction
-            implied_value = 0.0
-            if market_prices and security in market_prices:
-                implied_value = shares * market_prices[security]
-
-            # Event proximity
-            nearest_event_days = None
-            nearest_event_type = None
-            if txn_date and event_dates:
-                for event in event_dates:
-                    try:
-                        delta = abs((event['date'] - txn_date).days)
-                        if nearest_event_days is None or delta < nearest_event_days:
-                            nearest_event_days = delta
-                            nearest_event_type = event['type']
-                    except (TypeError, AttributeError):
-                        continue
-
-            # Build risk indicators
-            risk_indicators = [
-                f'$0 transaction (Code {code}) - {shares:,.0f} shares of {security}',
-            ]
-
-            if implied_value > 0:
-                risk_indicators.append(f'IMPLIED VALUE: ${implied_value:,.2f}')
-
-            if nearest_event_days is not None and nearest_event_days <= 30:
-                risk_indicators.append(
-                    f'EVENT PROXIMITY: {nearest_event_days} days to {nearest_event_type}'
-                )
-
-            if profile.get('count', 0) >= 3:
-                risk_indicators.append(
-                    f'RECIDIVIST: {profile["count"]} $0 transactions, '
-                    f'{profile["total_shares"]:,.0f} total shares'
-                )
-
-            if len(profile.get('codes', set())) >= 3:
-                risk_indicators.append(
-                    f'CODE ROTATION: used codes {list(profile["codes"])}'
-                )
-
-            # Determine severity
-            severity = PatternSeverity.MEDIUM
-            if nearest_event_days is not None and nearest_event_days <= 7:
-                severity = PatternSeverity.CRITICAL
-            elif nearest_event_days is not None and nearest_event_days <= 14:
-                severity = PatternSeverity.HIGH
-            elif implied_value >= 100000:
-                severity = PatternSeverity.HIGH
-            elif profile.get('count', 0) >= 3:
-                severity = PatternSeverity.HIGH
-
-            alerts.append(PatternAlert(
-                pattern_name="Zero-Dollar Forensic Analysis",
-                pattern_id="PATTERN_16",
-                description=(
-                    f"$0 transaction (Code {code}) by {owner}: "
-                    f"{shares:,.0f} shares"
-                    + (f" (implied ${implied_value:,.2f})" if implied_value > 0 else "")
-                    + (f" - {nearest_event_days}d from {nearest_event_type}" if nearest_event_days and nearest_event_days <= 30 else "")
-                ),
-                confidence=0.93,
-                severity=severity,
-                evidence={
-                    'transaction_code': code,
-                    'shares': shares,
-                    'security': security,
-                    'owner': owner,
-                    'transaction_date': str(txn_date) if txn_date else None,
-                    'implied_value': round(implied_value, 2),
-                    'nearest_event_days': nearest_event_days,
-                    'nearest_event_type': nearest_event_type,
-                    'insider_zero_dollar_count': profile.get('count', 0),
-                    'insider_total_shares': profile.get('total_shares', 0),
-                    'codes_used': list(profile.get('codes', set())),
-                },
-                risk_indicators=risk_indicators,
-                regulatory_implications=[
-                    '15 USC 78j(b) / Rule 10b-5 - Anti-fraud',
-                    '17 CFR 229.402 - Compensation disclosure',
-                    '17 CFR 229.404 - Related party transactions',
-                    '15 USC 78p(a) - Section 16 reporting',
-                ],
-                evidence_hash=self._generate_hash({
-                    'owner': owner,
-                    'code': code,
-                    'shares': shares,
-                    'date': str(txn_date),
-                })
-            ))
-
-        return alerts
-
-    # ═══════════════════════════════════════════════════════════════════
     # UTILITY METHODS
     # ═══════════════════════════════════════════════════════════════════
-
+    
     def _is_holiday_adjacent(self, d: date) -> bool:
         """Check if date is adjacent to major US holidays."""
         month, day = d.month, d.day
@@ -1829,290 +1509,221 @@ class AdvancedPatternDetector:
         data: Dict[str, Any]
     ) -> Dict[str, List[PatternAlert]]:
         """
-        Run all detection patterns on provided data.
-
-        All 23 patterns are always registered in results (with empty lists
-        when data is insufficient) so the caller gets an accurate total count.
-
+        Run all applicable detection patterns on provided data.
+        
         Args:
             data: Dictionary with various data types for analysis
-
+            
         Returns:
             Dictionary mapping pattern names to alert lists
         """
-        results: Dict[str, List[PatternAlert]] = {}
-
+        results = {}
+        
         # Pattern 1: Round-tripping
-        try:
+        if 'transactions' in data and 'relationships' in data:
             results['round_tripping'] = self.detect_round_tripping(
-                data.get('transactions', []),
-                data.get('relationships', {})
+                data['transactions'],
+                data['relationships']
             )
-        except Exception as e:
-            logger.warning(f"Pattern round_tripping failed: {e}")
-            results['round_tripping'] = []
-
+        
         # Pattern 2: Wolf Pack Formation
-        try:
+        if 'form13f_holdings' in data:
             results['wolf_pack'] = self.detect_wolf_pack_formation(
-                data.get('form13f_holdings', [])
+                data['form13f_holdings']
             )
-        except Exception as e:
-            logger.warning(f"Pattern wolf_pack failed: {e}")
-            results['wolf_pack'] = []
-
+        
         # Pattern 3: 13G-to-13D Conversion
-        try:
+        if 'schedule13_filings' in data:
             results['13g_to_13d'] = self.detect_13g_to_13d_conversion(
-                data.get('schedule13_filings', [])
+                data['schedule13_filings']
             )
-        except Exception as e:
-            logger.warning(f"Pattern 13g_to_13d failed: {e}")
-            results['13g_to_13d'] = []
-
+        
         # Pattern 4: Pre-Announcement Positioning
-        try:
+        if 'form4_trades' in data and 'form8k_filings' in data:
             results['pre_announcement'] = self.detect_pre_announcement_positioning(
-                data.get('form4_trades', []),
-                data.get('form8k_filings', [])
+                data['form4_trades'],
+                data['form8k_filings']
             )
-        except Exception as e:
-            logger.warning(f"Pattern pre_announcement failed: {e}")
-            results['pre_announcement'] = []
-
+        
         # Pattern 5: Disclosure timing
-        try:
+        if 'filings' in data:
             results['disclosure_timing'] = self.detect_disclosure_timing_anomalies(
-                data.get('filings', [])
+                data['filings']
             )
-        except Exception as e:
-            logger.warning(f"Pattern disclosure_timing failed: {e}")
-            results['disclosure_timing'] = []
-
+        
         # Pattern 6: Sequential Adverse Events
-        try:
+        if 'form8k_filings' in data:
             results['adverse_events'] = self.detect_sequential_adverse_events(
-                data.get('form8k_filings', [])
+                data['form8k_filings']
             )
-        except Exception as e:
-            logger.warning(f"Pattern adverse_events failed: {e}")
-            results['adverse_events'] = []
-
+        
         # Pattern 7: Board Interlocks
-        try:
+        if 'def14a_filings' in data:
             results['board_interlocks'] = self.detect_board_interlocks(
-                data.get('def14a_filings', [])
+                data['def14a_filings']
             )
-        except Exception as e:
-            logger.warning(f"Pattern board_interlocks failed: {e}")
-            results['board_interlocks'] = []
-
+        
         # Pattern 8: Revolving Door Patterns
-        try:
+        if 'executive_movements' in data:
             results['revolving_door'] = self.detect_revolving_door_patterns(
-                data.get('executive_movements', [])
+                data['executive_movements']
             )
-        except Exception as e:
-            logger.warning(f"Pattern revolving_door failed: {e}")
-            results['revolving_door'] = []
-
+        
         # Pattern 9: Earnings Sentiment Shift
-        try:
+        if 'earnings_calls' in data:
             results['sentiment_shift'] = self.detect_earnings_sentiment_shift(
-                data.get('earnings_calls', [])
+                data['earnings_calls']
             )
-        except Exception as e:
-            logger.warning(f"Pattern sentiment_shift failed: {e}")
-            results['sentiment_shift'] = []
-
+        
         # Pattern 10: Hedging language
-        doc_text = data.get('document_text', '')
-        if doc_text and isinstance(doc_text, str) and len(doc_text) > 100:
-            try:
-                result = self.detect_hedging_language(
-                    doc_text,
-                    data.get('document_type', '10-K')
-                )
-                results['hedging_language'] = [result] if result else []
-            except Exception as e:
-                logger.warning(f"Pattern hedging_language failed: {e}")
-                results['hedging_language'] = []
-        else:
-            results['hedging_language'] = []
-
+        if 'document_text' in data:
+            result = self.detect_hedging_language(
+                data['document_text'],
+                data.get('document_type', '10-K')
+            )
+            results['hedging_language'] = [result]
+        
         # Pattern 11: Holding period
-        try:
+        if 'form144_filings' in data:
             results['holding_period'] = self.detect_holding_period_violations(
-                data.get('form144_filings', []),
+                data['form144_filings'],
                 data.get('is_reporting_company', True)
             )
-        except Exception as e:
-            logger.warning(f"Pattern holding_period failed: {e}")
-            results['holding_period'] = []
-
+        
         # Pattern 12: Volume Limit Exceeded (Rule 144(e))
-        try:
+        if 'form144_filings' in data and 'trading_volume' in data:
             results['volume_limit'] = self.detect_volume_limit_exceeded(
-                data.get('form144_filings', []),
-                data.get('trading_volume', [])
+                data['form144_filings'],
+                data['trading_volume']
             )
-        except Exception as e:
-            logger.warning(f"Pattern volume_limit failed: {e}")
-            results['volume_limit'] = []
-
+        
         # Pattern 13: Clustered disposals
-        try:
+        if 'insider_trades' in data:
             results['clustered_disposals'] = self.detect_clustered_disposals(
-                data.get('insider_trades', [])
+                data['insider_trades']
             )
-        except Exception as e:
-            logger.warning(f"Pattern clustered_disposals failed: {e}")
-            results['clustered_disposals'] = []
-
+        
         # Pattern 14: CAR Event Study
-        events = data.get('events', [])
-        if events:
-            try:
-                results['car_event_study'] = self.detect_car_event_study(
-                    events,
-                    data.get('price_data', {}),
-                    data.get('market_data', {})
-                )
-            except Exception as e:
-                logger.warning(f"Pattern car_event_study failed: {e}")
-                results['car_event_study'] = []
-        else:
-            results['car_event_study'] = []
-
+        if 'events' in data and 'price_data' in data and 'market_data' in data:
+            results['car_event_study'] = self.detect_car_event_study(
+                data['events'],
+                data['price_data'],
+                data['market_data']
+            )
+        
         # Pattern 15: Volume anomalies
-        try:
+        if 'volume_data' in data:
             results['volume_anomalies'] = self.detect_volume_anomalies(
-                data.get('volume_data', [])
+                data['volume_data']
             )
-        except Exception as e:
-            logger.warning(f"Pattern volume_anomalies failed: {e}")
-            results['volume_anomalies'] = []
-
-        # ═══════════════════════════════════════════════════════════════════
-        # PATTERN 16: Zero-Dollar Forensic Deep Analysis (CORE PATTERN)
-        # ═══════════════════════════════════════════════════════════════════
-
-        try:
-            results['zero_dollar_forensic'] = self.detect_zero_dollar_forensic(
-                data.get('form4_trades', data.get('insider_trades', [])),
-                data.get('form8k_filings', []),
-                data.get('compensation_data', None),
-                data.get('market_prices', None),
-            )
-        except Exception as e:
-            logger.warning(f"Pattern zero_dollar_forensic failed: {e}")
-            results['zero_dollar_forensic'] = []
-
+        
         # ═══════════════════════════════════════════════════════════════════
         # STANDALONE DETECTOR INTEGRATIONS (P2 Priority)
         # ═══════════════════════════════════════════════════════════════════
-
+        
         # Beneish M-Score (Earnings Manipulation Detection)
-        results['beneish_mscore'] = []
-        fin_stmts = data.get('financial_statements', {})
-        if isinstance(fin_stmts, dict) and fin_stmts:
+        if 'financial_statements' in data:
             try:
                 from src.detection.financial.beneish_mscore import BeneishMScoreCalculator
                 mscore_calc = BeneishMScoreCalculator()
-
-                current_year = fin_stmts.get('current_year', {})
-                prior_year = fin_stmts.get('prior_year', {})
-
+                
+                # Extract current and prior year data
+                current_year = data['financial_statements'].get('current_year', {})
+                prior_year = data['financial_statements'].get('prior_year', {})
+                
                 if current_year and prior_year:
                     mscore_result = mscore_calc.calculate(current_year, prior_year)
-
+                    
                     if mscore_result.manipulation_likely:
                         alert = self._create_mscore_alert(mscore_result)
                         results['beneish_mscore'] = [alert]
+                    else:
+                        results['beneish_mscore'] = []
             except Exception as e:
                 logger.warning(f"Beneish M-Score detection failed: {e}")
-
+        
         # Benford's Law Analysis
-        results['benford_law'] = []
-        numbers = data.get('financial_data', [])
-        if isinstance(numbers, list) and len(numbers) >= 10:
+        if 'financial_data' in data:
             try:
                 from src.detection.financial.benford_analysis import BenfordAnalyzer
                 benford = BenfordAnalyzer()
-
-                benford_result = benford.analyze(numbers)
-
-                if benford_result.chi_square_significant or benford_result.suspicious_digits:
-                    alert = self._create_benford_alert(benford_result)
-                    results['benford_law'] = [alert]
+                
+                # Extract numeric values for analysis
+                numbers = data['financial_data']
+                if isinstance(numbers, list) and numbers:
+                    benford_result = benford.analyze(numbers)
+                    
+                    if benford_result.has_anomalies:
+                        alert = self._create_benford_alert(benford_result)
+                        results['benford_law'] = [alert]
+                    else:
+                        results['benford_law'] = []
             except Exception as e:
                 logger.warning(f"Benford's Law analysis failed: {e}")
-
+        
         # Options Backdating Detection
-        results['options_backdating'] = []
-        grants = data.get('form4_grants', [])
-        price_hist = data.get('price_history', {})
-        if grants and price_hist:
+        if 'form4_grants' in data and 'price_history' in data:
             try:
                 from src.detection.patterns.options_backdating_detector import OptionsBackdatingDetector
                 backdating = OptionsBackdatingDetector()
-
-                alerts = backdating.analyze_grants(grants, price_hist)
+                
+                alerts = backdating.analyze_grants(
+                    data['form4_grants'],
+                    data['price_history']
+                )
                 results['options_backdating'] = alerts
             except Exception as e:
                 logger.warning(f"Options backdating detection failed: {e}")
-
+        
         # Channel Stuffing Detection
-        results['channel_stuffing'] = []
-        q_fin = data.get('quarterly_financials', {})
-        if isinstance(q_fin, dict) and q_fin:
+        if 'quarterly_financials' in data:
             try:
                 from src.detection.patterns.channel_stuffing_detector import ChannelStuffingDetector
                 stuffing = ChannelStuffingDetector()
-
-                alerts = stuffing.analyze_quarters(q_fin)
+                
+                alerts = stuffing.analyze_quarters(data['quarterly_financials'])
                 results['channel_stuffing'] = alerts
             except Exception as e:
                 logger.warning(f"Channel stuffing detection failed: {e}")
-
+        
         # XGBoost Fraud Detection
-        results['xgboost_fraud'] = []
-        xg_features = data.get('xgboost_features', [])
-        if xg_features:
+        if 'xgboost_features' in data:
             try:
                 from src.detection.ml.xgboost_fraud import XGBoostFraudDetector
                 xgboost = XGBoostFraudDetector()
-
-                predictions = xgboost.predict(xg_features)
+                
+                predictions = xgboost.predict(data['xgboost_features'])
                 if predictions and any(p.get('fraud_probability', 0) > 0.7 for p in predictions):
                     alert = self._create_xgboost_alert(predictions)
                     results['xgboost_fraud'] = [alert]
+                else:
+                    results['xgboost_fraud'] = []
             except Exception as e:
                 logger.warning(f"XGBoost fraud detection failed: {e}")
-
+        
         # DeBERTa Contradiction Detection
-        results['deberta_contradiction'] = []
-        doc_pairs = data.get('document_pairs', [])
-        if doc_pairs:
+        if 'document_pairs' in data:
             try:
                 from src.detection.ml.deberta_contradiction import DeBERTaContradictionEngine
                 deberta = DeBERTaContradictionEngine()
-
+                
                 contradictions = []
-                for pair in doc_pairs:
+                for pair in data['document_pairs']:
                     result = deberta.detect_contradiction(
                         pair.get('text1', ''),
                         pair.get('text2', '')
                     )
                     if result.get('is_contradiction'):
                         contradictions.append(result)
-
+                
                 if contradictions:
                     alert = self._create_contradiction_alert(contradictions)
                     results['deberta_contradiction'] = [alert]
+                else:
+                    results['deberta_contradiction'] = []
             except Exception as e:
                 logger.warning(f"DeBERTa contradiction detection failed: {e}")
-
+        
         return results
     
     # ═══════════════════════════════════════════════════════════════════
@@ -2148,26 +1759,23 @@ class AdvancedPatternDetector:
     def _create_benford_alert(self, benford_result) -> PatternAlert:
         """Create alert from Benford's Law analysis result."""
         evidence_data = {
-            "chi_square_statistic": benford_result.chi_square_statistic,
-            "chi_square_p_value": benford_result.chi_square_p_value,
-            "mad": benford_result.mad,
-            "conformity_level": benford_result.conformity_level.value,
-            "suspicious_digits": benford_result.suspicious_digits,
-            "sample_size": benford_result.sample_size,
+            "chi_squared": benford_result.chi_squared,
+            "p_value": benford_result.p_value,
+            "observed_distribution": benford_result.observed_distribution,
+            "deviations": benford_result.deviations
         }
-
+        
         return PatternAlert(
             pattern_name="Benford's Law Violation",
             pattern_id="BENFORD-001",
-            description=f"Financial data violates Benford's Law (χ² = {benford_result.chi_square_statistic:.3f}, p = {benford_result.chi_square_p_value:.4f}, MAD = {benford_result.mad:.6f})",
+            description=f"Financial data violates Benford's Law (χ² = {benford_result.chi_squared:.3f}, p = {benford_result.p_value:.4f})",
             confidence=0.89,
             severity=PatternSeverity.MEDIUM,
             evidence=evidence_data,
             risk_indicators=[
                 "Numeric distribution deviates from Benford's Law",
-                f"Chi-squared test: {benford_result.chi_square_statistic:.3f}",
-                f"P-value: {benford_result.chi_square_p_value:.4f}",
-                f"Suspicious digits: {benford_result.suspicious_digits}",
+                f"Chi-squared test: {benford_result.chi_squared:.3f}",
+                f"P-value: {benford_result.p_value:.4f}"
             ],
             regulatory_implications=[
                 "Potential data manipulation or fabrication",

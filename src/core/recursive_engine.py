@@ -229,19 +229,17 @@ class RecursiveProsecutorialEngine:
         self.short_swing_calc = ShortSwingCalculator()
         self.gift_detector = GiftPatternDetector()
         
-        # Initialize Nodes 2-5 with output_dir from config if available
-        base_output = self.config.get('output_dir', './output')
-        self.node2_def14a = DEF14ACompensationAnalyzer(output_dir=f"{base_output}/node2_def14a")
-        self.node3_10q = TemporalConsistencyValidator(output_dir=f"{base_output}/node3_10q")
-        self.node4_sox = SOXCertificationAnalyzer(output_dir=f"{base_output}/node4_sox")
-        self.node5_irc83 = IRC83TaxCalculator(output_dir=f"{base_output}/node5_irs")
+        # Initialize Nodes 2-5
+        self.node2_def14a = DEF14ACompensationAnalyzer()
+        self.node3_10q = TemporalConsistencyValidator()
+        self.node4_sox = SOXCertificationAnalyzer()
+        self.node5_irc83 = IRC83TaxCalculator()
         self.enforcement_router = EnforcementRouter()
         
         # Phase 2 nodes - USE V2 VERSIONS for Nodes 7-12
         from src.nodes import (
             InstitutionalHoldingsAnalyzerV2,
             BeneficialOwnershipTrackerV2,
-            MaterialEventCorrelator,
             MaterialEventCorrelatorV2,
             RestrictedSaleMonitorV2,
             ExecutiveNetworkAnalyzerV2,
@@ -250,15 +248,7 @@ class RecursiveProsecutorialEngine:
         
         self.node7_institutional = InstitutionalHoldingsAnalyzerV2()
         self.node8_ownership = BeneficialOwnershipTrackerV2()
-        # MaterialEventCorrelatorV2 can be unavailable when optional dependencies
-        # (e.g., market data integrations) are missing; fall back to V1.
-        if MaterialEventCorrelatorV2 is not None:
-            self.node9_events = MaterialEventCorrelatorV2()
-        else:
-            logger.warning(
-                "MaterialEventCorrelatorV2 unavailable; falling back to MaterialEventCorrelator (V1)"
-            )
-            self.node9_events = MaterialEventCorrelator()
+        self.node9_events = MaterialEventCorrelatorV2()
         self.node10_form144 = RestrictedSaleMonitorV2()
         self.node11_network = ExecutiveNetworkAnalyzerV2()
         self.node12_transcripts = TranscriptAnalyzerV2()
@@ -464,13 +454,7 @@ class RecursiveProsecutorialEngine:
                          node_group_1_results + node_group_2_results + node_group_3_results + node_group_4_results)
         
         self._print_footer(total_alerts, total_violations, total_time)
-
-        # Calculate penalties from actual violation types instead of flat-rate
-        penalties = self._calculate_statutory_penalties(
-            node_group_1_results + node_group_2_results +
-            node_group_3_results + node_group_4_results
-        )
-
+        
         return RecursiveAnalysisResult(
             case_id=case_id,
             company_name=company_name,
@@ -487,98 +471,19 @@ class RecursiveProsecutorialEngine:
             critical_alerts=0,
             high_alerts=0,
             prosecution_recommendation=self._generate_recommendation(total_violations),
-            estimated_penalties=penalties,
+            estimated_penalties=PenaltyEstimate(
+                civil_minimum=total_violations * 50000,
+                civil_maximum=total_violations * 500000,
+                criminal_exposure=total_violations >= 5,
+                prison_years_maximum=5 if total_violations >= 5 else 0
+            ),
             regulatory_routing=RegulatoryRouting(
                 sec=total_violations > 0,
-                doj=penalties.criminal_exposure,
+                doj=total_violations >= 5,
                 irs=False
             )
         )
     
-    # Per-violation-type statutory penalty caps grounded in U.S. Code.
-    # Sources:
-    #   - 15 U.S.C. § 78p(a): Section 16(a) late filing, up to $25K per violation
-    #   - 15 U.S.C. § 78j(b) / Rule 10b-5: Securities fraud, up to $5M civil
-    #   - 15 U.S.C. § 7241: SOX 302 certification, up to $1M civil
-    #   - 15 U.S.C. § 7241 (906): SOX 906 certification, up to $5M civil
-    #   - 15 U.S.C. § 7262: SOX 404 internal controls, up to $500K civil
-    #   - 17 C.F.R. § 243.100: Reg FD, up to $500K civil
-    #   - 26 U.S.C. § 83: IRC 83, up to $250K civil
-    # Scrutiny flags (zero-dollar transactions, auditor changes) are
-    # investigative indicators, not confirmed violations — they carry $0 penalty.
-    _VIOLATION_PENALTY_MAP = {
-        # Confirmed violations with statutory basis
-        "section_16(a)_late_form_4_filing": (5000, 25000, False),     # 15 USC §78p(a)
-        "section 16(a) late form 4 filing": (5000, 25000, False),     # raw Node 1 format
-        "late_form4": (5000, 25000, False),                           # alias
-        "insider_trading": (100000, 5000000, True),                   # 15 USC §78j(b)
-        "securities_fraud": (100000, 5000000, True),                  # 15 USC §78j(b)
-        "section_302_certification_omission": (100000, 1000000, True),# 15 USC §7241
-        "section_906_certification_omission": (100000, 5000000, True),# 15 USC §7241
-        "material_weakness_disclosed": (50000, 500000, False),        # 15 USC §7262
-        "inconsistent_management_disclosure": (50000, 500000, False), # 15 USC §78j(b)
-        "sox_302_failure": (100000, 1000000, True),                   # 15 USC §7241
-        "sox_404_weakness": (50000, 500000, False),                   # 15 USC §7262
-        "beneficial_ownership_failure": (50000, 500000, False),       # 15 USC §78m(d)
-        "reg_fd_violation": (50000, 500000, False),                   # 17 CFR §243.100
-        "irc_83b_failure": (25000, 250000, True),                     # 26 USC §83
-        "deferred_compensation_violation": (25000, 250000, True),     # 26 USC §83
-        "short_swing_profit": (0, 0, False),                          # Disgorgement only
-        "gift_transaction": (0, 0, False),                            # Routine §16 disclosure
-        "gift transaction": (0, 0, False),                            # raw Node 1 format
-        # Scrutiny/investigative flags — NOT confirmed violations
-        "zero_dollar_transaction___requires_scrutiny": (0, 0, False),
-        "zero-dollar transaction - requires scrutiny": (0, 0, False), # raw Node 1 format
-        "zero_dollar_transaction": (0, 0, False),
-        "auditor_change_near_weakness": (0, 0, False),
-    }
-
-    def _calculate_statutory_penalties(
-        self, all_node_results: List['NodeResult']
-    ) -> 'PenaltyEstimate':
-        """
-        Calculate civil exposure from actual violation types using statutory
-        penalty caps rather than a flat per-violation multiplier.
-
-        Scrutiny flags (zero-dollar transactions, auditor changes) are excluded
-        from penalty totals because they are investigative indicators, not
-        confirmed violations.
-        """
-        civil_min = 0.0
-        civil_max = 0.0
-        has_criminal = False
-
-        for node in all_node_results:
-            findings = node.findings or {}
-            # Check all violation source keys
-            for key in ("violations", "alerts", "late_filing_violations",
-                        "zero_dollar_violations", "gift_violations"):
-                for v in (findings.get(key) or []):
-                    if not isinstance(v, dict):
-                        continue
-                    vtype = v.get("type", v.get("violation_type", "")).lower()
-                    penalty = self._VIOLATION_PENALTY_MAP.get(vtype)
-                    if penalty:
-                        civil_min += penalty[0]
-                        civil_max += penalty[1]
-                        if penalty[2]:
-                            has_criminal = True
-                    elif "scrutiny" in vtype or "requires_scrutiny" in vtype:
-                        # Explicit exclusion for any scrutiny flag variant
-                        pass
-                    else:
-                        # Unknown violation type — use conservative default
-                        # ($10K–$100K, matching Rule 144 base)
-                        civil_min += 10000
-                        civil_max += 100000
-
-        return PenaltyEstimate(
-            civil_minimum=civil_min,
-            civil_maximum=civil_max,
-            criminal_exposure=has_criminal,
-            prison_years_maximum=20 if has_criminal else 0
-        )
-
     async def _execute_node1(
         self, sec_client, cik: str, start_date: date, end_date: date
     ) -> NodeResult:
@@ -588,47 +493,18 @@ class RecursiveProsecutorialEngine:
         try:
             filings = await sec_client.get_form4_filings(cik, start_date, end_date)
             
-            # FSL imports (Forensic Sufficiency Layer)
-            from src.detection.forensic_sufficiency import (
-                classify_footnotes, classify_fsl, build_repeat_offender_profiles,
-                generate_fsl_diagnostic_table, extract_top_signals,
-                format_top_signals_report,
-            )
-
             # Track all violation types
             late_filing_violations = []
             zero_dollar_violations = []
             gift_violations = []
-            all_insider_trades = []  # All trades for Phase 5 pattern detection
             total_transactions = 0
-            parsed_filings = []     # Retain parsed filings for FSL analysis
-
+            
             for filing in filings:
                 xml = await sec_client.get_form4_xml(filing)
                 if xml:
                     parsed = self.form4_parser.parse_xml(xml, filing.accession_number, filing.filing_date)
                     total_transactions += len(parsed.transactions)
-                    parsed_filings.append(parsed)
-
-                    # Collect all trades for advanced pattern detection (Phase 5)
-                    for txn in parsed.transactions:
-                        all_insider_trades.append({
-                            "reporting_person": parsed.reporting_owner_name,
-                            "transaction_date": txn.transaction_date,
-                            "filing_date": parsed.filing_date,
-                            "transaction_code": txn.transaction_code,
-                            "shares": txn.shares,
-                            "price_per_share": txn.price_per_share,
-                            "total_value": txn.total_value,
-                            "acquired_disposed": txn.acquired_disposed,
-                            "security_title": txn.security_title,
-                            "is_derivative": txn.is_derivative,
-                            "accession_number": parsed.accession_number,
-                            "is_director": parsed.is_director,
-                            "is_officer": parsed.is_officer,
-                            "officer_title": parsed.officer_title,
-                        })
-
+                    
                     # Count late filings - Section 16(a) violations
                     for txn in parsed.late_transactions:
                         late_filing_violations.append({
@@ -643,7 +519,7 @@ class RecursiveProsecutorialEngine:
                             "estimated_penalty": 25000,
                             "statutory_reference": "15 U.S.C. § 78p(a) - Section 16(a)"
                         })
-
+                    
                     # Count ALL zero-dollar transactions for forensic scrutiny
                     # ANY Form 4 transaction at $0 is suspicious and warrants investigation
                     for txn in parsed.zero_dollar_transactions:
@@ -651,7 +527,7 @@ class RecursiveProsecutorialEngine:
                         high_suspicion_codes = {'S', 'P'}  # Sale/Purchase at $0 = highly abnormal
                         medium_suspicion_codes = {'G', 'J', 'W', 'L'}  # Gift/Other at $0 = requires scrutiny
                         # All others (V, A, F, M, X, etc.) = requires review
-
+                        
                         if txn.transaction_code in high_suspicion_codes:
                             severity = "CRITICAL"
                             suspicion_level = "EXTREMELY HIGH - Sale/Purchase at $0 is highly abnormal"
@@ -661,7 +537,7 @@ class RecursiveProsecutorialEngine:
                         else:
                             severity = "MEDIUM"
                             suspicion_level = "MODERATE - Compensation event at $0, verify legitimacy"
-
+                        
                         zero_dollar_violations.append({
                             "type": "Zero-Dollar Transaction - Requires Scrutiny",
                             "severity": severity,
@@ -675,21 +551,12 @@ class RecursiveProsecutorialEngine:
                             "transaction_date": txn.transaction_date.isoformat() if txn.transaction_date else None,
                             "is_derivative": txn.is_derivative,
                             "security_title": txn.security_title,
-                            "direct_indirect": txn.direct_indirect,
-                            "exercise_price": txn.exercise_price,
-                            "footnotes": txn.footnotes,
-                            "is_late_filed": txn.is_late_filed,
-                            "days_late": txn.days_late,
                             "statutory_reference": "15 U.S.C. § 78p(a)",
                             "notes": f"Zero-dollar transaction flagged for scrutiny. {suspicion_level}"
                         })
-
-                    # Count gift transactions (only non-zero-dollar gifts;
-                    # $0 gifts are already captured in zero_dollar_violations
-                    # to prevent double-counting the same transaction)
+                    
+                    # Count gift transactions
                     for txn in parsed.gift_transactions:
-                        if txn.is_zero_dollar:
-                            continue
                         gift_violations.append({
                             "type": "Gift Transaction",
                             "severity": "MEDIUM",
@@ -699,35 +566,9 @@ class RecursiveProsecutorialEngine:
                             "transaction_date": txn.transaction_date.isoformat() if txn.transaction_date else None,
                             "statutory_reference": "15 U.S.C. § 78p(a)"
                         })
-
-            # ── Forensic Sufficiency Layer (FSL) ──────────────────────────
-            repeat_profiles = build_repeat_offender_profiles(parsed_filings)
-            fsl_assessments = []
-            for v in zero_dollar_violations:
-                fn_cls = classify_footnotes(v.get('footnotes', []))
-                owner = v.get('reporting_owner', '')
-                is_repeat = repeat_profiles.get(owner, None)
-                is_repeat_offender = is_repeat.is_repeat_offender if is_repeat else False
-
-                assessment = classify_fsl(
-                    txn_data=v,
-                    footnote_cls=fn_cls,
-                    repeat_offender=is_repeat_offender,
-                )
-                fsl_assessments.append(assessment)
-                # Enrich the violation dict with FSL data
-                v['fsl_disposition'] = assessment.disposition
-                v['fsl_disposition_label'] = assessment.disposition_label
-                v['fsl_signal_score'] = assessment.signal_score
-                v['fsl_reasons'] = assessment.disposition_reasons
-                v['footnote_classification'] = fn_cls.to_dict()
-
-            fsl_diagnostic_table = generate_fsl_diagnostic_table(fsl_assessments)
-            fsl_top_signals = extract_top_signals(fsl_assessments, n=10)
-            fsl_top_signals_report = format_top_signals_report(fsl_top_signals)
-
+            
             total_violations = len(late_filing_violations) + len(zero_dollar_violations) + len(gift_violations)
-
+            
             result = NodeResult(
                 node_id="NODE_1",
                 node_name="Form 4 Analysis",
@@ -743,16 +584,7 @@ class RecursiveProsecutorialEngine:
                     "late_filing_violations": late_filing_violations,
                     "zero_dollar_violations": zero_dollar_violations,
                     "gift_violations": gift_violations,
-                    "estimated_penalties": len(late_filing_violations) * 25000,
-                    "insider_transactions": all_insider_trades,
-                    "form4_trades": all_insider_trades,
-                    "fsl_assessments": [a.to_dict() for a in fsl_assessments],
-                    "fsl_diagnostic_table": fsl_diagnostic_table,
-                    "fsl_top_signals": [a.to_dict() for a in fsl_top_signals],
-                    "fsl_top_signals_report": fsl_top_signals_report,
-                    "repeat_offender_profiles": {
-                        k: v.to_dict() for k, v in repeat_profiles.items()
-                    },
+                    "estimated_penalties": len(late_filing_violations) * 25000
                 },
                 execution_time_seconds=time.time() - start
             )
@@ -969,13 +801,7 @@ class RecursiveProsecutorialEngine:
             
             company_info = {"cik": cik, "name": company_name}
             results = self.node4_sox.analyze_annual_report(annual_text, company_info)
-
-            # Include document text for Phase 5 hedging language detection (Pattern 10)
-            if annual_text:
-                # Truncate to 500KB to avoid memory bloat
-                results['document_text'] = annual_text[:500_000]
-                results['document_type'] = '10-K'
-
+            
             return NodeResult(
                 node_id="NODE_4",
                 node_name="10-K SOX Analysis",
@@ -1139,49 +965,31 @@ class RecursiveProsecutorialEngine:
     ) -> NodeResult:
         """Execute Node 7: 13F-HR Institutional Holdings Analysis."""
         start = time.time()
-
+        
         try:
-            from src.nodes.node7_13f_holdings.sec_edgar_client import (
-                SECEDGARClient as SEC13FClient,
-                Institution13FHoldingV2,
-            )
-
+            # Fetch 13F-HR filings
             filings = await sec_client.get_filings(
-                cik=cik, form_types=["13F-HR"],
-                start_date=start_date, end_date=end_date
+                cik=cik,
+                form_types=["13F-HR"],
+                start_date=start_date,
+                end_date=end_date
             )
-
-            holdings: List[Any] = []
-            parser_13f = SEC13FClient(user_agent=self.sec_user_agent)
-
-            for filing in filings[:8]:
-                try:
-                    content = await sec_client.get_filing_text(filing)
-                    if content and ('<infoTable' in content or '<informationTable' in content.lower()):
-                        parsed = parser_13f.parse_13f_xml(content, filing.cik or cik)
-                        holdings.extend(parsed)
-                        logger.info(f"Node 7: Parsed {len(parsed)} holdings from {filing.accession_number}")
-                    elif content:
-                        holdings.append(Institution13FHoldingV2(
-                            cik=filing.cik or cik,
-                            institution_name=filing.company_name or "Unknown",
-                            filing_date=filing.filing_date,
-                            reporting_period=filing.report_date or filing.filing_date,
-                            quarter=f"{(filing.report_date or filing.filing_date).year}Q{((filing.report_date or filing.filing_date).month - 1) // 3 + 1}",
-                            cusip="000000000", issuer_name="Aggregate Holdings",
-                            shares=0, value_thousands=0, investment_discretion="SOLE",
-                            voting_authority_sole=0, voting_authority_shared=0, voting_authority_none=0,
-                        ))
-                except Exception as parse_err:
-                    logger.warning(f"Node 7: Failed to parse 13F {filing.accession_number}: {parse_err}")
-                    continue
-
-            logger.info(f"Node 7: Total {len(holdings)} holdings from {len(filings)} filings")
-            node7_output = self.node7_institutional.analyze(holdings)
-
+            
+            # Parse 13F holdings (simplified - would need full XML parsing in production)
+            holdings = []
+            # Note: Full 13F-HR parsing requires XML/SGML processing
+            # For now, pass filings metadata as placeholder
+            
+            node7_output = self.node7_institutional.analyze(
+                holdings if holdings else []
+            )
+            
             return NodeResult(
-                node_id="NODE_7", node_name="13F Holdings", status="success",
-                violations_found=0, alerts_generated=len(node7_output.alerts),
+                node_id="NODE_7",
+                node_name="13F Holdings",
+                status="success",
+                violations_found=0,
+                alerts_generated=len(node7_output.alerts),
                 findings={
                     "filings_found": len(filings),
                     "holdings_analyzed": node7_output.holdings_analyzed,
@@ -1202,106 +1010,36 @@ class RecursiveProsecutorialEngine:
         self, sec_client, cik: str, start_date: date, end_date: date
     ) -> NodeResult:
         """Execute Node 8: SC 13D/13G Beneficial Ownership Analysis."""
-        import re
         start = time.time()
-
+        
         try:
-            from src.nodes.node8_13d_ownership.beneficial_ownership_tracker_v2 import (
-                Schedule13Filing, Schedule13Type,
-            )
-
+            # Fetch SC 13D and SC 13G filings
             filings = await sec_client.get_filings(
-                cik=cik, form_types=["SC 13D", "SC 13D/A", "SC 13G", "SC 13G/A"],
-                start_date=start_date, end_date=end_date
+                cik=cik,
+                form_types=["SC 13D", "SC 13G"],
+                start_date=start_date,
+                end_date=end_date
             )
-
+            
+            # Parse ownership filings (simplified)
             ownership_filings = []
-            for filing in filings[:10]:
-                try:
-                    content = await sec_client.get_filing_text(filing)
-                    if not content:
-                        continue
-
-                    form = filing.form_type.upper()
-                    if "13D/A" in form:
-                        ft = Schedule13Type.SC_13D_A
-                        stype, deadline = "13D", 2
-                        is_amendment = True
-                    elif "13D" in form:
-                        ft = Schedule13Type.SC_13D
-                        stype, deadline = "13D", 5
-                        is_amendment = False
-                    elif "13G/A" in form:
-                        ft = Schedule13Type.SC_13G_A
-                        stype, deadline = "13G", 2
-                        is_amendment = True
-                    else:
-                        ft = Schedule13Type.SC_13G
-                        stype, deadline = "13G", 45
-                        is_amendment = False
-
-                    pct_match = re.search(r'(?:percent|percentage)\D{0,30}(\d+\.?\d*)\s*%', content, re.I)
-                    shares_match = re.search(r'(?:aggregate\s+number|shares\s+beneficially)\D{0,40}([\d,]+)', content, re.I)
-                    filer_match = re.search(r'(?:name\s+of\s+reporting\s+person|filed\s+by)[:\s]*([A-Z][A-Za-z\s,\.]+)', content)
-                    purpose_match = re.search(r'(?:item\s*4|purpose\s+of\s+transaction)[:\s]*(.*?)(?:item\s*5|$)', content[:8000], re.I | re.S)
-
-                    pct = float(pct_match.group(1)) if pct_match else 0.0
-                    shares = int(shares_match.group(1).replace(',', '')) if shares_match else 0
-                    filer_name = filer_match.group(1).strip()[:100] if filer_match else filing.company_name or "Unknown"
-                    purpose = (purpose_match.group(1).strip()[:500] if purpose_match else "")
-
-                    event_date = filing.report_date or filing.filing_date
-                    days_gap = (filing.filing_date - event_date).days if event_date else 0
-
-                    ownership_filings.append(Schedule13Filing(
-                        filing_type=ft, cik=filing.cik or cik, filer_name=filer_name,
-                        subject_company_cik=cik, subject_company_name=filing.company_name or "",
-                        filing_date=filing.filing_date, event_date=event_date,
-                        shares_owned=shares, percent_owned=pct,
-                        voting_power=pct, investment_power=pct,
-                        purpose_of_transaction=purpose,
-                        source_of_funds="Not parsed", item4_narrative=purpose,
-                        schedule_type=stype,
-                        filing_deadline_days=deadline,
-                        days_from_event_to_filing=max(0, days_gap),
-                        is_deadline_compliant=days_gap <= deadline,
-                        is_amendment=is_amendment,
-                    ))
-                    logger.info(f"Node 8: Parsed {filing.form_type} from {filer_name} ({pct}%)")
-                except Exception as parse_err:
-                    logger.warning(f"Node 8: Failed to parse {filing.accession_number}: {parse_err}")
-                    continue
-
-            logger.info(f"Node 8: Parsed {len(ownership_filings)} ownership filings from {len(filings)} fetched")
-            node8_output = self.node8_ownership.analyze(ownership_filings)
-
-            # Convert ownership filings to dicts for Phase 5 pattern detection
-            schedule13_dicts = []
-            for of in ownership_filings:
-                schedule13_dicts.append({
-                    "form_type": of.filing_type.value if hasattr(of.filing_type, 'value') else str(of.filing_type),
-                    "filer_name": of.filer_name,
-                    "filer_cik": of.cik,
-                    "issuer_name": of.subject_company_name,
-                    "filing_date": of.filing_date,
-                    "event_date": of.event_date,
-                    "shares_owned": of.shares_owned,
-                    "ownership_percent": of.percent_owned,
-                    "purpose": of.purpose_of_transaction,
-                    "schedule_type": of.schedule_type,
-                    "is_amendment": of.is_amendment,
-                    "is_deadline_compliant": of.is_deadline_compliant,
-                })
-
+            # Note: Full 13D/13G parsing requires text extraction and NLP
+            # For now, pass empty list as filings metadata available
+            
+            node8_output = self.node8_ownership.analyze(
+                ownership_filings if ownership_filings else []
+            )
+            
             return NodeResult(
-                node_id="NODE_8", node_name="13D/13G Ownership", status="success",
-                violations_found=len([a for a in node8_output.alerts if getattr(a, 'severity', '') in ('CRITICAL', 'HIGH')]),
+                node_id="NODE_8",
+                node_name="13D/13G Ownership",
+                status="success",
+                violations_found=0,
                 alerts_generated=len(node8_output.alerts),
                 findings={
                     "filings_found": len(filings),
                     "filings_analyzed": node8_output.filings_analyzed,
-                    "unique_filers": node8_output.unique_filers,
-                    "schedule13_filings": schedule13_dicts,
+                    "unique_filers": node8_output.unique_filers
                 },
                 execution_time_seconds=time.time() - start
             )
@@ -1318,123 +1056,36 @@ class RecursiveProsecutorialEngine:
         self, sec_client, cik: str, start_date: date, end_date: date
     ) -> NodeResult:
         """Execute Node 9: 8-K Material Event Analysis."""
-        import re
         start = time.time()
-
+        
         try:
-            from src.nodes.node9_8k_events.material_event_correlator_v2 import (
-                MaterialEvent8KV2, MarketHoursStatus,
-            )
-
+            # Fetch 8-K filings
             filings = await sec_client.get_filings(
-                cik=cik, form_types=["8-K"],
-                start_date=start_date, end_date=end_date
+                cik=cik,
+                form_types=["8-K"],
+                start_date=start_date,
+                end_date=end_date
             )
-
-            # 8-K item code patterns
-            item_pattern = re.compile(r'Item\s+(\d+\.\d+)', re.I)
-            item_descriptions_map = {
-                '1.01': 'Entry into Material Definitive Agreement',
-                '1.02': 'Termination of Material Definitive Agreement',
-                '1.03': 'Bankruptcy or Receivership',
-                '1.04': 'Mine Safety',
-                '1.05': 'Material Cybersecurity Incidents',
-                '2.01': 'Completion of Acquisition or Disposition',
-                '2.02': 'Results of Operations and Financial Condition',
-                '2.03': 'Creation of Direct Financial Obligation',
-                '2.04': 'Triggering Events for Off-Balance Sheet Arrangements',
-                '2.05': 'Costs Associated with Exit or Disposal Activities',
-                '2.06': 'Material Impairments',
-                '3.01': 'Notice of Delisting',
-                '3.02': 'Unregistered Sales of Equity Securities',
-                '3.03': 'Material Modification to Rights of Security Holders',
-                '4.01': 'Changes in Registrant Certifying Accountant',
-                '4.02': 'Non-Reliance on Previously Issued Financial Statements',
-                '5.01': 'Changes in Control of Registrant',
-                '5.02': 'Departure/Appointment of Directors or Officers',
-                '5.03': 'Amendments to Articles of Incorporation or Bylaws',
-                '5.04': 'Temporary Suspension of Trading Under Employee Benefit Plans',
-                '5.05': 'Amendment to Code of Ethics',
-                '5.06': 'Change in Shell Company Status',
-                '5.07': 'Submission of Matters to a Vote of Security Holders',
-                '5.08': 'Shareholder Nominations',
-                '7.01': 'Regulation FD Disclosure',
-                '8.01': 'Other Events',
-                '9.01': 'Financial Statements and Exhibits',
-            }
-
+            
+            # Parse 8-K events (simplified)
             events = []
-            for filing in filings[:15]:
-                try:
-                    content = await sec_client.get_filing_text(filing)
-                    if not content:
-                        continue
-
-                    items_found = list(set(item_pattern.findall(content[:5000])))
-                    items_found = [i for i in items_found if i in item_descriptions_map]
-
-                    if not items_found:
-                        items_found = ['8.01']
-
-                    descs = [item_descriptions_map.get(i, 'Unknown') for i in items_found]
-
-                    # Extract narrative (first 500 chars after item header)
-                    narrative = ""
-                    for item_code in items_found:
-                        m = re.search(rf'Item\s+{re.escape(item_code)}[^\n]*\n(.*?)(?:Item\s+\d+\.\d+|$)',
-                                      content[:8000], re.I | re.S)
-                        if m:
-                            narrative = re.sub(r'<[^>]+>', '', m.group(1)).strip()[:500]
-                            break
-                    if not narrative:
-                        narrative = re.sub(r'<[^>]+>', '', content[:1000]).strip()[:500]
-
-                    # Determine market hours status
-                    hour = filing.filing_date.weekday()
-                    mhs = MarketHoursStatus.WEEKEND if hour >= 5 else MarketHoursStatus.AFTER_HOURS
-
-                    events.append(MaterialEvent8KV2(
-                        accession_number=filing.accession_number,
-                        cik=cik,
-                        company_name=filing.company_name or "",
-                        ticker=None,
-                        filing_date=filing.filing_date,
-                        filing_time="16:00:00",
-                        items=items_found,
-                        item_descriptions=descs,
-                        narrative=narrative,
-                        market_hours_status=mhs,
-                    ))
-                    logger.info(f"Node 9: Parsed 8-K {filing.accession_number} items={items_found}")
-                except Exception as parse_err:
-                    logger.warning(f"Node 9: Failed to parse 8-K {filing.accession_number}: {parse_err}")
-                    continue
-
-            logger.info(f"Node 9: Parsed {len(events)} 8-K events from {len(filings)} filings")
-            node9_output = await self.node9_events.analyze(events)
-
-            # Convert 8-K events to dicts for Phase 5 pattern detection
-            events_8k_dicts = []
-            for ev in events:
-                events_8k_dicts.append({
-                    "accession_number": ev.accession_number,
-                    "filing_date": ev.filing_date,
-                    "items": ev.items,
-                    "item_descriptions": ev.item_descriptions,
-                    "narrative": ev.narrative,
-                    "company_name": ev.company_name,
-                })
-
+            # Note: Full 8-K parsing requires text extraction and item identification
+            # For now, pass empty list but track filings found
+            
+            node9_output = await self.node9_events.analyze(
+                events if events else []
+            )
+            
             return NodeResult(
-                node_id="NODE_9", node_name="8-K Events", status="success",
+                node_id="NODE_9",
+                node_name="8-K Events",
+                status="success",
                 violations_found=0,
                 alerts_generated=len(node9_output.alerts),
                 findings={
                     "filings_found": len(filings),
                     "events_analyzed": node9_output.events_analyzed,
-                    "high_risk_events": node9_output.high_risk_events,
-                    "form8k_filings": events_8k_dicts,
-                    "events_8k": events_8k_dicts,
+                    "high_risk_events": node9_output.high_risk_events
                 },
                 execution_time_seconds=time.time() - start
             )
@@ -1513,7 +1164,7 @@ class RecursiveProsecutorialEngine:
                                     "shares": txn.shares,
                                     "price_per_share": float(txn.price_per_share) if txn.price_per_share else 0,
                                     "transaction_code": txn.transaction_code,
-                                    "insider_name": parsed.reporting_owner_name
+                                    "insider_name": parsed.reporting_person.person_name
                                 })
                     except Exception as filing_error:
                         logger.warning(f"Failed to parse Form 4 filing {filing.accession_number}: {filing_error}")
@@ -1521,29 +1172,10 @@ class RecursiveProsecutorialEngine:
             except Exception as fetch_error:
                 logger.warning(f"Failed to fetch Form 4 filings: {fetch_error}")
             
-            # Extract executives from Node 2 result if available
-            executives = []
-            if node2_result and node2_result.findings:
-                for exec_info in node2_result.findings.get('executives', []):
-                    if isinstance(exec_info, dict):
-                        executives.append(exec_info)
-
-            # Also add insiders from Form 4 trades
-            seen_names = set()
-            for trade in form4_trades:
-                name = trade.get("insider_name", "")
-                if name and name not in seen_names:
-                    seen_names.add(name)
-                    executives.append({
-                        "name": name,
-                        "source": "Form 4",
-                        "trades": [t for t in form4_trades if t.get("insider_name") == name],
-                    })
-
             node11_output = self.node11_network.analyze(
-                executives=executives,
-                companies=[{"cik": cik, "name": node2_result.findings.get("company_name", "") if node2_result and node2_result.findings else ""}],
-                relationships=[{"from": t.get("insider_name", ""), "to": cik, "type": "insider_trade"} for t in form4_trades]
+                executives=[],
+                companies=[],
+                relationships=[]
             )
             
             return NodeResult(
