@@ -1,9 +1,9 @@
 {
   "node": "NODE_4_SOX",
-  "analysis_timestamp": "2026-02-24T14:32:36.496161+00:00Z",
+  "analysis_timestamp": "2026-02-26T13:38:31.495600+00:00Z",
   "company": {
-    "cik": "0000320187",
-    "name": "NIKE Inc"
+    "cik": "320187",
+    "name": "NIKE, Inc."
   },
   "section_302_certifications": [
     {
@@ -51,7 +51,7 @@
       "evidence_text": "t-size:8.5pt;\"><a style=\"text-decoration:none;color:#000000;-sec-extract:exhibit;\" href=\"nke-5312020exhibit311.htm\"><span style=\"font-family:Arial;font-size:8.5pt;color:#000000;text-decoration:none;\">Rule 13a-14(a)/15d-14(a) Certification of Chief Executive Officer.</span></a></div></td></tr><tr><td style=\"vertical-align:top;border-bottom:1px solid #808080;padding-left:2px;padding-top:2px;padding-bottom:2px;padding-right:2px;border-top:1px solid #808080;\"><div style=\"text-align:left;font-size:8.",
       "evidence_hash": "ef1e79eb9c34ccdea56aae4bad6f4b849b7569a1f6a598a487f53bd00caea581",
       "potential_penalties": {},
-      "detected_at": "2026-02-24T14:32:04.607965+00:00"
+      "detected_at": "2026-02-26T13:37:56.224954+00:00"
     },
     {
       "violation_type": "section_302_certification_omission",
@@ -66,7 +66,7 @@
       "evidence_text": "t-size:8.5pt;\"><a style=\"text-decoration:none;color:#000000;-sec-extract:exhibit;\" href=\"nke-5312020exhibit312.htm\"><span style=\"font-family:Arial;font-size:8.5pt;color:#000000;text-decoration:none;\">Rule 13a-14(a)/15d-14(a) Certification of Chief Financial Officer.</span></a></div></td></tr><tr><td style=\"vertical-align:top;border-bottom:1px solid #808080;padding-left:2px;padding-top:2px;padding-bottom:2px;padding-right:2px;border-top:1px solid #808080;\"><div style=\"text-align:left;font-size:8.",
       "evidence_hash": "bd57a92c72d06f66fb0bcb23955930eee0542074f6dd38651b4e7cc6e9baa361",
       "potential_penalties": {},
-      "detected_at": "2026-02-24T14:32:04.607976+00:00"
+      "detected_at": "2026-02-26T13:37:56.224964+00:00"
     },
     {
       "violation_type": "section_906_certification_omission",
@@ -85,7 +85,7 @@
         "criminal_knowing": "$1M fine, up to 10 years imprisonment",
         "criminal_willful": "$5M fine, up to 20 years imprisonment"
       },
-      "detected_at": "2026-02-24T14:32:04.607985+00:00"
+      "detected_at": "2026-02-26T13:37:56.224972+00:00"
     },
     {
       "violation_type": "inconsistent_management_disclosure",
@@ -100,7 +100,7 @@
       "evidence_text": "Effectiveness conclusion unclear",
       "evidence_hash": "a8ef73c1c14612923ed7bece32cc61fcd847d4b1d869fafa793392a7f59b9814",
       "potential_penalties": {},
-      "detected_at": "2026-02-24T14:32:04.645571+00:00"
+      "detected_at": "2026-02-26T13:37:56.269138+00:00"
     },
     {
       "violation_type": "material_weakness_disclosed",
@@ -117,7 +117,7 @@
       "evidence_text": "ocedures included examining, on a test basis, evidence regarding the amounts and disclosures in the consolidated financial statements. Our audits also included evaluating the accounting principles used and significant estimates made by management, as well as evaluating the overall presentation of the consolidated financial statements. Our audit of internal control over financial reporting included obtaining an understanding of internal control over financial reporting, assessing the risk that a ",
       "evidence_hash": "d6a1748927aa3e1bba79fb7a9dbe1a4bc4d59bec09b63d6a89284fa570332688",
       "potential_penalties": {},
-      "detected_at": "2026-02-24T14:32:04.679261+00:00"
+      "detected_at": "2026-02-26T13:37:56.307305+00:00"
     },
     {
       "violation_type": "material_weakness_disclosed",
@@ -134,7 +134,7 @@
       "evidence_text": "e terminated and the maturity of amounts owed may be accelerated. In addition, macroeconomic conditions, such as increased volatility or disruption in the credit markets, could adversely affect our ability to refinance existing debt.</span></div><div style=\"line-height:110%;padding-bottom:4px;padding-top:12px;text-align:left;padding-left:0px;text-indent:0px;font-size:8.5pt;\"><span style=\"font-family:Arial;font-size:8.5pt;color:#e87722;font-style:normal;font-weight:bold;text-decoration:none;\">If ",
       "evidence_hash": "4144e50562b4c37dcbaa7dc29ed141f4f4322dde2aa44033c96c70106bb5d38b",
       "potential_penalties": {},
-      "detected_at": "2026-02-24T14:32:04.757870+00:00"
+      "detected_at": "2026-02-26T13:37:56.386355+00:00"
     },
     {
       "violation_type": "auditor_change_near_weakness",
@@ -150,7 +150,7 @@
       "evidence_text": "Auditor change concurrent with MW",
       "evidence_hash": "acdcc5e91f27431729f409530d3ae3d8e968e0cfac79b74442216c55f61438f4",
       "potential_penalties": {},
-      "detected_at": "2026-02-24T14:32:36.256823+00:00"
+      "detected_at": "2026-02-26T13:38:31.229993+00:00"
     }
   ],
   "severity_summary": {
