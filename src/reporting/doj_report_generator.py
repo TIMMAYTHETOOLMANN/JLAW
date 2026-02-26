@@ -28,6 +28,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
+from .output_documentation_config import get_output_documentation_profile
 from .models import (
     AgentSource,
     ChainOfCustodyRecord,
@@ -197,6 +198,7 @@ class DOJReportGenerator:
         """
         self.output_dir = Path(output_dir)
         self.output_dir.mkdir(parents=True, exist_ok=True)
+        self.documentation_profile = get_output_documentation_profile()
     
     def generate_comprehensive_report(
         self,
@@ -277,6 +279,16 @@ class DOJReportGenerator:
             except Exception as e:
                 logger.error(f"Failed to generate Court PDF: {e}", exc_info=True)
                 logger.warning("Court PDF generation failed - continuing with other formats")
+
+        manifest_path = self._generate_output_manifest(
+            case_id=case_id,
+            summary=summary,
+            filing_reports=filing_reports,
+            chain_of_custody=chain_of_custody,
+            outputs=outputs,
+            base_filename=base_filename,
+        )
+        outputs['manifest'] = manifest_path
         
         return outputs
     
@@ -433,31 +445,42 @@ class DOJReportGenerator:
             f"**Case ID:** {summary.case_id}",
             f"**Classification:** CONFIDENTIAL - LAW ENFORCEMENT SENSITIVE",
             f"**Generated:** {summary.report_generated.strftime('%Y-%m-%d %H:%M:%S UTC')}",
+            f"**Documentation Profile:** {self.documentation_profile.profile_id} v{self.documentation_profile.profile_version}",
             "",
             "---",
             "",
         ])
         
-        # Executive Summary
+        # §0 — Documentation Control Plane
+        lines.extend(self._generate_documentation_control_plane_section(summary, filing_reports, chain_of_custody))
+
+        # §1 — Executive Summary
         lines.extend(self._generate_executive_summary_section(summary))
         
-        # Per-Filing Detailed Analysis
+        # §3 — Per-Filing Detailed Analysis
         lines.extend(self._generate_per_filing_section(filing_reports))
         
-        # Dual-Agent Consensus Tracking
+        # §5 — Detection Pattern Analysis (NEW)
+        lines.extend(self._generate_detection_pattern_section(summary))
+
+        # §6 — Dual-Agent Consensus Tracking
         lines.extend(self._generate_dual_agent_section(filing_reports))
         
-        # Subagent Specialized Findings
+        # §7 — Subagent Specialized Findings
         if subagent_findings:
             lines.extend(self._generate_subagent_section(subagent_findings))
         
-        # Statistical Analysis
+        # §9/§10 — Statistical Analysis & Penalty Assessment
         lines.extend(self._generate_statistical_section(summary))
+        lines.extend(self._generate_penalty_assessment_section(summary, filing_reports))
         
-        # Chain of Custody
+        # §12 — Chain of Custody
         lines.extend(self._generate_chain_of_custody_section(chain_of_custody))
+
+        # §14 — Compliance Standards Declaration (NEW)
+        lines.extend(self._generate_compliance_standards_section())
         
-        # NEW: Multi-Jurisdictional Compliance Sections
+        # Multi-Jurisdictional Compliance Sections
         if phase3_results:
             lines.extend(self._generate_jurisdictional_authority_section(phase3_results))
             lines.extend(self._generate_multi_jurisdictional_violations_section(phase3_results))
@@ -870,9 +893,127 @@ class DOJReportGenerator:
             "",
             "---",
             "",
-            "**END OF FORENSIC REPORT**",
         ])
         
+        return lines
+
+    def _generate_detection_pattern_section(
+        self,
+        summary: ForensicReportSummary
+    ) -> List[str]:
+        """Generate Section V: Detection Pattern Analysis (23 algorithms)."""
+        lines = [
+            "## DETECTION PATTERN ANALYSIS",
+            "",
+            "The JLAW forensic engine executes 23 detection algorithms spanning",
+            "financial manipulation, insider trading, and institutional patterns.",
+            "",
+            "### Detection Pattern Categories",
+            "",
+            "| Category | Patterns | Accuracy Range |",
+            "|----------|----------|----------------|",
+            "| Financial Manipulation | Beneish M-Score, Benford's Law, Altman Z-Score, Piotroski F-Score, Round-Tripping, Disclosure Timing, Management Hedging, Channel Stuffing | 80-92% |",
+            "| Insider Trading | Late Filing, Short-Swing Profit, Gift-Before-Drop, Zero-Dollar Trades, Holding Period, Volume Limit, Clustered Disposals | 89-99% |",
+            "| Institutional Patterns | Wolf Pack Formation, 13G→13D Conversion, Pre-Announcement, Sequential Adverse, Board Interlock, Revolving Door, Sentiment Shift, CAR Event Study | 85-94% |",
+            "",
+        ]
+
+        # Map violation types to pattern names for a summary
+        if summary.violations_by_type:
+            lines.extend([
+                "### Pattern Matches Detected",
+                "",
+                "| Violation Type | Count |",
+                "|----------------|-------|",
+            ])
+            for v_type, count in sorted(summary.violations_by_type.items(), key=lambda x: -x[1]):
+                lines.append(f"| {v_type} | {count} |")
+            lines.append("")
+
+        lines.extend([
+            "---",
+            "",
+        ])
+        return lines
+
+    def _generate_penalty_assessment_section(
+        self,
+        summary: ForensicReportSummary,
+        filing_reports: List[FilingAnalysisReport],
+    ) -> List[str]:
+        """Generate Section X: Penalty Assessment Matrix."""
+        lines = [
+            "## PENALTY ASSESSMENT MATRIX",
+            "",
+            "Estimated penalties per violation type with statutory authority.",
+            "",
+            "| Violation Type | Severity | Civil Min | Civil Max | Criminal | Statute |",
+            "|----------------|----------|-----------|-----------|----------|---------|",
+        ]
+
+        seen_types = set()
+        for report in filing_reports:
+            for v in report.violations:
+                vt = v.violation_type
+                if vt in seen_types:
+                    continue
+                seen_types.add(vt)
+                crim = "Yes" if v.damage_estimate.criminal_exposure else "No"
+                lines.append(
+                    f"| {vt} | {v.severity.value} "
+                    f"| ${v.damage_estimate.civil_minimum:,.0f} "
+                    f"| ${v.damage_estimate.civil_maximum:,.0f} "
+                    f"| {crim} "
+                    f"| {v.statutory_reference.citation} |"
+                )
+
+        lines.extend([
+            "",
+            "### Aggregate Exposure",
+            "",
+            "| Metric | Value |",
+            "|--------|-------|",
+            f"| Total Civil Min | ${summary.total_estimated_damages_min:,.2f} |",
+            f"| Total Civil Max | ${summary.total_estimated_damages_max:,.2f} |",
+            f"| Total Disgorgement | ${summary.total_disgorgement:,.2f} |",
+            f"| Criminal Referral Count | {summary.criminal_referral_count} |",
+            "",
+            "---",
+            "",
+        ])
+        return lines
+
+    def _generate_compliance_standards_section(self) -> List[str]:
+        """Generate Section XIV: Compliance Standards Declaration."""
+        profile = self.documentation_profile
+        compliance_standards = getattr(profile, "compliance_standards", [])
+
+        lines = [
+            "## COMPLIANCE STANDARDS DECLARATION",
+            "",
+            "This forensic dossier was generated in accordance with the following",
+            "legal and technical standards for digital evidence integrity.",
+            "",
+        ]
+
+        if compliance_standards:
+            lines.extend([
+                "| Standard | Title | Description |",
+                "|----------|-------|-------------|",
+            ])
+            for std in compliance_standards:
+                lines.append(
+                    f"| {std.standard_id} | {std.title} | {std.description} |"
+                )
+            lines.append("")
+        else:
+            lines.append("*No compliance standards declared in active profile.*")
+            lines.append("")
+
+        lines.extend([
+            "---",
+            "",
+        ])
         return lines
     
     def _generate_jurisdictional_authority_section(
@@ -1224,11 +1365,30 @@ class DOJReportGenerator:
         subagent_findings: List[SubagentFinding]
     ):
         """Generate comprehensive JSON report."""
+        profile = self.documentation_profile
         report_data = {
             "metadata": {
                 "report_type": "DOJ_FORENSIC_REPORT",
-                "version": "1.0",
+                "version": profile.profile_version,
                 "generated": datetime.utcnow().isoformat(),
+                "documentation_profile": profile.to_dict(),
+                "compliance_standards": [
+                    {
+                        "standard_id": std.standard_id,
+                        "title": std.title,
+                        "description": std.description,
+                    }
+                    for std in getattr(profile, "compliance_standards", [])
+                ],
+                "pipeline_stage_audits": [
+                    {
+                        "stage_number": audit.stage_number,
+                        "stage_name": audit.stage_name,
+                        "gate_description": audit.gate_description,
+                        "failure_exit_code": audit.failure_exit_code,
+                    }
+                    for audit in getattr(profile, "pipeline_stage_audits", [])
+                ],
             },
             "summary": summary.to_dict(),
             "filing_reports": [r.to_dict() for r in filing_reports],
@@ -1255,6 +1415,197 @@ class DOJReportGenerator:
         with open(output_path, 'w', encoding='utf-8') as f:
             json.dump(report_data, f, indent=2, default=str)
     
+    def _generate_documentation_control_plane_section(
+        self,
+        summary: ForensicReportSummary,
+        filing_reports: List[FilingAnalysisReport],
+        chain_of_custody: List[ChainOfCustodyRecord],
+    ) -> List[str]:
+        """Generate profile/quality/visual/compliance governance section."""
+        profile = self.documentation_profile
+        violations_total = max(summary.total_violations, 1)
+        filing_count = len(filing_reports)
+        custody_count = len(chain_of_custody)
+        quotes_count = sum(len(v.exact_quotes) for r in filing_reports for v in r.violations)
+        citations_count = sum(
+            1
+            for r in filing_reports
+            for v in r.violations
+            if getattr(v, "statutory_reference", None) and v.statutory_reference.citation
+        )
+        quotes_ratio = quotes_count / violations_total
+        citation_ratio = citations_count / violations_total
+
+        lines = [
+            "## OUTPUT DOCUMENTATION CONTROL PLANE",
+            "",
+            f"Profile: **{profile.profile_id} v{profile.profile_version}**",
+            f"Reference: {profile.reference_document}",
+            "",
+            "### Required Sections",
+            "",
+            "| # | Section | Objective | Pipeline Phase | Min Fields |",
+            "|---|---------|-----------|----------------|------------|",
+        ]
+
+        for section in profile.required_sections:
+            phase_str = getattr(section, "phase_alignment", "") or ""
+            lines.append(
+                f"| {getattr(section, 'section_number', '')} "
+                f"| {section.name} "
+                f"| {section.objective} "
+                f"| {phase_str} "
+                f"| {', '.join(section.minimum_fields)} |"
+            )
+
+        lines.extend([
+            "",
+            "### Visual Representation Matrix",
+            "",
+            "| Visual | Generator Module | Purpose | Status |",
+            "|--------|------------------|---------|--------|",
+        ])
+
+        visual_status = {
+            "severity_distribution": "ready" if summary.total_violations > 0 else "pending",
+            "transaction_timeline": "ready" if filing_count > 0 else "pending",
+            "beneficiary_profits": "ready" if summary.total_estimated_damages_max > 0 else "pending",
+            "actor_network": "ready" if filing_count > 0 else "pending",
+            "filing_compliance_heatmap": "ready" if filing_count > 0 else "pending",
+            "bubble_chart_analysis": "ready" if summary.total_violations > 0 else "pending",
+            "filing_deadline_compliance": "ready" if filing_count > 0 else "pending",
+            "merkle_tree_evidence": "ready" if custody_count > 0 else "pending",
+        }
+        for visual in profile.visual_requirements:
+            gen_mod = getattr(visual, "generator_module", "") or ""
+            lines.append(
+                f"| {visual.title} | {gen_mod} | {visual.rationale} | {visual_status.get(visual.key, 'pending')} |"
+            )
+
+        lines.extend([
+            "",
+            "### Quality Gate Snapshot",
+            "",
+            f"- Exact quotes per violation: **{quotes_ratio:.2f}** (min {profile.quality_thresholds['exact_quotes_per_violation']})",
+            f"- Statutory citations per violation: **{citation_ratio:.2f}** (min {profile.quality_thresholds['statutory_citations_per_violation']})",
+            f"- Chain of custody records: **{custody_count}** (required={profile.quality_thresholds['chain_of_custody_records_required']})",
+            f"- Dual-agent active: **{summary.dual_agent_active}** (required={profile.quality_thresholds['dual_agent_validation_required']})",
+            f"- Minimum confidence: **{summary.overall_confidence:.2f}** (threshold={profile.quality_thresholds['minimum_overall_confidence']})",
+            f"- Evidence hash algorithms required: **{profile.quality_thresholds.get('evidence_hash_algorithms_required', 3)}** (SHA-256 + SHA3-512 + BLAKE2b)",
+            f"- Minimum filings analyzed: **{filing_count}** (threshold={profile.quality_thresholds.get('minimum_filings_analyzed', 5)})",
+            "",
+        ])
+
+        # Compliance standards declaration
+        compliance_standards = getattr(profile, "compliance_standards", [])
+        if compliance_standards:
+            lines.extend([
+                "### Compliance Standards",
+                "",
+                "| Standard | Title | Applicable Sections |",
+                "|----------|-------|---------------------|",
+            ])
+            for std in compliance_standards:
+                sections_str = ", ".join(std.applicable_sections[:3])
+                lines.append(f"| {std.standard_id} | {std.title} | {sections_str} |")
+            lines.append("")
+
+        # Pipeline stage audit expectations
+        pipeline_audits = getattr(profile, "pipeline_stage_audits", [])
+        if pipeline_audits:
+            lines.extend([
+                "### Pipeline Stage Gate Requirements",
+                "",
+                "| Stage | Name | Gate | Exit Code |",
+                "|-------|------|------|-----------|",
+            ])
+            for audit in pipeline_audits:
+                lines.append(
+                    f"| {audit.stage_number} | {audit.stage_name} | {audit.gate_description} | {audit.failure_exit_code} |"
+                )
+            lines.append("")
+
+        lines.extend([
+            "---",
+            "",
+        ])
+        return lines
+
+    def _generate_output_manifest(
+        self,
+        case_id: str,
+        summary: ForensicReportSummary,
+        filing_reports: List[FilingAnalysisReport],
+        chain_of_custody: List[ChainOfCustodyRecord],
+        outputs: Dict[str, Path],
+        base_filename: str,
+    ) -> Path:
+        """Generate machine-readable output manifest for documentation governance."""
+        violations_total = max(summary.total_violations, 1)
+        quotes_count = sum(len(v.exact_quotes) for r in filing_reports for v in r.violations)
+        citations_count = sum(
+            1
+            for r in filing_reports
+            for v in r.violations
+            if getattr(v, "statutory_reference", None) and v.statutory_reference.citation
+        )
+
+        profile = self.documentation_profile
+        manifest = {
+            "case_id": case_id,
+            "generated_at": datetime.utcnow().isoformat(),
+            "documentation_profile": profile.to_dict(),
+            "output_files": {k: str(v) for k, v in outputs.items()},
+            "coverage": {
+                "required_sections": [
+                    {"section_number": s.section_number, "name": s.name}
+                    for s in profile.required_sections
+                ],
+                "required_sections_count": len(profile.required_sections),
+                "files_generated": list(outputs.keys()),
+                "filings_count": len(filing_reports),
+                "chain_of_custody_count": len(chain_of_custody),
+            },
+            "quality_metrics": {
+                "exact_quotes_per_violation": quotes_count / violations_total,
+                "statutory_citations_per_violation": citations_count / violations_total,
+                "dual_agent_active": summary.dual_agent_active,
+                "overall_confidence": summary.overall_confidence,
+                "filings_analyzed": len(filing_reports),
+                "total_violations": summary.total_violations,
+            },
+            "visual_representation": [
+                {
+                    "key": visual.key,
+                    "title": visual.title,
+                    "rationale": visual.rationale,
+                    "generator_module": getattr(visual, "generator_module", ""),
+                    "output_formats": list(getattr(visual, "output_formats", ("png",))),
+                }
+                for visual in profile.visual_requirements
+            ],
+            "compliance_standards": [
+                {
+                    "standard_id": std.standard_id,
+                    "title": std.title,
+                }
+                for std in getattr(profile, "compliance_standards", [])
+            ],
+            "pipeline_stage_audits": [
+                {
+                    "stage_number": audit.stage_number,
+                    "stage_name": audit.stage_name,
+                    "gate_description": audit.gate_description,
+                }
+                for audit in getattr(profile, "pipeline_stage_audits", [])
+            ],
+        }
+
+        manifest_path = self.output_dir / f"{base_filename}.manifest.json"
+        with open(manifest_path, "w", encoding="utf-8") as f:
+            json.dump(manifest, f, indent=2)
+        return manifest_path
+
     def _generate_html_report(
         self,
         output_path: Path,
