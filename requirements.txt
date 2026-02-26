@@ -18,8 +18,8 @@ markdown>=3.4.0
 sec-edgar-downloader>=5.0.0
 edgar>=5.0.0
 # XBRL parsing
-# python-xbrl>=1.1.0  # Build fails on Python 3.11+; using ixbrlparse instead
-# xbrl>=1.1.0  # Not available on PyPI
+python-xbrl>=1.1.0
+xbrl>=1.1.0
 # Additional XBRL tools
 ixbrlparse>=0.9.0  # XBRL inline parsing (latest stable version)
 # RFC 3161 Timestamping - CRITICAL for FRE 902(13)/(14) court-admissible evidence

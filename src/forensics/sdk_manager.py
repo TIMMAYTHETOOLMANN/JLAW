@@ -83,10 +83,6 @@ class UnifiedSDKManager:
         self._max_retries = 3
         self._retry_backoff_base = 2  # Exponential backoff multiplier
         
-        # OpenRouter client (for Claude via OpenRouter)
-        self._openrouter_client: Optional[Any] = None
-        self._openrouter_available = False
-
         # Availability flags
         self._openai_available = False
         self._openai_secondary_available = False
@@ -237,21 +233,15 @@ class UnifiedSDKManager:
             try:
                 from anthropic import AsyncAnthropic
                 config = self._load_config()
-
+                
                 if config.anthropic.api_key:
-                    client_kwargs = {
-                        'api_key': config.anthropic.api_key,
-                        'max_retries': self._max_retries,
-                        'timeout': 60.0,
-                    }
-                    # Route through OpenRouter if configured
-                    if config.anthropic.base_url:
-                        client_kwargs['base_url'] = config.anthropic.base_url
-
-                    self._anthropic_client = AsyncAnthropic(**client_kwargs)
+                    self._anthropic_client = AsyncAnthropic(
+                        api_key=config.anthropic.api_key,
+                        max_retries=self._max_retries,
+                        timeout=60.0
+                    )
                     self._anthropic_available = True
-                    route_info = " via OpenRouter" if config.anthropic.openrouter_mode else ""
-                    logger.info(f"✅ Anthropic client initialized{route_info} (model: {config.anthropic.model})")
+                    logger.info(f"✅ Anthropic client initialized (model: {config.anthropic.model})")
                 else:
                     logger.warning("⚠️ ANTHROPIC_API_KEY not set - Anthropic features disabled")
             except ImportError:
@@ -260,38 +250,7 @@ class UnifiedSDKManager:
                 logger.error(f"❌ Failed to initialize Anthropic client: {e}")
         
         return self._anthropic_client
-
-    @property
-    def openrouter(self):
-        """
-        Get OpenRouter async client (OpenAI-compatible, lazy-loaded).
-
-        Uses the OpenAI SDK pointed at OpenRouter's base URL for Claude model access.
-        Returns None if OpenRouter is not configured.
-        """
-        if self._openrouter_client is None:
-            try:
-                from openai import AsyncOpenAI
-                config = self._load_config()
-
-                if config.anthropic.openrouter_mode and config.anthropic.api_key:
-                    self._openrouter_client = AsyncOpenAI(
-                        api_key=config.anthropic.api_key,
-                        base_url="https://openrouter.ai/api/v1",
-                        max_retries=self._max_retries,
-                        timeout=120.0,
-                    )
-                    self._openrouter_available = True
-                    logger.info(f"✅ OpenRouter client initialized (model: {config.anthropic.model})")
-                else:
-                    logger.debug("OpenRouter not configured - skipping")
-            except ImportError:
-                logger.warning("⚠️ openai package not available for OpenRouter")
-            except Exception as e:
-                logger.error(f"❌ Failed to initialize OpenRouter client: {e}")
-
-        return self._openrouter_client
-
+    
     @property
     def http_session(self) -> aiohttp.ClientSession:
         """
@@ -319,7 +278,7 @@ class UnifiedSDKManager:
             self._http_session = aiohttp.ClientSession(
                 connector=connector,
                 timeout=timeout,
-                raise_for_status=False,  # Don't raise on 4xx/5xx, handle manually
+                raise_for_status=False  # Don't raise on 4xx/5xx, handle manually,
                 trust_env=True,
             )
             logger.info("✅ Shared HTTP session initialized with connection pooling")

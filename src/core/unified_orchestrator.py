@@ -6,11 +6,9 @@ This module provides the ONLY recommended orchestrator for DOJ-grade forensic
 analysis. All other orchestrators are deprecated and should delegate to this class.
 
 Architecture:
-    - Enforces 11-phase execution pipeline
+    - Enforces 9-phase execution pipeline
     - Validates all phase gates
     - Executes all 15 nodes (no skipping in strict mode)
-    - Web Intelligence & Contradiction Mapping (Phase 9)
-    - Enhanced forensic-grade visual dossier generation (Phase 10)
     - Maintains evidence chain integrity
     - Produces DOJ-grade output
 
@@ -18,12 +16,11 @@ Usage:
     orchestrator = UnifiedForensicOrchestrator(
         cik="320187",
         company_name="NIKE, Inc.",
-        ticker="NKE",
         start_date=date(2019, 1, 1),
         end_date=date(2019, 12, 31),
         strict_mode=True,
     )
-
+    
     result = await orchestrator.execute_full_analysis()
 """
 
@@ -54,70 +51,78 @@ class UnifiedExecutionResult:
 class UnifiedForensicOrchestrator:
     """
     Single canonical orchestrator for JLAW forensic analysis.
-
-    11-Phase Pipeline:
-      1. Configuration & Target Acquisition
-      2. SEC EDGAR Data Collection
-      3. Document Parsing & Indexing
-      4. 15-Node Recursive Analysis
-      5. Advanced Detection Patterns
-      6. Dual-Agent AI Cross-Validation
-      7. Subagent Orchestration
-      8. Evidence Chain Finalization
-      9. Web Intelligence & Contradiction Mapping
-     10. Forensic-Grade Visual Dossier Generation
-     11. Analysis Bundle Export
+    
+    This class ensures consistent execution across all entry points:
+    - Enforces 9-phase execution pipeline
+    - Validates all phase gates
+    - Executes all 15 nodes (no skipping in strict mode)
+    - Maintains evidence chain integrity
+    - Produces DOJ-grade output
+    
+    All other orchestrators should delegate to this class for consistency.
     """
-
-    VERSION = "2.0.0"
-
+    
+    VERSION = "1.0.0"
+    
     def __init__(
         self,
         cik: str,
         company_name: str,
         start_date: date,
         end_date: date,
-        ticker: str = "",
         output_dir: Optional[Path] = None,
         strict_mode: bool = True,
         enable_dual_agent: bool = True,
         enable_subagents: bool = True,
-        enable_web_intelligence: bool = True,
         auto_mode: bool = False,
     ):
+        """
+        Initialize unified orchestrator.
+        
+        Args:
+            cik: SEC Central Index Key
+            company_name: Target company name
+            start_date: Analysis period start date
+            end_date: Analysis period end date
+            output_dir: Output directory for results
+            strict_mode: Enable strict phase gating
+            enable_dual_agent: Enable dual AI agent validation (Phase 6)
+            enable_subagents: Enable subagent orchestration (Phase 7)
+            auto_mode: Run without user confirmations
+        """
         self.cik = cik
         self.company_name = company_name
-        self.ticker = ticker
         self.start_date = start_date
         self.end_date = end_date
         self.output_dir = output_dir or Path("output")
         self.strict_mode = strict_mode
         self.enable_dual_agent = enable_dual_agent
         self.enable_subagents = enable_subagents
-        self.enable_web_intelligence = enable_web_intelligence
         self.auto_mode = auto_mode
-
+        
         # Execution state
         self._current_phase = 0
         self._execution_log = []
-        self._engine_result = None          # RecursiveAnalysisResult from Phase 4
-        self._analysis_results = None       # Transformed dict for reporting
-        self._pattern_results = {}          # Phase 5 detection pattern results
-        self._ai_validation_report = None   # Phase 6 AI cross-validation report
-        self._subagent_results = None       # Phase 7 subagent orchestration results
-        self._contradiction_map = None      # Contradiction map from Phase 9
-
+        self._engine_result = None  # Full RecursiveAnalysisResult for Phase 9
+        
         logger.info(f"UnifiedForensicOrchestrator v{self.VERSION} initialized")
-        logger.info(f"Target: {company_name} (CIK: {cik}, Ticker: {ticker})")
+        logger.info(f"Target: {company_name} (CIK: {cik})")
         logger.info(f"Analysis Period: {start_date} to {end_date}")
-        logger.info(f"Strict Mode: {strict_mode} | Web Intelligence: {enable_web_intelligence}")
-
+        logger.info(f"Strict Mode: {strict_mode}")
+    
     async def execute_full_analysis(self) -> UnifiedExecutionResult:
         """
-        Execute complete 11-phase forensic analysis pipeline.
+        Execute complete 9-phase forensic analysis.
+        
+        This is the ONLY method that should be called for production analysis.
+        It orchestrates the entire forensic pipeline from configuration to
+        DOJ-grade dossier generation.
+        
+        Returns:
+            UnifiedExecutionResult with complete analysis results
         """
-        self._log("Starting unified forensic analysis (11-phase pipeline)")
-
+        self._log("Starting unified forensic analysis")
+        
         results = UnifiedExecutionResult(
             target_cik=self.cik,
             target_company=self.company_name,
@@ -126,62 +131,54 @@ class UnifiedForensicOrchestrator:
             phases={},
             status='in_progress',
         )
-
+        
         try:
             # Phase 1: Configuration & Target Acquisition
             self._current_phase = 1
             results.phases['phase_1'] = await self._execute_phase_1()
-
+            
             # Phase 2: SEC EDGAR Data Collection
             self._current_phase = 2
             results.phases['phase_2'] = await self._execute_phase_2()
-
+            
             # Phase 3: Document Parsing & Indexing
             self._current_phase = 3
             results.phases['phase_3'] = await self._execute_phase_3()
-
+            
             # Phase 4: 15-Node Recursive Analysis
             self._current_phase = 4
             results.phases['phase_4'] = await self._execute_phase_4()
-
+            
             # Phase 5: Advanced Detection Patterns
             self._current_phase = 5
             results.phases['phase_5'] = await self._execute_phase_5()
-
+            
             # Phase 6: Dual-Agent AI Cross-Validation
             if self.enable_dual_agent:
                 self._current_phase = 6
                 results.phases['phase_6'] = await self._execute_phase_6()
             else:
                 self._log("Phase 6 (Dual-Agent) skipped - disabled")
-
+            
             # Phase 7: Subagent Orchestration
             if self.enable_subagents:
                 self._current_phase = 7
                 results.phases['phase_7'] = await self._execute_phase_7()
             else:
                 self._log("Phase 7 (Subagents) skipped - disabled")
-
+            
             # Phase 8: Evidence Chain Finalization
             self._current_phase = 8
             results.phases['phase_8'] = await self._execute_phase_8()
-
-            # Phase 9: Web Intelligence & Contradiction Mapping
+            
+            # Phase 9: DOJ-Grade Dossier Generation
             self._current_phase = 9
-            results.phases['phase_9'] = await self._execute_phase_9_web_intelligence()
-
-            # Phase 10: Forensic-Grade Visual Dossier Generation
-            self._current_phase = 10
-            results.phases['phase_10'] = await self._execute_phase_10_dossier()
-
-            # Phase 11: Analysis Bundle Export
-            self._current_phase = 11
-            results.phases['phase_11'] = await self._execute_phase_11_bundle()
-
+            results.phases['phase_9'] = await self._execute_phase_9()
+            
             results.status = 'complete'
             results.execution_log = self._execution_log
-            self._log("Unified forensic analysis completed successfully (11 phases)")
-
+            self._log("Unified forensic analysis completed successfully")
+            
         except Exception as e:
             logger.error(f"Unified orchestrator failed at phase {self._current_phase}: {e}", exc_info=True)
             results.status = 'failed'
@@ -189,17 +186,17 @@ class UnifiedForensicOrchestrator:
             results.failed_at_phase = self._current_phase
             results.execution_log = self._execution_log
             raise
-
+        
         return results
-
-    # ═══════════════════════════════════════════════════════════════════
-    # PHASES 1-8 (unchanged from v1)
-    # ═══════════════════════════════════════════════════════════════════
-
+    
     async def _execute_phase_1(self) -> Dict[str, Any]:
         """Phase 1: Configuration & Target Acquisition."""
         self._log("Phase 1: Configuration & Target Acquisition")
+        
+        # Delegate to master execution controller
         from .master_execution_controller import MasterExecutionController
+        
+        # Phase 1 is primarily validation - already done in __init__
         return {
             'status': 'success',
             'cik': self.cik,
@@ -207,40 +204,50 @@ class UnifiedForensicOrchestrator:
             'start_date': str(self.start_date),
             'end_date': str(self.end_date),
         }
-
+    
     async def _execute_phase_2(self) -> Dict[str, Any]:
         """Phase 2: SEC EDGAR Data Collection."""
         self._log("Phase 2: SEC EDGAR Data Collection")
+        
         from src.integrations.sec_edgar.edgar_client import SECEdgarClient
+        
+        # Collect SEC filings
         async with SECEdgarClient() as client:
             submissions = await client.get_submissions(self.cik)
+            
             return {
                 'status': 'success',
                 'submissions_found': len(submissions.get('filings', {}).get('recent', {}).get('accessionNumber', [])) if submissions else 0,
             }
-
+    
     async def _execute_phase_3(self) -> Dict[str, Any]:
         """Phase 3: Document Parsing & Indexing."""
         self._log("Phase 3: Document Parsing & Indexing")
-        return {'status': 'success', 'documents_parsed': 0}
-
+        
+        # Placeholder - would invoke DocsGPT or similar
+        return {
+            'status': 'success',
+            'documents_parsed': 0,
+        }
+    
     async def _execute_phase_4(self) -> Dict[str, Any]:
         """Phase 4: 15-Node Recursive Analysis."""
         self._log("Phase 4: 15-Node Recursive Analysis")
+
         from .recursive_engine import RecursiveProsecutorialEngine
-        engine = RecursiveProsecutorialEngine(
-            strict_mode=self.strict_mode,
-            config={'output_dir': str(self.output_dir)}
-        )
+
+        # Execute 15-node analysis
+        engine = RecursiveProsecutorialEngine(strict_mode=self.strict_mode)
         result = await engine.run_full_analysis(
             cik=self.cik,
             company_name=self.company_name,
             start_date=self.start_date,
             end_date=self.end_date,
         )
+
+        # Store full result for Phase 9 visual dossier generation
         self._engine_result = result
-        # Pre-transform for later phases
-        self._analysis_results = self._transform_for_visual_report(result)
+
         return {
             'status': 'success',
             'case_id': result.case_id,
@@ -257,599 +264,147 @@ class UnifiedForensicOrchestrator:
                 'group_4': len(result.node_group_4_results),
             }
         }
-
+    
     async def _execute_phase_5(self) -> Dict[str, Any]:
-        """Phase 5: Advanced Detection Patterns.
-
-        Runs 23 fraud detection patterns including Beneish M-Score, Benford's Law,
-        options backdating, channel stuffing, and cross-node correlation.
-        """
+        """Phase 5: Advanced Detection Patterns."""
         self._log("Phase 5: Advanced Detection Patterns")
-
-        if not self._engine_result:
-            return {'status': 'skipped', 'reason': 'No Phase 4 results'}
-
-        try:
-            from src.detection.patterns.advanced_patterns import AdvancedPatternDetector
-            detector = AdvancedPatternDetector()
-
-            all_nodes = (
-                self._engine_result.node_group_1_results
-                + self._engine_result.node_group_2_results
-                + self._engine_result.node_group_3_results
-                + self._engine_result.node_group_4_results
-            )
-
-            # Build aggregated data dict from all node findings
-            # Keys cover all 23 detection patterns in AdvancedPatternDetector
-            aggregated_data: Dict[str, Any] = {
-                # Pattern 1: Round-tripping
-                'transactions': [],
-                'relationships': {},
-                # Pattern 2: Wolf Pack Formation
-                'form13f_holdings': [],
-                # Pattern 3: 13G-to-13D Conversion
-                'schedule13_filings': [],
-                # Pattern 4: Pre-Announcement Positioning
-                'form4_trades': [],
-                'form8k_filings': [],
-                # Pattern 5: Disclosure Timing
-                'filings': [],
-                # Pattern 7: Board Interlocks
-                'def14a_filings': [],
-                # Pattern 8: Revolving Door
-                'executive_movements': [],
-                # Pattern 9: Earnings Sentiment Shift
-                'earnings_calls': [],
-                # Pattern 10: Hedging Language Detection
-                'document_text': '',
-                'document_type': '10-K',
-                # Pattern 11-12: Form 144 / Volume Limit
-                'form144_filings': [],
-                'trading_volume': [],
-                # Pattern 13: Clustered Disposals
-                'insider_trades': [],
-                # Pattern 14: CAR Event Study
-                'events': [],
-                # Pattern 15: Volume Anomalies
-                'volume_data': [],
-                # Beneish M-Score
-                'financial_statements': {},
-                # Benford's Law
-                'financial_data': [],
-                # Options Backdating
-                'form4_grants': [],
-                'price_history': {},
-                # Channel Stuffing
-                'quarterly_financials': {},
-                # Violations accumulator
-                'violations': [],
-            }
-            node_findings = {}
-            for node in all_nodes:
-                findings = node.findings or {}
-                node_findings[node.node_id] = findings
-
-                # Auto-extend list keys that match directly
-                for key in aggregated_data:
-                    if key in findings:
-                        val = findings[key]
-                        agg_val = aggregated_data[key]
-                        if isinstance(val, list) and isinstance(agg_val, list):
-                            agg_val.extend(val)
-                        elif isinstance(val, str) and isinstance(agg_val, str):
-                            if val:
-                                aggregated_data[key] = (agg_val + ' ' + val).strip()
-                        elif isinstance(val, dict) and isinstance(agg_val, dict):
-                            agg_val.update(val)
-
-                # Map common alternate keys
-                if 'insider_transactions' in findings and isinstance(findings['insider_transactions'], list):
-                    aggregated_data['form4_trades'].extend(findings['insider_transactions'])
-                    aggregated_data['insider_trades'].extend(findings['insider_transactions'])
-                if 'events_8k' in findings and isinstance(findings['events_8k'], list):
-                    aggregated_data['form8k_filings'].extend(findings['events_8k'])
-                    # Also map 8-K events to 'events' for CAR Event Study (Pattern 14)
-                    for ev in findings['events_8k']:
-                        aggregated_data['events'].append({
-                            'event_date': ev.get('filing_date'),
-                            'event_type': ', '.join(ev.get('items', [])) if ev.get('items') else 'material_event',
-                            'description': ev.get('narrative', ''),
-                        })
-
-                # Populate disclosure-timing filings from 8-K events (for Pattern 5)
-                if 'form8k_filings' in findings and isinstance(findings['form8k_filings'], list):
-                    aggregated_data['filings'].extend(findings['form8k_filings'])
-
-                # Extract option grants from Form 4 trades (for Options Backdating pattern)
-                for trade in findings.get('form4_trades', findings.get('insider_transactions', [])) or []:
-                    if isinstance(trade, dict) and trade.get('transaction_code') in ('A', 'G', 'M'):
-                        aggregated_data['form4_grants'].append(trade)
-
-                # Extract violations as pseudo-alerts for further pattern analysis
-                for vkey in ('late_filing_violations', 'zero_dollar_violations', 'gift_violations',
-                             'violations', 'temporal_violations'):
-                    if vkey in findings and isinstance(findings[vkey], list):
-                        aggregated_data['violations'].extend(findings[vkey])
-
-                # Extract financial data for Benford's Law from numeric findings
-                for fkey in ('revenue', 'net_income', 'total_assets', 'total_liabilities',
-                             'operating_income', 'gross_profit'):
-                    val = findings.get(fkey)
-                    if isinstance(val, (int, float)) and val != 0:
-                        aggregated_data['financial_data'].append(val)
-
-                # Node 3 quarterly data for Channel Stuffing detection
-                if 'quarters' in findings and isinstance(findings['quarters'], list):
-                    aggregated_data['quarterly_financials']['quarters'] = findings['quarters']
-
-                # Build relationships dict from network mapper edges
-                if 'edges' in findings and isinstance(findings['edges'], list):
-                    for edge in findings['edges']:
-                        src = edge.get('source', edge.get('from', ''))
-                        tgt = edge.get('target', edge.get('to', ''))
-                        if src and tgt:
-                            aggregated_data['relationships'].setdefault(src, []).append(tgt)
-
-            pattern_results = detector.run_all_patterns(aggregated_data)
-            patterns_triggered = sum(1 for alerts in pattern_results.values()
-                                     if isinstance(alerts, list) and len(alerts) > 0)
-
-            self._pattern_results = pattern_results
-            self._log(f"Phase 5: {patterns_triggered} patterns triggered out of {len(pattern_results)}")
-
-            return {
-                'status': 'success',
-                'patterns_executed': len(pattern_results),
-                'patterns_triggered': patterns_triggered,
-            }
-        except Exception as e:
-            self._log(f"Phase 5 error: {e}", level="error")
-            self._pattern_results = {}
-            return {'status': 'degraded', 'patterns_executed': 0, 'error': str(e)}
-
+        
+        # Placeholder - would execute 23 detection algorithms
+        return {
+            'status': 'success',
+            'patterns_executed': 0,
+        }
+    
     async def _execute_phase_6(self) -> Dict[str, Any]:
-        """Phase 6: Dual-Agent AI Cross-Validation.
-
-        Uses both OpenAI and Anthropic to independently validate detected patterns,
-        then computes consensus confidence scores and flags disagreements.
-        """
+        """Phase 6: Dual-Agent AI Cross-Validation."""
         self._log("Phase 6: Dual-Agent AI Cross-Validation")
-
-        if not self._engine_result:
-            return {'status': 'skipped', 'reason': 'No Phase 4 results'}
-
+        
         try:
+            # Use the new AI cross-validator (MOD-005 implementation)
             from src.validation import AICrossValidator
+            
             ai_validator = AICrossValidator()
-
-            if not ai_validator.is_available():
-                self._log("Phase 6: No AI API keys configured - skipping validation")
-                return {'status': 'skipped', 'agents_responsive': 0, 'reason': 'No AI API keys configured'}
-
-            availability = ai_validator.get_availability_status()
-            self._log(
-                f"Phase 6: AI agents available - OpenAI: {availability.get('openai')}, "
-                f"Anthropic: {availability.get('anthropic')}"
-            )
-
-            pattern_results = getattr(self, '_pattern_results', {})
-            node_findings = {}
-            for node in (self._engine_result.node_group_1_results
-                         + self._engine_result.node_group_2_results
-                         + self._engine_result.node_group_3_results
-                         + self._engine_result.node_group_4_results):
-                # Include NodeResult metadata along with findings for evidence extraction
-                findings_with_meta = dict(node.findings or {})
-                findings_with_meta['violations_found'] = node.violations_found
-                findings_with_meta['alerts_generated'] = node.alerts_generated
-                findings_with_meta['node_name'] = node.node_name
-                findings_with_meta['status'] = node.status
-                node_findings[node.node_id] = findings_with_meta
-
-            report = await ai_validator.validate_all_patterns(
-                company_name=self.company_name,
-                cik=self.cik,
-                pattern_results=pattern_results,
-                node_results=node_findings,
-            )
-
-            self._ai_validation_report = report
-            self._log(
-                f"Phase 6: Validated {report.patterns_validated} patterns - "
-                f"{report.consensus_count} consensus, {report.disagreement_count} disagreements, "
-                f"confidence={report.overall_confidence:.2f}"
-            )
-
-            return {
-                'status': 'success',
-                'agents_responsive': 2 if availability.get('openai') and availability.get('anthropic') else 1,
-                'patterns_validated': report.patterns_validated,
-                'consensus_count': report.consensus_count,
-                'disagreement_count': report.disagreement_count,
-                'overall_confidence': round(report.overall_confidence, 3),
-                'high_confidence_violations': report.high_confidence_violations,
-                'flagged_for_review': report.flagged_for_review,
-            }
+            if ai_validator.is_available():
+                # Get pattern results from Phase 5
+                pattern_results = self._execution_result.get('phase_5', {}).get('pattern_results', {})
+                
+                # Get node results from Phase 4
+                node_results = self._execution_result.get('phase_4', {}).get('node_results', {})
+                
+                # Run AI cross-validation on all 23 patterns
+                validation_report = await ai_validator.validate_all_patterns(
+                    company_name=self.company_name,
+                    cik=self.cik,
+                    pattern_results=pattern_results,
+                    node_results=node_results
+                )
+                
+                self._log(
+                    "AI cross-validation complete",
+                    consensus_count=validation_report.consensus_count,
+                    total_patterns=validation_report.patterns_validated
+                )
+                
+                return {
+                    'status': 'success',
+                    'agents_responsive': 2 if ai_validator._openai_available and ai_validator._anthropic_available else 1,
+                    'validation_report': validation_report.to_dict()
+                }
+            else:
+                self._log("No AI agents available for cross-validation", level="warning")
+                return {
+                    'status': 'skipped',
+                    'agents_responsive': 0,
+                    'reason': 'No AI API keys configured'
+                }
         except Exception as e:
-            import traceback
-            logger.error(f"Phase 6 error: {traceback.format_exc()}")
             self._log(f"Phase 6 error: {e}", level="error")
-            return {'status': 'error', 'agents_responsive': 0, 'error': str(e)}
-
-    async def _execute_phase_7(self) -> Dict[str, Any]:
-        """Phase 7: Subagent Orchestration.
-
-        Spawns specialized Claude subagents to analyze violations detected in Phases 4-6.
-        Uses the auto_orchestrate() method which intelligently selects relevant agents.
-        """
-        self._log("Phase 7: Subagent Orchestration")
-
-        if not self._engine_result:
-            self._log("Phase 7 skipped - no Phase 4 results", level="warning")
-            return {'status': 'skipped', 'reason': 'No Phase 4 results'}
-
-        try:
-            from src.forensics.subagents.orchestrator import SubagentOrchestrator
-
-            orchestrator = SubagentOrchestrator()
-
-            # Extract violations from analysis results for subagent processing.
-            # IMPORTANT: Use shallow copies to avoid mutating the original
-            # analysis_results dicts, which would corrupt penalty calculations
-            # and the final report output.
-            violations = []
-            if self._analysis_results:
-                for v in self._analysis_results.get('violations', []):
-                    if isinstance(v, dict):
-                        violations.append(dict(v))
-
-            # Normalize violation types for intelligent agent routing
-            # Agent registry expects snake_case types like 'late_filing', 'sec_violation'
-            _TYPE_MAP = {
-                'Late Filing': 'late_filing',
-                'late filing': 'late_filing',
-                'Zero Dollar Transaction': 'zero_dollar_transaction',
-                'Gift Transaction': 'gift_transaction',
-                'Form 4 Analysis': 'late_form_4',
-                'DEF 14A Compensation': 'disclosure_violation',
-                '10-K SOX Analysis': 'sox_violation',
-                '10-Q Analysis': 'financial_statement_fraud',
-                'IRC §83 Analysis': 'sec_violation',
-                '8-K Events': 'disclosure_violation',
-                '13F Holdings': 'wolf_pack',
-                '13D/13G Ownership': 'beneficial_ownership',
-                'Enforcement Router': 'regulatory_violation',
-                'Network Mapper': 'executive_network',
-                'Earnings Calls': 'sentiment_shift',
-                'Z-Score': 'bankruptcy_risk',
-                'F-Score': 'financial_fraud',
-                'Market Correlation': 'trading_pattern',
-                'Customs & Trade Fraud': 'securities_fraud',
-            }
-            for v in violations:
-                raw_type = v.get('type', v.get('violation_type', ''))
-                normalized = _TYPE_MAP.get(raw_type, raw_type.lower().replace(' ', '_').replace('-', '_'))
-                v['type'] = normalized
-                v['violation_type'] = normalized
-
-            # Inject Phase 5 triggered patterns as additional violations for routing
-            pattern_results = getattr(self, '_pattern_results', {})
-            _PATTERN_VTYPE = {
-                'round_tripping': 'financial_fraud',
-                'wolf_pack': 'insider_trading',
-                '13g_to_13d': 'insider_trading',
-                'pre_announcement': 'pre_announcement_positioning',
-                'disclosure_timing': 'disclosure_violation',
-                'adverse_events': 'disclosure_violation',
-                'board_interlocks': 'executive_network',
-                'revolving_door': 'revolving_door',
-                'sentiment_shift': 'sentiment_shift',
-                'hedging_language': 'hedging_language',
-                'clustered_disposals': 'insider_trading',
-                'car_event_study': 'trading_pattern',
-                'volume_anomalies': 'trading_pattern',
-                'beneish_mscore': 'earnings_manipulation',
-                'benford_law': 'benford_anomaly',
-                'options_backdating': 'insider_trading',
-                'channel_stuffing': 'financial_fraud',
-                'xgboost_fraud': 'financial_fraud',
-                'deberta_contradiction': 'contradiction_detection',
-            }
-            for pattern_name, alerts in pattern_results.items():
-                if isinstance(alerts, list) and len(alerts) > 0:
-                    vtype = _PATTERN_VTYPE.get(pattern_name, pattern_name)
-                    violations.append({
-                        'type': vtype,
-                        'violation_type': vtype,
-                        'severity': 'HIGH',
-                        'description': f"Phase 5 pattern: {pattern_name} ({len(alerts)} alerts)",
-                        'source': 'phase_5_patterns',
-                        'pattern_name': pattern_name,
-                    })
-
-            if not violations:
-                self._log("Phase 7: No violations to analyze with subagents")
-                return {'status': 'success', 'subagents_executed': 0, 'reason': 'No violations'}
-
-            context = {
-                'cik': self.cik,
-                'company_name': self.company_name,
-                'ticker': self.ticker,
-                'period': f"{self.start_date} to {self.end_date}",
-                'total_alerts': self._engine_result.total_alerts,
-                'prosecution_recommendation': self._engine_result.prosecution_recommendation,
-            }
-
-            result = await orchestrator.auto_orchestrate(
-                violations=violations,
-                context=context,
-                parallel=True,
-            )
-
-            agents_spawned = result.get('agents_spawned', [])
-            findings_count = len(result.get('combined_findings', []))
-
-            self._log(
-                f"Phase 7: {len(agents_spawned)} subagents executed, "
-                f"{findings_count} findings aggregated, "
-                f"consensus={result.get('consensus_score', 0):.2f}"
-            )
-
-            # Store subagent results for dossier
-            self._subagent_results = result
-
             return {
-                'status': 'success' if result.get('status') in ('completed', 'success', None) else result.get('status', 'success'),
-                'subagents_executed': len(agents_spawned),
-                'agents_spawned': agents_spawned,
-                'violations_analyzed': result.get('violations_analyzed', 0),
-                'findings_aggregated': findings_count,
-                'consensus_score': round(result.get('consensus_score', 0), 3),
-                'errors': result.get('errors', []),
+                'status': 'error',
+                'agents_responsive': 0,
+                'error': str(e)
             }
-        except ImportError as e:
-            self._log(f"Phase 7: SubagentOrchestrator unavailable: {e}", level="warning")
-            return {'status': 'degraded', 'subagents_executed': 0, 'reason': f'Missing: {e}'}
-        except Exception as e:
-            import traceback
-            logger.error(f"Phase 7 error: {traceback.format_exc()}")
-            self._log(f"Phase 7 error: {e}", level="error")
-            return {'status': 'error', 'subagents_executed': 0, 'error': str(e)}
-
+    
+    async def _execute_phase_7(self) -> Dict[str, Any]:
+        """Phase 7: Subagent Orchestration."""
+        self._log("Phase 7: Subagent Orchestration")
+        
+        # Placeholder - would orchestrate Claude subagents
+        return {
+            'status': 'success',
+            'subagents_executed': 0,
+        }
+    
     async def _execute_phase_8(self) -> Dict[str, Any]:
         """Phase 8: Evidence Chain Finalization."""
         self._log("Phase 8: Evidence Chain Finalization")
-        return {'status': 'success', 'evidence_chain_valid': True}
+        
+        # Placeholder - would finalize triple-hash and Merkle tree
+        return {
+            'status': 'success',
+            'evidence_chain_valid': True,
+        }
+    
+    async def _execute_phase_9(self) -> Dict[str, Any]:
+        """Phase 9: DOJ-Grade Visual Dossier Generation."""
+        self._log("Phase 9: DOJ-Grade Visual Dossier Generation")
 
-    # ═══════════════════════════════════════════════════════════════════
-    # PHASE 9: WEB INTELLIGENCE & CONTRADICTION MAPPING (NEW)
-    # ═══════════════════════════════════════════════════════════════════
+        if not self._engine_result:
+            self._log("No engine results available for dossier generation", level="warning")
+            return {'status': 'skipped', 'reason': 'No engine results from Phase 4'}
 
-    async def _execute_phase_9_web_intelligence(self) -> Dict[str, Any]:
-        """Phase 9: Web Intelligence & Contradiction Mapping.
-
-        Scrapes public sources (earnings calls, press releases, news, social media)
-        for company claims and cross-references them against SEC analysis findings
-        to identify contradictions between public statements and internal data.
-        """
-        self._log("Phase 9: Web Intelligence & Contradiction Mapping")
-
-        if not self.enable_web_intelligence:
-            self._log("Phase 9 skipped - web intelligence disabled")
-            return {'status': 'skipped', 'reason': 'Web intelligence disabled'}
-
-        if not self._analysis_results:
-            self._log("Phase 9 skipped - no analysis results from Phase 4", level="warning")
-            return {'status': 'skipped', 'reason': 'No Phase 4 results'}
-
-        try:
-            from src.integrations.web_intelligence import WebIntelligenceEngine
-
-            engine = WebIntelligenceEngine()
-            result = await engine.collect_intelligence(
-                company_name=self.company_name,
-                ticker=self.ticker,
-                cik=self.cik,
-                start_date=self.start_date,
-                end_date=self.end_date,
-                sec_findings=self._analysis_results,
-            )
-
-            # Store contradiction map for Phase 10 dossier
-            if result.contradiction_map:
-                self._contradiction_map = result.contradiction_map.to_dict()
-
-            c_map = result.contradiction_map
-            c_total = c_map.total_contradictions_found if c_map else 0
-            c_crit = c_map.critical_contradictions if c_map else 0
-
-            self._log(
-                f"Web intelligence complete: {len(result.statements)} statements, "
-                f"{c_total} contradictions ({c_crit} critical)"
-            )
-
-            return {
-                'status': 'success',
-                'statements_collected': len(result.statements),
-                'sources_scraped': result.sources_scraped,
-                'contradictions_found': c_total,
-                'critical_contradictions': c_crit,
-                'scrape_errors': len(result.scrape_errors),
-                'execution_time': round(result.execution_time_seconds, 1),
-            }
-
-        except ImportError as e:
-            self._log(f"Web intelligence dependencies unavailable: {e}", level="warning")
-            return {'status': 'degraded', 'reason': f'Missing dependency: {e}'}
-        except Exception as e:
-            import traceback
-            error_detail = traceback.format_exc()
-            logger.error(f"Phase 9 web intelligence error: {error_detail}")
-            self._log(f"Phase 9 error: {e}", level="error")
-            return {'status': 'error', 'error': str(e)}
-
-    # ═══════════════════════════════════════════════════════════════════
-    # PHASE 10: FORENSIC-GRADE VISUAL DOSSIER (ENHANCED)
-    # ═══════════════════════════════════════════════════════════════════
-
-    async def _execute_phase_10_dossier(self) -> Dict[str, Any]:
-        """Phase 10: Forensic-Grade Visual Dossier Generation.
-
-        Generates a prosecution-ready PDF dossier with:
-        - Executive summary with risk assessment
-        - KPI dashboard with financial totals
-        - Violation severity analysis with color-coded tables
-        - Contradiction analysis (public claims vs SEC findings)
-        - Transaction timeline with embedded charts
-        - Beneficiary profit analysis
-        - Actor network diagrams
-        - Penalty estimates with legal citations
-        - Evidence chain summary
-        - Standalone chart exports
-        """
-        self._log("Phase 10: Forensic-Grade Visual Dossier Generation")
-
-        if not self._analysis_results:
-            self._log("No analysis results for dossier generation", level="warning")
-            return {'status': 'skipped', 'reason': 'No analysis results'}
-
-        try:
-            from src.reporting.forensic_dossier import ForensicDossierGenerator
-
-            report_dir = self.output_dir / "reports"
-            report_dir.mkdir(parents=True, exist_ok=True)
-
-            generator = ForensicDossierGenerator(output_dir=str(report_dir))
-            case_id = self._engine_result.case_id if self._engine_result else "UNKNOWN"
-
-            pdf_path, chart_paths = generator.generate_dossier(
-                case_id=case_id,
-                company_name=self.company_name,
-                cik=self.cik,
-                analysis_results=self._analysis_results,
-                contradiction_map=self._contradiction_map,
-            )
-
-            self._log(f"Forensic dossier generated: {pdf_path} ({len(chart_paths)} charts)")
-
-            return {
-                'status': 'success',
-                'dossier_generated': True,
-                'pdf_path': str(pdf_path),
-                'standalone_charts': [str(p) for p in chart_paths],
-                'chart_count': len(chart_paths),
-                'has_contradiction_analysis': self._contradiction_map is not None,
-            }
-
-        except ImportError as e:
-            self._log(f"Dossier dependencies unavailable: {e}", level="warning")
-            # Fallback to legacy visual report generator
-            return await self._fallback_legacy_dossier()
-        except Exception as e:
-            import traceback
-            error_detail = traceback.format_exc()
-            logger.error(f"Phase 10 dossier generation error: {error_detail}")
-            self._log(f"Phase 10 error: {e}", level="error")
-            # Attempt legacy fallback
-            return await self._fallback_legacy_dossier()
-
-    async def _fallback_legacy_dossier(self) -> Dict[str, Any]:
-        """Fallback to the legacy visual report generator if the new one fails."""
-        self._log("Falling back to legacy visual report generator")
         try:
             from src.reporting.visual_report_generator import ForensicVisualReportGenerator
+
+            # Transform engine results into visual report format
+            analysis_results = self._transform_for_visual_report(self._engine_result)
+
             report_dir = self.output_dir / "reports"
             report_dir.mkdir(parents=True, exist_ok=True)
+
             generator = ForensicVisualReportGenerator(output_dir=str(report_dir))
-            case_id = self._engine_result.case_id if self._engine_result else "UNKNOWN"
+            case_id = self._engine_result.case_id
             pdf_path = generator.generate_visual_dossier(
                 case_id=case_id,
                 company_name=self.company_name,
                 cik=self.cik,
-                analysis_results=self._analysis_results,
+                analysis_results=analysis_results,
             )
-            self._log(f"Legacy dossier generated: {pdf_path}")
+
+            self._log(f"Visual dossier generated: {pdf_path}")
             return {
-                'status': 'degraded',
+                'status': 'success',
                 'dossier_generated': True,
                 'pdf_path': str(pdf_path),
-                'generator': 'legacy',
+                'report_sections': list(analysis_results.keys()),
             }
-        except Exception as e2:
-            self._log(f"Legacy fallback also failed: {e2}", level="error")
-            return {'status': 'error', 'dossier_generated': False, 'error': str(e2)}
 
-    # ═══════════════════════════════════════════════════════════════════
-    # PHASE 11: ANALYSIS BUNDLE EXPORT (NEW)
-    # ═══════════════════════════════════════════════════════════════════
-
-    async def _execute_phase_11_bundle(self) -> Dict[str, Any]:
-        """Phase 11: Export complete analysis bundle.
-
-        Creates a structured output bundle containing:
-        - Forensic dossier PDF
-        - Standalone chart images
-        - JSON analysis results
-        - Contradiction map JSON
-        """
-        self._log("Phase 11: Analysis Bundle Export")
-        import json
-
-        bundle_dir = self.output_dir / "bundle"
-        bundle_dir.mkdir(parents=True, exist_ok=True)
-
-        exports = []
-
-        # Export analysis results JSON
-        if self._analysis_results:
-            json_path = bundle_dir / "analysis_results.json"
-            with open(json_path, "w") as f:
-                json.dump(self._analysis_results, f, indent=2, default=str)
-            exports.append(str(json_path))
-
-        # Export contradiction map JSON
-        if self._contradiction_map:
-            cmap_path = bundle_dir / "contradiction_map.json"
-            with open(cmap_path, "w") as f:
-                json.dump(self._contradiction_map, f, indent=2, default=str)
-            exports.append(str(cmap_path))
-
-        # Export Forensic Sufficiency Layer reports
-        if self._analysis_results:
-            fsl = self._analysis_results.get("forensic_sufficiency_layer", {})
-            if fsl.get("fsl_diagnostic_table"):
-                table_path = bundle_dir / "fsl_diagnostic_table.txt"
-                with open(table_path, "w") as f:
-                    f.write(fsl["fsl_diagnostic_table"])
-                exports.append(str(table_path))
-            if fsl.get("fsl_top_signals_report"):
-                signals_path = bundle_dir / "fsl_top_signals.txt"
-                with open(signals_path, "w") as f:
-                    f.write(fsl["fsl_top_signals_report"])
-                exports.append(str(signals_path))
-            if fsl.get("fsl_assessments"):
-                fsl_json_path = bundle_dir / "fsl_assessments.json"
-                with open(fsl_json_path, "w") as f:
-                    json.dump(fsl["fsl_assessments"], f, indent=2, default=str)
-                exports.append(str(fsl_json_path))
-
-        self._log(f"Analysis bundle exported: {len(exports)} files")
-        return {
-            'status': 'success',
-            'bundle_dir': str(bundle_dir),
-            'files_exported': exports,
-            'total_files': len(exports),
-        }
-
-    # ═══════════════════════════════════════════════════════════════════
-    # DATA TRANSFORMATION
-    # ═══════════════════════════════════════════════════════════════════
+        except ImportError as e:
+            self._log(f"Visual report dependencies unavailable: {e}", level="warning")
+            return {
+                'status': 'degraded',
+                'dossier_generated': False,
+                'reason': f'Missing dependency: {e}',
+            }
+        except Exception as e:
+            import traceback
+            error_detail = traceback.format_exc()
+            logger.error(f"Phase 9 dossier generation error: {error_detail}")
+            self._log(f"Phase 9 dossier generation error: {e}", level="error")
+            return {
+                'status': 'error',
+                'dossier_generated': False,
+                'error': str(e),
+                'traceback': error_detail,
+            }
 
     def _transform_for_visual_report(self, engine_result) -> Dict[str, Any]:
         """
         Transform RecursiveAnalysisResult into the dict format expected by
-        both the legacy and new dossier generators.
+        ForensicVisualReportGenerator.generate_visual_dossier().
+
+        Extracts violations, transactions, beneficiaries, filings, actors,
+        and relationships from each node's findings dict.
         """
         all_nodes = (
             engine_result.node_group_1_results
@@ -872,34 +427,16 @@ class UnifiedForensicOrchestrator:
 
             # --- Violations ---
             for v in self._safe_iter(findings.get("violations", [])):
-                # Ensure every violation has both 'type' and 'violation_type' for routing
-                if 'type' not in v and 'violation_type' in v:
-                    v['type'] = v['violation_type']
-                elif 'violation_type' not in v and 'type' in v:
-                    v['violation_type'] = v['type']
                 violations.append(v)
             for alert in self._safe_iter(findings.get("alerts", [])):
-                vtype = alert.get("type", alert.get("alert_type", node.node_name))
                 violations.append({
-                    "type": vtype,
                     "severity": alert.get("severity", alert.get("risk_level", "MEDIUM")),
-                    "violation_type": vtype,
+                    "violation_type": alert.get("type", alert.get("alert_type", node.node_name)),
                     "description": alert.get("description", alert.get("message", "")),
                     "node_id": node.node_id,
                 })
-            # Collect node-specific violation lists (e.g. Node 1 Form 4 violations)
-            for vkey in ('late_filing_violations', 'zero_dollar_violations', 'gift_violations'):
-                for v in self._safe_iter(findings.get(vkey, [])):
-                    vtype = v.get("type", vkey.replace("_violations", "").replace("_", " ").title())
-                    if 'type' not in v:
-                        v['type'] = vtype
-                    if 'violation_type' not in v:
-                        v['violation_type'] = vtype
-                    if 'node_id' not in v:
-                        v['node_id'] = node.node_id
-                    violations.append(v)
 
-            # --- Transactions ---
+            # --- Transactions (Node 1 Form 4, Node 5 IRC, Node 10 Form 144) ---
             for txn in self._safe_iter(findings.get("transactions", [])):
                 transactions.append(txn)
             for txn in self._safe_iter(findings.get("insider_transactions", [])):
@@ -911,7 +448,7 @@ class UnifiedForensicOrchestrator:
                     "type": txn.get("transaction_type", ""),
                 })
 
-            # --- Beneficiaries ---
+            # --- Beneficiaries (from compensation, IRC exposure) ---
             for b in self._safe_iter(findings.get("beneficiaries", [])):
                 beneficiaries.append(b)
             for exec_info in self._safe_iter(findings.get("executives", [])):
@@ -924,7 +461,7 @@ class UnifiedForensicOrchestrator:
                     "violations": exec_info.get("violation_count", 0),
                 })
 
-            # --- Filings ---
+            # --- Filings (all nodes may report filing metadata) ---
             for f in findings.get("filings", []):
                 if isinstance(f, dict):
                     filings.append(f)
@@ -938,7 +475,7 @@ class UnifiedForensicOrchestrator:
                             "accession_number": f.get("accession_number", ""),
                         })
 
-            # --- Actors ---
+            # --- Actors (Node 11 network mapper) ---
             for a in self._safe_iter(findings.get("actors", [])):
                 actors.append(a)
             for a in self._safe_iter(findings.get("network_nodes", [])):
@@ -949,7 +486,7 @@ class UnifiedForensicOrchestrator:
                     "roles": a.get("roles", []),
                 })
 
-            # --- Relationships ---
+            # --- Relationships (Node 11) ---
             for r in self._safe_iter(findings.get("relationships", [])):
                 relationships.append(r)
             for r in self._safe_iter(findings.get("edges", [])):
@@ -958,7 +495,7 @@ class UnifiedForensicOrchestrator:
                     "target": r.get("target", r.get("to", "")),
                 })
 
-            # --- Material Events ---
+            # --- Material Events (Node 9 8-K) ---
             for e in self._safe_iter(findings.get("material_events", [])):
                 material_events.append(e)
             for e in self._safe_iter(findings.get("events_8k", [])):
@@ -967,180 +504,8 @@ class UnifiedForensicOrchestrator:
                     "description": e.get("description", e.get("event_type", "")),
                 })
 
+        # Build penalty estimates dict
         penalties = engine_result.estimated_penalties.to_dict() if engine_result.estimated_penalties else {}
-
-        # Collect FSL data from Node 1 findings
-        fsl_data = {}
-        for node in all_nodes:
-            findings = node.findings or {}
-            if findings.get("fsl_assessments"):
-                fsl_data = {
-                    "fsl_assessments": findings["fsl_assessments"],
-                    "fsl_diagnostic_table": findings.get("fsl_diagnostic_table", ""),
-                    "fsl_top_signals": findings.get("fsl_top_signals", []),
-                    "fsl_top_signals_report": findings.get("fsl_top_signals_report", ""),
-                    "repeat_offender_profiles": findings.get("repeat_offender_profiles", {}),
-                }
-                break
-
-        # ── Synthesize transaction values from violation data ──
-        for txn in transactions:
-            current_val = txn.get("value") or 0
-            if current_val == 0:
-                shares = txn.get("shares") or txn.get("shares_traded") or 0
-                price = txn.get("price_per_share") or txn.get("price") or 0
-                try:
-                    computed = abs(float(shares) * float(price))
-                except (TypeError, ValueError):
-                    computed = 0
-                if computed > 0:
-                    txn["value"] = computed
-
-        # Enrich zero-value transactions with shares from violations by matching date+actor
-        for v in violations:
-            v_shares = v.get("shares") or v.get("shares_traded") or 0
-            v_date = v.get("transaction_date") or v.get("date") or v.get("filing_date")
-            v_actor = (
-                v.get("reporting_owner") or v.get("owner")
-                or v.get("reporting_person") or v.get("insider_name")
-            )
-            v_penalty = v.get("estimated_penalty") or 0
-            for txn in transactions:
-                if txn.get("date") == v_date and txn.get("actor") == v_actor:
-                    if not txn.get("shares") and v_shares:
-                        txn["shares"] = v_shares
-                    if not txn.get("estimated_penalty") and v_penalty:
-                        txn["estimated_penalty"] = v_penalty
-                    if not txn.get("accession_number") and v.get("accession_number"):
-                        txn["accession_number"] = v["accession_number"]
-
-        # If ALL transaction values are 0 but we have share data, use shares as primary metric
-        all_zero_val = all((t.get("value") or 0) == 0 for t in transactions) if transactions else True
-        if all_zero_val and transactions:
-            for txn in transactions:
-                shares = txn.get("shares") or 0
-                if shares:
-                    txn["value"] = float(shares)  # Use shares as the metric
-                    txn["_value_is_shares"] = True
-
-        # ── Synthesize transactions from violations when transactions list is empty ──
-        if not transactions and violations:
-            for v in violations:
-                v_date = v.get("transaction_date") or v.get("date") or v.get("filing_date")
-                v_shares = v.get("shares") or v.get("shares_traded") or 0
-                actor = (
-                    v.get("reporting_owner") or v.get("owner")
-                    or v.get("reporting_person") or v.get("insider_name")
-                    or v.get("actor") or "Unknown"
-                )
-                # Use shares as value when dollar amounts unavailable
-                try:
-                    v_value = abs(float(v_shares)) if v_shares else 0
-                except (TypeError, ValueError):
-                    v_value = 0
-                if v_date or v_value:
-                    transactions.append({
-                        "date": v_date,
-                        "actor": actor,
-                        "value": v_value,
-                        "shares": v_shares,
-                        "estimated_penalty": v.get("estimated_penalty"),
-                        "accession_number": v.get("accession_number"),
-                        "risk_level": v.get("severity") or v.get("risk_level") or "MEDIUM",
-                        "type": v.get("type") or v.get("violation_type") or "",
-                        "source": "violation_synthesis",
-                        "_value_is_shares": True,
-                    })
-
-        # ── Synthesize beneficiaries from violations when empty ──
-        if not beneficiaries and violations:
-            owner_map = {}
-            for v in violations:
-                owner = (
-                    v.get("reporting_owner") or v.get("owner")
-                    or v.get("reporting_person") or v.get("insider_name")
-                    or v.get("actor")
-                )
-                if not owner:
-                    continue
-                if owner not in owner_map:
-                    owner_map[owner] = {
-                        "name": owner,
-                        "role": v.get("role") or v.get("relationship") or "Insider",
-                        "total_profit": 0,
-                        "transaction_count": 0,
-                        "risk_score": 0,
-                        "violations": 0,
-                    }
-                entry = owner_map[owner]
-                entry["violations"] += 1
-                entry["transaction_count"] += 1
-                v_shares = v.get("shares") or v.get("shares_traded") or 0
-                v_price = v.get("price_per_share") or v.get("price") or 0
-                try:
-                    profit = abs(float(v_shares) * float(v_price))
-                except (TypeError, ValueError):
-                    profit = 0
-                if not profit:
-                    try:
-                        profit = abs(float(v.get("value") or v.get("estimated_damages") or 0))
-                    except (TypeError, ValueError):
-                        profit = 0
-                entry["total_profit"] += profit
-                sev = (v.get("severity") or "").upper()
-                sev_score = {"CRITICAL": 10, "HIGH": 7, "MEDIUM": 4, "LOW": 1}.get(sev, 0)
-                entry["risk_score"] = max(entry["risk_score"], sev_score)
-            beneficiaries = list(owner_map.values())
-
-        # ── Synthesize actors from violations when empty ──
-        if not actors and violations:
-            actor_map = {}
-            for v in violations:
-                name = (
-                    v.get("reporting_owner") or v.get("owner")
-                    or v.get("reporting_person") or v.get("insider_name")
-                    or v.get("actor")
-                )
-                if not name:
-                    continue
-                if name not in actor_map:
-                    actor_map[name] = {
-                        "name": name,
-                        "actor_type": "Individual",
-                        "risk_score": 0,
-                        "roles": set(),
-                    }
-                role = v.get("role") or v.get("relationship") or v.get("type") or ""
-                if role:
-                    actor_map[name]["roles"].add(role)
-                sev = (v.get("severity") or "").upper()
-                sev_score = {"CRITICAL": 10, "HIGH": 7, "MEDIUM": 4, "LOW": 1}.get(sev, 0)
-                actor_map[name]["risk_score"] = max(actor_map[name]["risk_score"], sev_score)
-            # Convert role sets to lists for JSON serialization
-            for entry in actor_map.values():
-                entry["roles"] = list(entry["roles"])
-            actors = list(actor_map.values())
-
-        # ── Synthesize filings from violations when empty ──
-        if not filings and violations:
-            filing_map = {}
-            for v in violations:
-                acc = v.get("accession_number") or v.get("accession") or ""
-                if not acc:
-                    continue
-                if acc not in filing_map:
-                    filing_map[acc] = {
-                        "accession_number": acc,
-                        "filing_type": v.get("form_type") or v.get("filing_type") or "4",
-                        "filing_date": v.get("filing_date") or v.get("date") or v.get("transaction_date"),
-                    }
-            filings = list(filing_map.values())
-
-        # ── Filter null material events ──
-        material_events = [
-            e for e in material_events
-            if e.get("date") is not None and (e.get("description") or "").strip()
-        ]
 
         return {
             "total_violations": len(violations),
@@ -1157,7 +522,6 @@ class UnifiedForensicOrchestrator:
             "estimated_penalties": penalties,
             "regulatory_routing": engine_result.regulatory_routing.to_dict() if engine_result.regulatory_routing else {},
             "evidence_chain": [],
-            "forensic_sufficiency_layer": fsl_data,
             "executive_summary_text": (
                 f"Forensic analysis of {engine_result.company_name} "
                 f"(CIK: {engine_result.cik}) for period {engine_result.analysis_period} "
@@ -1165,7 +529,7 @@ class UnifiedForensicOrchestrator:
                 f"Prosecution recommendation: {engine_result.prosecution_recommendation}."
             ),
         }
-
+    
     @staticmethod
     def _safe_iter(value):
         """Safely iterate over a value, returning empty list for non-iterables."""
@@ -1195,6 +559,18 @@ async def execute_forensic_analysis(
 ) -> UnifiedExecutionResult:
     """
     Convenience function to execute unified forensic analysis.
+    
+    This is the recommended way to execute JLAW forensic analysis.
+    
+    Args:
+        cik: SEC Central Index Key
+        company_name: Target company name
+        start_date: Analysis period start date
+        end_date: Analysis period end date
+        **kwargs: Additional arguments passed to UnifiedForensicOrchestrator
+        
+    Returns:
+        UnifiedExecutionResult with complete analysis results
     """
     orchestrator = UnifiedForensicOrchestrator(
         cik=cik,
@@ -1203,4 +579,5 @@ async def execute_forensic_analysis(
         end_date=end_date,
         **kwargs
     )
+    
     return await orchestrator.execute_full_analysis()

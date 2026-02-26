@@ -12,7 +12,7 @@ Uses plotly for interactive bubble charts.
 """
 
 import logging
-from datetime import date, datetime
+from datetime import date
 from typing import List, Dict, Any
 from pathlib import Path
 
@@ -54,20 +54,6 @@ class BubbleChartGenerator:
         """Initialize the bubble chart generator."""
         self.logger = logging.getLogger(__name__)
 
-    @staticmethod
-    def _parse_date(value) -> date:
-        """Convert a date string or datetime to a datetime.date object."""
-        if isinstance(value, datetime):
-            return value.date()
-        if isinstance(value, date):
-            return value
-        if isinstance(value, str):
-            try:
-                return datetime.fromisoformat(value).date()
-            except (ValueError, TypeError):
-                pass
-        return date.today()
-
     def generate_transaction_bubbles(
         self,
         transactions: List[Dict[str, Any]],
@@ -98,15 +84,6 @@ class BubbleChartGenerator:
 
         if not transactions:
             return self._empty_figure(title)
-
-        # Auto-fallback: when size_metric is 'value' but all values are 0, use shares
-        if size_metric == "value":
-            all_vals = [abs(txn.get("value", 0)) for txn in transactions]
-            if all(v == 0 for v in all_vals):
-                self.logger.info(
-                    "All transaction dollar values are 0 -- falling back to shares for bubble size"
-                )
-                size_metric = "shares"
 
         fig = go.Figure()
 
@@ -258,7 +235,7 @@ class BubbleChartGenerator:
         size_metric: str,
     ):
         """Add a bubble trace for a group of transactions."""
-        dates = [self._parse_date(txn.get("date", date.today())) for txn in transactions]
+        dates = [txn.get("date", date.today()) for txn in transactions]
         actors = [txn.get("actor", "Unknown") for txn in transactions]
         values = [abs(txn.get("value", 0)) for txn in transactions]
         shares = [abs(txn.get("shares", 0)) for txn in transactions]
@@ -272,7 +249,6 @@ class BubbleChartGenerator:
             sizes_raw = values
 
         max_val = max(sizes_raw) if sizes_raw and max(sizes_raw) > 0 else 1
-        # Ensure a minimum bubble size so zero-value entries still appear
         sizes = [max(8, (v / max_val) * 50) for v in sizes_raw]
 
         hover_text = [

@@ -46,10 +46,10 @@ class AnthropicAgentAnalyzer:
         self.model = config.config.anthropic.model
         self.max_tokens = config.config.anthropic.max_tokens
         
-        # Use unified SDK manager for Claude client (async)
+        # Use unified SDK manager for Anthropic client (async)
         self._sdk_manager = get_sdk_manager_sync()
         self.client = None  # Will be lazily accessed via SDK manager
-        self.using_openrouter = config.config.anthropic.openrouter_mode
+        self.using_openrouter = False  # No longer needed with SDK manager
         
         # Fallback to manual analyzer for compatibility
         self.manual_analyzer = SECForensicAnalyzer(user_agent=self.user_agent)
@@ -58,22 +58,14 @@ class AnthropicAgentAnalyzer:
     
     @property
     def anthropic_client(self):
-        """Lazily access Claude client from SDK manager (OpenRouter or direct Anthropic)."""
+        """Lazily access Anthropic async client from SDK manager."""
         if self.client is None:
-            if self.using_openrouter:
-                openrouter_client = self._sdk_manager.openrouter
-                if openrouter_client:
-                    self.client = openrouter_client
-                    logger.info("Claude client loaded via OpenRouter")
-                    return self.client
-            # Fallback to direct Anthropic SDK
             anthropic_client = self._sdk_manager.anthropic
             if anthropic_client:
                 self.client = anthropic_client
-                self.using_openrouter = False
                 logger.debug("Anthropic client loaded from SDK manager")
             else:
-                logger.warning("No Claude client available from SDK manager")
+                logger.warning("Anthropic client not available from SDK manager")
         return self.client
 
     async def analyze_text(self, content: str, context: Optional[Dict] = None) -> Dict[str, Any]:
@@ -197,31 +189,19 @@ Provide a JSON response with detected violations following this structure:
 """
         
         try:
-            # Call Claude API - route via OpenRouter or direct Anthropic
-            if self.using_openrouter:
-                message = await self.anthropic_client.chat.completions.create(
-                    model=self.model,
-                    max_tokens=self.max_tokens,
-                    messages=[
-                        {"role": "system", "content": self._get_system_prompt()},
-                        {"role": "user", "content": user_message},
-                    ],
-                    extra_headers={
-                        "HTTP-Referer": "https://jlaw-forensics.com",
-                        "X-Title": "JLAW Forensic Analysis Platform",
-                    },
-                )
-                response_text = message.choices[0].message.content if message.choices else ""
-            else:
-                message = await self.anthropic_client.messages.create(
-                    model=self.model,
-                    max_tokens=self.max_tokens,
-                    system=self._get_system_prompt(),
-                    messages=[{"role": "user", "content": user_message}],
-                )
-                response_text = message.content[0].text
-
-            logger.info(f"[Claude Deep] Received {len(response_text)} chars via {'OpenRouter' if self.using_openrouter else 'Anthropic'}")
+            # Call Claude API with streaming disabled for structured output
+            message = await self.anthropic_client.messages.create(
+                model=self.model,
+                max_tokens=self.max_tokens,
+                system=self._get_system_prompt(),
+                messages=[
+                    {"role": "user", "content": user_message}
+                ]
+            )
+            
+            # Extract response
+            response_text = message.content[0].text
+            logger.info(f"[Anthropic Deep] Received {len(response_text)} chars from Claude")
             
             # Parse JSON response
             try:
@@ -248,8 +228,8 @@ Provide a JSON response with detected violations following this structure:
                     'risk_indicators': analysis_result.get('risk_indicators', []),
                     'recommended_actions': analysis_result.get('recommended_actions', []),
                     'usage': {
-                        'input_tokens': getattr(message.usage, 'prompt_tokens', 0) or getattr(message.usage, 'input_tokens', 0),
-                        'output_tokens': getattr(message.usage, 'completion_tokens', 0) or getattr(message.usage, 'output_tokens', 0),
+                        'input_tokens': message.usage.input_tokens,
+                        'output_tokens': message.usage.output_tokens
                     }
                 }
             

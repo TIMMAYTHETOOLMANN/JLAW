@@ -93,7 +93,6 @@ class Form4Transaction:
     is_gift: bool = False
     is_late_filed: bool = False
     days_late: int = 0
-    calendar_days_after_transaction: int = 0  # Raw calendar days from transaction to filing
     
     def to_dict(self) -> Dict[str, Any]:
         return {
@@ -110,8 +109,7 @@ class Form4Transaction:
             "is_zero_dollar": self.is_zero_dollar,
             "is_gift": self.is_gift,
             "is_late_filed": self.is_late_filed,
-            "days_late": self.days_late,
-            "calendar_days_after_transaction": self.calendar_days_after_transaction,
+            "days_late": self.days_late
         }
 
 
@@ -138,7 +136,6 @@ class Form4Filing:
     zero_dollar_transactions: List[Form4Transaction] = field(default_factory=list)
     gift_transactions: List[Form4Transaction] = field(default_factory=list)
     late_transactions: List[Form4Transaction] = field(default_factory=list)
-    filing_footnotes: Dict[str, str] = field(default_factory=dict)  # id → text
     
     def to_dict(self) -> Dict[str, Any]:
         return {
@@ -258,38 +255,19 @@ class Form4Parser:
         # Extract period of report
         period_of_report = self._parse_date(self._get_text(root, 'periodOfReport'))
         
-        # Extract filing-level footnotes (id → text)
-        filing_footnotes = {}
-        footnotes_elem = root.find('footnotes')
-        if footnotes_elem is not None:
-            for fn in footnotes_elem.findall('footnote'):
-                fn_id = fn.get('id', '')
-                fn_text = (fn.text or '').strip()
-                if fn_id and fn_text:
-                    filing_footnotes[fn_id] = fn_text
-
         # Parse non-derivative transactions
         transactions = []
         for trans in root.findall('.//nonDerivativeTransaction'):
             parsed = self._parse_non_derivative_transaction(trans, filing_date)
             if parsed:
-                # Resolve footnote IDs from transactionCoding and transactionAmounts
-                fn_ids = self._extract_footnote_ids(trans)
-                parsed.footnotes = [
-                    filing_footnotes.get(fid, fid) for fid in fn_ids
-                ]
                 transactions.append(parsed)
-
+        
         # Parse derivative transactions
         for trans in root.findall('.//derivativeTransaction'):
             parsed = self._parse_derivative_transaction(trans, filing_date)
             if parsed:
-                fn_ids = self._extract_footnote_ids(trans)
-                parsed.footnotes = [
-                    filing_footnotes.get(fid, fid) for fid in fn_ids
-                ]
                 transactions.append(parsed)
-
+        
         # Create filing object
         filing = Form4Filing(
             accession_number=accession_number,
@@ -303,8 +281,7 @@ class Form4Parser:
             is_officer=is_officer,
             is_ten_percent_owner=is_ten_percent,
             officer_title=officer_title,
-            transactions=transactions,
-            filing_footnotes=filing_footnotes,
+            transactions=transactions
         )
         
         # Compute aggregates
@@ -351,9 +328,8 @@ class Form4Parser:
             # - Holidays would require a holiday calendar (not implemented here)
             is_late = False
             days_late = 0
-            calendar_days = 0
             if trans_date:
-                calendar_days = (filing_date - trans_date).days
+                days_diff = (filing_date - trans_date).days
                 
                 # Calculate actual business days between transaction and filing
                 business_days = 0
@@ -394,8 +370,7 @@ class Form4Parser:
                 is_zero_dollar=is_zero_dollar_transaction,  # Flag ALL zero-dollar transactions
                 is_gift=(trans_code == 'G'),
                 is_late_filed=is_late,
-                days_late=days_late,
-                calendar_days_after_transaction=calendar_days,
+                days_late=days_late
             )
             
             return transaction
@@ -443,9 +418,7 @@ class Form4Parser:
             # Check for late filing (> 2 business days per Section 16(a))
             is_late = False
             days_late = 0
-            calendar_days = 0
             if trans_date:
-                calendar_days = (filing_date - trans_date).days
                 # Calculate actual business days between transaction and filing
                 business_days = 0
                 current = trans_date
@@ -482,8 +455,7 @@ class Form4Parser:
                 is_zero_dollar=is_zero_dollar_derivative,
                 is_gift=(trans_code == 'G'),
                 is_late_filed=is_late,
-                days_late=days_late,
-                calendar_days_after_transaction=calendar_days,
+                days_late=days_late
             )
             
             return transaction
@@ -563,22 +535,4 @@ class Form4Parser:
                 return datetime.strptime(date_str, '%m/%d/%Y').date()
             except ValueError:
                 return None
-
-    @staticmethod
-    def _extract_footnote_ids(trans_element: ET.Element) -> List[str]:
-        """
-        Extract all footnoteId references from a transaction element.
-
-        Form 4 XML uses <footnoteId id="F1"/> refs inside transaction
-        sub-elements (transactionCoding, transactionAmounts, ownershipNature,
-        postTransactionAmounts, etc.).
-        """
-        ids = []
-        seen = set()
-        for fn_ref in trans_element.iter('footnoteId'):
-            fid = fn_ref.get('id', '')
-            if fid and fid not in seen:
-                ids.append(fid)
-                seen.add(fid)
-        return ids
 

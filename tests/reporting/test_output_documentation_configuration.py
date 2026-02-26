@@ -73,7 +73,7 @@ def test_profile_has_visual_and_quality_requirements():
     profile = get_output_documentation_profile()
 
     assert profile.profile_id == "JLAW-FORENSIC-OUTPUT-DOCCONFIG"
-    assert profile.profile_version == "2.0"
+    assert profile.profile_version == "3.0"
     assert len(profile.required_sections) >= 7
     assert len(profile.visual_requirements) >= 4
     assert profile.quality_thresholds["exact_quotes_per_violation"] >= 1
@@ -113,4 +113,4 @@ def test_manifest_and_json_embed_documentation_profile(tmp_path: Path):
 
     json_report = json.loads(outputs["json"].read_text())
     profile = json_report["metadata"]["documentation_profile"]
-    assert profile["profile_version"] == "2.0"
+    assert profile["profile_version"] == "3.0"
