@@ -93,6 +93,7 @@ class Form4Transaction:
     is_gift: bool = False
     is_late_filed: bool = False
     days_late: int = 0
+    calendar_days_after_transaction: int = 0  # Raw calendar days from transaction to filing
     
     def to_dict(self) -> Dict[str, Any]:
         return {
@@ -109,7 +110,8 @@ class Form4Transaction:
             "is_zero_dollar": self.is_zero_dollar,
             "is_gift": self.is_gift,
             "is_late_filed": self.is_late_filed,
-            "days_late": self.days_late
+            "days_late": self.days_late,
+            "calendar_days_after_transaction": self.calendar_days_after_transaction,
         }
 
 
@@ -349,8 +351,9 @@ class Form4Parser:
             # - Holidays would require a holiday calendar (not implemented here)
             is_late = False
             days_late = 0
+            calendar_days = 0
             if trans_date:
-                days_diff = (filing_date - trans_date).days
+                calendar_days = (filing_date - trans_date).days
                 
                 # Calculate actual business days between transaction and filing
                 business_days = 0
@@ -391,7 +394,8 @@ class Form4Parser:
                 is_zero_dollar=is_zero_dollar_transaction,  # Flag ALL zero-dollar transactions
                 is_gift=(trans_code == 'G'),
                 is_late_filed=is_late,
-                days_late=days_late
+                days_late=days_late,
+                calendar_days_after_transaction=calendar_days,
             )
             
             return transaction
@@ -439,7 +443,9 @@ class Form4Parser:
             # Check for late filing (> 2 business days per Section 16(a))
             is_late = False
             days_late = 0
+            calendar_days = 0
             if trans_date:
+                calendar_days = (filing_date - trans_date).days
                 # Calculate actual business days between transaction and filing
                 business_days = 0
                 current = trans_date
@@ -476,7 +482,8 @@ class Form4Parser:
                 is_zero_dollar=is_zero_dollar_derivative,
                 is_gift=(trans_code == 'G'),
                 is_late_filed=is_late,
-                days_late=days_late
+                days_late=days_late,
+                calendar_days_after_transaction=calendar_days,
             )
             
             return transaction
