@@ -1,6 +1,10 @@
 # macOS Files
 .DS_Store
 
+# Generated output and reports
+output/
+coverage_report/
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 **/__pycache__/
