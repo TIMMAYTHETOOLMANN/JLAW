@@ -100,6 +100,24 @@ class DispositionRecord:
     form_144_correlated: bool = False
     form_144_accession: Optional[str] = None
 
+    @property
+    def effective_price(self) -> float:
+        """
+        The economic value per share for this disposition.
+
+        For cash sales (S): actual sale price (price_per_share)
+        For gifts (G), entity transfers (J), tax withholding (F):
+          price_per_share is 0, use market_price as the FMV
+        """
+        if self.price_per_share and self.price_per_share > 0:
+            return self.price_per_share
+        return self.market_price or 0
+
+    @property
+    def economic_value(self) -> float:
+        """Total economic value of this disposition (shares * FMV)."""
+        return self.effective_price * self.shares_disposed
+
 
 @dataclass
 class LiquidationChain:
@@ -116,8 +134,9 @@ class LiquidationChain:
     intermediate_transfers: List[dict] = field(default_factory=list)
     shares_fully_traced: float = 0
     shares_untraced: float = 0
-    total_proceeds: float = 0
-    total_profit: float = 0
+    total_proceeds: float = 0        # Cash proceeds (from S-code sales only)
+    total_economic_value: float = 0   # FMV of all dispositions (includes non-cash)
+    total_profit: float = 0           # Economic value minus cost basis
     time_to_first_sale_days: Optional[int] = None
     liquidation_rate: float = 0  # % of acquired shares eventually sold
 
@@ -150,9 +169,11 @@ class LiquidationChain:
                 {
                     'date': d.transaction_date,
                     'type': d.disposition_type.value,
+                    'code': d.transaction_code,
                     'shares': d.shares_disposed,
-                    'price': d.price_per_share,
-                    'proceeds': round(d.price_per_share * d.shares_disposed, 2),
+                    'price_per_share': d.price_per_share,
+                    'effective_price': round(d.effective_price, 4),
+                    'economic_value': round(d.economic_value, 2),
                     'entity_destination': d.entity_destination,
                 }
                 for d in self.dispositions
@@ -161,6 +182,7 @@ class LiquidationChain:
             'shares_fully_traced': self.shares_fully_traced,
             'shares_untraced': self.shares_untraced,
             'total_proceeds': round(self.total_proceeds, 2),
+            'total_economic_value': round(self.total_economic_value, 2),
             'total_profit': round(self.total_profit, 2),
             'time_to_first_sale_days': self.time_to_first_sale_days,
             'liquidation_rate': round(self.liquidation_rate, 4),
@@ -345,10 +367,15 @@ class GrantToSaleTracer:
                         chain.dispositions.append(disp)
                         remaining -= matched_shares
                         chain.shares_fully_traced += matched_shares
-                        chain.total_proceeds += matched_shares * disp.price_per_share
+                        # Cash proceeds: only from actual sales (Code S)
+                        if disp.disposition_type == DispositionType.OPEN_MARKET_SALE:
+                            chain.total_proceeds += matched_shares * disp.effective_price
+                        # Economic value: FMV for ALL disposition types
+                        chain.total_economic_value += matched_shares * disp.effective_price
 
                 chain.shares_untraced = max(remaining, 0)
-                chain.total_profit = chain.total_proceeds - acq.cost_basis
+                # Profit = economic value at disposition minus cost basis at acquisition
+                chain.total_profit = chain.total_economic_value - acq.cost_basis
 
                 if chain.dispositions:
                     acq_date = datetime.strptime(acq.transaction_date, '%Y-%m-%d')
@@ -404,6 +431,8 @@ class GrantToSaleTracer:
             for records in inventory.values()
         )
         total_sold = sum(c.shares_fully_traced for c in chains)
+        total_cash_proceeds = sum(c.total_proceeds for c in chains)
+        total_economic_value = sum(c.total_economic_value for c in chains)
         total_profit = sum(c.total_profit for c in chains)
 
         # Compute total market value of acquired shares
@@ -436,6 +465,8 @@ class GrantToSaleTracer:
             'total_acquisition_market_value': round(total_acq_value, 2),
             'total_shares_sold': total_sold,
             'overall_liquidation_rate': round(total_sold / total_acquired, 4) if total_acquired > 0 else 0,
+            'total_cash_proceeds': round(total_cash_proceeds, 2),
+            'total_economic_value_transferred': round(total_economic_value, 2),
             'total_profit': round(total_profit, 2),
             'chain_type_distribution': chain_types,
             'obfuscation_vector_chains': len(obfuscation_chains),

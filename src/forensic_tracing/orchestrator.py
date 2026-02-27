@@ -108,6 +108,8 @@ class ForensicTracingOrchestrator:
         print(f'  -> {tracing_results["complete_chains"]} complete, '
               f'{tracing_results["incomplete_chains"]} incomplete')
         print(f'  -> Total acquisition market value: ${tracing_results["total_acquisition_market_value"]:,.2f}')
+        print(f'  -> Economic value transferred: ${tracing_results["total_economic_value_transferred"]:,.2f}')
+        print(f'  -> Total profit (value - cost basis): ${tracing_results["total_profit"]:,.2f}')
         print(f'  -> Liquidation rate: {tracing_results["overall_liquidation_rate"]:.1%}')
         if tracing_results['obfuscation_vector_chains'] > 0:
             print(f'  -> Obfuscation vectors (A->G/J): {tracing_results["obfuscation_vector_chains"]}')
@@ -204,6 +206,8 @@ class ForensicTracingOrchestrator:
                     'total_acquisition_market_value': tracing_results['total_acquisition_market_value'],
                     'total_shares_sold': tracing_results['total_shares_sold'],
                     'liquidation_rate': tracing_results['overall_liquidation_rate'],
+                    'total_cash_proceeds': tracing_results['total_cash_proceeds'],
+                    'total_economic_value_transferred': tracing_results['total_economic_value_transferred'],
                     'total_profit': tracing_results['total_profit'],
                     'chain_type_distribution': tracing_results['chain_type_distribution'],
                     'obfuscation_vectors': tracing_results['obfuscation_vector_chains'],

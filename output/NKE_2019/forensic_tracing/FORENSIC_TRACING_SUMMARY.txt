@@ -1,6 +1,6 @@
 ========================================================================
 JLAW FORENSIC TRACING SYSTEM — SIX-DOMAIN ANALYSIS REPORT
-Generated: 2026-02-27T09:49:10.833844+00:00
+Generated: 2026-02-27T13:16:13.914812+00:00
 ========================================================================
 
 DOMAIN 1: FORM 4 FOOTNOTE CLASSIFICATION
@@ -17,7 +17,9 @@ DOMAIN 2: GRANT-TO-SALE TRACING
   Total acquisition market value: $206,470,719.69
   Total shares disposed (traced): 671,737
   Liquidation rate: 27.7%
-  Total profit (from cash sales): $0.00
+  Economic value transferred (FMV): $54,219,307.08
+  Cash proceeds (Code S sales): $0.00
+  Total profit (econ value - cost basis): $54,219,307.08
   Obfuscation vector chains: 5
   Chain type distribution:
     M -> G: 3

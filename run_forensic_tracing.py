@@ -169,7 +169,11 @@ def generate_summary(results: dict) -> str:
     lines.append(f'  Total acquisition market value: ${acq_val:,.2f}')
     lines.append(f'  Total shares disposed (traced): {d2.get("total_shares_sold", 0):,.0f}')
     lines.append(f'  Liquidation rate: {d2.get("liquidation_rate", 0):.1%}')
-    lines.append(f'  Total profit (from cash sales): ${d2.get("total_profit", 0):,.2f}')
+    econ_val = d2.get("total_economic_value_transferred", 0)
+    lines.append(f'  Economic value transferred (FMV): ${econ_val:,.2f}')
+    cash_val = d2.get("total_cash_proceeds", 0)
+    lines.append(f'  Cash proceeds (Code S sales): ${cash_val:,.2f}')
+    lines.append(f'  Total profit (econ value - cost basis): ${d2.get("total_profit", 0):,.2f}')
     lines.append(f'  Obfuscation vector chains: {d2.get("obfuscation_vectors", 0)}')
     if d2.get('note'):
         lines.append(f'  Note: {d2["note"]}')
