@@ -1,0 +1,61 @@
+{
+  "civil_penalty_range": {
+    "minimum": 325000,
+    "maximum": 8182009292.360005,
+    "formatted_min": "$325,000",
+    "formatted_max": "$8,182,009,292"
+  },
+  "criminal_exposure": {
+    "max_fine": 5000000,
+    "max_years": 20
+  },
+  "estimated_disgorgement": {
+    "amount": 2726794764.120002,
+    "formatted": "$2,726,794,764"
+  },
+  "whistleblower_bounty": {
+    "sanctions_basis": 10908804056.480007,
+    "bounty_floor": 1090880405.65,
+    "bounty_ceiling": 3272641216.94,
+    "estimated_bounty_midpoint": 2181760811.3,
+    "eligibility_note": "SEC Rule 21F - bounty requires original information leading to successful enforcement action with sanctions exceeding $1M"
+  },
+  "penalty_breakdown": [
+    {
+      "category": "Section 16(a) Late Filing",
+      "count": 5,
+      "min_per_violation": 5000,
+      "max_per_violation": 25000,
+      "total_min": 25000,
+      "total_max": 125000,
+      "statutory_basis": "15 U.S.C. 78u-2(b)"
+    },
+    {
+      "category": "SOX 302 Certification Omission",
+      "count": 3,
+      "total_min": 300000,
+      "total_max": 1500000,
+      "statutory_basis": "SOX 302, 17 CFR 240.13a-14(a)"
+    },
+    {
+      "category": "SOX 906 Certification - Criminal",
+      "count": 2,
+      "criminal_knowing": "$1M fine, up to 10 years",
+      "criminal_willful": "$5M fine, up to 20 years",
+      "statutory_basis": "18 USC 1350"
+    },
+    {
+      "category": "Estimated Disgorgement",
+      "amount": 2726794764.120002,
+      "basis": "Total economic benefit from insider transactions",
+      "note": "Disgorgement limited to net profits per Liu v. SEC (2020)"
+    },
+    {
+      "category": "Civil Penalty (3x Disgorgement)",
+      "amount": 8180384292.360005,
+      "statutory_basis": "15 U.S.C. 78u-1(a)(2) - treble damages"
+    }
+  ],
+  "total_maximum_exposure": 10913804056.480007,
+  "formatted_total": "$10,913,804,056"
+}

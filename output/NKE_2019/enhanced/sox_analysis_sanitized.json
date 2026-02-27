@@ -1,0 +1,200 @@
+{
+  "node": "NODE_4_SOX",
+  "analysis_timestamp": "2026-02-26T13:38:16.931704+00:00Z",
+  "company": {
+    "cik": "320187",
+    "name": "NIKE, Inc."
+  },
+  "section_302_certifications": [
+    {
+      "certifier": "Mark G. Parker",
+      "title": "Chairman, President and CEO",
+      "complete": false,
+      "_corrected": true,
+      "_correction_source": "NKE_DEF14A_FY2019"
+    },
+    {
+      "certifier": "Andrew Campion",
+      "title": "Executive Vice President and CFO",
+      "complete": false,
+      "_corrected": true,
+      "_correction_source": "NKE_DEF14A_FY2019"
+    }
+  ],
+  "section_906_certifications": [],
+  "audit_opinion": {
+    "firm": "PricewaterhouseCoopers",
+    "fs_opinion": "unqualified",
+    "icfr_opinion": "unqualified",
+    "going_concern": false
+  },
+  "material_weaknesses": [
+    {
+      "control_area": "unspecified",
+      "remediated": false,
+      "description": "Our audits also included evaluating the accounting principles use",
+      "description_raw": "ocedures included examining, on a test basis, evidence regarding the amounts and disclosures in the consolidated financial statements. Our audits also included evaluating the accounting principles use"
+    },
+    {
+      "control_area": "revenue_recognition",
+      "remediated": false,
+      "description": "In addition, macroeconomic conditions, such as increased volatility or disruption in the credit markets, could adversely affect our ab",
+      "description_raw": "e terminated and the maturity of amounts owed may be accelerated. In addition, macroeconomic conditions, such as increased volatility or disruption in the credit markets, could adversely affect our ab"
+    },
+    {
+      "control_area": "revenue_recognition",
+      "remediated": true,
+      "description": "ITEM 7. <td style=\" padding-ri",
+      "description_raw": "s-serif;font-size:9pt;font-weight:bold;color:#000000;text-decoration:none;\">ITEM 7.</font></a></div></td><td style=\"vertical-align:bottom;padding-left:2px;padding-top:2px;padding-bottom:2px;padding-ri"
+    }
+  ],
+  "violations_detected": 8,
+  "violations": [
+    {
+      "violation_type": "section_302_certification_omission",
+      "severity": 8,
+      "description": "Section 302 Chief Executive Officer SOX Section 302 certification is incomplete. Required elements missing: (1) statement that certifying officer reviewed the report, (2) statement that report contains no material misstatements, (3) fair presentation statement regarding financial condition, (4) statement of responsibility for establishing and maintaining internal controls. Ref: 17 CFR 240.13a-14(a), SOX 302(a)(1)-(6).",
+      "affected_certifications": [
+        "Section 302 Chief Executive Officer"
+      ],
+      "regulatory_citations": [
+        "17 CFR 240.13a-14(a)"
+      ],
+      "evidence_text": "Rule 13a-14(a)/15d-14(a) Certification of Chief Executive Officer. <font style=\"font-family:A",
+      "evidence_hash": "509ddefa118cff37164cc11290794dac9cd526ed56315feb486262a33e566923",
+      "potential_penalties": {},
+      "detected_at": "2026-02-26T13:38:16.420863+00:00",
+      "evidence_text_raw": "t-size:8.5pt;\"><a style=\"text-decoration:none;color:#000000;-sec-extract:exhibit;\" href=\"nke-5312019exhibit311.htm\"><font style=\"font-family:Arial;font-size:8.5pt;color:#000000;text-decoration:none;\">Rule 13a-14(a)/15d-14(a) Certification of Chief Executive Officer.</font></a></div></td></tr><tr><td style=\"vertical-align:top;padding-left:2px;padding-top:2px;padding-bottom:2px;padding-right:2px;border-top:1px solid #808080;\"><div style=\"text-align:left;font-size:8.5pt;\"><font style=\"font-family:A"
+    },
+    {
+      "violation_type": "section_302_certification_omission",
+      "severity": 8,
+      "description": "Section 302 Chief Financial Officer SOX Section 302 certification is incomplete. Required elements missing: (1) statement that certifying officer reviewed the report, (2) statement that report contains no material misstatements, (3) fair presentation statement regarding financial condition, (4) statement of responsibility for establishing and maintaining internal controls. Ref: 17 CFR 240.13a-14(a), SOX 302(a)(1)-(6).",
+      "affected_certifications": [
+        "Section 302 Chief Financial Officer"
+      ],
+      "regulatory_citations": [
+        "17 CFR 240.13a-14(a)"
+      ],
+      "evidence_text": "Rule 13a-14(a)/15d-14(a) Certification of Chief Financial Officer. <font style=\"font-family:A",
+      "evidence_hash": "cf4821658b9e95595832de5791477e78e8abd08290ad123aef2d0db3a7bb8648",
+      "potential_penalties": {},
+      "detected_at": "2026-02-26T13:38:16.420873+00:00",
+      "evidence_text_raw": "t-size:8.5pt;\"><a style=\"text-decoration:none;color:#000000;-sec-extract:exhibit;\" href=\"nke-5312019exhibit312.htm\"><font style=\"font-family:Arial;font-size:8.5pt;color:#000000;text-decoration:none;\">Rule 13a-14(a)/15d-14(a) Certification of Chief Financial Officer.</font></a></div></td></tr><tr><td style=\"vertical-align:top;padding-left:2px;padding-top:2px;padding-bottom:2px;padding-right:2px;border-top:1px solid #808080;\"><div style=\"text-align:left;font-size:8.5pt;\"><font style=\"font-family:A"
+    },
+    {
+      "violation_type": "section_906_certification_omission",
+      "severity": 10,
+      "description": "SOX Section 906 certifications are absent. 18 USC 1350 requires BOTH the CEO and CFO to certify that the periodic report fully complies with Securities Exchange Act 13(a) or 15(d) and that information fairly presents the financial condition and results. Criminal penalties: knowing violation $1M/10yr, willful violation $5M/20yr.",
+      "affected_certifications": [
+        "Section 906"
+      ],
+      "regulatory_citations": [
+        "18 USC 1350",
+        "SOX Section 906"
+      ],
+      "evidence_text": "Insufficient Section 906 certifications",
+      "evidence_hash": "b051004205bbfdc7cc330c3c3ab27d61549373943a48b6928f592366f12a2c03",
+      "potential_penalties": {
+        "criminal_knowing": "$1M fine, up to 10 years imprisonment",
+        "criminal_willful": "$5M fine, up to 20 years imprisonment"
+      },
+      "detected_at": "2026-02-26T13:38:16.420882+00:00",
+      "evidence_text_raw": "Insufficient Section 906 certifications"
+    },
+    {
+      "violation_type": "inconsistent_management_disclosure",
+      "severity": 6,
+      "description": "Management's annual report on internal control over financial reporting does not contain a clear conclusion on the effectiveness of ICFR as required by Regulation S-K Item 308(a). Management must state whether ICFR is effective or ineffective as of the fiscal year-end.",
+      "affected_certifications": [
+        "Management ICFR Assessment"
+      ],
+      "regulatory_citations": [
+        "Regulation S-K Item 308(a)"
+      ],
+      "evidence_text": "Effectiveness conclusion unclear",
+      "evidence_hash": "a8ef73c1c14612923ed7bece32cc61fcd847d4b1d869fafa793392a7f59b9814",
+      "potential_penalties": {},
+      "detected_at": "2026-02-26T13:38:16.452405+00:00",
+      "evidence_text_raw": "Effectiveness conclusion unclear"
+    },
+    {
+      "violation_type": "material_weakness_disclosed",
+      "severity": 9,
+      "description": "Material weakness identified in unspecified internal control area. A material weakness is a deficiency, or combination of deficiencies, such that there is a reasonable possibility that a material misstatement will not be prevented or detected on a timely basis. Ref: PCAOB AS 2201.A7, SOX 404.",
+      "affected_certifications": [
+        "Management ICFR Assessment",
+        "Auditor ICFR Opinion"
+      ],
+      "regulatory_citations": [
+        "PCAOB AS 2201.A7",
+        "SOX Section 404"
+      ],
+      "evidence_text": "Our audits also included evaluating the accounting principles used and significant estimates made by management, as well as evaluating the overall presentation of the consolidated financial statements. Our audit of internal control over financial reporting included obtaining an understanding of internal control over financial reporting, assessing the risk that a",
+      "evidence_hash": "d6a1748927aa3e1bba79fb7a9dbe1a4bc4d59bec09b63d6a89284fa570332688",
+      "potential_penalties": {},
+      "detected_at": "2026-02-26T13:38:16.478458+00:00",
+      "evidence_text_raw": "ocedures included examining, on a test basis, evidence regarding the amounts and disclosures in the consolidated financial statements. Our audits also included evaluating the accounting principles used and significant estimates made by management, as well as evaluating the overall presentation of the consolidated financial statements. Our audit of internal control over financial reporting included obtaining an understanding of internal control over financial reporting, assessing the risk that a "
+    },
+    {
+      "violation_type": "material_weakness_disclosed",
+      "severity": 9,
+      "description": "Material weakness identified in revenue recognition internal control area. A material weakness is a deficiency, or combination of deficiencies, such that there is a reasonable possibility that a material misstatement will not be prevented or detected on a timely basis. Ref: PCAOB AS 2201.A7, SOX 404.",
+      "affected_certifications": [
+        "Management ICFR Assessment",
+        "Auditor ICFR Opinion"
+      ],
+      "regulatory_citations": [
+        "PCAOB AS 2201.A7",
+        "SOX Section 404"
+      ],
+      "evidence_text": "In addition, macroeconomic conditions, such as increased volatility or disruption in the credit markets, could adversely affect our ability to refinance existing debt. If",
+      "evidence_hash": "eb532dceefad370019872a1e34c3cc871e0bb328cd23b59084d3bdb3d53b7be1",
+      "potential_penalties": {},
+      "detected_at": "2026-02-26T13:38:16.506697+00:00",
+      "evidence_text_raw": "e terminated and the maturity of amounts owed may be accelerated. In addition, macroeconomic conditions, such as increased volatility or disruption in the credit markets, could adversely affect our ability to refinance existing debt.</font></div><div style=\"line-height:110%;padding-bottom:4px;padding-top:12px;text-align:left;padding-left:0px;text-indent:0px;font-size:8.5pt;\"><font style=\"font-family:Arial;font-size:8.5pt;color:#e87722;font-style:normal;font-weight:bold;text-decoration:none;\">If "
+    },
+    {
+      "violation_type": "material_weakness_disclosed",
+      "severity": 9,
+      "description": "Material weakness identified in revenue recognition internal control area. A material weakness is a deficiency, or combination of deficiencies, such that there is a reasonable possibility that a material misstatement will not be prevented or detected on a timely basis. Ref: PCAOB AS 2201.A7, SOX 404.",
+      "affected_certifications": [
+        "Management ICFR Assessment",
+        "Auditor ICFR Opinion"
+      ],
+      "regulatory_citations": [
+        "PCAOB AS 2201.A7",
+        "SOX Section 404"
+      ],
+      "evidence_text": "ITEM 7.",
+      "evidence_hash": "61998d2c658c8e5902439923d0c52888161843546739c4caef5d9360d948503b",
+      "potential_penalties": {},
+      "detected_at": "2026-02-26T13:38:16.735949+00:00",
+      "evidence_text_raw": "s-serif;font-size:9pt;font-weight:bold;color:#000000;text-decoration:none;\">ITEM 7.</font></a></div></td><td style=\"vertical-align:bottom;padding-left:2px;padding-top:2px;padding-bottom:2px;padding-right:2px;border-top:1px solid #808080;\"><div style=\"font-size:8pt;\"><a style=\"font-family:Open Sans,sans-serif;font-size:8pt;color:#000000;text-decoration:none;\" href=\"#s7A536678047C5DEEBADEBCDA08BFE19F\"><font style=\"font-family:Open Sans,sans-serif;font-size:8pt;color:#000000;text-decoration:none;\">"
+    },
+    {
+      "violation_type": "auditor_change_near_weakness",
+      "severity": 7,
+      "description": "Auditor change detected in a fiscal year where material weaknesses were disclosed. This temporal correlation constitutes a red flag per SEC Staff views on auditor changes. Form 8-K Item 4.01 requires disclosure of disagreements with former auditor.",
+      "affected_certifications": [
+        "External Audit"
+      ],
+      "regulatory_citations": [
+        "Item 4.01 Form 8-K",
+        "SEC Staff Views on Auditor Changes"
+      ],
+      "evidence_text": "Auditor change concurrent with MW",
+      "evidence_hash": "acdcc5e91f27431729f409530d3ae3d8e968e0cfac79b74442216c55f61438f4",
+      "potential_penalties": {},
+      "detected_at": "2026-02-26T13:38:16.756784+00:00",
+      "evidence_text_raw": "Auditor change concurrent with MW"
+    }
+  ],
+  "severity_summary": {
+    "critical": 4,
+    "high": 3,
+    "medium": 1,
+    "low": 0
+  },
+  "sox_compliance_score": 0.0
+}

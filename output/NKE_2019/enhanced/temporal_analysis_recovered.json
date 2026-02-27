@@ -1,0 +1,167 @@
+{
+  "quarters": [
+    {
+      "period": "2018-Q4",
+      "revenue": "9,944,000,000",
+      "revenue_raw": 9944000000,
+      "net_income": "1,087,000,000",
+      "net_income_raw": 1087000000,
+      "gross_margin": "43.94%",
+      "gross_margin_raw": 0.4394,
+      "dso": "38.4",
+      "dio": "84.9",
+      "total_assets": 22536000000
+    },
+    {
+      "period": "2019-Q1",
+      "revenue": "9,374,000,000",
+      "revenue_raw": 9374000000,
+      "net_income": "847,000,000",
+      "net_income_raw": 847000000,
+      "gross_margin": "43.50%",
+      "gross_margin_raw": 0.435,
+      "dso": "41.0",
+      "dio": "92.0",
+      "total_assets": 22432000000
+    },
+    {
+      "period": "2019-Q2",
+      "revenue": "9,611,000,000",
+      "revenue_raw": 9611000000,
+      "net_income": "1,105,000,000",
+      "net_income_raw": 1105000000,
+      "gross_margin": "44.29%",
+      "gross_margin_raw": 0.4429,
+      "dso": "39.3",
+      "dio": "91.0",
+      "total_assets": 22929000000
+    },
+    {
+      "period": "2019-Q4",
+      "revenue": "10,184,000,000",
+      "revenue_raw": 10184000000,
+      "net_income": "989,000,000",
+      "net_income_raw": 989000000,
+      "gross_margin": "45.49%",
+      "gross_margin_raw": 0.4549,
+      "dso": "37.8",
+      "dio": "66.6",
+      "total_assets": 23717000000
+    }
+  ],
+  "transaction_clusters": [
+    {
+      "date_range": "2019-01-16 to 2019-01-18",
+      "transaction_count": 3,
+      "unique_insiders": 2,
+      "insiders": [
+        "PARKER MARK G",
+        "KNIGHT PHILIP H"
+      ],
+      "total_shares": 925000.0,
+      "total_economic_benefit": 69595000.0,
+      "transaction_codes": [
+        "M",
+        "G"
+      ],
+      "suspicion_score": 0.3
+    },
+    {
+      "date_range": "2019-04-09 to 2019-04-11",
+      "transaction_count": 4,
+      "unique_insiders": 1,
+      "insiders": [
+        "SPRUNK ERIC D"
+      ],
+      "total_shares": 16888.0,
+      "total_economic_benefit": 1443649.76,
+      "transaction_codes": [
+        "",
+        "G"
+      ],
+      "suspicion_score": 0.0
+    },
+    {
+      "date_range": "2019-08-01 to 2019-08-01",
+      "transaction_count": 7,
+      "unique_insiders": 7,
+      "insiders": [
+        "PARKER MARK G",
+        "Krane Hilary K",
+        "Slusher John F",
+        "SPRUNK ERIC D",
+        "Hill Elliott",
+        "Matheson Monique S.",
+        "Campion Andrew"
+      ],
+      "total_shares": 871716.0,
+      "total_economic_benefit": 73154406.72,
+      "transaction_codes": [
+        "A"
+      ],
+      "suspicion_score": 0.6
+    },
+    {
+      "date_range": "2019-09-19 to 2019-09-19",
+      "transaction_count": 11,
+      "unique_insiders": 11,
+      "insiders": [
+        "Comstock Elizabeth J",
+        "Knight Travis A",
+        "Connors John G",
+        "THOMPSON JOHN R JR",
+        "ROGERS JOHN W JR",
+        "PELUSO MICHELLE A",
+        "Benko Cathleen A",
+        "Henry Peter B.",
+        "Donahoe John J",
+        "GRAF ALAN B JR",
+        "COOK TIMOTHY D"
+      ],
+      "total_shares": 21956.0,
+      "total_economic_benefit": 1963085.96,
+      "transaction_codes": [
+        "A"
+      ],
+      "suspicion_score": 0.3
+    },
+    {
+      "date_range": "2019-10-29 to 2019-10-30",
+      "transaction_count": 7,
+      "unique_insiders": 6,
+      "insiders": [
+        "Knight Travis A",
+        "Krane Hilary K",
+        "Swoosh, LLC",
+        "KNIGHT PHILIP H",
+        "Matheson Monique S.",
+        "GRAF ALAN B JR"
+      ],
+      "total_shares": 26163181.0,
+      "total_economic_benefit": 2489687598.72,
+      "transaction_codes": [
+        "J",
+        "M",
+        "G"
+      ],
+      "suspicion_score": 0.8
+    },
+    {
+      "date_range": "2019-12-23 to 2019-12-24",
+      "transaction_count": 3,
+      "unique_insiders": 2,
+      "insiders": [
+        "Comstock Elizabeth J",
+        "SPRUNK ERIC D"
+      ],
+      "total_shares": 168000.0,
+      "total_economic_benefit": 11829600.0,
+      "transaction_codes": [
+        "",
+        "M"
+      ],
+      "suspicion_score": 0.3
+    }
+  ],
+  "data_source": "SEC XBRL companyfacts API (recovered from failed extraction)"
+}

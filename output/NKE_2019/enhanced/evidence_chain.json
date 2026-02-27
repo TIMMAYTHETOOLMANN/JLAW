@@ -1,0 +1,6 @@
+{
+  "merkle_root": "c0d446506a1529a0c69a73444a49a21f3d3cc794f9cc1edc1cc44e6eb7defe40",
+  "leaf_count": 57,
+  "algorithm": "SHA-256 binary Merkle tree",
+  "report_hash": "286fefa025198483aae1116cd9113f45b77ad64c7f054aa6afb9f8f1ad00126c"
+}
