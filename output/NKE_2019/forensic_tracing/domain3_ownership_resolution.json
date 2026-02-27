@@ -1,0 +1,603 @@
+{
+  "dual_test_results": [
+    {
+      "entity_name": "GRAF ALAN B JR",
+      "entity_type": "LLC",
+      "insider_name": "GRAF ALAN B JR",
+      "shares_involved": 8960.0,
+      "rule_13d3": {
+        "result": "beneficial_owner",
+        "voting_power": true,
+        "investment_power": true,
+        "acquire_within_60d": false,
+        "anti_evasion": false,
+        "evidence": []
+      },
+      "rule_16a1": {
+        "result": "beneficial_owner",
+        "direct_pecuniary": true,
+        "indirect_pecuniary": false,
+        "pecuniary_basis": "",
+        "evidence": []
+      },
+      "overall_beneficial_owner": true,
+      "confidence": 0.75
+    },
+    {
+      "entity_name": "Krane Hilary K",
+      "entity_type": "LLC",
+      "insider_name": "Krane Hilary K",
+      "shares_involved": 4721.0,
+      "rule_13d3": {
+        "result": "beneficial_owner",
+        "voting_power": true,
+        "investment_power": true,
+        "acquire_within_60d": false,
+        "anti_evasion": false,
+        "evidence": []
+      },
+      "rule_16a1": {
+        "result": "beneficial_owner",
+        "direct_pecuniary": true,
+        "indirect_pecuniary": false,
+        "pecuniary_basis": "",
+        "evidence": []
+      },
+      "overall_beneficial_owner": true,
+      "confidence": 0.75
+    },
+    {
+      "entity_name": "Knight Travis A",
+      "entity_type": "LLC",
+      "insider_name": "Knight Travis A",
+      "shares_involved": 9000000.0,
+      "rule_13d3": {
+        "result": "beneficial_owner",
+        "voting_power": true,
+        "investment_power": true,
+        "acquire_within_60d": false,
+        "anti_evasion": true,
+        "evidence": [
+          "Disclaimer filed \u2014 but anti-evasion Rule 13d-3(b) may override",
+          "Anti-evasion triggered: disclaimer + retained voting/investment power"
+        ]
+      },
+      "rule_16a1": {
+        "result": "beneficial_owner",
+        "direct_pecuniary": true,
+        "indirect_pecuniary": false,
+        "pecuniary_basis": "",
+        "evidence": []
+      },
+      "overall_beneficial_owner": true,
+      "confidence": 0.85
+    },
+    {
+      "entity_name": "KNIGHT PHILIP H",
+      "entity_type": "LLC",
+      "insider_name": "KNIGHT PHILIP H",
+      "shares_involved": 8100000.0,
+      "rule_13d3": {
+        "result": "beneficial_owner",
+        "voting_power": true,
+        "investment_power": true,
+        "acquire_within_60d": false,
+        "anti_evasion": false,
+        "evidence": []
+      },
+      "rule_16a1": {
+        "result": "beneficial_owner",
+        "direct_pecuniary": true,
+        "indirect_pecuniary": false,
+        "pecuniary_basis": "",
+        "evidence": []
+      },
+      "overall_beneficial_owner": true,
+      "confidence": 0.75
+    },
+    {
+      "entity_name": "Swoosh, LLC",
+      "entity_type": "LLC",
+      "insider_name": "Swoosh, LLC",
+      "shares_involved": 9000000.0,
+      "rule_13d3": {
+        "result": "beneficial_owner",
+        "voting_power": true,
+        "investment_power": true,
+        "acquire_within_60d": false,
+        "anti_evasion": false,
+        "evidence": []
+      },
+      "rule_16a1": {
+        "result": "beneficial_owner",
+        "direct_pecuniary": true,
+        "indirect_pecuniary": false,
+        "pecuniary_basis": "",
+        "evidence": []
+      },
+      "overall_beneficial_owner": true,
+      "confidence": 0.75
+    },
+    {
+      "entity_name": "Matheson Monique S.",
+      "entity_type": "LLC",
+      "insider_name": "Matheson Monique S.",
+      "shares_involved": 17000.0,
+      "rule_13d3": {
+        "result": "beneficial_owner",
+        "voting_power": true,
+        "investment_power": true,
+        "acquire_within_60d": false,
+        "anti_evasion": false,
+        "evidence": []
+      },
+      "rule_16a1": {
+        "result": "beneficial_owner",
+        "direct_pecuniary": true,
+        "indirect_pecuniary": false,
+        "pecuniary_basis": "",
+        "evidence": []
+      },
+      "overall_beneficial_owner": true,
+      "confidence": 0.75
+    },
+    {
+      "entity_name": "SPRUNK ERIC D",
+      "entity_type": "LLC",
+      "insider_name": "SPRUNK ERIC D",
+      "shares_involved": 820.0,
+      "rule_13d3": {
+        "result": "beneficial_owner",
+        "voting_power": true,
+        "investment_power": true,
+        "acquire_within_60d": false,
+        "anti_evasion": false,
+        "evidence": []
+      },
+      "rule_16a1": {
+        "result": "beneficial_owner",
+        "direct_pecuniary": true,
+        "indirect_pecuniary": false,
+        "pecuniary_basis": "",
+        "evidence": []
+      },
+      "overall_beneficial_owner": true,
+      "confidence": 0.75
+    },
+    {
+      "entity_name": "SPRUNK ERIC D",
+      "entity_type": "LLC",
+      "insider_name": "SPRUNK ERIC D",
+      "shares_involved": 489.0,
+      "rule_13d3": {
+        "result": "beneficial_owner",
+        "voting_power": true,
+        "investment_power": true,
+        "acquire_within_60d": false,
+        "anti_evasion": false,
+        "evidence": []
+      },
+      "rule_16a1": {
+        "result": "beneficial_owner",
+        "direct_pecuniary": true,
+        "indirect_pecuniary": false,
+        "pecuniary_basis": "",
+        "evidence": []
+      },
+      "overall_beneficial_owner": true,
+      "confidence": 0.75
+    },
+    {
+      "entity_name": "SPRUNK ERIC D",
+      "entity_type": "LLC",
+      "insider_name": "SPRUNK ERIC D",
+      "shares_involved": 8036.0,
+      "rule_13d3": {
+        "result": "beneficial_owner",
+        "voting_power": true,
+        "investment_power": true,
+        "acquire_within_60d": false,
+        "anti_evasion": false,
+        "evidence": []
+      },
+      "rule_16a1": {
+        "result": "beneficial_owner",
+        "direct_pecuniary": true,
+        "indirect_pecuniary": false,
+        "pecuniary_basis": "",
+        "evidence": []
+      },
+      "overall_beneficial_owner": true,
+      "confidence": 0.75
+    },
+    {
+      "entity_name": "SPRUNK ERIC D",
+      "entity_type": "LLC",
+      "insider_name": "SPRUNK ERIC D",
+      "shares_involved": 408.0,
+      "rule_13d3": {
+        "result": "beneficial_owner",
+        "voting_power": true,
+        "investment_power": true,
+        "acquire_within_60d": false,
+        "anti_evasion": false,
+        "evidence": []
+      },
+      "rule_16a1": {
+        "result": "beneficial_owner",
+        "direct_pecuniary": true,
+        "indirect_pecuniary": false,
+        "pecuniary_basis": "",
+        "evidence": []
+      },
+      "overall_beneficial_owner": true,
+      "confidence": 0.75
+    },
+    {
+      "entity_name": "KNIGHT PHILIP H",
+      "entity_type": "LLC",
+      "insider_name": "KNIGHT PHILIP H",
+      "shares_involved": 625000.0,
+      "rule_13d3": {
+        "result": "beneficial_owner",
+        "voting_power": true,
+        "investment_power": true,
+        "acquire_within_60d": false,
+        "anti_evasion": true,
+        "evidence": [
+          "Disclaimer filed \u2014 but anti-evasion Rule 13d-3(b) may override",
+          "Anti-evasion triggered: disclaimer + retained voting/investment power"
+        ]
+      },
+      "rule_16a1": {
+        "result": "beneficial_owner",
+        "direct_pecuniary": true,
+        "indirect_pecuniary": false,
+        "pecuniary_basis": "",
+        "evidence": []
+      },
+      "overall_beneficial_owner": true,
+      "confidence": 0.85
+    },
+    {
+      "entity_name": "Slusher John F",
+      "entity_type": "LLC",
+      "insider_name": "Slusher John F",
+      "shares_involved": 2190.0,
+      "rule_13d3": {
+        "result": "beneficial_owner",
+        "voting_power": true,
+        "investment_power": true,
+        "acquire_within_60d": false,
+        "anti_evasion": false,
+        "evidence": []
+      },
+      "rule_16a1": {
+        "result": "beneficial_owner",
+        "direct_pecuniary": true,
+        "indirect_pecuniary": false,
+        "pecuniary_basis": "",
+        "evidence": []
+      },
+      "overall_beneficial_owner": true,
+      "confidence": 0.75
+    },
+    {
+      "entity_name": "GRAF ALAN B JR",
+      "entity_type": "LLC",
+      "insider_name": "GRAF ALAN B JR",
+      "shares_involved": 8960.0,
+      "rule_13d3": {
+        "result": "beneficial_owner",
+        "voting_power": true,
+        "investment_power": true,
+        "acquire_within_60d": false,
+        "anti_evasion": false,
+        "evidence": []
+      },
+      "rule_16a1": {
+        "result": "beneficial_owner",
+        "direct_pecuniary": true,
+        "indirect_pecuniary": false,
+        "pecuniary_basis": "",
+        "evidence": []
+      },
+      "overall_beneficial_owner": true,
+      "confidence": 0.75
+    },
+    {
+      "entity_name": "Krane Hilary K",
+      "entity_type": "LLC",
+      "insider_name": "Krane Hilary K",
+      "shares_involved": 4721.0,
+      "rule_13d3": {
+        "result": "beneficial_owner",
+        "voting_power": true,
+        "investment_power": true,
+        "acquire_within_60d": false,
+        "anti_evasion": false,
+        "evidence": []
+      },
+      "rule_16a1": {
+        "result": "beneficial_owner",
+        "direct_pecuniary": true,
+        "indirect_pecuniary": false,
+        "pecuniary_basis": "",
+        "evidence": []
+      },
+      "overall_beneficial_owner": true,
+      "confidence": 0.75
+    },
+    {
+      "entity_name": "Knight Travis A",
+      "entity_type": "LLC",
+      "insider_name": "Knight Travis A",
+      "shares_involved": 9000000.0,
+      "rule_13d3": {
+        "result": "beneficial_owner",
+        "voting_power": true,
+        "investment_power": true,
+        "acquire_within_60d": false,
+        "anti_evasion": false,
+        "evidence": []
+      },
+      "rule_16a1": {
+        "result": "beneficial_owner",
+        "direct_pecuniary": true,
+        "indirect_pecuniary": false,
+        "pecuniary_basis": "",
+        "evidence": []
+      },
+      "overall_beneficial_owner": true,
+      "confidence": 0.75
+    },
+    {
+      "entity_name": "Knight Travis A",
+      "entity_type": "LLC",
+      "insider_name": "Knight Travis A",
+      "shares_involved": 900000.0,
+      "rule_13d3": {
+        "result": "beneficial_owner",
+        "voting_power": true,
+        "investment_power": true,
+        "acquire_within_60d": false,
+        "anti_evasion": false,
+        "evidence": []
+      },
+      "rule_16a1": {
+        "result": "beneficial_owner",
+        "direct_pecuniary": true,
+        "indirect_pecuniary": false,
+        "pecuniary_basis": "",
+        "evidence": []
+      },
+      "overall_beneficial_owner": true,
+      "confidence": 0.75
+    },
+    {
+      "entity_name": "KNIGHT PHILIP H",
+      "entity_type": "LLC",
+      "insider_name": "KNIGHT PHILIP H",
+      "shares_involved": 8100000.0,
+      "rule_13d3": {
+        "result": "beneficial_owner",
+        "voting_power": true,
+        "investment_power": true,
+        "acquire_within_60d": false,
+        "anti_evasion": false,
+        "evidence": []
+      },
+      "rule_16a1": {
+        "result": "beneficial_owner",
+        "direct_pecuniary": true,
+        "indirect_pecuniary": false,
+        "pecuniary_basis": "",
+        "evidence": []
+      },
+      "overall_beneficial_owner": true,
+      "confidence": 0.75
+    },
+    {
+      "entity_name": "Swoosh, LLC",
+      "entity_type": "LLC",
+      "insider_name": "Swoosh, LLC",
+      "shares_involved": 9000000.0,
+      "rule_13d3": {
+        "result": "beneficial_owner",
+        "voting_power": true,
+        "investment_power": true,
+        "acquire_within_60d": false,
+        "anti_evasion": false,
+        "evidence": []
+      },
+      "rule_16a1": {
+        "result": "beneficial_owner",
+        "direct_pecuniary": true,
+        "indirect_pecuniary": false,
+        "pecuniary_basis": "",
+        "evidence": []
+      },
+      "overall_beneficial_owner": true,
+      "confidence": 0.75
+    },
+    {
+      "entity_name": "Matheson Monique S.",
+      "entity_type": "LLC",
+      "insider_name": "Matheson Monique S.",
+      "shares_involved": 1120.0,
+      "rule_13d3": {
+        "result": "beneficial_owner",
+        "voting_power": true,
+        "investment_power": true,
+        "acquire_within_60d": false,
+        "anti_evasion": false,
+        "evidence": []
+      },
+      "rule_16a1": {
+        "result": "beneficial_owner",
+        "direct_pecuniary": true,
+        "indirect_pecuniary": false,
+        "pecuniary_basis": "",
+        "evidence": []
+      },
+      "overall_beneficial_owner": true,
+      "confidence": 0.75
+    },
+    {
+      "entity_name": "SPRUNK ERIC D",
+      "entity_type": "LLC",
+      "insider_name": "SPRUNK ERIC D",
+      "shares_involved": 820.0,
+      "rule_13d3": {
+        "result": "beneficial_owner",
+        "voting_power": true,
+        "investment_power": true,
+        "acquire_within_60d": false,
+        "anti_evasion": false,
+        "evidence": []
+      },
+      "rule_16a1": {
+        "result": "beneficial_owner",
+        "direct_pecuniary": true,
+        "indirect_pecuniary": false,
+        "pecuniary_basis": "",
+        "evidence": []
+      },
+      "overall_beneficial_owner": true,
+      "confidence": 0.75
+    },
+    {
+      "entity_name": "SPRUNK ERIC D",
+      "entity_type": "LLC",
+      "insider_name": "SPRUNK ERIC D",
+      "shares_involved": 489.0,
+      "rule_13d3": {
+        "result": "beneficial_owner",
+        "voting_power": true,
+        "investment_power": true,
+        "acquire_within_60d": false,
+        "anti_evasion": false,
+        "evidence": []
+      },
+      "rule_16a1": {
+        "result": "beneficial_owner",
+        "direct_pecuniary": true,
+        "indirect_pecuniary": false,
+        "pecuniary_basis": "",
+        "evidence": []
+      },
+      "overall_beneficial_owner": true,
+      "confidence": 0.75
+    },
+    {
+      "entity_name": "SPRUNK ERIC D",
+      "entity_type": "LLC",
+      "insider_name": "SPRUNK ERIC D",
+      "shares_involved": 8036.0,
+      "rule_13d3": {
+        "result": "beneficial_owner",
+        "voting_power": true,
+        "investment_power": true,
+        "acquire_within_60d": false,
+        "anti_evasion": false,
+        "evidence": []
+      },
+      "rule_16a1": {
+        "result": "beneficial_owner",
+        "direct_pecuniary": true,
+        "indirect_pecuniary": false,
+        "pecuniary_basis": "",
+        "evidence": []
+      },
+      "overall_beneficial_owner": true,
+      "confidence": 0.75
+    },
+    {
+      "entity_name": "SPRUNK ERIC D",
+      "entity_type": "LLC",
+      "insider_name": "SPRUNK ERIC D",
+      "shares_involved": 408.0,
+      "rule_13d3": {
+        "result": "beneficial_owner",
+        "voting_power": true,
+        "investment_power": true,
+        "acquire_within_60d": false,
+        "anti_evasion": false,
+        "evidence": []
+      },
+      "rule_16a1": {
+        "result": "beneficial_owner",
+        "direct_pecuniary": true,
+        "indirect_pecuniary": false,
+        "pecuniary_basis": "",
+        "evidence": []
+      },
+      "overall_beneficial_owner": true,
+      "confidence": 0.75
+    },
+    {
+      "entity_name": "KNIGHT PHILIP H",
+      "entity_type": "LLC",
+      "insider_name": "KNIGHT PHILIP H",
+      "shares_involved": 625000.0,
+      "rule_13d3": {
+        "result": "beneficial_owner",
+        "voting_power": true,
+        "investment_power": true,
+        "acquire_within_60d": false,
+        "anti_evasion": false,
+        "evidence": []
+      },
+      "rule_16a1": {
+        "result": "beneficial_owner",
+        "direct_pecuniary": true,
+        "indirect_pecuniary": false,
+        "pecuniary_basis": "",
+        "evidence": []
+      },
+      "overall_beneficial_owner": true,
+      "confidence": 0.75
+    },
+    {
+      "entity_name": "Slusher John F",
+      "entity_type": "LLC",
+      "insider_name": "Slusher John F",
+      "shares_involved": 2190.0,
+      "rule_13d3": {
+        "result": "beneficial_owner",
+        "voting_power": true,
+        "investment_power": true,
+        "acquire_within_60d": false,
+        "anti_evasion": false,
+        "evidence": []
+      },
+      "rule_16a1": {
+        "result": "beneficial_owner",
+        "direct_pecuniary": true,
+        "indirect_pecuniary": false,
+        "pecuniary_basis": "",
+        "evidence": []
+      },
+      "overall_beneficial_owner": true,
+      "confidence": 0.75
+    }
+  ],
+  "parking_analyses": [
+    {
+      "entity_a": "Knight Travis A",
+      "entity_b": "Multiple entities on 2019-10-29",
+      "red_flags": [
+        "circular_transfer"
+      ],
+      "red_flag_details": [
+        "3 J-code transfers on same date (2019-10-29) \u2014 potential coordinated restructuring or parking"
+      ],
+      "risk_score": 0.6,
+      "transfers_examined": 3,
+      "conclusion": "Multiple same-date entity transfers detected. Requires manual review of entity relationships to determine if parking arrangement exists."
+    }
+  ],
+  "entity_transfers_analyzed": 25,
+  "beneficial_owners_identified": 25,
+  "parking_risk_flags": 1
+}

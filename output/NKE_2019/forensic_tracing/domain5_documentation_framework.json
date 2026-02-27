@@ -1,0 +1,85 @@
+{
+  "tcr_submission": {
+    "is_anonymous": true,
+    "subject": {
+      "company_name": "NIKE, Inc.",
+      "company_cik": "320187",
+      "company_ticker": "NKE",
+      "individuals": [
+        "Knight Travis A",
+        "Swoosh, LLC",
+        "KNIGHT PHILIP H",
+        "PARKER MARK G",
+        "SPRUNK ERIC D",
+        "Slusher John F",
+        "Hill Elliott",
+        "Campion Andrew",
+        "Matheson Monique S.",
+        "Krane Hilary K"
+      ]
+    },
+    "violation_types": [
+      "Section 16(a) Late Form 4 Filing",
+      "Zero-Dollar Transaction - Requires Scrutiny",
+      "auditor_change_near_weakness",
+      "inconsistent_management_disclosure",
+      "material_weakness_disclosed",
+      "section_302_certification_omission",
+      "section_906_certification_omission"
+    ],
+    "statutory_references": [
+      "15 U.S.C. 78j(b) \u2014 Section 10(b) anti-fraud",
+      "15 U.S.C. 78p(a) \u2014 Section 16(a) reporting obligations",
+      "15 U.S.C. \u00a7 78p(a)",
+      "15 U.S.C. \u00a7 78p(a) - Section 16(a)",
+      "17 CFR 240.10b-5 \u2014 Rule 10b-5",
+      "SOX Section 302 \u2014 CEO/CFO certifications",
+      "SOX Section 906 \u2014 Criminal certification (18 USC 1350)"
+    ],
+    "date_range": "2019-01-02 to 2019-12-30",
+    "exhibit_count": 3,
+    "information_source": "independent_analysis",
+    "methodology": {
+      "description": "Systematic computational analysis of publicly available SEC EDGAR filings including Form 4 insider transaction reports, Form 144 notices of proposed sale, Schedule 13D/13G beneficial ownership reports, and 10-K/10-Q financial statements. Analysis applied economic benefit valuation using historical market prices, temporal clustering detection, violation deduplication, severity normalization across multiple analysis nodes, and beneficial ownership chain resolution. This analysis reveals non-obviou",
+      "data_sources": [
+        "SEC EDGAR Form 4 filings (XML)",
+        "SEC EDGAR Full-Text Search API",
+        "SEC XBRL companyfacts API",
+        "NKE historical closing prices (Yahoo Finance, split-adjusted)"
+      ],
+      "tools_used": [
+        "JLAW Forensic Analysis System v5.0.0",
+        "EDGAR Ownership XML Technical Specification v5.1",
+        "Python 3.x with lxml XML parser"
+      ]
+    },
+    "estimated_sanctions_basis": 10913804056.480007
+  },
+  "tcr_exhibit_count": 3,
+  "tcr_violation_types": [
+    "Section 16(a) Late Form 4 Filing",
+    "Zero-Dollar Transaction - Requires Scrutiny",
+    "auditor_change_near_weakness",
+    "inconsistent_management_disclosure",
+    "material_weakness_disclosed",
+    "section_302_certification_omission",
+    "section_906_certification_omission"
+  ],
+  "tcr_statutory_references": [
+    "15 U.S.C. 78j(b) \u2014 Section 10(b) anti-fraud",
+    "15 U.S.C. 78p(a) \u2014 Section 16(a) reporting obligations",
+    "15 U.S.C. \u00a7 78p(a)",
+    "15 U.S.C. \u00a7 78p(a) - Section 16(a)",
+    "17 CFR 240.10b-5 \u2014 Rule 10b-5",
+    "SOX Section 302 \u2014 CEO/CFO certifications",
+    "SOX Section 906 \u2014 Criminal certification (18 USC 1350)"
+  ],
+  "work_product_count": 4,
+  "work_product_ids": [
+    "WP-001",
+    "WP-002",
+    "WP-003",
+    "WP-004"
+  ],
+  "tier_separation_note": "Tier 1 (TCR) contains only verified factual findings. Tier 2 (work product) contains scoring, bounty estimates, and strategic analysis \u2014 never submitted to SEC."
+}

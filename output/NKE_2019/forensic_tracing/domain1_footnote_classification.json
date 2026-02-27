@@ -1,0 +1,85 @@
+{
+  "total_footnotes": 66,
+  "risk_distribution": {
+    "low_risk": 62,
+    "high_risk": 4
+  },
+  "type_distribution": {
+    "unknown": 66
+  },
+  "highest_risk_footnotes": [
+    {
+      "footnote_id": "F1",
+      "raw_text": "Footnote present but text not extracted for Knight Travis A J transaction",
+      "footnote_type": "unknown",
+      "risk_category": "high_risk",
+      "risk_score": 0.45,
+      "signals": [
+        "Code J transaction without adequate footnote explanation (required by SEC rule)"
+      ],
+      "entity_names_extracted": [],
+      "dates_extracted": [],
+      "plan_adoption_date": null,
+      "has_exculpatory_disclaimer": false,
+      "has_pecuniary_interest_disclaimer": false,
+      "is_code_j_without_explanation": true
+    },
+    {
+      "footnote_id": "F1",
+      "raw_text": "Footnote present but text not extracted for Knight Travis A J transaction",
+      "footnote_type": "unknown",
+      "risk_category": "high_risk",
+      "risk_score": 0.45,
+      "signals": [
+        "Code J transaction without adequate footnote explanation (required by SEC rule)"
+      ],
+      "entity_names_extracted": [],
+      "dates_extracted": [],
+      "plan_adoption_date": null,
+      "has_exculpatory_disclaimer": false,
+      "has_pecuniary_interest_disclaimer": false,
+      "is_code_j_without_explanation": true
+    },
+    {
+      "footnote_id": "F1",
+      "raw_text": "Footnote present but text not extracted for KNIGHT PHILIP H J transaction",
+      "footnote_type": "unknown",
+      "risk_category": "high_risk",
+      "risk_score": 0.45,
+      "signals": [
+        "Code J transaction without adequate footnote explanation (required by SEC rule)"
+      ],
+      "entity_names_extracted": [],
+      "dates_extracted": [],
+      "plan_adoption_date": null,
+      "has_exculpatory_disclaimer": false,
+      "has_pecuniary_interest_disclaimer": false,
+      "is_code_j_without_explanation": true
+    },
+    {
+      "footnote_id": "F1",
+      "raw_text": "Footnote present but text not extracted for Swoosh, LLC J transaction",
+      "footnote_type": "unknown",
+      "risk_category": "high_risk",
+      "risk_score": 0.45,
+      "signals": [
+        "Code J transaction without adequate footnote explanation (required by SEC rule)"
+      ],
+      "entity_names_extracted": [],
+      "dates_extracted": [],
+      "plan_adoption_date": null,
+      "has_exculpatory_disclaimer": false,
+      "has_pecuniary_interest_disclaimer": false,
+      "is_code_j_without_explanation": true
+    }
+  ],
+  "all_extracted_entities": [],
+  "all_signals": [
+    "Code J transaction without adequate footnote explanation (required by SEC rule)",
+    "Code J transaction without adequate footnote explanation (required by SEC rule)",
+    "Code J transaction without adequate footnote explanation (required by SEC rule)",
+    "Code J transaction without adequate footnote explanation (required by SEC rule)"
+  ],
+  "code_j_missing_explanations": 4,
+  "average_risk_score": 0.168
+}
