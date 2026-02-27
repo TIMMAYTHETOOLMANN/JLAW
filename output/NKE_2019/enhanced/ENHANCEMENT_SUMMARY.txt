@@ -1,7 +1,7 @@
 ========================================================================
 JLAW FORENSIC DOSSIER ENHANCEMENT PROTOCOL v5.0.0
 CODENAME: APEX-VALUATION
-Generated: 2026-02-27T09:49:00.497678+00:00
+Generated: 2026-02-27T13:38:29.309132+00:00
 ========================================================================
 
 DEFICIENCIES RESOLVED:
@@ -93,7 +93,7 @@ TEMPORAL ANALYSIS (RECOVERED):
 EVIDENCE CHAIN:
   Merkle root:   c0d446506a1529a0c69a73444a49a21f3d3cc794f9cc1edc1cc44e6eb7defe40
   Leaf count:    57
-  Report hash:   1bd0d7ed2ee2d0fe9695810e19115f6b111d363e8e7498c2d0ccc5a135a4e251
+  Report hash:   be94a857904e313c4ca15d835e928561257f1ef26d8a13a9b996aab8d97a6967
   Algorithm:     SHA-256 binary Merkle tree
 
 ========================================================================

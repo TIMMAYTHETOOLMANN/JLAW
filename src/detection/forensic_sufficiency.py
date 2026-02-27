@@ -312,6 +312,7 @@ class FSLAssessment:
 
     # Footnote analysis
     footnote_present: bool = False
+    footnotes: List[str] = field(default_factory=list)  # Actual footnote text
     mentions_10b5_1: bool = False
     plan_adoption_date_present: bool = False
     tax_withholding_fn: bool = False
@@ -345,6 +346,7 @@ class FSLAssessment:
             "price_required": self.price_required,
             "price_value_source": self.price_value_source,
             "footnote_present": self.footnote_present,
+            "footnotes": self.footnotes,
             "mentions_10b5_1": self.mentions_10b5_1,
             "tax_withholding": self.tax_withholding_fn,
             "entity_transfer": self.entity_transfer_fn,
@@ -418,6 +420,7 @@ def classify_fsl(
         price_required=price_req,
         price_value_source=price_src.value,
         footnote_present=footnote_cls.has_footnotes,
+        footnotes=footnote_cls.raw_footnotes,
         mentions_10b5_1=footnote_cls.mentions_10b5_1,
         plan_adoption_date_present=footnote_cls.plan_adoption_date_present,
         tax_withholding_fn=footnote_cls.tax_withholding,

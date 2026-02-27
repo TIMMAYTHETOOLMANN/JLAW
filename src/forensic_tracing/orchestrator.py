@@ -259,24 +259,25 @@ class ForensicTracingOrchestrator:
     def _run_domain1(cls, fsl_assessments: list) -> dict:
         """Run Domain 1 footnote classification on FSL assessment records."""
         all_classifications = []
+        skipped_no_text = 0
 
         for record in fsl_assessments:
-            # Extract footnotes from the record
+            # Extract actual footnote text from the record
             footnotes = {}
             raw_footnotes = record.get('footnotes', [])
             if isinstance(raw_footnotes, list):
                 for i, fn in enumerate(raw_footnotes):
-                    if isinstance(fn, str):
+                    if isinstance(fn, str) and fn.strip():
                         footnotes[f'F{i+1}'] = fn
             elif isinstance(raw_footnotes, dict):
-                footnotes = raw_footnotes
+                footnotes = {k: v for k, v in raw_footnotes.items() if v and str(v).strip()}
 
             if not footnotes:
-                # Create synthetic footnote entry for records with footnote_present flag
-                if record.get('footnote_present'):
-                    footnotes = {'F1': f'Footnote present but text not extracted for '
-                                       f'{record.get("insider_name", "unknown")} '
-                                       f'{record.get("transaction_code", "")} transaction'}
+                # No actual footnote text — skip classification entirely.
+                # footnote_present=True with no text means the boolean flag
+                # was set but text was not preserved through the pipeline.
+                skipped_no_text += 1
+                continue
 
             code = record.get('transaction_code', '')
             codes_map = {fid: code for fid in footnotes}
@@ -286,7 +287,9 @@ class ForensicTracingOrchestrator:
             )
             all_classifications.extend(classifications)
 
-        return FootnoteClassifier.generate_risk_summary(all_classifications)
+        result = FootnoteClassifier.generate_risk_summary(all_classifications)
+        result['skipped_no_text'] = skipped_no_text
+        return result
 
     @classmethod
     def _run_domain3(cls, fsl_assessments: list, transactions: list) -> dict:

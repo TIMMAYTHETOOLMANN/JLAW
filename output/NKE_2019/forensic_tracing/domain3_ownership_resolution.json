@@ -338,8 +338,11 @@
         "voting_power": true,
         "investment_power": true,
         "acquire_within_60d": false,
-        "anti_evasion": false,
-        "evidence": []
+        "anti_evasion": true,
+        "evidence": [
+          "Disclaimer filed \u2014 but anti-evasion Rule 13d-3(b) may override",
+          "Anti-evasion triggered: disclaimer + retained voting/investment power"
+        ]
       },
       "rule_16a1": {
         "result": "beneficial_owner",
@@ -349,7 +352,7 @@
         "evidence": []
       },
       "overall_beneficial_owner": true,
-      "confidence": 0.75
+      "confidence": 0.85
     },
     {
       "entity_name": "Knight Travis A",
@@ -361,8 +364,11 @@
         "voting_power": true,
         "investment_power": true,
         "acquire_within_60d": false,
-        "anti_evasion": false,
-        "evidence": []
+        "anti_evasion": true,
+        "evidence": [
+          "Disclaimer filed \u2014 but anti-evasion Rule 13d-3(b) may override",
+          "Anti-evasion triggered: disclaimer + retained voting/investment power"
+        ]
       },
       "rule_16a1": {
         "result": "beneficial_owner",
@@ -372,7 +378,7 @@
         "evidence": []
       },
       "overall_beneficial_owner": true,
-      "confidence": 0.75
+      "confidence": 0.85
     },
     {
       "entity_name": "KNIGHT PHILIP H",
@@ -545,8 +551,11 @@
         "voting_power": true,
         "investment_power": true,
         "acquire_within_60d": false,
-        "anti_evasion": false,
-        "evidence": []
+        "anti_evasion": true,
+        "evidence": [
+          "Disclaimer filed \u2014 but anti-evasion Rule 13d-3(b) may override",
+          "Anti-evasion triggered: disclaimer + retained voting/investment power"
+        ]
       },
       "rule_16a1": {
         "result": "beneficial_owner",
@@ -556,7 +565,7 @@
         "evidence": []
       },
       "overall_beneficial_owner": true,
-      "confidence": 0.75
+      "confidence": 0.85
     },
     {
       "entity_name": "Slusher John F",

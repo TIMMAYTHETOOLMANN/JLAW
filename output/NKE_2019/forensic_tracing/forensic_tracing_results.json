@@ -1,7 +1,7 @@
 {
   "_system": "JLAW Forensic Tracing System",
   "_version": "1.0.0",
-  "_timestamp": "2026-02-27T13:16:13.914812+00:00",
+  "_timestamp": "2026-02-27T13:38:36.712511+00:00",
   "_domains": [
     "D1: Form 4 Footnote Classification",
     "D2: Grant-to-Sale Transaction Tracing",
@@ -10,20 +10,119 @@
     "D5: Two-Tier Documentation Framework",
     "D6: Courtroom-Grade Visualization"
   ],
-  "_report_hash": "ab62c8e63243db78fdea329a4082955b1a4db27dcf44d06641e0a27fb10127eb",
+  "_report_hash": "da9f8ab44b8c41962c00c56e20900a35fe765f18fec9920333043fb1f8edf1c3",
   "domain1_footnotes": {
-    "total_footnotes": 66,
+    "total_footnotes": 104,
     "risk_distribution": {
-      "low_risk": 62,
-      "high_risk": 4
+      "low_risk": 66,
+      "exculpatory": 28,
+      "high_risk": 10
     },
     "type_distribution": {
-      "unknown": 66
+      "unknown": 65,
+      "rule_10b5_1_plan": 23,
+      "entity_transfer": 4,
+      "beneficial_ownership_chain": 5,
+      "vesting_schedule": 7
     },
     "highest_risk_footnotes": [
       {
+        "footnote_id": "F2",
+        "raw_text": "On October 29, 2019, Swoosh, LLC, a Delaware limited liability company (\"Swoosh\"), made a private pro rata distribution of shares of the Issuer's Class A Common Stock. A wholly-owned subsidiary (\"Subs...",
+        "footnote_type": "entity_transfer",
+        "risk_category": "high_risk",
+        "risk_score": 0.55,
+        "signals": [
+          "Entity transfer footnote lacks pecuniary interest disclaimer"
+        ],
+        "entity_names_extracted": [
+          "Irrevocable",
+          "shares were simultaneously distributed to the",
+          "through the"
+        ],
+        "dates_extracted": [
+          "October 29, 2019"
+        ],
+        "plan_adoption_date": null,
+        "has_exculpatory_disclaimer": false,
+        "has_pecuniary_interest_disclaimer": false,
+        "is_code_j_without_explanation": false
+      },
+      {
+        "footnote_id": "F2",
+        "raw_text": "On October 29, 2019, Swoosh, LLC, a Delaware limited liability company (\"Swoosh\"), made a private pro rata distribution of shares of the Issuer's Class A Common Stock. A wholly-owned subsidiary (\"Subs...",
+        "footnote_type": "entity_transfer",
+        "risk_category": "high_risk",
+        "risk_score": 0.55,
+        "signals": [
+          "Entity transfer footnote lacks pecuniary interest disclaimer"
+        ],
+        "entity_names_extracted": [
+          "Irrevocable",
+          "shares were simultaneously distributed to the",
+          "through the"
+        ],
+        "dates_extracted": [
+          "October 29, 2019"
+        ],
+        "plan_adoption_date": null,
+        "has_exculpatory_disclaimer": false,
+        "has_pecuniary_interest_disclaimer": false,
+        "is_code_j_without_explanation": false
+      },
+      {
+        "footnote_id": "F2",
+        "raw_text": "On October 29, 2019, the reporting person acquired the shares as a result of a private pro rata distribution from Swoosh, LLC, a Delaware limited liability company.",
+        "footnote_type": "entity_transfer",
+        "risk_category": "high_risk",
+        "risk_score": 0.55,
+        "signals": [
+          "Entity transfer footnote lacks pecuniary interest disclaimer"
+        ],
+        "entity_names_extracted": [],
+        "dates_extracted": [
+          "October 29, 2019"
+        ],
+        "plan_adoption_date": null,
+        "has_exculpatory_disclaimer": false,
+        "has_pecuniary_interest_disclaimer": false,
+        "is_code_j_without_explanation": false
+      },
+      {
+        "footnote_id": "F2",
+        "raw_text": "Private pro rata distribution to members of Swoosh, LLC.",
+        "footnote_type": "entity_transfer",
+        "risk_category": "high_risk",
+        "risk_score": 0.55,
+        "signals": [
+          "Entity transfer footnote lacks pecuniary interest disclaimer"
+        ],
+        "entity_names_extracted": [],
+        "dates_extracted": [],
+        "plan_adoption_date": null,
+        "has_exculpatory_disclaimer": false,
+        "has_pecuniary_interest_disclaimer": false,
+        "is_code_j_without_explanation": false
+      },
+      {
         "footnote_id": "F1",
-        "raw_text": "Footnote present but text not extracted for Knight Travis A J transaction",
+        "raw_text": "Class A Common Stock is convertible at any time on a one-for-one basis into Class B Common Stock with no expiration date.",
+        "footnote_type": "unknown",
+        "risk_category": "high_risk",
+        "risk_score": 0.45,
+        "signals": [
+          "Code J transaction without adequate footnote explanation (required by SEC rule)"
+        ],
+        "entity_names_extracted": [],
+        "dates_extracted": [],
+        "plan_adoption_date": null,
+        "has_exculpatory_disclaimer": false,
+        "has_pecuniary_interest_disclaimer": false,
+        "is_code_j_without_explanation": true
+      },
+      {
+        "footnote_id": "F3",
+        "raw_text": "Pursuant to the Amended and Restated Limited Liability Company Agreement of Swoosh (the \"Swoosh Agreement\"), Swoosh is managed by a board of directors consisting of five board seats (the \"Swoosh Board...",
         "footnote_type": "unknown",
         "risk_category": "high_risk",
         "risk_score": 0.45,
@@ -39,7 +138,23 @@
       },
       {
         "footnote_id": "F1",
-        "raw_text": "Footnote present but text not extracted for Knight Travis A J transaction",
+        "raw_text": "Class A Common Stock is convertible at any time on a one-for-one basis into Class B Common Stock with no expiration date.",
+        "footnote_type": "unknown",
+        "risk_category": "high_risk",
+        "risk_score": 0.45,
+        "signals": [
+          "Code J transaction without adequate footnote explanation (required by SEC rule)"
+        ],
+        "entity_names_extracted": [],
+        "dates_extracted": [],
+        "plan_adoption_date": null,
+        "has_exculpatory_disclaimer": false,
+        "has_pecuniary_interest_disclaimer": false,
+        "is_code_j_without_explanation": true
+      },
+      {
+        "footnote_id": "F3",
+        "raw_text": "Pursuant to the Amended and Restated Limited Liability Company Agreement of Swoosh (the \"Swoosh Agreement\"), Swoosh is managed by a board of directors consisting of five board seats (the \"Swoosh Board...",
         "footnote_type": "unknown",
         "risk_category": "high_risk",
         "risk_score": 0.45,
@@ -55,7 +170,7 @@
       },
       {
         "footnote_id": "F1",
-        "raw_text": "Footnote present but text not extracted for KNIGHT PHILIP H J transaction",
+        "raw_text": "Class A Common  Stock is convertible at any time on a one-for-one basis into Class B Common Stock with no expiration date.",
         "footnote_type": "unknown",
         "risk_category": "high_risk",
         "risk_score": 0.45,
@@ -71,7 +186,7 @@
       },
       {
         "footnote_id": "F1",
-        "raw_text": "Footnote present but text not extracted for Swoosh, LLC J transaction",
+        "raw_text": "Class A Common Stock is convertible at any time on a one-for-one basis into Class B Common Stock with no expiration date.",
         "footnote_type": "unknown",
         "risk_category": "high_risk",
         "risk_score": 0.45,
@@ -86,15 +201,53 @@
         "is_code_j_without_explanation": true
       }
     ],
-    "all_extracted_entities": [],
-    "all_signals": [
-      "Code J transaction without adequate footnote explanation (required by SEC rule)",
-      "Code J transaction without adequate footnote explanation (required by SEC rule)",
-      "Code J transaction without adequate footnote explanation (required by SEC rule)",
-      "Code J transaction without adequate footnote explanation (required by SEC rule)"
+    "all_extracted_entities": [
+      "held directly by the",
+      "through the",
+      "reporting person disclaims beneficial ownership of all such shares held directly and indirectly by the",
+      "any units that have not vested shall be forfeited to the",
+      "Inc. Stock",
+      "Irrevocable",
+      "shares were simultaneously distributed to the"
     ],
-    "code_j_missing_explanations": 4,
-    "average_risk_score": 0.168
+    "all_signals": [
+      "10b5-1 plan referenced without adoption date",
+      "10b5-1 plan referenced without adoption date",
+      "Code J transaction without adequate footnote explanation (required by SEC rule)",
+      "Entity transfer footnote lacks pecuniary interest disclaimer",
+      "Code J transaction without adequate footnote explanation (required by SEC rule)",
+      "Code J transaction without adequate footnote explanation (required by SEC rule)",
+      "Entity transfer footnote lacks pecuniary interest disclaimer",
+      "Code J transaction without adequate footnote explanation (required by SEC rule)",
+      "Code J transaction without adequate footnote explanation (required by SEC rule)",
+      "Entity transfer footnote lacks pecuniary interest disclaimer",
+      "Code J transaction without adequate footnote explanation (required by SEC rule)",
+      "Entity transfer footnote lacks pecuniary interest disclaimer",
+      "10b5-1 plan referenced without adoption date",
+      "10b5-1 plan referenced without adoption date",
+      "10b5-1 plan referenced without adoption date",
+      "10b5-1 plan referenced without adoption date",
+      "10b5-1 plan referenced without adoption date",
+      "10b5-1 plan referenced without adoption date",
+      "10b5-1 plan referenced without adoption date",
+      "10b5-1 plan referenced without adoption date",
+      "10b5-1 plan referenced without adoption date",
+      "10b5-1 plan referenced without adoption date",
+      "10b5-1 plan referenced without adoption date",
+      "10b5-1 plan referenced without adoption date",
+      "10b5-1 plan referenced without adoption date",
+      "10b5-1 plan referenced without adoption date",
+      "10b5-1 plan referenced without adoption date",
+      "10b5-1 plan referenced without adoption date",
+      "10b5-1 plan referenced without adoption date",
+      "10b5-1 plan referenced without adoption date",
+      "10b5-1 plan referenced without adoption date",
+      "10b5-1 plan referenced without adoption date",
+      "10b5-1 plan referenced without adoption date"
+    ],
+    "code_j_missing_explanations": 6,
+    "average_risk_score": 0.177,
+    "skipped_no_text": 0
   },
   "domain2_tracing": {
     "summary": {
@@ -109,7 +262,7 @@
       "liquidation_rate": 0.2765,
       "total_cash_proceeds": 0,
       "total_economic_value_transferred": 54219307.08,
-      "total_profit": 54219307.08,
+      "total_profit": 0,
       "chain_type_distribution": {
         "M -> G": 3,
         "A -> G": 4,
@@ -150,7 +303,7 @@
         "shares_untraced": 15380.0,
         "total_proceeds": 0,
         "total_economic_value": 105974.4,
-        "total_profit": 105974.4,
+        "total_profit": 0,
         "time_to_first_sale_days": 225,
         "liquidation_rate": 0.0679,
         "is_complete": false
@@ -182,7 +335,7 @@
         "shares_untraced": 12836.0,
         "total_proceeds": 0,
         "total_economic_value": 105974.4,
-        "total_profit": 105974.4,
+        "total_profit": 0,
         "time_to_first_sale_days": 90,
         "liquidation_rate": 0.0803,
         "is_complete": false
@@ -214,7 +367,7 @@
         "shares_untraced": 0.0,
         "total_proceeds": 0,
         "total_economic_value": 105974.4,
-        "total_profit": 105974.4,
+        "total_profit": 0,
         "time_to_first_sale_days": 0,
         "liquidation_rate": 1.0,
         "is_complete": true
@@ -235,7 +388,7 @@
         "shares_untraced": 16500.0,
         "total_proceeds": 0,
         "total_economic_value": 0,
-        "total_profit": 0.0,
+        "total_profit": 0,
         "time_to_first_sale_days": null,
         "liquidation_rate": 0.0,
         "is_complete": false
@@ -267,7 +420,7 @@
         "shares_untraced": 0.0,
         "total_proceeds": 0,
         "total_economic_value": 687238.72,
-        "total_profit": 687238.72,
+        "total_profit": 0,
         "time_to_first_sale_days": 0,
         "liquidation_rate": 1.0,
         "is_complete": true
@@ -299,7 +452,7 @@
         "shares_untraced": 0.0,
         "total_proceeds": 0,
         "total_economic_value": 34586.16,
-        "total_profit": 34586.16,
+        "total_profit": 0,
         "time_to_first_sale_days": 0,
         "liquidation_rate": 1.0,
         "is_complete": true
@@ -341,7 +494,7 @@
         "shares_untraced": 38691.0,
         "total_proceeds": 0,
         "total_economic_value": 118348.41,
-        "total_profit": 118348.41,
+        "total_profit": 0,
         "time_to_first_sale_days": 14,
         "liquidation_rate": 0.0327,
         "is_complete": false
@@ -373,7 +526,7 @@
         "shares_untraced": 0.0,
         "total_proceeds": 0,
         "total_economic_value": 43662.81,
-        "total_profit": 43662.81,
+        "total_profit": 0,
         "time_to_first_sale_days": 0,
         "liquidation_rate": 1.0,
         "is_complete": true
@@ -405,7 +558,7 @@
         "shares_untraced": 14821.0,
         "total_proceeds": 0,
         "total_economic_value": 74685.6,
-        "total_profit": 74685.6,
+        "total_profit": 0,
         "time_to_first_sale_days": 63,
         "liquidation_rate": 0.0524,
         "is_complete": false
@@ -437,7 +590,7 @@
         "shares_untraced": 0.0,
         "total_proceeds": 0,
         "total_economic_value": 74685.6,
-        "total_profit": 74685.6,
+        "total_profit": 0,
         "time_to_first_sale_days": 0,
         "liquidation_rate": 1.0,
         "is_complete": true
@@ -458,7 +611,7 @@
         "shares_untraced": 120000.0,
         "total_proceeds": 0,
         "total_economic_value": 0,
-        "total_profit": 0.0,
+        "total_profit": 0,
         "time_to_first_sale_days": null,
         "liquidation_rate": 0.0,
         "is_complete": false
@@ -479,7 +632,7 @@
         "shares_untraced": 24000.0,
         "total_proceeds": 0,
         "total_economic_value": 0,
-        "total_profit": 0.0,
+        "total_profit": 0,
         "time_to_first_sale_days": null,
         "liquidation_rate": 0.0,
         "is_complete": false
@@ -500,7 +653,7 @@
         "shares_untraced": 1996.0,
         "total_proceeds": 0,
         "total_economic_value": 0,
-        "total_profit": 0.0,
+        "total_profit": 0,
         "time_to_first_sale_days": null,
         "liquidation_rate": 0.0,
         "is_complete": false
@@ -521,7 +674,7 @@
         "shares_untraced": 24000.0,
         "total_proceeds": 0,
         "total_economic_value": 0,
-        "total_profit": 0.0,
+        "total_profit": 0,
         "time_to_first_sale_days": null,
         "liquidation_rate": 0.0,
         "is_complete": false
@@ -542,7 +695,7 @@
         "shares_untraced": 150000.0,
         "total_proceeds": 0,
         "total_economic_value": 0,
-        "total_profit": 0.0,
+        "total_profit": 0,
         "time_to_first_sale_days": null,
         "liquidation_rate": 0.0,
         "is_complete": false
@@ -563,7 +716,7 @@
         "shares_untraced": 150000.0,
         "total_proceeds": 0,
         "total_economic_value": 0,
-        "total_profit": 0.0,
+        "total_profit": 0,
         "time_to_first_sale_days": null,
         "liquidation_rate": 0.0,
         "is_complete": false
@@ -584,7 +737,7 @@
         "shares_untraced": 150000.0,
         "total_proceeds": 0,
         "total_economic_value": 0,
-        "total_profit": 0.0,
+        "total_profit": 0,
         "time_to_first_sale_days": null,
         "liquidation_rate": 0.0,
         "is_complete": false
@@ -605,7 +758,7 @@
         "shares_untraced": 2100.0,
         "total_proceeds": 0,
         "total_economic_value": 0,
-        "total_profit": 0.0,
+        "total_profit": 0,
         "time_to_first_sale_days": null,
         "liquidation_rate": 0.0,
         "is_complete": false
@@ -626,7 +779,7 @@
         "shares_untraced": 147900.0,
         "total_proceeds": 0,
         "total_economic_value": 0,
-        "total_profit": 0.0,
+        "total_profit": 0,
         "time_to_first_sale_days": null,
         "liquidation_rate": 0.0,
         "is_complete": false
@@ -647,7 +800,7 @@
         "shares_untraced": 48124.0,
         "total_proceeds": 0,
         "total_economic_value": 0,
-        "total_profit": 0.0,
+        "total_profit": 0,
         "time_to_first_sale_days": null,
         "liquidation_rate": 0.0,
         "is_complete": false
@@ -668,7 +821,7 @@
         "shares_untraced": 165000.0,
         "total_proceeds": 0,
         "total_economic_value": 0,
-        "total_profit": 0.0,
+        "total_profit": 0,
         "time_to_first_sale_days": null,
         "liquidation_rate": 0.0,
         "is_complete": false
@@ -689,7 +842,7 @@
         "shares_untraced": 156529.0,
         "total_proceeds": 0,
         "total_economic_value": 0,
-        "total_profit": 0.0,
+        "total_profit": 0,
         "time_to_first_sale_days": null,
         "liquidation_rate": 0.0,
         "is_complete": false
@@ -710,7 +863,7 @@
         "shares_untraced": 1918.0,
         "total_proceeds": 0,
         "total_economic_value": 0,
-        "total_profit": 0.0,
+        "total_profit": 0,
         "time_to_first_sale_days": null,
         "liquidation_rate": 0.0,
         "is_complete": false
@@ -742,7 +895,7 @@
         "shares_untraced": 0.0,
         "total_proceeds": 0,
         "total_economic_value": 188861.52,
-        "total_profit": 188861.52,
+        "total_profit": 0,
         "time_to_first_sale_days": 41,
         "liquidation_rate": 1.0,
         "is_complete": true
@@ -774,7 +927,7 @@
         "shares_untraced": 0.0,
         "total_proceeds": 0,
         "total_economic_value": 847795.2,
-        "total_profit": 847795.2,
+        "total_profit": 0,
         "time_to_first_sale_days": 0,
         "liquidation_rate": 1.0,
         "is_complete": true
@@ -806,7 +959,7 @@
         "shares_untraced": 9235.0,
         "total_proceeds": 0,
         "total_economic_value": 446701.02,
-        "total_profit": 446701.02,
+        "total_profit": 0,
         "time_to_first_sale_days": 90,
         "liquidation_rate": 0.3383,
         "is_complete": false
@@ -838,7 +991,7 @@
         "shares_untraced": 27779.0,
         "total_proceeds": 0,
         "total_economic_value": 446701.02,
-        "total_profit": 446701.02,
+        "total_profit": 0,
         "time_to_first_sale_days": 1,
         "liquidation_rate": 0.1453,
         "is_complete": false
@@ -870,7 +1023,7 @@
         "shares_untraced": 0.0,
         "total_proceeds": 0,
         "total_economic_value": 446701.02,
-        "total_profit": 446701.02,
+        "total_profit": 0,
         "time_to_first_sale_days": 0,
         "liquidation_rate": 1.0,
         "is_complete": true
@@ -891,7 +1044,7 @@
         "shares_untraced": 34100.0,
         "total_proceeds": 0,
         "total_economic_value": 0,
-        "total_profit": 0.0,
+        "total_profit": 0,
         "time_to_first_sale_days": null,
         "liquidation_rate": 0.0,
         "is_complete": false
@@ -912,7 +1065,7 @@
         "shares_untraced": 15641.0,
         "total_proceeds": 0,
         "total_economic_value": 0,
-        "total_profit": 0.0,
+        "total_profit": 0,
         "time_to_first_sale_days": null,
         "liquidation_rate": 0.0,
         "is_complete": false
@@ -933,7 +1086,7 @@
         "shares_untraced": 90000.0,
         "total_proceeds": 0,
         "total_economic_value": 0,
-        "total_profit": 0.0,
+        "total_profit": 0,
         "time_to_first_sale_days": null,
         "liquidation_rate": 0.0,
         "is_complete": false
@@ -954,7 +1107,7 @@
         "shares_untraced": 13956.0,
         "total_proceeds": 0,
         "total_economic_value": 0,
-        "total_profit": 0.0,
+        "total_profit": 0,
         "time_to_first_sale_days": null,
         "liquidation_rate": 0.0,
         "is_complete": false
@@ -975,7 +1128,7 @@
         "shares_untraced": 120000.0,
         "total_proceeds": 0,
         "total_economic_value": 0,
-        "total_profit": 0.0,
+        "total_profit": 0,
         "time_to_first_sale_days": null,
         "liquidation_rate": 0.0,
         "is_complete": false
@@ -996,7 +1149,7 @@
         "shares_untraced": 1996.0,
         "total_proceeds": 0,
         "total_economic_value": 0,
-        "total_profit": 0.0,
+        "total_profit": 0,
         "time_to_first_sale_days": null,
         "liquidation_rate": 0.0,
         "is_complete": false
@@ -1017,7 +1170,7 @@
         "shares_untraced": 1996.0,
         "total_proceeds": 0,
         "total_economic_value": 0,
-        "total_profit": 0.0,
+        "total_profit": 0,
         "time_to_first_sale_days": null,
         "liquidation_rate": 0.0,
         "is_complete": false
@@ -1038,7 +1191,7 @@
         "shares_untraced": 1996.0,
         "total_proceeds": 0,
         "total_economic_value": 0,
-        "total_profit": 0.0,
+        "total_profit": 0,
         "time_to_first_sale_days": null,
         "liquidation_rate": 0.0,
         "is_complete": false
@@ -1059,7 +1212,7 @@
         "shares_untraced": 1996.0,
         "total_proceeds": 0,
         "total_economic_value": 0,
-        "total_profit": 0.0,
+        "total_profit": 0,
         "time_to_first_sale_days": null,
         "liquidation_rate": 0.0,
         "is_complete": false
@@ -1080,7 +1233,7 @@
         "shares_untraced": 1996.0,
         "total_proceeds": 0,
         "total_economic_value": 0,
-        "total_profit": 0.0,
+        "total_profit": 0,
         "time_to_first_sale_days": null,
         "liquidation_rate": 0.0,
         "is_complete": false
@@ -1101,7 +1254,7 @@
         "shares_untraced": 1996.0,
         "total_proceeds": 0,
         "total_economic_value": 0,
-        "total_profit": 0.0,
+        "total_profit": 0,
         "time_to_first_sale_days": null,
         "liquidation_rate": 0.0,
         "is_complete": false
@@ -1122,7 +1275,7 @@
         "shares_untraced": 1996.0,
         "total_proceeds": 0,
         "total_economic_value": 0,
-        "total_profit": 0.0,
+        "total_profit": 0,
         "time_to_first_sale_days": null,
         "liquidation_rate": 0.0,
         "is_complete": false
@@ -1154,7 +1307,7 @@
         "shares_untraced": 0.0,
         "total_proceeds": 0,
         "total_economic_value": 190019.2,
-        "total_profit": 190019.2,
+        "total_profit": 0,
         "time_to_first_sale_days": 40,
         "liquidation_rate": 1.0,
         "is_complete": true
@@ -1175,7 +1328,7 @@
         "shares_untraced": 1996.0,
         "total_proceeds": 0,
         "total_economic_value": 0,
-        "total_profit": 0.0,
+        "total_profit": 0,
         "time_to_first_sale_days": null,
         "liquidation_rate": 0.0,
         "is_complete": false
@@ -1196,7 +1349,7 @@
         "shares_untraced": 23670.0,
         "total_proceeds": 0,
         "total_economic_value": 0,
-        "total_profit": 0.0,
+        "total_profit": 0,
         "time_to_first_sale_days": null,
         "liquidation_rate": 0.0,
         "is_complete": false
@@ -1228,7 +1381,7 @@
         "shares_untraced": 97810.0,
         "total_proceeds": 0,
         "total_economic_value": 163198.8,
-        "total_profit": 163198.8,
+        "total_profit": 0,
         "time_to_first_sale_days": 6,
         "liquidation_rate": 0.0219,
         "is_complete": false
@@ -1260,7 +1413,7 @@
         "shares_untraced": 0.0,
         "total_proceeds": 0,
         "total_economic_value": 163198.8,
-        "total_profit": 163198.8,
+        "total_profit": 0,
         "time_to_first_sale_days": 0,
         "liquidation_rate": 1.0,
         "is_complete": true
@@ -1281,7 +1434,7 @@
         "shares_untraced": 50000.0,
         "total_proceeds": 0,
         "total_economic_value": 0,
-        "total_profit": 0.0,
+        "total_profit": 0,
         "time_to_first_sale_days": null,
         "liquidation_rate": 0.0,
         "is_complete": false
@@ -1302,7 +1455,7 @@
         "shares_untraced": 13956.0,
         "total_proceeds": 0,
         "total_economic_value": 0,
-        "total_profit": 0.0,
+        "total_profit": 0,
         "time_to_first_sale_days": null,
         "liquidation_rate": 0.0,
         "is_complete": false
@@ -1323,7 +1476,7 @@
         "shares_untraced": 5406.0,
         "total_proceeds": 0,
         "total_economic_value": 0,
-        "total_profit": 0.0,
+        "total_profit": 0,
         "time_to_first_sale_days": null,
         "liquidation_rate": 0.0,
         "is_complete": false
@@ -1355,7 +1508,7 @@
         "shares_untraced": 0.0,
         "total_proceeds": 0,
         "total_economic_value": 49975000.0,
-        "total_profit": 49975000.0,
+        "total_profit": 0,
         "time_to_first_sale_days": 0,
         "liquidation_rate": 1.0,
         "is_complete": true
@@ -1702,8 +1855,11 @@
           "voting_power": true,
           "investment_power": true,
           "acquire_within_60d": false,
-          "anti_evasion": false,
-          "evidence": []
+          "anti_evasion": true,
+          "evidence": [
+            "Disclaimer filed \u2014 but anti-evasion Rule 13d-3(b) may override",
+            "Anti-evasion triggered: disclaimer + retained voting/investment power"
+          ]
         },
         "rule_16a1": {
           "result": "beneficial_owner",
@@ -1713,7 +1869,7 @@
           "evidence": []
         },
         "overall_beneficial_owner": true,
-        "confidence": 0.75
+        "confidence": 0.85
       },
       {
         "entity_name": "Knight Travis A",
@@ -1725,8 +1881,11 @@
           "voting_power": true,
           "investment_power": true,
           "acquire_within_60d": false,
-          "anti_evasion": false,
-          "evidence": []
+          "anti_evasion": true,
+          "evidence": [
+            "Disclaimer filed \u2014 but anti-evasion Rule 13d-3(b) may override",
+            "Anti-evasion triggered: disclaimer + retained voting/investment power"
+          ]
         },
         "rule_16a1": {
           "result": "beneficial_owner",
@@ -1736,7 +1895,7 @@
           "evidence": []
         },
         "overall_beneficial_owner": true,
-        "confidence": 0.75
+        "confidence": 0.85
       },
       {
         "entity_name": "KNIGHT PHILIP H",
@@ -1909,8 +2068,11 @@
           "voting_power": true,
           "investment_power": true,
           "acquire_within_60d": false,
-          "anti_evasion": false,
-          "evidence": []
+          "anti_evasion": true,
+          "evidence": [
+            "Disclaimer filed \u2014 but anti-evasion Rule 13d-3(b) may override",
+            "Anti-evasion triggered: disclaimer + retained voting/investment power"
+          ]
         },
         "rule_16a1": {
           "result": "beneficial_owner",
@@ -1920,7 +2082,7 @@
           "evidence": []
         },
         "overall_beneficial_owner": true,
-        "confidence": 0.75
+        "confidence": 0.85
       },
       {
         "entity_name": "Slusher John F",

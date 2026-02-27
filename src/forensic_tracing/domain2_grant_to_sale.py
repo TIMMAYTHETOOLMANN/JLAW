@@ -134,9 +134,9 @@ class LiquidationChain:
     intermediate_transfers: List[dict] = field(default_factory=list)
     shares_fully_traced: float = 0
     shares_untraced: float = 0
-    total_proceeds: float = 0        # Cash proceeds (from S-code sales only)
-    total_economic_value: float = 0   # FMV of all dispositions (includes non-cash)
-    total_profit: float = 0           # Economic value minus cost basis
+    total_proceeds: float = 0        # Cash received (Code S open market sales ONLY)
+    total_economic_value: float = 0   # FMV of shares at disposition (all types incl gifts/transfers)
+    total_profit: float = 0           # Realized gain: sale_proceeds - cost_basis (Code S ONLY)
     time_to_first_sale_days: Optional[int] = None
     liquidation_rate: float = 0  # % of acquired shares eventually sold
 
@@ -367,15 +367,23 @@ class GrantToSaleTracer:
                         chain.dispositions.append(disp)
                         remaining -= matched_shares
                         chain.shares_fully_traced += matched_shares
-                        # Cash proceeds: only from actual sales (Code S)
-                        if disp.disposition_type == DispositionType.OPEN_MARKET_SALE:
-                            chain.total_proceeds += matched_shares * disp.effective_price
-                        # Economic value: FMV for ALL disposition types
+                        # Economic value: FMV of shares at time of disposition (all types)
                         chain.total_economic_value += matched_shares * disp.effective_price
+                        # Cash proceeds + realized profit: ONLY from actual open market sales
+                        if disp.disposition_type == DispositionType.OPEN_MARKET_SALE:
+                            sale_proceeds = matched_shares * disp.effective_price
+                            chain.total_proceeds += sale_proceeds
+                            # Realized profit = sale price - cost basis (pro-rated)
+                            pro_rata_cost = (
+                                acq.cost_basis * (matched_shares / acq.shares_acquired)
+                                if acq.shares_acquired > 0 else 0
+                            )
+                            chain.total_profit += sale_proceeds - pro_rata_cost
 
                 chain.shares_untraced = max(remaining, 0)
-                # Profit = economic value at disposition minus cost basis at acquisition
-                chain.total_profit = chain.total_economic_value - acq.cost_basis
+                # NOTE: total_profit is accumulated above only for Code S sales.
+                # For gifts/transfers, profit stays $0 — the value moved but
+                # no cash was realized by the insider.
 
                 if chain.dispositions:
                     acq_date = datetime.strptime(acq.transaction_date, '%Y-%m-%d')

@@ -12,6 +12,9 @@
     "price_required": true,
     "price_value_source": "derived",
     "footnote_present": true,
+    "footnotes": [
+      "Stock Option granted on 07/20/2012 and became exercisable with respect to 25% of the shares on each of the first four anniversaries of the date of the grant."
+    ],
     "mentions_10b5_1": false,
     "tax_withholding": false,
     "entity_transfer": false,
@@ -50,6 +53,9 @@
     "price_required": true,
     "price_value_source": "derived",
     "footnote_present": true,
+    "footnotes": [
+      "Stock Option granted on 07/18/2014 and became exercisable with respect to 25% of the shares on each of the first four anniversaries of the date of the grant."
+    ],
     "mentions_10b5_1": false,
     "tax_withholding": false,
     "entity_transfer": false,
@@ -90,6 +96,9 @@
     "price_required": true,
     "price_value_source": "derived",
     "footnote_present": true,
+    "footnotes": [
+      "Stock Option granted on 09/19/2011 and became exercisable with respect to 100% of the shares on the date of the first anniversary of the date of grant."
+    ],
     "mentions_10b5_1": false,
     "tax_withholding": false,
     "entity_transfer": false,
@@ -133,6 +142,9 @@
     "price_required": true,
     "price_value_source": "derived",
     "footnote_present": true,
+    "footnotes": [
+      "Option granted on 07/16/2010 and became exercisable with respect to 25% of the shares on each of the first four anniversaries of the date of the grant."
+    ],
     "mentions_10b5_1": false,
     "tax_withholding": false,
     "entity_transfer": false,
@@ -171,6 +183,9 @@
     "price_required": true,
     "price_value_source": "derived",
     "footnote_present": true,
+    "footnotes": [
+      "Option granted on 07/16/2010 and became exercisable with respect to 25% of the shares on each of the first four anniversaries of the date of the grant."
+    ],
     "mentions_10b5_1": false,
     "tax_withholding": false,
     "entity_transfer": false,
@@ -209,6 +224,9 @@
     "price_required": false,
     "price_value_source": "missing",
     "footnote_present": true,
+    "footnotes": [
+      "Restricted shares granted on 11/14/2019 under the NIKE, Inc. Stock Incentive Plan. The restrictions lapse with respect to 100% of the shares on the first anniversary of the date of grant; and upon any termination of service, any shares as to which the restrictions have not expired shall be forfeited to NIKE for cancellation and become authorized but unissued shares."
+    ],
     "mentions_10b5_1": false,
     "tax_withholding": false,
     "entity_transfer": false,
@@ -246,6 +264,9 @@
     "price_required": false,
     "price_value_source": "missing",
     "footnote_present": true,
+    "footnotes": [
+      "Pursuant to Company policy, market transactions in Company stock by officers and directors are permitted only after the second full trading day after the release of quarterly earnings and ending on the last day of the second month of the following fiscal quarter, except pursuant to approved 10b5-1 trading plans."
+    ],
     "mentions_10b5_1": true,
     "tax_withholding": false,
     "entity_transfer": false,
@@ -288,6 +309,9 @@
     "price_required": false,
     "price_value_source": "missing",
     "footnote_present": true,
+    "footnotes": [
+      "Pursuant to Company policy, market transactions in Company stock by officers and directors are permitted only after the first full trading day after the release of quarterly earnings and ending on the last day of the second month of the following fiscal quarter, except pursuant to approved 10b5-1 trading plans."
+    ],
     "mentions_10b5_1": true,
     "tax_withholding": false,
     "entity_transfer": false,
@@ -330,6 +354,9 @@
     "price_required": true,
     "price_value_source": "derived",
     "footnote_present": true,
+    "footnotes": [
+      "Stock Option granted on 07/19/2013 and became exercisable with respect to 25% of the shares on each of the first four anniversaries of the date of the grant."
+    ],
     "mentions_10b5_1": false,
     "tax_withholding": false,
     "entity_transfer": false,
@@ -369,6 +396,13 @@
     "price_required": false,
     "price_value_source": "missing",
     "footnote_present": true,
+    "footnotes": [
+      "Class A Common Stock is convertible at any time on a one-for-one basis into Class B Common Stock with no expiration date.",
+      "On October 29, 2019, Swoosh, LLC, a Delaware limited liability company (\"Swoosh\"), made a private pro rata distribution of shares of the Issuer's Class A Common Stock. A wholly-owned subsidiary (\"Subsidiary\") of the Travis A. Knight 2009 Irrevocable Trust II (the \"Trust\") received 900,000 of the 9,000,000 shares so distributed, which 900,000 shares were simultaneously distributed to the Trust in a transaction representing only a change in the form of beneficial ownership of such shares.  As described in footnote 5, the reporting person, through the Trust, acquired an interest in such shares.",
+      "Pursuant to the Amended and Restated Limited Liability Company Agreement of Swoosh (the \"Swoosh Agreement\"), Swoosh is managed by a board of directors consisting of five board seats (the \"Swoosh Board\").  Two of the five seats on the Swoosh Board are classified as Class X Board Seats and are filled by vote of the Class X Units. The other three Swoosh board seats are held by directors who are self-electing (the \"Independent Directors\").  The reporting person currently holds both of the Class X Board Seats.  At least two Independent Directors and a director holding a Class X Board Seat constitute a quorum at a meeting of the Swoosh Board, and board action requires the approval of a majority of votes cast at a meeting at which a quorum is present.",
+      "The foregoing description of the Swoosh Agreement and the Swoosh Board is qualified in its entirety by reference to the Schedule 13D filed by Swoosh on June 30, 2015, as amended on December 31, 2015 and June 30, 2016.  The reporting person disclaims beneficial ownership of all securities held by Swoosh, and this report shall not be deemed an admission that the reporting person is, or has been, the beneficial owner of such securities for purposes of Section 16 or for any other purpose.",
+      "The number in column 9 represents 20,713,989 shares, in the case of row 1 of Table II, and 21,613,989 shares, in the case of row 2 of Table II, held directly by the Trust, 19,142,380 shares held directly by a Delaware limited liability company of which Subsidiary is the sole manager, and 236,000,000 shares held directly by Swoosh (all the Class X Units of which are held by Subsidiary).  The reporting person disclaims beneficial ownership of all such shares held directly and indirectly by the Trust in excess of his pecuniary interest therein and disclaims beneficial ownership of all securities held by Swoosh."
+    ],
     "mentions_10b5_1": false,
     "tax_withholding": false,
     "entity_transfer": true,
@@ -411,6 +445,13 @@
     "price_required": false,
     "price_value_source": "missing",
     "footnote_present": true,
+    "footnotes": [
+      "Class A Common Stock is convertible at any time on a one-for-one basis into Class B Common Stock with no expiration date.",
+      "On October 29, 2019, Swoosh, LLC, a Delaware limited liability company (\"Swoosh\"), made a private pro rata distribution of shares of the Issuer's Class A Common Stock. A wholly-owned subsidiary (\"Subsidiary\") of the Travis A. Knight 2009 Irrevocable Trust II (the \"Trust\") received 900,000 of the 9,000,000 shares so distributed, which 900,000 shares were simultaneously distributed to the Trust in a transaction representing only a change in the form of beneficial ownership of such shares.  As described in footnote 5, the reporting person, through the Trust, acquired an interest in such shares.",
+      "Pursuant to the Amended and Restated Limited Liability Company Agreement of Swoosh (the \"Swoosh Agreement\"), Swoosh is managed by a board of directors consisting of five board seats (the \"Swoosh Board\").  Two of the five seats on the Swoosh Board are classified as Class X Board Seats and are filled by vote of the Class X Units. The other three Swoosh board seats are held by directors who are self-electing (the \"Independent Directors\").  The reporting person currently holds both of the Class X Board Seats.  At least two Independent Directors and a director holding a Class X Board Seat constitute a quorum at a meeting of the Swoosh Board, and board action requires the approval of a majority of votes cast at a meeting at which a quorum is present.",
+      "The foregoing description of the Swoosh Agreement and the Swoosh Board is qualified in its entirety by reference to the Schedule 13D filed by Swoosh on June 30, 2015, as amended on December 31, 2015 and June 30, 2016.  The reporting person disclaims beneficial ownership of all securities held by Swoosh, and this report shall not be deemed an admission that the reporting person is, or has been, the beneficial owner of such securities for purposes of Section 16 or for any other purpose.",
+      "The number in column 9 represents 20,713,989 shares, in the case of row 1 of Table II, and 21,613,989 shares, in the case of row 2 of Table II, held directly by the Trust, 19,142,380 shares held directly by a Delaware limited liability company of which Subsidiary is the sole manager, and 236,000,000 shares held directly by Swoosh (all the Class X Units of which are held by Subsidiary).  The reporting person disclaims beneficial ownership of all such shares held directly and indirectly by the Trust in excess of his pecuniary interest therein and disclaims beneficial ownership of all securities held by Swoosh."
+    ],
     "mentions_10b5_1": false,
     "tax_withholding": false,
     "entity_transfer": true,
@@ -453,6 +494,10 @@
     "price_required": false,
     "price_value_source": "missing",
     "footnote_present": true,
+    "footnotes": [
+      "Class A Common  Stock is convertible at any time on a one-for-one basis into Class B Common Stock with no expiration date.",
+      "On October 29, 2019, the reporting person acquired the shares as a result of a private pro rata distribution from Swoosh, LLC, a Delaware limited liability company."
+    ],
     "mentions_10b5_1": false,
     "tax_withholding": false,
     "entity_transfer": true,
@@ -493,6 +538,10 @@
     "price_required": false,
     "price_value_source": "missing",
     "footnote_present": true,
+    "footnotes": [
+      "Class A Common Stock is convertible at any time on a one-for-one basis into Class B Common Stock with no expiration date.",
+      "Private pro rata distribution to members of Swoosh, LLC."
+    ],
     "mentions_10b5_1": false,
     "tax_withholding": false,
     "entity_transfer": true,
@@ -533,6 +582,9 @@
     "price_required": false,
     "price_value_source": "missing",
     "footnote_present": true,
+    "footnotes": [
+      "Pursuant to Company policy, market transactions in Company stock by officers and directors are permitted only after the first full trading day after the release of quarterly earnings and ending on the last day of the second month of the following fiscal quarter, except pursuant to approved 10b5-1 trading plans."
+    ],
     "mentions_10b5_1": true,
     "tax_withholding": false,
     "entity_transfer": false,
@@ -576,6 +628,9 @@
     "price_required": true,
     "price_value_source": "derived",
     "footnote_present": true,
+    "footnotes": [
+      "Stock Option granted on 07/15/2011 and became exercisable with respect to 25% of the shares on each of the first four anniversaries of the date of the grant."
+    ],
     "mentions_10b5_1": false,
     "tax_withholding": false,
     "entity_transfer": false,
@@ -615,6 +670,10 @@
     "price_required": false,
     "price_value_source": "missing",
     "footnote_present": true,
+    "footnotes": [
+      "Pursuant to Company policy, market transactions in Company stock by officers and directors are permitted only after the first full trading day after the release of quarterly earnings and ending on the last day of the second month of the following fiscal quarter, except pursuant to approved 10b5-1 trading plans.",
+      "Includes shares acquired pursuant to NIKE, Inc.'s Employee Stock Purchase Plan."
+    ],
     "mentions_10b5_1": true,
     "tax_withholding": false,
     "entity_transfer": false,
@@ -658,6 +717,9 @@
     "price_required": true,
     "price_value_source": "derived",
     "footnote_present": true,
+    "footnotes": [
+      "Option granted on 07/16/2010 and became exercisable with respect to 25% of the shares on each of the first four anniversaries of the date of the grant."
+    ],
     "mentions_10b5_1": false,
     "tax_withholding": false,
     "entity_transfer": false,
@@ -696,6 +758,9 @@
     "price_required": true,
     "price_value_source": "derived",
     "footnote_present": true,
+    "footnotes": [
+      "Stock Option granted on 07/19/2013 and became exercisable with respect to 25% of the shares on each of the first four anniversaries of the date of the grant."
+    ],
     "mentions_10b5_1": false,
     "tax_withholding": false,
     "entity_transfer": false,
@@ -734,6 +799,9 @@
     "price_required": true,
     "price_value_source": "derived",
     "footnote_present": true,
+    "footnotes": [
+      "Stock Option granted on 07/20/2012 and became exercisable with respect to 25% of the shares on each of the first four anniversaries of the date of the grant."
+    ],
     "mentions_10b5_1": false,
     "tax_withholding": false,
     "entity_transfer": false,
@@ -772,6 +840,9 @@
     "price_required": false,
     "price_value_source": "missing",
     "footnote_present": true,
+    "footnotes": [
+      "Restricted shares granted on 09/19/2019 under the NIKE, Inc. Stock Incentive Plan. The restrictions lapse with respect to 100% of the shares on the earlier of the date of the next annual meeting of shareholders, or the first anniversary of the date of grant; and upon any termination of service, any shares as to which the restrictions have not expired shall be forfeited to NIKE for cancellation and become authorized but unissued shares."
+    ],
     "mentions_10b5_1": false,
     "tax_withholding": false,
     "entity_transfer": false,
@@ -810,6 +881,9 @@
     "price_required": false,
     "price_value_source": "missing",
     "footnote_present": true,
+    "footnotes": [
+      "Restricted shares granted on 09/19/2019 under the NIKE, Inc. Stock Incentive Plan. The restrictions lapse with respect to 100% of the shares on the earlier of the date of the next annual meeting of shareholders, or the first anniversary of the date of grant; and upon any termination of service, any shares as to which the restrictions have not expired shall be forfeited to NIKE for cancellation and become authorized but unissued shares."
+    ],
     "mentions_10b5_1": false,
     "tax_withholding": false,
     "entity_transfer": false,
@@ -848,6 +922,9 @@
     "price_required": false,
     "price_value_source": "missing",
     "footnote_present": true,
+    "footnotes": [
+      "Restricted shares granted on 09/19/2019 under the NIKE, Inc. Stock Incentive Plan. The restrictions lapse with respect to 100% of the shares on the earlier of the date of the next annual meeting of shareholders, or the first anniversary of the date of grant; and upon any termination of service, any shares as to which the restrictions have not expired shall be forfeited to NIKE for cancellation and become authorized but unissued shares."
+    ],
     "mentions_10b5_1": false,
     "tax_withholding": false,
     "entity_transfer": false,
@@ -886,6 +963,9 @@
     "price_required": false,
     "price_value_source": "missing",
     "footnote_present": true,
+    "footnotes": [
+      "Restricted shares granted on 09/19/2019 under the NIKE, Inc. Stock Incentive Plan. The restrictions lapse with respect to 100% of the shares on the earlier of the date of the next annual meeting of shareholders, or the first anniversary of the date of grant; and upon any termination of service, any shares as to which the restrictions have not expired shall be forfeited to NIKE for cancellation and become authorized but unissued shares."
+    ],
     "mentions_10b5_1": false,
     "tax_withholding": false,
     "entity_transfer": false,
@@ -926,6 +1006,9 @@
     "price_required": false,
     "price_value_source": "missing",
     "footnote_present": true,
+    "footnotes": [
+      "Restricted shares granted on 09/19/2019 under the NIKE, Inc. Stock Incentive Plan. The restrictions lapse with respect to 100% of the shares on the earlier of the date of the next annual meeting of shareholders, or the first anniversary of the date of grant; and upon any termination of service, any shares as to which the restrictions have not expired shall be forfeited to NIKE for cancellation and become authorized but unissued shares."
+    ],
     "mentions_10b5_1": false,
     "tax_withholding": false,
     "entity_transfer": false,
@@ -964,6 +1047,9 @@
     "price_required": false,
     "price_value_source": "missing",
     "footnote_present": true,
+    "footnotes": [
+      "Restricted shares granted on 09/19/2019 under the NIKE, Inc. Stock Incentive Plan. The restrictions lapse with respect to 100% of the shares on the earlier of the date of the next annual meeting of shareholders, or the first anniversary of the date of grant; and upon any termination of service, any shares as to which the restrictions have not expired shall be forfeited to NIKE for cancellation and become authorized but unissued shares."
+    ],
     "mentions_10b5_1": false,
     "tax_withholding": false,
     "entity_transfer": false,
@@ -1002,6 +1088,9 @@
     "price_required": false,
     "price_value_source": "missing",
     "footnote_present": true,
+    "footnotes": [
+      "Restricted shares granted on 09/19/2019 under the NIKE, Inc. Stock Incentive Plan. The restrictions lapse with respect to 100% of the shares on the earlier of the date of the next annual meeting of shareholders, or the first anniversary of the date of grant; and upon any termination of service, any shares as to which the restrictions have not expired shall be forfeited to NIKE for cancellation and become authorized but unissued shares."
+    ],
     "mentions_10b5_1": false,
     "tax_withholding": false,
     "entity_transfer": false,
@@ -1040,6 +1129,9 @@
     "price_required": false,
     "price_value_source": "missing",
     "footnote_present": true,
+    "footnotes": [
+      "Restricted shares granted on 09/19/2019 under the NIKE, Inc. Stock Incentive Plan. The restrictions lapse with respect to 100% of the shares on the earlier of the date of the next annual meeting of shareholders, or the first anniversary of the date of grant; and upon any termination of service, any shares as to which the restrictions have not expired shall be forfeited to NIKE for cancellation and become authorized but unissued shares."
+    ],
     "mentions_10b5_1": false,
     "tax_withholding": false,
     "entity_transfer": false,
@@ -1078,6 +1170,10 @@
     "price_required": false,
     "price_value_source": "missing",
     "footnote_present": true,
+    "footnotes": [
+      "Restricted shares granted on 09/19/2019 under the NIKE, Inc. Stock Incentive Plan. The restrictions lapse with respect to 100% of the shares on the earlier of the date of the next annual meeting of shareholders, or the first anniversary of the date of grant; and upon any termination of service, any shares as to which the restrictions have not expired shall be forfeited to NIKE for cancellation and become authorized but unissued shares.",
+      "Reflects a decrease of two shares to correct a rounding difference."
+    ],
     "mentions_10b5_1": false,
     "tax_withholding": false,
     "entity_transfer": false,
@@ -1116,6 +1212,9 @@
     "price_required": false,
     "price_value_source": "missing",
     "footnote_present": true,
+    "footnotes": [
+      "Restricted shares granted on 09/19/2019 under the NIKE, Inc. Stock Incentive Plan. The restrictions lapse with respect to 100% of the shares on the earlier of the date of the next annual meeting of shareholders, or the first anniversary of the date of grant; and upon any termination of service, any shares as to which the restrictions have not expired shall be forfeited to NIKE for cancellation and become authorized but unissued shares."
+    ],
     "mentions_10b5_1": false,
     "tax_withholding": false,
     "entity_transfer": false,
@@ -1154,6 +1253,10 @@
     "price_required": false,
     "price_value_source": "missing",
     "footnote_present": true,
+    "footnotes": [
+      "Restricted shares granted on 09/19/2019 under the NIKE, Inc. Stock Incentive Plan. The restrictions lapse with respect to 100% of the shares on the earlier of the date of the next annual meeting of shareholders, or the first anniversary of the date of grant; and upon any termination of service, any shares as to which the restrictions have not expired shall be forfeited to NIKE for cancellation and become authorized but unissued shares.",
+      "Includes shares acquired under the Company's dividend reinvestment plan on a quarterly basis from October 3, 2005 through July 1, 2010 that were previously unreported."
+    ],
     "mentions_10b5_1": false,
     "tax_withholding": false,
     "entity_transfer": false,
@@ -1192,6 +1295,9 @@
     "price_required": false,
     "price_value_source": "derived",
     "footnote_present": true,
+    "footnotes": [
+      "Stock Option granted on 9/01/2019 and becomes exercisable with respect to 25% of the shares on each of the first four anniversaries of the date of the grant."
+    ],
     "mentions_10b5_1": false,
     "tax_withholding": false,
     "entity_transfer": false,
@@ -1230,6 +1336,10 @@
     "price_required": false,
     "price_value_source": "missing",
     "footnote_present": true,
+    "footnotes": [
+      "Restricted Stock Units (\"RSUs\") granted under the NIKE, Inc. Stock Incentive Plan. One-third of the total number of RSUs granted shall vest on each of the first three anniversaries of the date of the grant; and upon any termination of employment, any units that have not vested shall be forfeited to the Corporation.",
+      "Includes shares acquired pursuant to NIKE, Inc.'s Employee Stock Purchase Plan."
+    ],
     "mentions_10b5_1": false,
     "tax_withholding": false,
     "entity_transfer": false,
@@ -1269,6 +1379,9 @@
     "price_required": true,
     "price_value_source": "derived",
     "footnote_present": true,
+    "footnotes": [
+      "Stock Option granted on 07/20/2012 and became exercisable with respect to 25% of the shares on each of the first four anniversaries of the date of the grant."
+    ],
     "mentions_10b5_1": false,
     "tax_withholding": false,
     "entity_transfer": false,
@@ -1308,6 +1421,9 @@
     "price_required": false,
     "price_value_source": "derived",
     "footnote_present": true,
+    "footnotes": [
+      "Stock Option granted on 08/01/2019 and becomes exercisable with respect to 25% of the shares on each of the first four anniversaries of the date of the grant."
+    ],
     "mentions_10b5_1": false,
     "tax_withholding": false,
     "entity_transfer": false,
@@ -1347,6 +1463,9 @@
     "price_required": false,
     "price_value_source": "missing",
     "footnote_present": true,
+    "footnotes": [
+      "Restricted Stock Units (\"RSUs\") granted under the NIKE, Inc. Stock Incentive Plan. One-third of the total number of RSUs granted shall vest on each of the first three anniversaries of the date of the grant; and upon any termination of employment, any units that have not vested shall be forfeited to the Corporation."
+    ],
     "mentions_10b5_1": false,
     "tax_withholding": false,
     "entity_transfer": false,
@@ -1386,6 +1505,9 @@
     "price_required": false,
     "price_value_source": "derived",
     "footnote_present": true,
+    "footnotes": [
+      "Stock Option granted on 08/01/2019 and becomes exercisable with respect to 25% of the shares on each of the first four anniversaries of the date of the grant."
+    ],
     "mentions_10b5_1": false,
     "tax_withholding": false,
     "entity_transfer": false,
@@ -1425,6 +1547,10 @@
     "price_required": false,
     "price_value_source": "missing",
     "footnote_present": true,
+    "footnotes": [
+      "Restricted Stock Units (\"RSUs\") granted under the NIKE, Inc. Stock Incentive Plan. One-third of the total number of RSUs granted shall vest on each of the first three anniversaries of the date of the grant; and upon any termination of employment, any units that have not vested shall be forfeited to the Corporation.",
+      "Includes shares acquired pursuant to NIKE, Inc.'s Employee Stock Purchase Plan."
+    ],
     "mentions_10b5_1": false,
     "tax_withholding": false,
     "entity_transfer": false,
@@ -1464,6 +1590,9 @@
     "price_required": false,
     "price_value_source": "derived",
     "footnote_present": true,
+    "footnotes": [
+      "Stock Option granted on 08/01/2019 and becomes exercisable with respect to 25% of the shares on each of the first four anniversaries of the date of the grant."
+    ],
     "mentions_10b5_1": false,
     "tax_withholding": false,
     "entity_transfer": false,
@@ -1503,6 +1632,10 @@
     "price_required": false,
     "price_value_source": "missing",
     "footnote_present": true,
+    "footnotes": [
+      "Restricted Stock Units (\"RSUs\") granted under the NIKE, Inc. Stock Incentive Plan. One-third of the total number of RSUs granted shall vest on each of the first three anniversaries of the date of the grant; and upon any termination of employment, any units that have not vested shall be forfeited to the Corporation.",
+      "Includes shares acquired pursuant to NIKE, Inc.'s Employee Stock Purchase Plan."
+    ],
     "mentions_10b5_1": false,
     "tax_withholding": false,
     "entity_transfer": false,
@@ -1542,6 +1675,9 @@
     "price_required": false,
     "price_value_source": "derived",
     "footnote_present": true,
+    "footnotes": [
+      "Stock Option granted on 08/01/2019 and becomes exercisable with respect to 25% of the shares on each of the first four anniversaries of the date of the grant."
+    ],
     "mentions_10b5_1": false,
     "tax_withholding": false,
     "entity_transfer": false,
@@ -1581,6 +1717,10 @@
     "price_required": false,
     "price_value_source": "missing",
     "footnote_present": true,
+    "footnotes": [
+      "Restricted Stock Units (\"RSUs\") granted under the NIKE, Inc. Stock Incentive Plan. One-third of the total number of RSUs granted shall vest on each of the first three anniversaries of the date of the grant; and upon any termination of employment, any units that have not vested shall be forfeited to the Corporation.",
+      "Includes shares acquired pursuant to NIKE, Inc.'s Employee Stock Purchase Plan."
+    ],
     "mentions_10b5_1": false,
     "tax_withholding": false,
     "entity_transfer": false,
@@ -1622,6 +1762,9 @@
     "price_required": false,
     "price_value_source": "derived",
     "footnote_present": true,
+    "footnotes": [
+      "Stock Option granted on 08/01/2019 and becomes exercisable with respect to 25% of the shares on each of the first four anniversaries of the date of the grant."
+    ],
     "mentions_10b5_1": false,
     "tax_withholding": false,
     "entity_transfer": false,
@@ -1663,6 +1806,10 @@
     "price_required": false,
     "price_value_source": "missing",
     "footnote_present": true,
+    "footnotes": [
+      "Restricted Stock Units (\"RSUs\") granted under the NIKE, Inc. Stock Incentive Plan. One-third of the total number of RSUs granted shall vest on each of the first three anniversaries of the date of the grant; and upon any termination of employment, any units that have not vested shall be forfeited to the Corporation.",
+      "Includes shares acquired pursuant to NIKE, Inc.'s Employee Stock Purchase Plan."
+    ],
     "mentions_10b5_1": false,
     "tax_withholding": false,
     "entity_transfer": false,
@@ -1702,6 +1849,9 @@
     "price_required": false,
     "price_value_source": "derived",
     "footnote_present": true,
+    "footnotes": [
+      "Stock Option granted on 08/01/2019 and becomes exercisable with respect to 25% of the shares on each of the first four anniversaries of the date of the grant."
+    ],
     "mentions_10b5_1": false,
     "tax_withholding": false,
     "entity_transfer": false,
@@ -1741,6 +1891,10 @@
     "price_required": false,
     "price_value_source": "missing",
     "footnote_present": true,
+    "footnotes": [
+      "Restricted Stock Units (\"RSUs\") granted under the NIKE, Inc. Stock Incentive Plan. One-third of the total number of RSUs granted shall vest on each of the first three anniversaries of the date of the grant; and upon any termination of employment, any units that have not vested shall be forfeited to the Corporation.",
+      "Includes shares acquired pursuant to NIKE, Inc.'s Employee Stock Purchase Plan."
+    ],
     "mentions_10b5_1": false,
     "tax_withholding": false,
     "entity_transfer": false,
@@ -1780,6 +1934,9 @@
     "price_required": false,
     "price_value_source": "derived",
     "footnote_present": true,
+    "footnotes": [
+      "Stock Option granted on 08/01/2019 and becomes exercisable with respect to 25% of the shares on each of the first four anniversaries of the date of the grant."
+    ],
     "mentions_10b5_1": false,
     "tax_withholding": false,
     "entity_transfer": false,
@@ -1819,6 +1976,10 @@
     "price_required": true,
     "price_value_source": "derived",
     "footnote_present": true,
+    "footnotes": [
+      "Pursuant to Company policy, market transactions in Company stock by officers and directors are permitted only after the first full trading day after the release of quarterly earnings and ending on the last day of the second month of the following fiscal quarter, except pursuant to approved 10b5-1 trading plans.",
+      "Option granted on 09/20/2010 and became exercisable with respect to 100% of the shares on the date of the first annual meeting of shareholders of the Company held after Grant Date."
+    ],
     "mentions_10b5_1": true,
     "tax_withholding": false,
     "entity_transfer": false,
@@ -1860,6 +2021,10 @@
     "price_required": true,
     "price_value_source": "derived",
     "footnote_present": true,
+    "footnotes": [
+      "Pursuant to Company policy, market transactions in Company stock by officers and directors are permitted only after the first full trading day after the release of quarterly earnings and ending on the last day of the second month of the following fiscal quarter, except pursuant to approved 10b5-1 trading plans.",
+      "Option granted on 09/20/2010 and became exercisable with respect to 100% of the shares on the date of the first annual meeting of shareholders of the Company held after Grant Date."
+    ],
     "mentions_10b5_1": true,
     "tax_withholding": false,
     "entity_transfer": false,
@@ -1901,6 +2066,9 @@
     "price_required": true,
     "price_value_source": "derived",
     "footnote_present": true,
+    "footnotes": [
+      "Stock Option granted on 07/20/2012 and became exercisable with respect to 25% of the shares on each of the first four anniversaries of the date of the grant."
+    ],
     "mentions_10b5_1": false,
     "tax_withholding": false,
     "entity_transfer": false,
@@ -1939,6 +2107,10 @@
     "price_required": true,
     "price_value_source": "derived",
     "footnote_present": true,
+    "footnotes": [
+      "Pursuant to Company policy, market transactions in Company stock by officers and directors are permitted only after the first full trading day after the release of quarterly earnings and ending on the last day of the second month of the following fiscal quarter, except pursuant to approved 10b5-1 trading plans.",
+      "Stock Option granted on 04/21/2011 and becomes exercisable with respect to 100% of the shares on the date of the first anniversary of the date of grant."
+    ],
     "mentions_10b5_1": true,
     "tax_withholding": false,
     "entity_transfer": false,
@@ -1982,6 +2154,10 @@
     "price_required": false,
     "price_value_source": "missing",
     "footnote_present": true,
+    "footnotes": [
+      "Pursuant to Company policy, market transactions in Company stock by officers and directors are permitted only after the second full trading day after the release of quarterly earnings and ending on the last day of the second month of the following fiscal quarter, except pursuant to approved 10b5-1 trading plans.",
+      "Includes shares acquired pursuant to NIKE, Inc.'s Employee Stock Purchase Plan."
+    ],
     "mentions_10b5_1": true,
     "tax_withholding": false,
     "entity_transfer": false,
@@ -2027,6 +2203,10 @@
     "price_required": false,
     "price_value_source": "missing",
     "footnote_present": true,
+    "footnotes": [
+      "Pursuant to Company policy, market transactions in Company stock by officers and directors are permitted only after the second full trading day after the release of quarterly earnings and ending on the last day of the second month of the following fiscal quarter, except pursuant to approved 10b5-1 trading plans.",
+      "Includes shares acquired pursuant to NIKE, Inc.'s Employee Stock Purchase Plan."
+    ],
     "mentions_10b5_1": true,
     "tax_withholding": false,
     "entity_transfer": false,
@@ -2072,6 +2252,10 @@
     "price_required": false,
     "price_value_source": "missing",
     "footnote_present": true,
+    "footnotes": [
+      "Pursuant to Company policy, market transactions in Company stock by officers and directors are permitted only after the second full trading day after the release of quarterly earnings and ending on the last day of the second month of the following fiscal quarter, except pursuant to approved 10b5-1 trading plans.",
+      "Includes shares acquired pursuant to NIKE, Inc.'s Employee Stock Purchase Plan."
+    ],
     "mentions_10b5_1": true,
     "tax_withholding": false,
     "entity_transfer": false,
@@ -2117,6 +2301,10 @@
     "price_required": true,
     "price_value_source": "derived",
     "footnote_present": true,
+    "footnotes": [
+      "Pursuant to Company policy, market transactions in Company stock by officers and directors are permitted only after the second full trading day after the release of quarterly earnings and ending on the last day of the second month of the following fiscal quarter, except pursuant to approved 10b5-1 trading plans.",
+      "Stock Option granted on 07/18/2014 and became exercisable with respect to 25% of the shares on each of the first four anniversaries of the date of the grant."
+    ],
     "mentions_10b5_1": true,
     "tax_withholding": false,
     "entity_transfer": false,
@@ -2160,6 +2348,10 @@
     "price_required": true,
     "price_value_source": "derived",
     "footnote_present": true,
+    "footnotes": [
+      "Exercise and sale was pursuant to an approved 10b5-1 trading plan.  Pursuant to Company policy, market transactions in Company stock by officers and directors are permitted only after the second full trading day after the public release of quarterly earnings and ending on the last day of the second month of the following fiscal quarter, except pursuant to approved 10b5-1 trading plans.",
+      "Stock Option granted on 07/20/2012 and became exercisable with respect to 25% of the shares on each of the first four anniversaries of the date of the grant."
+    ],
     "mentions_10b5_1": true,
     "tax_withholding": false,
     "entity_transfer": false,
@@ -2201,6 +2393,10 @@
     "price_required": true,
     "price_value_source": "derived",
     "footnote_present": true,
+    "footnotes": [
+      "Exercise and sale was pursuant to an approved 10b5-1 trading plan.  Pursuant to Company policy, market transactions in Company stock by officers and directors are permitted only after the second full trading day after the public release of quarterly earnings and ending on the last day of the second month of the following fiscal quarter, except pursuant to approved 10b5-1 trading plans.",
+      "Stock Option granted on 07/20/2012 and became exercisable with respect to 25% of the shares on each of the first four anniversaries of the date of the grant."
+    ],
     "mentions_10b5_1": true,
     "tax_withholding": false,
     "entity_transfer": false,
@@ -2242,6 +2438,10 @@
     "price_required": true,
     "price_value_source": "derived",
     "footnote_present": true,
+    "footnotes": [
+      "Exercise and sale was pursuant to an approved 10b5-1 trading plan.  Pursuant to Company policy, market transactions in Company stock by officers and directors are permitted only after the second full trading day after the public release of quarterly earnings and ending on the last day of the second month of the following fiscal quarter, except pursuant to approved 10b5-1 trading plans.",
+      "Stock Option granted on 07/20/2012 and became exercisable with respect to 25% of the shares on each of the first four anniversaries of the date of the grant."
+    ],
     "mentions_10b5_1": true,
     "tax_withholding": false,
     "entity_transfer": false,
@@ -2283,6 +2483,10 @@
     "price_required": true,
     "price_value_source": "derived",
     "footnote_present": true,
+    "footnotes": [
+      "Exercise and sale was pursuant to an approved 10b5-1 trading plan.  Pursuant to Company policy, market transactions in Company stock by officers and directors are permitted only after the second full trading day after the public release of quarterly earnings and ending on the last day of the second month of the following fiscal quarter, except pursuant to approved 10b5-1 trading plans.",
+      "Stock Option granted on 07/17/2009 and became exercisable with respect to 25% of the shares on each of the first four anniversaries of the date of the grant."
+    ],
     "mentions_10b5_1": true,
     "tax_withholding": false,
     "entity_transfer": false,
@@ -2323,6 +2527,10 @@
     "price_required": true,
     "price_value_source": "derived",
     "footnote_present": true,
+    "footnotes": [
+      "Exercise and sale was pursuant to an approved 10b5-1 trading plan.  Pursuant to Company policy, market transactions in Company stock by officers and directors are permitted only after the second full trading day after the public release of quarterly earnings and ending on the last day of the second month of the following fiscal quarter, except pursuant to approved 10b5-1 trading plans.",
+      "Stock Option granted on 07/17/2009 and became exercisable with respect to 25% of the shares on each of the first four anniversaries of the date of the grant."
+    ],
     "mentions_10b5_1": true,
     "tax_withholding": false,
     "entity_transfer": false,
@@ -2364,6 +2572,10 @@
     "price_required": false,
     "price_value_source": "missing",
     "footnote_present": true,
+    "footnotes": [
+      "Pursuant to Company policy, market transactions in Company stock by officers and directors are permitted only after the second full trading day after the release of quarterly earnings and ending on the last day of the second month of the following fiscal quarter, except pursuant to approved 10b5-1 trading plans.",
+      "On January 18, 2019, the reporting person gifted 625,000 shares of the Issuer's Class B common stock to a charitable organization. The reporting person disclaims beneficial ownership of all gifted shares."
+    ],
     "mentions_10b5_1": true,
     "tax_withholding": false,
     "entity_transfer": false,
@@ -2405,6 +2617,10 @@
     "price_required": true,
     "price_value_source": "derived",
     "footnote_present": true,
+    "footnotes": [
+      "Exercise and sale was pursuant to an approved 10b5-1 trading plan.  Pursuant to Company policy, market transactions in Company stock by officers and directors are permitted only after the second full trading day after the public release of quarterly earnings and ending on the last day of the second month of the following fiscal quarter, except pursuant to approved 10b5-1 trading plans.",
+      "Stock Option granted on 07/17/2009 and became exercisable with respect to 25% of the shares on each of the first four anniversaries of the date of the grant."
+    ],
     "mentions_10b5_1": true,
     "tax_withholding": false,
     "entity_transfer": false,
@@ -2446,6 +2662,10 @@
     "price_required": true,
     "price_value_source": "derived",
     "footnote_present": true,
+    "footnotes": [
+      "Exercise and sale was pursuant to an approved 10b5-1 trading plan.  Pursuant to Company policy, market transactions in Company stock by officers and directors are permitted only after the second full trading day after the public release of quarterly earnings and ending on the last day of the second month of the following fiscal quarter, except pursuant to approved 10b5-1 trading plans.",
+      "Stock Option granted on 07/17/2009 and became exercisable with respect to 25% of the shares on each of the first four anniversaries of the date of the grant."
+    ],
     "mentions_10b5_1": true,
     "tax_withholding": false,
     "entity_transfer": false,
@@ -2487,6 +2707,10 @@
     "price_required": false,
     "price_value_source": "missing",
     "footnote_present": true,
+    "footnotes": [
+      "Pursuant to Company policy, market transactions in Company stock by officers and directors are permitted only after the second full trading day after the release of quarterly earnings and ending on the last day of the second month of the following fiscal quarter, except pursuant to approved 10b5-1 trading plans.",
+      "Includes shares acquired pursuant to NIKE, Inc.'s Employee Stock Purchase Plan."
+    ],
     "mentions_10b5_1": true,
     "tax_withholding": false,
     "entity_transfer": false,
@@ -2527,6 +2751,10 @@
     "price_required": true,
     "price_value_source": "derived",
     "footnote_present": true,
+    "footnotes": [
+      "Exercise and sale was pursuant to an approved 10b5-1 trading plan.  Pursuant to Company policy, market transactions in Company stock by officers and directors are permitted only after the second full trading day after the public release of quarterly earnings and ending on the last day of the second month of the following fiscal quarter, except pursuant to approved 10b5-1 trading plans.",
+      "Stock Option granted on 07/17/2009 and became exercisable with respect to 25% of the shares on each of the first four anniversaries of the date of the grant."
+    ],
     "mentions_10b5_1": true,
     "tax_withholding": false,
     "entity_transfer": false,
@@ -2568,6 +2796,10 @@
     "price_required": true,
     "price_value_source": "derived",
     "footnote_present": true,
+    "footnotes": [
+      "Pursuant to Company policy, market transactions in Company stock by officers and directors are permitted only after the second full trading day after the release of quarterly earnings and ending on the last day of the second month of the following fiscal quarter, except pursuant to approved 10b5-1 trading plans.",
+      "Stock Option granted on 07/15/2011 and became exercisable with respect to 25% of the shares on each of the first four anniversaries of the date of the grant."
+    ],
     "mentions_10b5_1": true,
     "tax_withholding": false,
     "entity_transfer": false,
@@ -2609,6 +2841,10 @@
     "price_required": true,
     "price_value_source": "derived",
     "footnote_present": true,
+    "footnotes": [
+      "Pursuant to Company policy, market transactions in Company stock by officers and directors are permitted only after the second full trading day after the release of quarterly earnings and ending on the last day of the second month of the following fiscal quarter, except pursuant to approved 10b5-1 trading plans.",
+      "Stock Option granted on 07/15/2011 and became exercisable with respect to 25% of the shares on each of the first four anniversaries of the date of the grant."
+    ],
     "mentions_10b5_1": true,
     "tax_withholding": false,
     "entity_transfer": false,

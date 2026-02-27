@@ -1,13 +1,14 @@
 ========================================================================
 JLAW FORENSIC TRACING SYSTEM — SIX-DOMAIN ANALYSIS REPORT
-Generated: 2026-02-27T13:16:13.914812+00:00
+Generated: 2026-02-27T13:38:36.712511+00:00
 ========================================================================
 
 DOMAIN 1: FORM 4 FOOTNOTE CLASSIFICATION
-  Total footnotes classified: 66
-  Average risk score: 0.168
-  Risk distribution: {'low_risk': 62, 'high_risk': 4}
-  Code J missing explanations: 4
+  Total footnotes classified: 104
+  Average risk score: 0.177
+  Risk distribution: {'low_risk': 66, 'exculpatory': 28, 'high_risk': 10}
+  Code J missing explanations: 6
+  Extracted entities: held directly by the, through the, reporting person disclaims beneficial ownership of all such shares held directly and indirectly by the, any units that have not vested shall be forfeited to the, Inc. Stock, Irrevocable, shares were simultaneously distributed to the
 
 DOMAIN 2: GRANT-TO-SALE TRACING
   Insiders tracked: 22
@@ -19,7 +20,7 @@ DOMAIN 2: GRANT-TO-SALE TRACING
   Liquidation rate: 27.7%
   Economic value transferred (FMV): $54,219,307.08
   Cash proceeds (Code S sales): $0.00
-  Total profit (econ value - cost basis): $54,219,307.08
+  Total profit (econ value - cost basis): $0.00
   Obfuscation vector chains: 5
   Chain type distribution:
     M -> G: 3
