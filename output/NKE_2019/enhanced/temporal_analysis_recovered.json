@@ -61,8 +61,8 @@
       "total_shares": 925000.0,
       "total_economic_benefit": 69595000.0,
       "transaction_codes": [
-        "M",
-        "G"
+        "G",
+        "M"
       ],
       "suspicion_score": 0.3
     },
@@ -86,13 +86,13 @@
       "transaction_count": 7,
       "unique_insiders": 7,
       "insiders": [
-        "PARKER MARK G",
         "Krane Hilary K",
-        "Slusher John F",
-        "SPRUNK ERIC D",
         "Hill Elliott",
-        "Matheson Monique S.",
-        "Campion Andrew"
+        "SPRUNK ERIC D",
+        "PARKER MARK G",
+        "Campion Andrew",
+        "Slusher John F",
+        "Matheson Monique S."
       ],
       "total_shares": 871716.0,
       "total_economic_benefit": 73154406.72,
@@ -106,17 +106,17 @@
       "transaction_count": 11,
       "unique_insiders": 11,
       "insiders": [
-        "Comstock Elizabeth J",
-        "Knight Travis A",
-        "Connors John G",
+        "COOK TIMOTHY D",
+        "GRAF ALAN B JR",
         "THOMPSON JOHN R JR",
+        "Donahoe John J",
         "ROGERS JOHN W JR",
         "PELUSO MICHELLE A",
-        "Benko Cathleen A",
+        "Connors John G",
+        "Comstock Elizabeth J",
         "Henry Peter B.",
-        "Donahoe John J",
-        "GRAF ALAN B JR",
-        "COOK TIMOTHY D"
+        "Benko Cathleen A",
+        "Knight Travis A"
       ],
       "total_shares": 21956.0,
       "total_economic_benefit": 1963085.96,
@@ -130,19 +130,19 @@
       "transaction_count": 7,
       "unique_insiders": 6,
       "insiders": [
-        "Knight Travis A",
         "Krane Hilary K",
+        "GRAF ALAN B JR",
         "Swoosh, LLC",
         "KNIGHT PHILIP H",
         "Matheson Monique S.",
-        "GRAF ALAN B JR"
+        "Knight Travis A"
       ],
       "total_shares": 26163181.0,
       "total_economic_benefit": 2489687598.72,
       "transaction_codes": [
         "J",
-        "M",
-        "G"
+        "G",
+        "M"
       ],
       "suspicion_score": 0.8
     },
@@ -151,8 +151,8 @@
       "transaction_count": 3,
       "unique_insiders": 2,
       "insiders": [
-        "Comstock Elizabeth J",
-        "SPRUNK ERIC D"
+        "SPRUNK ERIC D",
+        "Comstock Elizabeth J"
       ],
       "total_shares": 168000.0,
       "total_economic_benefit": 11829600.0,
