@@ -65,7 +65,7 @@
             <a id="nextFileLink" class="nav" href="z_ac12e45a16666993_transcript_source_client_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.13.4">coverage.py v7.13.4</a>,
-            created at 2026-02-23 04:38 +0000
+            created at 2026-02-28 07:47 +0000
         </p>
         <aside class="hidden">
             <button type="button" class="button_next_chunk" data-shortcut="j"></button>
@@ -190,7 +190,7 @@
     <p class="mis show_mis"><span class="n"><a id="t108" href="#t108">108</a></span><span class="t">                    <span class="nam">alerts</span><span class="op">.</span><span class="nam">append</span><span class="op">(</span><span class="nam">TranscriptAlertV2</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
     <p class="mis mis2 show_mis"><span class="n"><a id="t109" href="#t109">109</a></span><span class="t">                        <span class="nam">alert_type</span><span class="op">=</span><span class="nam">AlertType</span><span class="op">.</span><span class="nam">CONTRADICTION_DETECTED</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="mis mis2 show_mis"><span class="n"><a id="t110" href="#t110">110</a></span><span class="t">                        <span class="nam">severity</span><span class="op">=</span><span class="nam">Severity</span><span class="op">.</span><span class="nam">HIGH</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
-    <p class="mis mis2 show_mis"><span class="n"><a id="t111" href="#t111">111</a></span><span class="t">                        <span class="nam">description</span><span class="op">=</span><span class="str">f"Contradiction detected in {transcript.company_ticker} transcript"</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
+    <p class="mis mis2 show_mis"><span class="n"><a id="t111" href="#t111">111</a></span><span class="t">                        <span class="nam">description</span><span class="op">=</span><span class="fst">f"</span><span class="fst">Contradiction detected in </span><span class="op">{</span><span class="nam">transcript</span><span class="op">.</span><span class="nam">company_ticker</span><span class="op">}</span><span class="fst"> transcript</span><span class="fst">"</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="mis mis2 show_mis"><span class="n"><a id="t112" href="#t112">112</a></span><span class="t">                        <span class="nam">details</span><span class="op">=</span><span class="nam">contradiction</span><span class="op">.</span><span class="nam">to_dict</span><span class="op">(</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="mis mis2 show_mis"><span class="n"><a id="t113" href="#t113">113</a></span><span class="t">                    <span class="op">)</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t114" href="#t114">114</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
@@ -201,7 +201,7 @@
     <p class="mis show_mis"><span class="n"><a id="t119" href="#t119">119</a></span><span class="t">                <span class="nam">alerts</span><span class="op">.</span><span class="nam">append</span><span class="op">(</span><span class="nam">TranscriptAlertV2</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
     <p class="mis mis2 show_mis"><span class="n"><a id="t120" href="#t120">120</a></span><span class="t">                    <span class="nam">alert_type</span><span class="op">=</span><span class="nam">AlertType</span><span class="op">.</span><span class="nam">HIGH_HEDGING</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="mis mis2 show_mis"><span class="n"><a id="t121" href="#t121">121</a></span><span class="t">                    <span class="nam">severity</span><span class="op">=</span><span class="nam">Severity</span><span class="op">.</span><span class="nam">MEDIUM</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
-    <p class="mis mis2 show_mis"><span class="n"><a id="t122" href="#t122">122</a></span><span class="t">                    <span class="nam">description</span><span class="op">=</span><span class="str">f"High hedging language from {hedging.speaker}"</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
+    <p class="mis mis2 show_mis"><span class="n"><a id="t122" href="#t122">122</a></span><span class="t">                    <span class="nam">description</span><span class="op">=</span><span class="fst">f"</span><span class="fst">High hedging language from </span><span class="op">{</span><span class="nam">hedging</span><span class="op">.</span><span class="nam">speaker</span><span class="op">}</span><span class="fst">"</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="mis mis2 show_mis"><span class="n"><a id="t123" href="#t123">123</a></span><span class="t">                    <span class="nam">details</span><span class="op">=</span><span class="nam">hedging</span><span class="op">.</span><span class="nam">to_dict</span><span class="op">(</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="mis mis2 show_mis"><span class="n"><a id="t124" href="#t124">124</a></span><span class="t">                <span class="op">)</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t125" href="#t125">125</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
@@ -219,7 +219,7 @@
     <p class="mis show_mis"><span class="n"><a id="t137" href="#t137">137</a></span><span class="t">                            <span class="nam">alerts</span><span class="op">.</span><span class="nam">append</span><span class="op">(</span><span class="nam">TranscriptAlertV2</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
     <p class="mis mis2 show_mis"><span class="n"><a id="t138" href="#t138">138</a></span><span class="t">                                <span class="nam">alert_type</span><span class="op">=</span><span class="nam">AlertType</span><span class="op">.</span><span class="nam">NARRATIVE_DISCREPANCY</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="mis mis2 show_mis"><span class="n"><a id="t139" href="#t139">139</a></span><span class="t">                                <span class="nam">severity</span><span class="op">=</span><span class="nam">Severity</span><span class="op">.</span><span class="nam">HIGH</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
-    <p class="mis mis2 show_mis"><span class="n"><a id="t140" href="#t140">140</a></span><span class="t">                                <span class="nam">description</span><span class="op">=</span><span class="str">f"Narrative discrepancy on {comp.topic}"</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
+    <p class="mis mis2 show_mis"><span class="n"><a id="t140" href="#t140">140</a></span><span class="t">                                <span class="nam">description</span><span class="op">=</span><span class="fst">f"</span><span class="fst">Narrative discrepancy on </span><span class="op">{</span><span class="nam">comp</span><span class="op">.</span><span class="nam">topic</span><span class="op">}</span><span class="fst">"</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="mis mis2 show_mis"><span class="n"><a id="t141" href="#t141">141</a></span><span class="t">                                <span class="nam">details</span><span class="op">=</span><span class="nam">comp</span><span class="op">.</span><span class="nam">to_dict</span><span class="op">(</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="mis mis2 show_mis"><span class="n"><a id="t142" href="#t142">142</a></span><span class="t">                            <span class="op">)</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t143" href="#t143">143</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
@@ -265,7 +265,7 @@
             <a class="nav" href="z_ac12e45a16666993_transcript_source_client_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.13.4">coverage.py v7.13.4</a>,
-            created at 2026-02-23 04:38 +0000
+            created at 2026-02-28 07:47 +0000
         </p>
     </div>
 </footer>

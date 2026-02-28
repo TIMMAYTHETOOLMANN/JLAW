@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-    <title>Coverage for src/utils/deprecation.py: 0.00%</title>
+    <title>Coverage for src/utils/deprecation.py: 32.00%</title>
     <link rel="icon" sizes="32x32" href="favicon_32_cb_c827f16f.png">
     <link rel="stylesheet" href="style_cb_9ff733b0.css" type="text/css">
     <script src="coverage_html_cb_dd2e7eb5.js" defer></script>
@@ -12,7 +12,7 @@
     <div class="content">
         <h1>
             <span class="text">Coverage for </span><b>src&#8201;/&#8201;utils&#8201;/&#8201;deprecation.py</b>:
-            <span class="pc_cov">0.00%</span>
+            <span class="pc_cov">32.00%</span>
         </h1>
         <aside id="help_panel_wrapper">
             <input id="help_panel_state" type="checkbox">
@@ -55,8 +55,8 @@
         </aside>
         <h2>
             <span class="text">25 statements &nbsp;</span>
-            <button type="button" class="run button_toggle_run" value="run" data-shortcut="r" title="Toggle lines run">0<span class="text"> run</span></button>
-            <button type="button" class="mis show_mis button_toggle_mis" value="mis" data-shortcut="m" title="Toggle lines missing">25<span class="text"> missing</span></button>
+            <button type="button" class="run button_toggle_run" value="run" data-shortcut="r" title="Toggle lines run">8<span class="text"> run</span></button>
+            <button type="button" class="mis show_mis button_toggle_mis" value="mis" data-shortcut="m" title="Toggle lines missing">17<span class="text"> missing</span></button>
             <button type="button" class="exc show_exc button_toggle_exc" value="exc" data-shortcut="x" title="Toggle lines excluded">1<span class="text"> excluded</span></button>
         </h2>
         <p class="text">
@@ -65,7 +65,7 @@
             <a id="nextFileLink" class="nav" href="z_e1765c7221f80e55___init___py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.13.4">coverage.py v7.13.4</a>,
-            created at 2026-02-23 04:35 +0000
+            created at 2026-02-28 07:47 +0000
         </p>
         <aside class="hidden">
             <button type="button" class="button_next_chunk" data-shortcut="j"></button>
@@ -95,16 +95,16 @@
     <p class="exc exc2 show_exc"><span class="n"><a id="t13" href="#t13">13</a></span><span class="t"><span class="str">        ...</span>&nbsp;</span><span class="r"></span></p>
     <p class="exc exc2 show_exc"><span class="n"><a id="t14" href="#t14">14</a></span><span class="t"><span class="str">"""</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t15" href="#t15">15</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
-    <p class="mis show_mis"><span class="n"><a id="t16" href="#t16">16</a></span><span class="t"><span class="key">import</span> <span class="nam">warnings</span>&nbsp;</span><span class="r"></span></p>
-    <p class="mis show_mis"><span class="n"><a id="t17" href="#t17">17</a></span><span class="t"><span class="key">from</span> <span class="nam">functools</span> <span class="key">import</span> <span class="nam">wraps</span>&nbsp;</span><span class="r"></span></p>
-    <p class="mis show_mis"><span class="n"><a id="t18" href="#t18">18</a></span><span class="t"><span class="key">from</span> <span class="nam">typing</span> <span class="key">import</span> <span class="nam">Optional</span><span class="op">,</span> <span class="nam">Callable</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t16" href="#t16">16</a></span><span class="t"><span class="key">import</span> <span class="nam">warnings</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t17" href="#t17">17</a></span><span class="t"><span class="key">from</span> <span class="nam">functools</span> <span class="key">import</span> <span class="nam">wraps</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t18" href="#t18">18</a></span><span class="t"><span class="key">from</span> <span class="nam">typing</span> <span class="key">import</span> <span class="nam">Optional</span><span class="op">,</span> <span class="nam">Callable</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t19" href="#t19">19</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t20" href="#t20">20</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
-    <p class="mis show_mis"><span class="n"><a id="t21" href="#t21">21</a></span><span class="t"><span class="key">def</span> <span class="nam">deprecated_module</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
-    <p class="mis mis2 show_mis"><span class="n"><a id="t22" href="#t22">22</a></span><span class="t">    <span class="nam">reason</span><span class="op">:</span> <span class="nam">str</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
-    <p class="mis mis2 show_mis"><span class="n"><a id="t23" href="#t23">23</a></span><span class="t">    <span class="nam">replacement</span><span class="op">:</span> <span class="nam">str</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
-    <p class="mis mis2 show_mis"><span class="n"><a id="t24" href="#t24">24</a></span><span class="t">    <span class="nam">removal_version</span><span class="op">:</span> <span class="nam">str</span> <span class="op">=</span> <span class="str">"3.0"</span>&nbsp;</span><span class="r"></span></p>
-    <p class="mis mis2 show_mis"><span class="n"><a id="t25" href="#t25">25</a></span><span class="t"><span class="op">)</span> <span class="op">-></span> <span class="nam">Callable</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t21" href="#t21">21</a></span><span class="t"><span class="key">def</span> <span class="nam">deprecated_module</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run run2"><span class="n"><a id="t22" href="#t22">22</a></span><span class="t">    <span class="nam">reason</span><span class="op">:</span> <span class="nam">str</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run run2"><span class="n"><a id="t23" href="#t23">23</a></span><span class="t">    <span class="nam">replacement</span><span class="op">:</span> <span class="nam">str</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run run2"><span class="n"><a id="t24" href="#t24">24</a></span><span class="t">    <span class="nam">removal_version</span><span class="op">:</span> <span class="nam">str</span> <span class="op">=</span> <span class="str">"3.0"</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run run2"><span class="n"><a id="t25" href="#t25">25</a></span><span class="t"><span class="op">)</span> <span class="op">-></span> <span class="nam">Callable</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t26" href="#t26">26</a></span><span class="t">    <span class="str">"""</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t27" href="#t27">27</a></span><span class="t"><span class="str">    Decorator to mark entire modules, classes, or functions as deprecated.</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t28" href="#t28">28</a></span><span class="t"><span class="str">    </span>&nbsp;</span><span class="r"></span></p>
@@ -129,9 +129,9 @@
     <p class="mis show_mis"><span class="n"><a id="t47" href="#t47">47</a></span><span class="t">        <span class="op">@</span><span class="nam">wraps</span><span class="op">(</span><span class="nam">cls_or_func</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="mis show_mis"><span class="n"><a id="t48" href="#t48">48</a></span><span class="t">        <span class="key">def</span> <span class="nam">wrapper</span><span class="op">(</span><span class="op">*</span><span class="nam">args</span><span class="op">,</span> <span class="op">**</span><span class="nam">kwargs</span><span class="op">)</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
     <p class="mis show_mis"><span class="n"><a id="t49" href="#t49">49</a></span><span class="t">            <span class="nam">warnings</span><span class="op">.</span><span class="nam">warn</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
-    <p class="mis mis2 show_mis"><span class="n"><a id="t50" href="#t50">50</a></span><span class="t">                <span class="str">f"{cls_or_func.__name__} is deprecated. "</span>&nbsp;</span><span class="r"></span></p>
-    <p class="mis mis2 show_mis"><span class="n"><a id="t51" href="#t51">51</a></span><span class="t">                <span class="str">f"{reason} Use {replacement} instead. "</span>&nbsp;</span><span class="r"></span></p>
-    <p class="mis mis2 show_mis"><span class="n"><a id="t52" href="#t52">52</a></span><span class="t">                <span class="str">f"Will be removed in v{removal_version}."</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
+    <p class="mis mis2 show_mis"><span class="n"><a id="t50" href="#t50">50</a></span><span class="t">                <span class="fst">f"</span><span class="op">{</span><span class="nam">cls_or_func</span><span class="op">.</span><span class="nam">__name__</span><span class="op">}</span><span class="fst"> is deprecated. </span><span class="fst">"</span>&nbsp;</span><span class="r"></span></p>
+    <p class="mis mis2 show_mis"><span class="n"><a id="t51" href="#t51">51</a></span><span class="t">                <span class="fst">f"</span><span class="op">{</span><span class="nam">reason</span><span class="op">}</span><span class="fst"> Use </span><span class="op">{</span><span class="nam">replacement</span><span class="op">}</span><span class="fst"> instead. </span><span class="fst">"</span>&nbsp;</span><span class="r"></span></p>
+    <p class="mis mis2 show_mis"><span class="n"><a id="t52" href="#t52">52</a></span><span class="t">                <span class="fst">f"</span><span class="fst">Will be removed in v</span><span class="op">{</span><span class="nam">removal_version</span><span class="op">}</span><span class="fst">.</span><span class="fst">"</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="mis mis2 show_mis"><span class="n"><a id="t53" href="#t53">53</a></span><span class="t">                <span class="nam">DeprecationWarning</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="mis mis2 show_mis"><span class="n"><a id="t54" href="#t54">54</a></span><span class="t">                <span class="nam">stacklevel</span><span class="op">=</span><span class="num">2</span>&nbsp;</span><span class="r"></span></p>
     <p class="mis mis2 show_mis"><span class="n"><a id="t55" href="#t55">55</a></span><span class="t">            <span class="op">)</span>&nbsp;</span><span class="r"></span></p>
@@ -140,7 +140,7 @@
     <p class="mis show_mis"><span class="n"><a id="t58" href="#t58">58</a></span><span class="t">    <span class="key">return</span> <span class="nam">decorator</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t59" href="#t59">59</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t60" href="#t60">60</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
-    <p class="mis show_mis"><span class="n"><a id="t61" href="#t61">61</a></span><span class="t"><span class="key">def</span> <span class="nam">deprecated_v1</span><span class="op">(</span><span class="nam">message</span><span class="op">:</span> <span class="nam">str</span> <span class="op">=</span> <span class="str">"Use v2 module instead"</span><span class="op">)</span> <span class="op">-></span> <span class="nam">Callable</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t61" href="#t61">61</a></span><span class="t"><span class="key">def</span> <span class="nam">deprecated_v1</span><span class="op">(</span><span class="nam">message</span><span class="op">:</span> <span class="nam">str</span> <span class="op">=</span> <span class="str">"Use v2 module instead"</span><span class="op">)</span> <span class="op">-></span> <span class="nam">Callable</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t62" href="#t62">62</a></span><span class="t">    <span class="str">"""</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t63" href="#t63">63</a></span><span class="t"><span class="str">    Specific decorator for v1 modules being replaced by v2.</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t64" href="#t64">64</a></span><span class="t"><span class="str">    </span>&nbsp;</span><span class="r"></span></p>
@@ -162,12 +162,12 @@
     <p class="mis mis2 show_mis"><span class="n"><a id="t80" href="#t80">80</a></span><span class="t">    <span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t81" href="#t81">81</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t82" href="#t82">82</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
-    <p class="mis show_mis"><span class="n"><a id="t83" href="#t83">83</a></span><span class="t"><span class="key">def</span> <span class="nam">emit_deprecation_warning</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
-    <p class="mis mis2 show_mis"><span class="n"><a id="t84" href="#t84">84</a></span><span class="t">    <span class="nam">deprecated_item</span><span class="op">:</span> <span class="nam">str</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
-    <p class="mis mis2 show_mis"><span class="n"><a id="t85" href="#t85">85</a></span><span class="t">    <span class="nam">replacement</span><span class="op">:</span> <span class="nam">str</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
-    <p class="mis mis2 show_mis"><span class="n"><a id="t86" href="#t86">86</a></span><span class="t">    <span class="nam">removal_version</span><span class="op">:</span> <span class="nam">str</span> <span class="op">=</span> <span class="str">"3.0"</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
-    <p class="mis mis2 show_mis"><span class="n"><a id="t87" href="#t87">87</a></span><span class="t">    <span class="nam">additional_info</span><span class="op">:</span> <span class="nam">Optional</span><span class="op">[</span><span class="nam">str</span><span class="op">]</span> <span class="op">=</span> <span class="key">None</span>&nbsp;</span><span class="r"></span></p>
-    <p class="mis mis2 show_mis"><span class="n"><a id="t88" href="#t88">88</a></span><span class="t"><span class="op">)</span> <span class="op">-></span> <span class="key">None</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t83" href="#t83">83</a></span><span class="t"><span class="key">def</span> <span class="nam">emit_deprecation_warning</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run run2"><span class="n"><a id="t84" href="#t84">84</a></span><span class="t">    <span class="nam">deprecated_item</span><span class="op">:</span> <span class="nam">str</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run run2"><span class="n"><a id="t85" href="#t85">85</a></span><span class="t">    <span class="nam">replacement</span><span class="op">:</span> <span class="nam">str</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run run2"><span class="n"><a id="t86" href="#t86">86</a></span><span class="t">    <span class="nam">removal_version</span><span class="op">:</span> <span class="nam">str</span> <span class="op">=</span> <span class="str">"3.0"</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run run2"><span class="n"><a id="t87" href="#t87">87</a></span><span class="t">    <span class="nam">additional_info</span><span class="op">:</span> <span class="nam">Optional</span><span class="op">[</span><span class="nam">str</span><span class="op">]</span> <span class="op">=</span> <span class="key">None</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run run2"><span class="n"><a id="t88" href="#t88">88</a></span><span class="t"><span class="op">)</span> <span class="op">-></span> <span class="key">None</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t89" href="#t89">89</a></span><span class="t">    <span class="str">"""</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t90" href="#t90">90</a></span><span class="t"><span class="str">    Emit a deprecation warning programmatically.</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t91" href="#t91">91</a></span><span class="t"><span class="str">    </span>&nbsp;</span><span class="r"></span></p>
@@ -185,17 +185,17 @@
     <p class="pln"><span class="n"><a id="t103" href="#t103">103</a></span><span class="t"><span class="str">        )</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t104" href="#t104">104</a></span><span class="t"><span class="str">    """</span>&nbsp;</span><span class="r"></span></p>
     <p class="mis show_mis"><span class="n"><a id="t105" href="#t105">105</a></span><span class="t">    <span class="nam">message</span> <span class="op">=</span> <span class="op">(</span>&nbsp;</span><span class="r"></span></p>
-    <p class="mis mis2 show_mis"><span class="n"><a id="t106" href="#t106">106</a></span><span class="t">        <span class="str">f"{deprecated_item} is deprecated and will be removed in v{removal_version}. "</span>&nbsp;</span><span class="r"></span></p>
-    <p class="mis mis2 show_mis"><span class="n"><a id="t107" href="#t107">107</a></span><span class="t">        <span class="str">f"Use {replacement} instead."</span>&nbsp;</span><span class="r"></span></p>
+    <p class="mis mis2 show_mis"><span class="n"><a id="t106" href="#t106">106</a></span><span class="t">        <span class="fst">f"</span><span class="op">{</span><span class="nam">deprecated_item</span><span class="op">}</span><span class="fst"> is deprecated and will be removed in v</span><span class="op">{</span><span class="nam">removal_version</span><span class="op">}</span><span class="fst">. </span><span class="fst">"</span>&nbsp;</span><span class="r"></span></p>
+    <p class="mis mis2 show_mis"><span class="n"><a id="t107" href="#t107">107</a></span><span class="t">        <span class="fst">f"</span><span class="fst">Use </span><span class="op">{</span><span class="nam">replacement</span><span class="op">}</span><span class="fst"> instead.</span><span class="fst">"</span>&nbsp;</span><span class="r"></span></p>
     <p class="mis mis2 show_mis"><span class="n"><a id="t108" href="#t108">108</a></span><span class="t">    <span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t109" href="#t109">109</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="mis show_mis"><span class="n"><a id="t110" href="#t110">110</a></span><span class="t">    <span class="key">if</span> <span class="nam">additional_info</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
-    <p class="mis show_mis"><span class="n"><a id="t111" href="#t111">111</a></span><span class="t">        <span class="nam">message</span> <span class="op">+=</span> <span class="str">f" {additional_info}"</span>&nbsp;</span><span class="r"></span></p>
+    <p class="mis show_mis"><span class="n"><a id="t111" href="#t111">111</a></span><span class="t">        <span class="nam">message</span> <span class="op">+=</span> <span class="fst">f"</span><span class="fst"> </span><span class="op">{</span><span class="nam">additional_info</span><span class="op">}</span><span class="fst">"</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t112" href="#t112">112</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="mis show_mis"><span class="n"><a id="t113" href="#t113">113</a></span><span class="t">    <span class="nam">warnings</span><span class="op">.</span><span class="nam">warn</span><span class="op">(</span><span class="nam">message</span><span class="op">,</span> <span class="nam">DeprecationWarning</span><span class="op">,</span> <span class="nam">stacklevel</span><span class="op">=</span><span class="num">2</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t114" href="#t114">114</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t115" href="#t115">115</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
-    <p class="mis show_mis"><span class="n"><a id="t116" href="#t116">116</a></span><span class="t"><span class="key">class</span> <span class="nam">DeprecatedClassMeta</span><span class="op">(</span><span class="nam">type</span><span class="op">)</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t116" href="#t116">116</a></span><span class="t"><span class="key">class</span> <span class="nam">DeprecatedClassMeta</span><span class="op">(</span><span class="nam">type</span><span class="op">)</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t117" href="#t117">117</a></span><span class="t">    <span class="str">"""</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t118" href="#t118">118</a></span><span class="t"><span class="str">    Metaclass for deprecated classes that emits warnings on instantiation.</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t119" href="#t119">119</a></span><span class="t"><span class="str">    </span>&nbsp;</span><span class="r"></span></p>
@@ -206,15 +206,15 @@
     <p class="pln"><span class="n"><a id="t124" href="#t124">124</a></span><span class="t"><span class="str">            __deprecated_reason__ = "Enhanced implementation available"</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t125" href="#t125">125</a></span><span class="t"><span class="str">    """</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t126" href="#t126">126</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
-    <p class="mis show_mis"><span class="n"><a id="t127" href="#t127">127</a></span><span class="t">    <span class="key">def</span> <span class="nam">__call__</span><span class="op">(</span><span class="nam">cls</span><span class="op">,</span> <span class="op">*</span><span class="nam">args</span><span class="op">,</span> <span class="op">**</span><span class="nam">kwargs</span><span class="op">)</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t127" href="#t127">127</a></span><span class="t">    <span class="key">def</span> <span class="nam">__call__</span><span class="op">(</span><span class="nam">cls</span><span class="op">,</span> <span class="op">*</span><span class="nam">args</span><span class="op">,</span> <span class="op">**</span><span class="nam">kwargs</span><span class="op">)</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
     <p class="mis show_mis"><span class="n"><a id="t128" href="#t128">128</a></span><span class="t">        <span class="nam">replacement</span> <span class="op">=</span> <span class="nam">getattr</span><span class="op">(</span><span class="nam">cls</span><span class="op">,</span> <span class="str">'__deprecated_replacement__'</span><span class="op">,</span> <span class="str">'newer version'</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="mis show_mis"><span class="n"><a id="t129" href="#t129">129</a></span><span class="t">        <span class="nam">version</span> <span class="op">=</span> <span class="nam">getattr</span><span class="op">(</span><span class="nam">cls</span><span class="op">,</span> <span class="str">'__deprecated_version__'</span><span class="op">,</span> <span class="str">'3.0'</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="mis show_mis"><span class="n"><a id="t130" href="#t130">130</a></span><span class="t">        <span class="nam">reason</span> <span class="op">=</span> <span class="nam">getattr</span><span class="op">(</span><span class="nam">cls</span><span class="op">,</span> <span class="str">'__deprecated_reason__'</span><span class="op">,</span> <span class="str">'Deprecated'</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t131" href="#t131">131</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="mis show_mis"><span class="n"><a id="t132" href="#t132">132</a></span><span class="t">        <span class="nam">warnings</span><span class="op">.</span><span class="nam">warn</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
-    <p class="mis mis2 show_mis"><span class="n"><a id="t133" href="#t133">133</a></span><span class="t">            <span class="str">f"{cls.__name__} is deprecated. {reason} "</span>&nbsp;</span><span class="r"></span></p>
-    <p class="mis mis2 show_mis"><span class="n"><a id="t134" href="#t134">134</a></span><span class="t">            <span class="str">f"Use {replacement} instead. "</span>&nbsp;</span><span class="r"></span></p>
-    <p class="mis mis2 show_mis"><span class="n"><a id="t135" href="#t135">135</a></span><span class="t">            <span class="str">f"Will be removed in v{version}."</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
+    <p class="mis mis2 show_mis"><span class="n"><a id="t133" href="#t133">133</a></span><span class="t">            <span class="fst">f"</span><span class="op">{</span><span class="nam">cls</span><span class="op">.</span><span class="nam">__name__</span><span class="op">}</span><span class="fst"> is deprecated. </span><span class="op">{</span><span class="nam">reason</span><span class="op">}</span><span class="fst"> </span><span class="fst">"</span>&nbsp;</span><span class="r"></span></p>
+    <p class="mis mis2 show_mis"><span class="n"><a id="t134" href="#t134">134</a></span><span class="t">            <span class="fst">f"</span><span class="fst">Use </span><span class="op">{</span><span class="nam">replacement</span><span class="op">}</span><span class="fst"> instead. </span><span class="fst">"</span>&nbsp;</span><span class="r"></span></p>
+    <p class="mis mis2 show_mis"><span class="n"><a id="t135" href="#t135">135</a></span><span class="t">            <span class="fst">f"</span><span class="fst">Will be removed in v</span><span class="op">{</span><span class="nam">version</span><span class="op">}</span><span class="fst">.</span><span class="fst">"</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="mis mis2 show_mis"><span class="n"><a id="t136" href="#t136">136</a></span><span class="t">            <span class="nam">DeprecationWarning</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="mis mis2 show_mis"><span class="n"><a id="t137" href="#t137">137</a></span><span class="t">            <span class="nam">stacklevel</span><span class="op">=</span><span class="num">2</span>&nbsp;</span><span class="r"></span></p>
     <p class="mis mis2 show_mis"><span class="n"><a id="t138" href="#t138">138</a></span><span class="t">        <span class="op">)</span>&nbsp;</span><span class="r"></span></p>
@@ -229,7 +229,7 @@
             <a class="nav" href="z_e1765c7221f80e55___init___py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.13.4">coverage.py v7.13.4</a>,
-            created at 2026-02-23 04:35 +0000
+            created at 2026-02-28 07:47 +0000
         </p>
     </div>
 </footer>

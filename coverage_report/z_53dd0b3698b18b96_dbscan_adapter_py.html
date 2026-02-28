@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-    <title>Coverage for src/zero_dollar/modules/algorithms/dbscan_adapter.py: 0.00%</title>
+    <title>Coverage for src/zero_dollar/modules/algorithms/dbscan_adapter.py: 28.57%</title>
     <link rel="icon" sizes="32x32" href="favicon_32_cb_c827f16f.png">
     <link rel="stylesheet" href="style_cb_9ff733b0.css" type="text/css">
     <script src="coverage_html_cb_dd2e7eb5.js" defer></script>
@@ -12,7 +12,7 @@
     <div class="content">
         <h1>
             <span class="text">Coverage for </span><b>src&#8201;/&#8201;zero_dollar&#8201;/&#8201;modules&#8201;/&#8201;algorithms&#8201;/&#8201;dbscan_adapter.py</b>:
-            <span class="pc_cov">0.00%</span>
+            <span class="pc_cov">28.57%</span>
         </h1>
         <aside id="help_panel_wrapper">
             <input id="help_panel_state" type="checkbox">
@@ -55,8 +55,8 @@
         </aside>
         <h2>
             <span class="text">42 statements &nbsp;</span>
-            <button type="button" class="run button_toggle_run" value="run" data-shortcut="r" title="Toggle lines run">0<span class="text"> run</span></button>
-            <button type="button" class="mis show_mis button_toggle_mis" value="mis" data-shortcut="m" title="Toggle lines missing">42<span class="text"> missing</span></button>
+            <button type="button" class="run button_toggle_run" value="run" data-shortcut="r" title="Toggle lines run">12<span class="text"> run</span></button>
+            <button type="button" class="mis show_mis button_toggle_mis" value="mis" data-shortcut="m" title="Toggle lines missing">30<span class="text"> missing</span></button>
             <button type="button" class="exc show_exc button_toggle_exc" value="exc" data-shortcut="x" title="Toggle lines excluded">0<span class="text"> excluded</span></button>
         </h2>
         <p class="text">
@@ -65,7 +65,7 @@
             <a id="nextFileLink" class="nav" href="z_990bbba6a1643819_behavioral_scoring_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.13.4">coverage.py v7.13.4</a>,
-            created at 2026-02-23 04:35 +0000
+            created at 2026-02-28 07:47 +0000
         </p>
         <aside class="hidden">
             <button type="button" class="button_next_chunk" data-shortcut="j"></button>
@@ -97,22 +97,22 @@
     <p class="pln"><span class="n"><a id="t15" href="#t15">15</a></span><span class="t"><span class="str">    - Section 5.3.2: DBSCAN Clustering Algorithm</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t16" href="#t16">16</a></span><span class="t"><span class="str">"""</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t17" href="#t17">17</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
-    <p class="mis show_mis"><span class="n"><a id="t18" href="#t18">18</a></span><span class="t"><span class="key">import</span> <span class="nam">hashlib</span>&nbsp;</span><span class="r"></span></p>
-    <p class="mis show_mis"><span class="n"><a id="t19" href="#t19">19</a></span><span class="t"><span class="key">import</span> <span class="nam">numpy</span> <span class="key">as</span> <span class="nam">np</span>&nbsp;</span><span class="r"></span></p>
-    <p class="mis show_mis"><span class="n"><a id="t20" href="#t20">20</a></span><span class="t"><span class="key">from</span> <span class="nam">datetime</span> <span class="key">import</span> <span class="nam">datetime</span>&nbsp;</span><span class="r"></span></p>
-    <p class="mis show_mis"><span class="n"><a id="t21" href="#t21">21</a></span><span class="t"><span class="key">from</span> <span class="nam">decimal</span> <span class="key">import</span> <span class="nam">Decimal</span>&nbsp;</span><span class="r"></span></p>
-    <p class="mis show_mis"><span class="n"><a id="t22" href="#t22">22</a></span><span class="t"><span class="key">from</span> <span class="nam">typing</span> <span class="key">import</span> <span class="nam">List</span><span class="op">,</span> <span class="nam">Dict</span><span class="op">,</span> <span class="nam">Any</span>&nbsp;</span><span class="r"></span></p>
-    <p class="mis show_mis"><span class="n"><a id="t23" href="#t23">23</a></span><span class="t"><span class="key">from</span> <span class="nam">sklearn</span><span class="op">.</span><span class="nam">cluster</span> <span class="key">import</span> <span class="nam">DBSCAN</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t18" href="#t18">18</a></span><span class="t"><span class="key">import</span> <span class="nam">hashlib</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t19" href="#t19">19</a></span><span class="t"><span class="key">import</span> <span class="nam">numpy</span> <span class="key">as</span> <span class="nam">np</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t20" href="#t20">20</a></span><span class="t"><span class="key">from</span> <span class="nam">datetime</span> <span class="key">import</span> <span class="nam">datetime</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t21" href="#t21">21</a></span><span class="t"><span class="key">from</span> <span class="nam">decimal</span> <span class="key">import</span> <span class="nam">Decimal</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t22" href="#t22">22</a></span><span class="t"><span class="key">from</span> <span class="nam">typing</span> <span class="key">import</span> <span class="nam">List</span><span class="op">,</span> <span class="nam">Dict</span><span class="op">,</span> <span class="nam">Any</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t23" href="#t23">23</a></span><span class="t"><span class="key">from</span> <span class="nam">sklearn</span><span class="op">.</span><span class="nam">cluster</span> <span class="key">import</span> <span class="nam">DBSCAN</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t24" href="#t24">24</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
-    <p class="mis show_mis"><span class="n"><a id="t25" href="#t25">25</a></span><span class="t"><span class="key">from</span> <span class="nam">src</span><span class="op">.</span><span class="nam">zero_dollar</span><span class="op">.</span><span class="nam">models</span> <span class="key">import</span> <span class="nam">Transaction</span><span class="op">,</span> <span class="nam">TransactionCluster</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t25" href="#t25">25</a></span><span class="t"><span class="key">from</span> <span class="nam">src</span><span class="op">.</span><span class="nam">zero_dollar</span><span class="op">.</span><span class="nam">models</span> <span class="key">import</span> <span class="nam">Transaction</span><span class="op">,</span> <span class="nam">TransactionCluster</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t26" href="#t26">26</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t27" href="#t27">27</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
-    <p class="mis show_mis"><span class="n"><a id="t28" href="#t28">28</a></span><span class="t"><span class="key">def</span> <span class="nam">detect_temporal_clusters</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
-    <p class="mis mis2 show_mis"><span class="n"><a id="t29" href="#t29">29</a></span><span class="t">    <span class="nam">distance_matrix</span><span class="op">:</span> <span class="nam">np</span><span class="op">.</span><span class="nam">ndarray</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
-    <p class="mis mis2 show_mis"><span class="n"><a id="t30" href="#t30">30</a></span><span class="t">    <span class="nam">transactions</span><span class="op">:</span> <span class="nam">List</span><span class="op">[</span><span class="nam">Transaction</span><span class="op">]</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
-    <p class="mis mis2 show_mis"><span class="n"><a id="t31" href="#t31">31</a></span><span class="t">    <span class="nam">eps_days</span><span class="op">:</span> <span class="nam">int</span> <span class="op">=</span> <span class="num">1</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
-    <p class="mis mis2 show_mis"><span class="n"><a id="t32" href="#t32">32</a></span><span class="t">    <span class="nam">min_samples</span><span class="op">:</span> <span class="nam">int</span> <span class="op">=</span> <span class="num">2</span>&nbsp;</span><span class="r"></span></p>
-    <p class="mis mis2 show_mis"><span class="n"><a id="t33" href="#t33">33</a></span><span class="t"><span class="op">)</span> <span class="op">-></span> <span class="nam">List</span><span class="op">[</span><span class="nam">TransactionCluster</span><span class="op">]</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t28" href="#t28">28</a></span><span class="t"><span class="key">def</span> <span class="nam">detect_temporal_clusters</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run run2"><span class="n"><a id="t29" href="#t29">29</a></span><span class="t">    <span class="nam">distance_matrix</span><span class="op">:</span> <span class="nam">np</span><span class="op">.</span><span class="nam">ndarray</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run run2"><span class="n"><a id="t30" href="#t30">30</a></span><span class="t">    <span class="nam">transactions</span><span class="op">:</span> <span class="nam">List</span><span class="op">[</span><span class="nam">Transaction</span><span class="op">]</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run run2"><span class="n"><a id="t31" href="#t31">31</a></span><span class="t">    <span class="nam">eps_days</span><span class="op">:</span> <span class="nam">int</span> <span class="op">=</span> <span class="num">1</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run run2"><span class="n"><a id="t32" href="#t32">32</a></span><span class="t">    <span class="nam">min_samples</span><span class="op">:</span> <span class="nam">int</span> <span class="op">=</span> <span class="num">2</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run run2"><span class="n"><a id="t33" href="#t33">33</a></span><span class="t"><span class="op">)</span> <span class="op">-></span> <span class="nam">List</span><span class="op">[</span><span class="nam">TransactionCluster</span><span class="op">]</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t34" href="#t34">34</a></span><span class="t">    <span class="str">"""</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t35" href="#t35">35</a></span><span class="t"><span class="str">    Apply density-based clustering to identify temporally proximate transaction groups.</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t36" href="#t36">36</a></span><span class="t"><span class="str">    </span>&nbsp;</span><span class="r"></span></p>
@@ -203,12 +203,12 @@
     <p class="mis show_mis"><span class="n"><a id="t121" href="#t121">121</a></span><span class="t">    <span class="key">return</span> <span class="nam">clusters</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t122" href="#t122">122</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t123" href="#t123">123</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
-    <p class="mis show_mis"><span class="n"><a id="t124" href="#t124">124</a></span><span class="t"><span class="key">def</span> <span class="nam">_generate_cluster_id</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
-    <p class="mis mis2 show_mis"><span class="n"><a id="t125" href="#t125">125</a></span><span class="t">    <span class="nam">reporting_person_cik</span><span class="op">:</span> <span class="nam">str</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
-    <p class="mis mis2 show_mis"><span class="n"><a id="t126" href="#t126">126</a></span><span class="t">    <span class="nam">start_date</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
-    <p class="mis mis2 show_mis"><span class="n"><a id="t127" href="#t127">127</a></span><span class="t">    <span class="nam">end_date</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
-    <p class="mis mis2 show_mis"><span class="n"><a id="t128" href="#t128">128</a></span><span class="t">    <span class="nam">transaction_count</span><span class="op">:</span> <span class="nam">int</span>&nbsp;</span><span class="r"></span></p>
-    <p class="mis mis2 show_mis"><span class="n"><a id="t129" href="#t129">129</a></span><span class="t"><span class="op">)</span> <span class="op">-></span> <span class="nam">str</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t124" href="#t124">124</a></span><span class="t"><span class="key">def</span> <span class="nam">_generate_cluster_id</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run run2"><span class="n"><a id="t125" href="#t125">125</a></span><span class="t">    <span class="nam">reporting_person_cik</span><span class="op">:</span> <span class="nam">str</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run run2"><span class="n"><a id="t126" href="#t126">126</a></span><span class="t">    <span class="nam">start_date</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run run2"><span class="n"><a id="t127" href="#t127">127</a></span><span class="t">    <span class="nam">end_date</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run run2"><span class="n"><a id="t128" href="#t128">128</a></span><span class="t">    <span class="nam">transaction_count</span><span class="op">:</span> <span class="nam">int</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run run2"><span class="n"><a id="t129" href="#t129">129</a></span><span class="t"><span class="op">)</span> <span class="op">-></span> <span class="nam">str</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t130" href="#t130">130</a></span><span class="t">    <span class="str">"""</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t131" href="#t131">131</a></span><span class="t"><span class="str">    Generate unique cluster identifier using SHA-256 hash.</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t132" href="#t132">132</a></span><span class="t"><span class="str">    </span>&nbsp;</span><span class="r"></span></p>
@@ -223,12 +223,12 @@
     <p class="pln"><span class="n"><a id="t141" href="#t141">141</a></span><span class="t"><span class="str">    Returns:</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t142" href="#t142">142</a></span><span class="t"><span class="str">        Hexadecimal SHA-256 hash (first 16 characters)</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t143" href="#t143">143</a></span><span class="t"><span class="str">    """</span>&nbsp;</span><span class="r"></span></p>
-    <p class="mis show_mis"><span class="n"><a id="t144" href="#t144">144</a></span><span class="t">    <span class="nam">content</span> <span class="op">=</span> <span class="str">f"{reporting_person_cik}|{start_date.isoformat()}|{end_date.isoformat()}|{transaction_count}"</span>&nbsp;</span><span class="r"></span></p>
+    <p class="mis show_mis"><span class="n"><a id="t144" href="#t144">144</a></span><span class="t">    <span class="nam">content</span> <span class="op">=</span> <span class="fst">f"</span><span class="op">{</span><span class="nam">reporting_person_cik</span><span class="op">}</span><span class="fst">|</span><span class="op">{</span><span class="nam">start_date</span><span class="op">.</span><span class="nam">isoformat</span><span class="op">(</span><span class="op">)</span><span class="op">}</span><span class="fst">|</span><span class="op">{</span><span class="nam">end_date</span><span class="op">.</span><span class="nam">isoformat</span><span class="op">(</span><span class="op">)</span><span class="op">}</span><span class="fst">|</span><span class="op">{</span><span class="nam">transaction_count</span><span class="op">}</span><span class="fst">"</span>&nbsp;</span><span class="r"></span></p>
     <p class="mis show_mis"><span class="n"><a id="t145" href="#t145">145</a></span><span class="t">    <span class="nam">hash_obj</span> <span class="op">=</span> <span class="nam">hashlib</span><span class="op">.</span><span class="nam">sha256</span><span class="op">(</span><span class="nam">content</span><span class="op">.</span><span class="nam">encode</span><span class="op">(</span><span class="str">'utf-8'</span><span class="op">)</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="mis show_mis"><span class="n"><a id="t146" href="#t146">146</a></span><span class="t">    <span class="key">return</span> <span class="nam">hash_obj</span><span class="op">.</span><span class="nam">hexdigest</span><span class="op">(</span><span class="op">)</span><span class="op">[</span><span class="op">:</span><span class="num">16</span><span class="op">]</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t147" href="#t147">147</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t148" href="#t148">148</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
-    <p class="mis show_mis"><span class="n"><a id="t149" href="#t149">149</a></span><span class="t"><span class="key">class</span> <span class="nam">DBSCANClusteringAdapter</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t149" href="#t149">149</a></span><span class="t"><span class="key">class</span> <span class="nam">DBSCANClusteringAdapter</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t150" href="#t150">150</a></span><span class="t">    <span class="str">"""</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t151" href="#t151">151</a></span><span class="t"><span class="str">    Adapter class for DBSCAN clustering with configurable parameters.</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t152" href="#t152">152</a></span><span class="t"><span class="str">    </span>&nbsp;</span><span class="r"></span></p>
@@ -240,7 +240,7 @@
     <p class="pln"><span class="n"><a id="t158" href="#t158">158</a></span><span class="t"><span class="str">        min_samples: Minimum transactions per cluster (default: 2)</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t159" href="#t159">159</a></span><span class="t"><span class="str">    """</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t160" href="#t160">160</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
-    <p class="mis show_mis"><span class="n"><a id="t161" href="#t161">161</a></span><span class="t">    <span class="key">def</span> <span class="nam">__init__</span><span class="op">(</span><span class="nam">self</span><span class="op">,</span> <span class="nam">eps_days</span><span class="op">:</span> <span class="nam">int</span> <span class="op">=</span> <span class="num">1</span><span class="op">,</span> <span class="nam">min_samples</span><span class="op">:</span> <span class="nam">int</span> <span class="op">=</span> <span class="num">2</span><span class="op">)</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t161" href="#t161">161</a></span><span class="t">    <span class="key">def</span> <span class="nam">__init__</span><span class="op">(</span><span class="nam">self</span><span class="op">,</span> <span class="nam">eps_days</span><span class="op">:</span> <span class="nam">int</span> <span class="op">=</span> <span class="num">1</span><span class="op">,</span> <span class="nam">min_samples</span><span class="op">:</span> <span class="nam">int</span> <span class="op">=</span> <span class="num">2</span><span class="op">)</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t162" href="#t162">162</a></span><span class="t">        <span class="str">"""</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t163" href="#t163">163</a></span><span class="t"><span class="str">        Initialize DBSCAN clustering adapter.</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t164" href="#t164">164</a></span><span class="t"><span class="str">        </span>&nbsp;</span><span class="r"></span></p>
@@ -251,11 +251,11 @@
     <p class="mis show_mis"><span class="n"><a id="t169" href="#t169">169</a></span><span class="t">        <span class="nam">self</span><span class="op">.</span><span class="nam">eps_days</span> <span class="op">=</span> <span class="nam">eps_days</span>&nbsp;</span><span class="r"></span></p>
     <p class="mis show_mis"><span class="n"><a id="t170" href="#t170">170</a></span><span class="t">        <span class="nam">self</span><span class="op">.</span><span class="nam">min_samples</span> <span class="op">=</span> <span class="nam">min_samples</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t171" href="#t171">171</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
-    <p class="mis show_mis"><span class="n"><a id="t172" href="#t172">172</a></span><span class="t">    <span class="key">def</span> <span class="nam">cluster</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
-    <p class="mis mis2 show_mis"><span class="n"><a id="t173" href="#t173">173</a></span><span class="t">        <span class="nam">self</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
-    <p class="mis mis2 show_mis"><span class="n"><a id="t174" href="#t174">174</a></span><span class="t">        <span class="nam">distance_matrix</span><span class="op">:</span> <span class="nam">np</span><span class="op">.</span><span class="nam">ndarray</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
-    <p class="mis mis2 show_mis"><span class="n"><a id="t175" href="#t175">175</a></span><span class="t">        <span class="nam">transactions</span><span class="op">:</span> <span class="nam">List</span><span class="op">[</span><span class="nam">Transaction</span><span class="op">]</span>&nbsp;</span><span class="r"></span></p>
-    <p class="mis mis2 show_mis"><span class="n"><a id="t176" href="#t176">176</a></span><span class="t">    <span class="op">)</span> <span class="op">-></span> <span class="nam">List</span><span class="op">[</span><span class="nam">TransactionCluster</span><span class="op">]</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t172" href="#t172">172</a></span><span class="t">    <span class="key">def</span> <span class="nam">cluster</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run run2"><span class="n"><a id="t173" href="#t173">173</a></span><span class="t">        <span class="nam">self</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run run2"><span class="n"><a id="t174" href="#t174">174</a></span><span class="t">        <span class="nam">distance_matrix</span><span class="op">:</span> <span class="nam">np</span><span class="op">.</span><span class="nam">ndarray</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run run2"><span class="n"><a id="t175" href="#t175">175</a></span><span class="t">        <span class="nam">transactions</span><span class="op">:</span> <span class="nam">List</span><span class="op">[</span><span class="nam">Transaction</span><span class="op">]</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run run2"><span class="n"><a id="t176" href="#t176">176</a></span><span class="t">    <span class="op">)</span> <span class="op">-></span> <span class="nam">List</span><span class="op">[</span><span class="nam">TransactionCluster</span><span class="op">]</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t177" href="#t177">177</a></span><span class="t">        <span class="str">"""</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t178" href="#t178">178</a></span><span class="t"><span class="str">        Perform DBSCAN clustering on transactions.</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t179" href="#t179">179</a></span><span class="t"><span class="str">        </span>&nbsp;</span><span class="r"></span></p>
@@ -281,7 +281,7 @@
             <a class="nav" href="z_990bbba6a1643819_behavioral_scoring_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.13.4">coverage.py v7.13.4</a>,
-            created at 2026-02-23 04:35 +0000
+            created at 2026-02-28 07:47 +0000
         </p>
     </div>
 </footer>

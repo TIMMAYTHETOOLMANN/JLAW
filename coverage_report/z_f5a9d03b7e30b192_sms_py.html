@@ -65,7 +65,7 @@
             <a id="nextFileLink" class="nav" href="z_c491fc8e7f435b94___init___py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.13.4">coverage.py v7.13.4</a>,
-            created at 2026-02-23 04:35 +0000
+            created at 2026-02-28 07:47 +0000
         </p>
         <aside class="hidden">
             <button type="button" class="button_next_chunk" data-shortcut="j"></button>
@@ -182,9 +182,9 @@
     <p class="mis mis2 show_mis"><span class="n"><a id="t100" href="#t100">100</a></span><span class="t">                    <span class="nam">phone</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="mis mis2 show_mis"><span class="n"><a id="t101" href="#t101">101</a></span><span class="t">                    <span class="nam">message</span>&nbsp;</span><span class="r"></span></p>
     <p class="mis mis2 show_mis"><span class="n"><a id="t102" href="#t102">102</a></span><span class="t">                <span class="op">)</span>&nbsp;</span><span class="r"></span></p>
-    <p class="mis show_mis"><span class="n"><a id="t103" href="#t103">103</a></span><span class="t">                <span class="nam">self</span><span class="op">.</span><span class="nam">logger</span><span class="op">.</span><span class="nam">info</span><span class="op">(</span><span class="str">f"Alert sent via SMS to {phone}: {alert.title}"</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="mis show_mis"><span class="n"><a id="t103" href="#t103">103</a></span><span class="t">                <span class="nam">self</span><span class="op">.</span><span class="nam">logger</span><span class="op">.</span><span class="nam">info</span><span class="op">(</span><span class="fst">f"</span><span class="fst">Alert sent via SMS to </span><span class="op">{</span><span class="nam">phone</span><span class="op">}</span><span class="fst">: </span><span class="op">{</span><span class="nam">alert</span><span class="op">.</span><span class="nam">title</span><span class="op">}</span><span class="fst">"</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="mis show_mis"><span class="n"><a id="t104" href="#t104">104</a></span><span class="t">            <span class="key">except</span> <span class="nam">Exception</span> <span class="key">as</span> <span class="nam">e</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
-    <p class="mis show_mis"><span class="n"><a id="t105" href="#t105">105</a></span><span class="t">                <span class="nam">self</span><span class="op">.</span><span class="nam">logger</span><span class="op">.</span><span class="nam">error</span><span class="op">(</span><span class="str">f"Error sending SMS to {phone}: {e}"</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="mis show_mis"><span class="n"><a id="t105" href="#t105">105</a></span><span class="t">                <span class="nam">self</span><span class="op">.</span><span class="nam">logger</span><span class="op">.</span><span class="nam">error</span><span class="op">(</span><span class="fst">f"</span><span class="fst">Error sending SMS to </span><span class="op">{</span><span class="nam">phone</span><span class="op">}</span><span class="fst">: </span><span class="op">{</span><span class="nam">e</span><span class="op">}</span><span class="fst">"</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="mis show_mis"><span class="n"><a id="t106" href="#t106">106</a></span><span class="t">                <span class="nam">success</span> <span class="op">=</span> <span class="key">False</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t107" href="#t107">107</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="mis show_mis"><span class="n"><a id="t108" href="#t108">108</a></span><span class="t">        <span class="key">return</span> <span class="nam">success</span>&nbsp;</span><span class="r"></span></p>
@@ -212,7 +212,7 @@
     <p class="pln"><span class="n"><a id="t130" href="#t130">130</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t131" href="#t131">131</a></span><span class="t">        <span class="com"># Build short message</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t132" href="#t132">132</a></span><span class="t">        <span class="com"># Format: [CRIT] Title | Message (truncated to 160 chars)</span>&nbsp;</span><span class="r"></span></p>
-    <p class="mis show_mis"><span class="n"><a id="t133" href="#t133">133</a></span><span class="t">        <span class="nam">message</span> <span class="op">=</span> <span class="str">f"[{prefix}] {alert.title} | {alert.message}"</span>&nbsp;</span><span class="r"></span></p>
+    <p class="mis show_mis"><span class="n"><a id="t133" href="#t133">133</a></span><span class="t">        <span class="nam">message</span> <span class="op">=</span> <span class="fst">f"</span><span class="fst">[</span><span class="op">{</span><span class="nam">prefix</span><span class="op">}</span><span class="fst">] </span><span class="op">{</span><span class="nam">alert</span><span class="op">.</span><span class="nam">title</span><span class="op">}</span><span class="fst"> | </span><span class="op">{</span><span class="nam">alert</span><span class="op">.</span><span class="nam">message</span><span class="op">}</span><span class="fst">"</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t134" href="#t134">134</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t135" href="#t135">135</a></span><span class="t">        <span class="com"># Truncate to 160 chars if needed</span>&nbsp;</span><span class="r"></span></p>
     <p class="mis show_mis"><span class="n"><a id="t136" href="#t136">136</a></span><span class="t">        <span class="key">if</span> <span class="nam">len</span><span class="op">(</span><span class="nam">message</span><span class="op">)</span> <span class="op">></span> <span class="num">160</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
@@ -242,7 +242,7 @@
             <a class="nav" href="z_c491fc8e7f435b94___init___py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.13.4">coverage.py v7.13.4</a>,
-            created at 2026-02-23 04:35 +0000
+            created at 2026-02-28 07:47 +0000
         </p>
     </div>
 </footer>
