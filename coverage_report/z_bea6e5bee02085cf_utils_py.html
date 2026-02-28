@@ -65,7 +65,7 @@
             <a id="nextFileLink" class="nav" href="z_5e7c8869d25572f9_sec_edgar_bulletproof_config_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.13.4">coverage.py v7.13.4</a>,
-            created at 2026-02-28 07:47 +0000
+            created at 2026-02-23 04:38 +0000
         </p>
         <aside class="hidden">
             <button type="button" class="button_next_chunk" data-shortcut="j"></button>
@@ -181,7 +181,7 @@
     <p class="pln"><span class="n"><a id="t99" href="#t99">99</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="mis show_mis"><span class="n"><a id="t100" href="#t100">100</a></span><span class="t">    <span class="key">if</span> <span class="nam">with_dashes</span> <span class="key">and</span> <span class="nam">len</span><span class="op">(</span><span class="nam">clean</span><span class="op">)</span> <span class="op">>=</span> <span class="num">18</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t101" href="#t101">101</a></span><span class="t">        <span class="com"># Format: XXXXXXXXXX-XX-XXXXXX</span>&nbsp;</span><span class="r"></span></p>
-    <p class="mis show_mis"><span class="n"><a id="t102" href="#t102">102</a></span><span class="t">        <span class="key">return</span> <span class="fst">f"</span><span class="op">{</span><span class="nam">clean</span><span class="op">[</span><span class="op">:</span><span class="num">10</span><span class="op">]</span><span class="op">}</span><span class="fst">-</span><span class="op">{</span><span class="nam">clean</span><span class="op">[</span><span class="num">10</span><span class="op">:</span><span class="num">12</span><span class="op">]</span><span class="op">}</span><span class="fst">-</span><span class="op">{</span><span class="nam">clean</span><span class="op">[</span><span class="num">12</span><span class="op">:</span><span class="op">]</span><span class="op">}</span><span class="fst">"</span>&nbsp;</span><span class="r"></span></p>
+    <p class="mis show_mis"><span class="n"><a id="t102" href="#t102">102</a></span><span class="t">        <span class="key">return</span> <span class="str">f"{clean[:10]}-{clean[10:12]}-{clean[12:]}"</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t103" href="#t103">103</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="mis show_mis"><span class="n"><a id="t104" href="#t104">104</a></span><span class="t">    <span class="key">return</span> <span class="nam">clean</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t105" href="#t105">105</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
@@ -206,7 +206,7 @@
     <p class="pln"><span class="n"><a id="t124" href="#t124">124</a></span><span class="t"><span class="str">    """</span>&nbsp;</span><span class="r"></span></p>
     <p class="mis show_mis"><span class="n"><a id="t125" href="#t125">125</a></span><span class="t">    <span class="nam">cik_clean</span> <span class="op">=</span> <span class="nam">strip_cik_leading_zeros</span><span class="op">(</span><span class="nam">cik</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="mis show_mis"><span class="n"><a id="t126" href="#t126">126</a></span><span class="t">    <span class="nam">accession_clean</span> <span class="op">=</span> <span class="nam">format_accession_number</span><span class="op">(</span><span class="nam">accession</span><span class="op">,</span> <span class="nam">with_dashes</span><span class="op">=</span><span class="key">False</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
-    <p class="mis show_mis"><span class="n"><a id="t127" href="#t127">127</a></span><span class="t">    <span class="key">return</span> <span class="fst">f"</span><span class="fst">https://www.sec.gov/Archives/edgar/data/</span><span class="op">{</span><span class="nam">cik_clean</span><span class="op">}</span><span class="fst">/</span><span class="op">{</span><span class="nam">accession_clean</span><span class="op">}</span><span class="fst">/</span><span class="op">{</span><span class="nam">filename</span><span class="op">}</span><span class="fst">"</span>&nbsp;</span><span class="r"></span></p>
+    <p class="mis show_mis"><span class="n"><a id="t127" href="#t127">127</a></span><span class="t">    <span class="key">return</span> <span class="str">f"https://www.sec.gov/Archives/edgar/data/{cik_clean}/{accession_clean}/{filename}"</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t128" href="#t128">128</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t129" href="#t129">129</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t130" href="#t130">130</a></span><span class="t"><span class="key">def</span> <span class="nam">build_edgar_index_url</span><span class="op">(</span><span class="nam">cik</span><span class="op">:</span> <span class="nam">str</span><span class="op">,</span> <span class="nam">accession</span><span class="op">:</span> <span class="nam">str</span><span class="op">)</span> <span class="op">-></span> <span class="nam">str</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
@@ -246,7 +246,7 @@
     <p class="pln"><span class="n"><a id="t164" href="#t164">164</a></span><span class="t"><span class="str">        'https://data.sec.gov/submissions/CIK0000320193.json'</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t165" href="#t165">165</a></span><span class="t"><span class="str">    """</span>&nbsp;</span><span class="r"></span></p>
     <p class="mis show_mis"><span class="n"><a id="t166" href="#t166">166</a></span><span class="t">    <span class="nam">cik_padded</span> <span class="op">=</span> <span class="nam">normalize_cik</span><span class="op">(</span><span class="nam">cik</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
-    <p class="mis show_mis"><span class="n"><a id="t167" href="#t167">167</a></span><span class="t">    <span class="key">return</span> <span class="fst">f"</span><span class="fst">https://data.sec.gov/submissions/CIK</span><span class="op">{</span><span class="nam">cik_padded</span><span class="op">}</span><span class="fst">.json</span><span class="fst">"</span>&nbsp;</span><span class="r"></span></p>
+    <p class="mis show_mis"><span class="n"><a id="t167" href="#t167">167</a></span><span class="t">    <span class="key">return</span> <span class="str">f"https://data.sec.gov/submissions/CIK{cik_padded}.json"</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t168" href="#t168">168</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t169" href="#t169">169</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t170" href="#t170">170</a></span><span class="t"><span class="key">def</span> <span class="nam">build_xbrl_companyfacts_url</span><span class="op">(</span><span class="nam">cik</span><span class="op">:</span> <span class="nam">str</span><span class="op">)</span> <span class="op">-></span> <span class="nam">str</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
@@ -266,7 +266,7 @@
     <p class="pln"><span class="n"><a id="t184" href="#t184">184</a></span><span class="t"><span class="str">        'https://data.sec.gov/api/xbrl/companyfacts/CIK0000320193.json'</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t185" href="#t185">185</a></span><span class="t"><span class="str">    """</span>&nbsp;</span><span class="r"></span></p>
     <p class="mis show_mis"><span class="n"><a id="t186" href="#t186">186</a></span><span class="t">    <span class="nam">cik_padded</span> <span class="op">=</span> <span class="nam">normalize_cik</span><span class="op">(</span><span class="nam">cik</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
-    <p class="mis show_mis"><span class="n"><a id="t187" href="#t187">187</a></span><span class="t">    <span class="key">return</span> <span class="fst">f"</span><span class="fst">https://data.sec.gov/api/xbrl/companyfacts/CIK</span><span class="op">{</span><span class="nam">cik_padded</span><span class="op">}</span><span class="fst">.json</span><span class="fst">"</span>&nbsp;</span><span class="r"></span></p>
+    <p class="mis show_mis"><span class="n"><a id="t187" href="#t187">187</a></span><span class="t">    <span class="key">return</span> <span class="str">f"https://data.sec.gov/api/xbrl/companyfacts/CIK{cik_padded}.json"</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t188" href="#t188">188</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t189" href="#t189">189</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t190" href="#t190">190</a></span><span class="t"><span class="key">def</span> <span class="nam">extract_cik_from_url</span><span class="op">(</span><span class="nam">url</span><span class="op">:</span> <span class="nam">str</span><span class="op">)</span> <span class="op">-></span> <span class="nam">Optional</span><span class="op">[</span><span class="nam">str</span><span class="op">]</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
@@ -338,7 +338,7 @@
             <a class="nav" href="z_5e7c8869d25572f9_sec_edgar_bulletproof_config_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.13.4">coverage.py v7.13.4</a>,
-            created at 2026-02-28 07:47 +0000
+            created at 2026-02-23 04:38 +0000
         </p>
     </div>
 </footer>

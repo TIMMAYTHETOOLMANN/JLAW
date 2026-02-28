@@ -65,7 +65,7 @@
             <a id="nextFileLink" class="nav" href="z_7034054e825f4f95_bankruptcy_predictor_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.13.4">coverage.py v7.13.4</a>,
-            created at 2026-02-28 07:47 +0000
+            created at 2026-02-23 04:38 +0000
         </p>
         <aside class="hidden">
             <button type="button" class="button_next_chunk" data-shortcut="j"></button>
@@ -327,7 +327,7 @@
     <p class="pln"><span class="n"><a id="t245" href="#t245">245</a></span><span class="t"><span class="str">        Returns:</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t246" href="#t246">246</a></span><span class="t"><span class="str">            ZScoreResult with complete analysis and forensic metadata</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t247" href="#t247">247</a></span><span class="t"><span class="str">        """</span>&nbsp;</span><span class="r"></span></p>
-    <p class="mis show_mis"><span class="n"><a id="t248" href="#t248">248</a></span><span class="t">        <span class="nam">logger</span><span class="op">.</span><span class="nam">info</span><span class="op">(</span><span class="fst">f"</span><span class="fst">Calculating Z-Score for </span><span class="op">{</span><span class="nam">input_data</span><span class="op">.</span><span class="nam">company_name</span><span class="op">}</span><span class="fst"> (CIK: </span><span class="op">{</span><span class="nam">input_data</span><span class="op">.</span><span class="nam">cik</span><span class="op">}</span><span class="fst">)</span><span class="fst">"</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="mis show_mis"><span class="n"><a id="t248" href="#t248">248</a></span><span class="t">        <span class="nam">logger</span><span class="op">.</span><span class="nam">info</span><span class="op">(</span><span class="str">f"Calculating Z-Score for {input_data.company_name} (CIK: {input_data.cik})"</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t249" href="#t249">249</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t250" href="#t250">250</a></span><span class="t">        <span class="com"># Calculate component ratios</span>&nbsp;</span><span class="r"></span></p>
     <p class="mis show_mis"><span class="n"><a id="t251" href="#t251">251</a></span><span class="t">        <span class="nam">working_capital</span> <span class="op">=</span> <span class="nam">input_data</span><span class="op">.</span><span class="nam">current_assets</span> <span class="op">-</span> <span class="nam">input_data</span><span class="op">.</span><span class="nam">current_liabilities</span>&nbsp;</span><span class="r"></span></p>
@@ -378,7 +378,7 @@
     <p class="mis show_mis"><span class="n"><a id="t296" href="#t296">296</a></span><span class="t">        <span class="nam">requires_disclosure</span> <span class="op">=</span> <span class="nam">classification</span> <span class="op">==</span> <span class="nam">ZScoreClassification</span><span class="op">.</span><span class="nam">DISTRESS</span>&nbsp;</span><span class="r"></span></p>
     <p class="mis show_mis"><span class="n"><a id="t297" href="#t297">297</a></span><span class="t">        <span class="nam">sox_implications</span> <span class="op">=</span> <span class="nam">self</span><span class="op">.</span><span class="nam">_assess_sox_302_implications</span><span class="op">(</span><span class="nam">classification</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t298" href="#t298">298</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
-    <p class="mis show_mis"><span class="n"><a id="t299" href="#t299">299</a></span><span class="t">        <span class="nam">logger</span><span class="op">.</span><span class="nam">info</span><span class="op">(</span><span class="fst">f"</span><span class="fst">Z-Score calculated: </span><span class="op">{</span><span class="nam">z_score</span><span class="op">:</span><span class="fst">.4f</span><span class="op">}</span><span class="fst"> (</span><span class="op">{</span><span class="nam">classification</span><span class="op">.</span><span class="nam">value</span><span class="op">}</span><span class="fst">)</span><span class="fst">"</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="mis show_mis"><span class="n"><a id="t299" href="#t299">299</a></span><span class="t">        <span class="nam">logger</span><span class="op">.</span><span class="nam">info</span><span class="op">(</span><span class="str">f"Z-Score calculated: {z_score:.4f} ({classification.value})"</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t300" href="#t300">300</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="mis show_mis"><span class="n"><a id="t301" href="#t301">301</a></span><span class="t">        <span class="key">return</span> <span class="nam">ZScoreResult</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
     <p class="mis mis2 show_mis"><span class="n"><a id="t302" href="#t302">302</a></span><span class="t">            <span class="nam">input_data</span><span class="op">=</span><span class="nam">input_data</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
@@ -459,7 +459,7 @@
     <p class="mis show_mis"><span class="n"><a id="t377" href="#t377">377</a></span><span class="t">                <span class="nam">result</span> <span class="op">=</span> <span class="nam">self</span><span class="op">.</span><span class="nam">calculate</span><span class="op">(</span><span class="nam">company</span><span class="op">,</span> <span class="nam">model</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="mis show_mis"><span class="n"><a id="t378" href="#t378">378</a></span><span class="t">                <span class="nam">results</span><span class="op">.</span><span class="nam">append</span><span class="op">(</span><span class="nam">result</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="mis show_mis"><span class="n"><a id="t379" href="#t379">379</a></span><span class="t">            <span class="key">except</span> <span class="nam">Exception</span> <span class="key">as</span> <span class="nam">e</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
-    <p class="mis show_mis"><span class="n"><a id="t380" href="#t380">380</a></span><span class="t">                <span class="nam">logger</span><span class="op">.</span><span class="nam">error</span><span class="op">(</span><span class="fst">f"</span><span class="fst">Error calculating Z-Score for </span><span class="op">{</span><span class="nam">company</span><span class="op">.</span><span class="nam">company_name</span><span class="op">}</span><span class="fst">: </span><span class="op">{</span><span class="nam">e</span><span class="op">}</span><span class="fst">"</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="mis show_mis"><span class="n"><a id="t380" href="#t380">380</a></span><span class="t">                <span class="nam">logger</span><span class="op">.</span><span class="nam">error</span><span class="op">(</span><span class="str">f"Error calculating Z-Score for {company.company_name}: {e}"</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t381" href="#t381">381</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="mis show_mis"><span class="n"><a id="t382" href="#t382">382</a></span><span class="t">        <span class="key">return</span> <span class="nam">results</span>&nbsp;</span><span class="r"></span></p>
 </main>
@@ -471,7 +471,7 @@
             <a class="nav" href="z_7034054e825f4f95_bankruptcy_predictor_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.13.4">coverage.py v7.13.4</a>,
-            created at 2026-02-28 07:47 +0000
+            created at 2026-02-23 04:38 +0000
         </p>
     </div>
 </footer>

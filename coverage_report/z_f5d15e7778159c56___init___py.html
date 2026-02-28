@@ -65,7 +65,7 @@
             <a id="nextFileLink" class="nav" href="z_71ec9df653c0e186___init___py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.13.4">coverage.py v7.13.4</a>,
-            created at 2026-02-28 07:47 +0000
+            created at 2026-02-23 04:38 +0000
         </p>
         <aside class="hidden">
             <button type="button" class="button_next_chunk" data-shortcut="j"></button>
@@ -363,10 +363,10 @@
     <p class="pln"><span class="n"><a id="t281" href="#t281">281</a></span><span class="t"><span class="str">    __dict__. We use it to catch V1 node imports and emit deprecation warnings.</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t282" href="#t282">282</a></span><span class="t"><span class="str">    """</span>&nbsp;</span><span class="r"></span></p>
     <p class="mis show_mis"><span class="n"><a id="t283" href="#t283">283</a></span><span class="t">    <span class="key">if</span> <span class="nam">name</span> <span class="key">in</span> <span class="nam">__deprecated_v1_nodes__</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
-    <p class="mis show_mis"><span class="n"><a id="t284" href="#t284">284</a></span><span class="t">        <span class="nam">v2_name</span> <span class="op">=</span> <span class="nam">__v1_to_v2_mapping__</span><span class="op">.</span><span class="nam">get</span><span class="op">(</span><span class="nam">name</span><span class="op">,</span> <span class="fst">f"</span><span class="op">{</span><span class="nam">name</span><span class="op">}</span><span class="fst">_V2</span><span class="fst">"</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="mis show_mis"><span class="n"><a id="t284" href="#t284">284</a></span><span class="t">        <span class="nam">v2_name</span> <span class="op">=</span> <span class="nam">__v1_to_v2_mapping__</span><span class="op">.</span><span class="nam">get</span><span class="op">(</span><span class="nam">name</span><span class="op">,</span> <span class="str">f"{name}_V2"</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="mis show_mis"><span class="n"><a id="t285" href="#t285">285</a></span><span class="t">        <span class="nam">warnings</span><span class="op">.</span><span class="nam">warn</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
-    <p class="mis mis2 show_mis"><span class="n"><a id="t286" href="#t286">286</a></span><span class="t">            <span class="fst">f"</span><span class="op">{</span><span class="nam">name</span><span class="op">}</span><span class="fst"> is deprecated and will be removed in a future release. </span><span class="fst">"</span>&nbsp;</span><span class="r"></span></p>
-    <p class="mis mis2 show_mis"><span class="n"><a id="t287" href="#t287">287</a></span><span class="t">            <span class="fst">f"</span><span class="fst">Please use </span><span class="op">{</span><span class="nam">v2_name</span><span class="op">}</span><span class="fst"> instead.</span><span class="fst">"</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
+    <p class="mis mis2 show_mis"><span class="n"><a id="t286" href="#t286">286</a></span><span class="t">            <span class="str">f"{name} is deprecated and will be removed in a future release. "</span>&nbsp;</span><span class="r"></span></p>
+    <p class="mis mis2 show_mis"><span class="n"><a id="t287" href="#t287">287</a></span><span class="t">            <span class="str">f"Please use {v2_name} instead."</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="mis mis2 show_mis"><span class="n"><a id="t288" href="#t288">288</a></span><span class="t">            <span class="nam">DeprecationWarning</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="mis mis2 show_mis"><span class="n"><a id="t289" href="#t289">289</a></span><span class="t">            <span class="nam">stacklevel</span><span class="op">=</span><span class="num">2</span>&nbsp;</span><span class="r"></span></p>
     <p class="mis mis2 show_mis"><span class="n"><a id="t290" href="#t290">290</a></span><span class="t">        <span class="op">)</span>&nbsp;</span><span class="r"></span></p>
@@ -375,7 +375,7 @@
     <p class="mis show_mis"><span class="n"><a id="t293" href="#t293">293</a></span><span class="t">        <span class="key">if</span> <span class="nam">name</span> <span class="key">in</span> <span class="nam">globals</span><span class="op">(</span><span class="op">)</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
     <p class="mis show_mis"><span class="n"><a id="t294" href="#t294">294</a></span><span class="t">            <span class="key">return</span> <span class="nam">globals</span><span class="op">(</span><span class="op">)</span><span class="op">[</span><span class="nam">name</span><span class="op">]</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t295" href="#t295">295</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
-    <p class="mis show_mis"><span class="n"><a id="t296" href="#t296">296</a></span><span class="t">    <span class="key">raise</span> <span class="nam">AttributeError</span><span class="op">(</span><span class="fst">f"</span><span class="fst">module </span><span class="op">{</span><span class="nam">__name__</span><span class="op">!</span><span class="nam">r</span><span class="op">}</span><span class="fst"> has no attribute </span><span class="op">{</span><span class="nam">name</span><span class="op">!</span><span class="nam">r</span><span class="op">}</span><span class="fst">"</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="mis show_mis"><span class="n"><a id="t296" href="#t296">296</a></span><span class="t">    <span class="key">raise</span> <span class="nam">AttributeError</span><span class="op">(</span><span class="str">f"module {__name__!r} has no attribute {name!r}"</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t297" href="#t297">297</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t298" href="#t298">298</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
 </main>
@@ -387,7 +387,7 @@
             <a class="nav" href="z_71ec9df653c0e186___init___py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.13.4">coverage.py v7.13.4</a>,
-            created at 2026-02-28 07:47 +0000
+            created at 2026-02-23 04:38 +0000
         </p>
     </div>
 </footer>

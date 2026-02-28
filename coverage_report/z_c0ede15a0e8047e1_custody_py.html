@@ -65,7 +65,7 @@
             <a id="nextFileLink" class="nav" href="z_0618756b1ff51bca_data_contracts_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.13.4">coverage.py v7.13.4</a>,
-            created at 2026-02-28 07:47 +0000
+            created at 2026-02-23 04:35 +0000
         </p>
         <aside class="hidden">
             <button type="button" class="button_next_chunk" data-shortcut="j"></button>
@@ -148,7 +148,7 @@
     <p class="mis show_mis"><span class="n"><a id="t66" href="#t66">66</a></span><span class="t">        <span class="nam">self</span><span class="op">.</span><span class="nam">_counter</span> <span class="op">+=</span> <span class="num">1</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t67" href="#t67">67</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="mis show_mis"><span class="n"><a id="t68" href="#t68">68</a></span><span class="t">        <span class="nam">entry</span> <span class="op">=</span> <span class="nam">CustodyEntry</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
-    <p class="mis mis2 show_mis"><span class="n"><a id="t69" href="#t69">69</a></span><span class="t">            <span class="nam">custody_id</span><span class="op">=</span><span class="fst">f"</span><span class="fst">COC-</span><span class="op">{</span><span class="nam">self</span><span class="op">.</span><span class="nam">evidence_id</span><span class="op">}</span><span class="fst">-</span><span class="op">{</span><span class="nam">self</span><span class="op">.</span><span class="nam">_counter</span><span class="op">:</span><span class="fst">04d</span><span class="op">}</span><span class="fst">"</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
+    <p class="mis mis2 show_mis"><span class="n"><a id="t69" href="#t69">69</a></span><span class="t">            <span class="nam">custody_id</span><span class="op">=</span><span class="str">f"COC-{self.evidence_id}-{self._counter:04d}"</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="mis mis2 show_mis"><span class="n"><a id="t70" href="#t70">70</a></span><span class="t">            <span class="nam">evidence_id</span><span class="op">=</span><span class="nam">self</span><span class="op">.</span><span class="nam">evidence_id</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="mis mis2 show_mis"><span class="n"><a id="t71" href="#t71">71</a></span><span class="t">            <span class="nam">custodian</span><span class="op">=</span><span class="nam">custodian</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="mis mis2 show_mis"><span class="n"><a id="t72" href="#t72">72</a></span><span class="t">            <span class="nam">action</span><span class="op">=</span><span class="nam">action</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
@@ -180,22 +180,22 @@
     <p class="mis show_mis"><span class="n"><a id="t98" href="#t98">98</a></span><span class="t">    <span class="nam">organization</span><span class="op">:</span> <span class="nam">str</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t99" href="#t99">99</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="mis show_mis"><span class="n"><a id="t100" href="#t100">100</a></span><span class="t">    <span class="key">def</span> <span class="nam">generate_902_14_certification</span><span class="op">(</span><span class="nam">self</span><span class="op">,</span> <span class="nam">evidence_id</span><span class="op">:</span> <span class="nam">str</span><span class="op">,</span> <span class="nam">hash_value</span><span class="op">:</span> <span class="nam">str</span><span class="op">)</span> <span class="op">-></span> <span class="nam">str</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
-    <p class="mis show_mis"><span class="n"><a id="t101" href="#t101">101</a></span><span class="t">        <span class="key">return</span> <span class="fst">f"""</span>&nbsp;</span><span class="r"></span></p>
-    <p class="mis mis2 show_mis"><span class="n"><a id="t102" href="#t102">102</a></span><span class="t"><span class="fst">CERTIFICATION PURSUANT TO FEDERAL RULES OF EVIDENCE 902(14)</span>&nbsp;</span><span class="r"></span></p>
-    <p class="mis mis2 show_mis"><span class="n"><a id="t103" href="#t103">103</a></span><span class="t"><span class="fst">============================================================</span>&nbsp;</span><span class="r"></span></p>
+    <p class="mis show_mis"><span class="n"><a id="t101" href="#t101">101</a></span><span class="t">        <span class="key">return</span> <span class="str">f"""</span>&nbsp;</span><span class="r"></span></p>
+    <p class="mis mis2 show_mis"><span class="n"><a id="t102" href="#t102">102</a></span><span class="t"><span class="str">CERTIFICATION PURSUANT TO FEDERAL RULES OF EVIDENCE 902(14)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="mis mis2 show_mis"><span class="n"><a id="t103" href="#t103">103</a></span><span class="t"><span class="str">============================================================</span>&nbsp;</span><span class="r"></span></p>
     <p class="mis mis2 show_mis"><span class="n"><a id="t104" href="#t104">104</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
-    <p class="mis mis2 show_mis"><span class="n"><a id="t105" href="#t105">105</a></span><span class="t"><span class="fst">Evidence ID: </span><span class="op">{</span><span class="nam">evidence_id</span><span class="op">}</span>&nbsp;</span><span class="r"></span></p>
-    <p class="mis mis2 show_mis"><span class="n"><a id="t106" href="#t106">106</a></span><span class="t"><span class="fst">Hash Value (SHA-256): </span><span class="op">{</span><span class="nam">hash_value</span><span class="op">}</span>&nbsp;</span><span class="r"></span></p>
+    <p class="mis mis2 show_mis"><span class="n"><a id="t105" href="#t105">105</a></span><span class="t"><span class="str">Evidence ID: {evidence_id}</span>&nbsp;</span><span class="r"></span></p>
+    <p class="mis mis2 show_mis"><span class="n"><a id="t106" href="#t106">106</a></span><span class="t"><span class="str">Hash Value (SHA-256): {hash_value}</span>&nbsp;</span><span class="r"></span></p>
     <p class="mis mis2 show_mis"><span class="n"><a id="t107" href="#t107">107</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
-    <p class="mis mis2 show_mis"><span class="n"><a id="t108" href="#t108">108</a></span><span class="t"><span class="fst">I, </span><span class="op">{</span><span class="nam">self</span><span class="op">.</span><span class="nam">certifier_name</span><span class="op">}</span><span class="fst">, </span><span class="op">{</span><span class="nam">self</span><span class="op">.</span><span class="nam">certifier_title</span><span class="op">}</span><span class="fst"> of </span><span class="op">{</span><span class="nam">self</span><span class="op">.</span><span class="nam">organization</span><span class="op">}</span><span class="fst">,</span>&nbsp;</span><span class="r"></span></p>
-    <p class="mis mis2 show_mis"><span class="n"><a id="t109" href="#t109">109</a></span><span class="t"><span class="fst">certify under penalty of perjury that the data identified herein is a</span>&nbsp;</span><span class="r"></span></p>
-    <p class="mis mis2 show_mis"><span class="n"><a id="t110" href="#t110">110</a></span><span class="t"><span class="fst">complete and accurate copy of the original electronic data.</span>&nbsp;</span><span class="r"></span></p>
+    <p class="mis mis2 show_mis"><span class="n"><a id="t108" href="#t108">108</a></span><span class="t"><span class="str">I, {self.certifier_name}, {self.certifier_title} of {self.organization},</span>&nbsp;</span><span class="r"></span></p>
+    <p class="mis mis2 show_mis"><span class="n"><a id="t109" href="#t109">109</a></span><span class="t"><span class="str">certify under penalty of perjury that the data identified herein is a</span>&nbsp;</span><span class="r"></span></p>
+    <p class="mis mis2 show_mis"><span class="n"><a id="t110" href="#t110">110</a></span><span class="t"><span class="str">complete and accurate copy of the original electronic data.</span>&nbsp;</span><span class="r"></span></p>
     <p class="mis mis2 show_mis"><span class="n"><a id="t111" href="#t111">111</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
-    <p class="mis mis2 show_mis"><span class="n"><a id="t112" href="#t112">112</a></span><span class="t"><span class="fst">Date: </span><span class="op">{</span><span class="nam">datetime</span><span class="op">.</span><span class="nam">utcnow</span><span class="op">(</span><span class="op">)</span><span class="op">.</span><span class="nam">strftime</span><span class="op">(</span><span class="str">'%Y-%m-%d'</span><span class="op">)</span><span class="op">}</span>&nbsp;</span><span class="r"></span></p>
+    <p class="mis mis2 show_mis"><span class="n"><a id="t112" href="#t112">112</a></span><span class="t"><span class="str">Date: {datetime.utcnow().strftime('%Y-%m-%d')}</span>&nbsp;</span><span class="r"></span></p>
     <p class="mis mis2 show_mis"><span class="n"><a id="t113" href="#t113">113</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
-    <p class="mis mis2 show_mis"><span class="n"><a id="t114" href="#t114">114</a></span><span class="t"><span class="op">{</span><span class="nam">self</span><span class="op">.</span><span class="nam">certifier_name</span><span class="op">}</span>&nbsp;</span><span class="r"></span></p>
-    <p class="mis mis2 show_mis"><span class="n"><a id="t115" href="#t115">115</a></span><span class="t"><span class="op">{</span><span class="nam">self</span><span class="op">.</span><span class="nam">certifier_title</span><span class="op">}</span>&nbsp;</span><span class="r"></span></p>
-    <p class="mis mis2 show_mis"><span class="n"><a id="t116" href="#t116">116</a></span><span class="t"><span class="fst">"""</span>&nbsp;</span><span class="r"></span></p>
+    <p class="mis mis2 show_mis"><span class="n"><a id="t114" href="#t114">114</a></span><span class="t"><span class="str">{self.certifier_name}</span>&nbsp;</span><span class="r"></span></p>
+    <p class="mis mis2 show_mis"><span class="n"><a id="t115" href="#t115">115</a></span><span class="t"><span class="str">{self.certifier_title}</span>&nbsp;</span><span class="r"></span></p>
+    <p class="mis mis2 show_mis"><span class="n"><a id="t116" href="#t116">116</a></span><span class="t"><span class="str">"""</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t117" href="#t117">117</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
 </main>
 <footer>
@@ -206,7 +206,7 @@
             <a class="nav" href="z_0618756b1ff51bca_data_contracts_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.13.4">coverage.py v7.13.4</a>,
-            created at 2026-02-28 07:47 +0000
+            created at 2026-02-23 04:35 +0000
         </p>
     </div>
 </footer>
