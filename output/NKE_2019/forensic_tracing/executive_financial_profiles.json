@@ -1,0 +1,1109 @@
+{
+  "profiles": {
+    "NAME:Comstock Elizabeth J": {
+      "insider_name": "Comstock Elizabeth J",
+      "insider_cik": "NAME:Comstock Elizabeth J",
+      "company_cik": "",
+      "company_name": "",
+      "role": {
+        "is_officer": false,
+        "is_director": false,
+        "is_ten_percent_owner": false,
+        "officer_title": ""
+      },
+      "ownership_timeline": {
+        "form3_count": 0,
+        "form4_count": 0,
+        "form5_count": 0,
+        "schedule_13d_count": 0,
+        "schedule_13g_count": 0,
+        "form144_count": 0,
+        "total_ownership_filings": 0,
+        "has_form3": false,
+        "has_form5": false,
+        "has_schedule_13d": false,
+        "form3_filings": [],
+        "form4_filings": [],
+        "form5_filings": []
+      },
+      "form4_summary": {
+        "total_transactions": 6,
+        "total_shares_acquired": 0.0,
+        "total_shares_disposed": 0.0,
+        "total_value_acquired": 0.0,
+        "total_value_disposed": 0.0,
+        "transaction_code_distribution": {
+          "M": 2,
+          "A": 1
+        },
+        "date_range": [
+          "2019-07-02",
+          "2019-12-23"
+        ]
+      },
+      "anomalies": [],
+      "anomaly_count": 0,
+      "profile_generated_at": "2026-02-28T02:58:46.373646Z",
+      "data_sources_used": [
+        "Form 4 XML (parsed)"
+      ]
+    },
+    "NAME:SPRUNK ERIC D": {
+      "insider_name": "SPRUNK ERIC D",
+      "insider_cik": "NAME:SPRUNK ERIC D",
+      "company_cik": "",
+      "company_name": "",
+      "role": {
+        "is_officer": false,
+        "is_director": false,
+        "is_ten_percent_owner": false,
+        "officer_title": ""
+      },
+      "ownership_timeline": {
+        "form3_count": 0,
+        "form4_count": 0,
+        "form5_count": 0,
+        "schedule_13d_count": 0,
+        "schedule_13g_count": 0,
+        "form144_count": 0,
+        "total_ownership_filings": 0,
+        "has_form3": false,
+        "has_form5": false,
+        "has_schedule_13d": false,
+        "form3_filings": [],
+        "form4_filings": [],
+        "form5_filings": []
+      },
+      "form4_summary": {
+        "total_transactions": 11,
+        "total_shares_acquired": 0.0,
+        "total_shares_disposed": 0.0,
+        "total_value_acquired": 0.0,
+        "total_value_disposed": 0.0,
+        "transaction_code_distribution": {
+          "M": 2,
+          "G": 4,
+          "A": 2
+        },
+        "date_range": [
+          "2019-04-09",
+          "2019-12-24"
+        ]
+      },
+      "anomalies": [],
+      "anomaly_count": 0,
+      "profile_generated_at": "2026-02-28T02:58:46.373681Z",
+      "data_sources_used": [
+        "Form 4 XML (parsed)"
+      ]
+    },
+    "NAME:Abston Chris L": {
+      "insider_name": "Abston Chris L",
+      "insider_cik": "NAME:Abston Chris L",
+      "company_cik": "",
+      "company_name": "",
+      "role": {
+        "is_officer": false,
+        "is_director": false,
+        "is_ten_percent_owner": false,
+        "officer_title": ""
+      },
+      "ownership_timeline": {
+        "form3_count": 0,
+        "form4_count": 0,
+        "form5_count": 0,
+        "schedule_13d_count": 0,
+        "schedule_13g_count": 0,
+        "form144_count": 0,
+        "total_ownership_filings": 0,
+        "has_form3": false,
+        "has_form5": false,
+        "has_schedule_13d": false,
+        "form3_filings": [],
+        "form4_filings": [],
+        "form5_filings": []
+      },
+      "form4_summary": {
+        "total_transactions": 2,
+        "total_shares_acquired": 0.0,
+        "total_shares_disposed": 0.0,
+        "total_value_acquired": 0.0,
+        "total_value_disposed": 0.0,
+        "transaction_code_distribution": {
+          "A": 1
+        },
+        "date_range": [
+          "2019-02-14",
+          "2019-09-01"
+        ]
+      },
+      "anomalies": [],
+      "anomaly_count": 0,
+      "profile_generated_at": "2026-02-28T02:58:46.373707Z",
+      "data_sources_used": [
+        "Form 4 XML (parsed)"
+      ]
+    },
+    "NAME:Matheson Monique S.": {
+      "insider_name": "Matheson Monique S.",
+      "insider_cik": "NAME:Matheson Monique S.",
+      "company_cik": "",
+      "company_name": "",
+      "role": {
+        "is_officer": false,
+        "is_director": false,
+        "is_ten_percent_owner": false,
+        "officer_title": ""
+      },
+      "ownership_timeline": {
+        "form3_count": 0,
+        "form4_count": 0,
+        "form5_count": 0,
+        "schedule_13d_count": 0,
+        "schedule_13g_count": 0,
+        "form144_count": 0,
+        "total_ownership_filings": 0,
+        "has_form3": false,
+        "has_form5": false,
+        "has_schedule_13d": false,
+        "form3_filings": [],
+        "form4_filings": [],
+        "form5_filings": []
+      },
+      "form4_summary": {
+        "total_transactions": 6,
+        "total_shares_acquired": 0.0,
+        "total_shares_disposed": 0.0,
+        "total_value_acquired": 0.0,
+        "total_value_disposed": 0.0,
+        "transaction_code_distribution": {
+          "M": 3,
+          "G": 1,
+          "A": 2
+        },
+        "date_range": [
+          "2019-03-19",
+          "2019-12-30"
+        ]
+      },
+      "anomalies": [],
+      "anomaly_count": 0,
+      "profile_generated_at": "2026-02-28T02:58:46.373714Z",
+      "data_sources_used": [
+        "Form 4 XML (parsed)"
+      ]
+    },
+    "NAME:PARKER MARK G": {
+      "insider_name": "PARKER MARK G",
+      "insider_cik": "NAME:PARKER MARK G",
+      "company_cik": "",
+      "company_name": "",
+      "role": {
+        "is_officer": false,
+        "is_director": false,
+        "is_ten_percent_owner": false,
+        "officer_title": ""
+      },
+      "ownership_timeline": {
+        "form3_count": 0,
+        "form4_count": 0,
+        "form5_count": 0,
+        "schedule_13d_count": 0,
+        "schedule_13g_count": 0,
+        "form144_count": 0,
+        "total_ownership_filings": 0,
+        "has_form3": false,
+        "has_form5": false,
+        "has_schedule_13d": false,
+        "form3_filings": [],
+        "form4_filings": [],
+        "form5_filings": []
+      },
+      "form4_summary": {
+        "total_transactions": 10,
+        "total_shares_acquired": 0.0,
+        "total_shares_disposed": 0.0,
+        "total_value_acquired": 0.0,
+        "total_value_disposed": 0.0,
+        "transaction_code_distribution": {
+          "M": 8,
+          "A": 2
+        },
+        "date_range": [
+          "2019-01-02",
+          "2019-12-02"
+        ]
+      },
+      "anomalies": [],
+      "anomaly_count": 0,
+      "profile_generated_at": "2026-02-28T02:58:46.373725Z",
+      "data_sources_used": [
+        "Form 4 XML (parsed)"
+      ]
+    },
+    "NAME:Duckett Thasunda": {
+      "insider_name": "Duckett Thasunda",
+      "insider_cik": "NAME:Duckett Thasunda",
+      "company_cik": "",
+      "company_name": "",
+      "role": {
+        "is_officer": false,
+        "is_director": false,
+        "is_ten_percent_owner": false,
+        "officer_title": ""
+      },
+      "ownership_timeline": {
+        "form3_count": 0,
+        "form4_count": 0,
+        "form5_count": 0,
+        "schedule_13d_count": 0,
+        "schedule_13g_count": 0,
+        "form144_count": 0,
+        "total_ownership_filings": 0,
+        "has_form3": false,
+        "has_form5": false,
+        "has_schedule_13d": false,
+        "form3_filings": [],
+        "form4_filings": [],
+        "form5_filings": []
+      },
+      "form4_summary": {
+        "total_transactions": 1,
+        "total_shares_acquired": 0.0,
+        "total_shares_disposed": 0.0,
+        "total_value_acquired": 0.0,
+        "total_value_disposed": 0.0,
+        "transaction_code_distribution": {
+          "A": 1
+        },
+        "date_range": [
+          "2019-11-14",
+          "2019-11-14"
+        ]
+      },
+      "anomalies": [],
+      "anomaly_count": 0,
+      "profile_generated_at": "2026-02-28T02:58:46.373735Z",
+      "data_sources_used": [
+        "Form 4 XML (parsed)"
+      ]
+    },
+    "NAME:GRAF ALAN B JR": {
+      "insider_name": "GRAF ALAN B JR",
+      "insider_cik": "NAME:GRAF ALAN B JR",
+      "company_cik": "",
+      "company_name": "",
+      "role": {
+        "is_officer": false,
+        "is_director": false,
+        "is_ten_percent_owner": false,
+        "officer_title": ""
+      },
+      "ownership_timeline": {
+        "form3_count": 0,
+        "form4_count": 0,
+        "form5_count": 0,
+        "schedule_13d_count": 0,
+        "schedule_13g_count": 0,
+        "form144_count": 0,
+        "total_ownership_filings": 0,
+        "has_form3": false,
+        "has_form5": false,
+        "has_schedule_13d": false,
+        "form3_filings": [],
+        "form4_filings": [],
+        "form5_filings": []
+      },
+      "form4_summary": {
+        "total_transactions": 2,
+        "total_shares_acquired": 0.0,
+        "total_shares_disposed": 0.0,
+        "total_value_acquired": 0.0,
+        "total_value_disposed": 0.0,
+        "transaction_code_distribution": {
+          "G": 1,
+          "A": 1
+        },
+        "date_range": [
+          "2019-09-19",
+          "2019-10-30"
+        ]
+      },
+      "anomalies": [],
+      "anomaly_count": 0,
+      "profile_generated_at": "2026-02-28T02:58:46.373740Z",
+      "data_sources_used": [
+        "Form 4 XML (parsed)"
+      ]
+    },
+    "NAME:Krane Hilary K": {
+      "insider_name": "Krane Hilary K",
+      "insider_cik": "NAME:Krane Hilary K",
+      "company_cik": "",
+      "company_name": "",
+      "role": {
+        "is_officer": false,
+        "is_director": false,
+        "is_ten_percent_owner": false,
+        "officer_title": ""
+      },
+      "ownership_timeline": {
+        "form3_count": 0,
+        "form4_count": 0,
+        "form5_count": 0,
+        "schedule_13d_count": 0,
+        "schedule_13g_count": 0,
+        "form144_count": 0,
+        "total_ownership_filings": 0,
+        "has_form3": false,
+        "has_form5": false,
+        "has_schedule_13d": false,
+        "form3_filings": [],
+        "form4_filings": [],
+        "form5_filings": []
+      },
+      "form4_summary": {
+        "total_transactions": 4,
+        "total_shares_acquired": 0.0,
+        "total_shares_disposed": 0.0,
+        "total_value_acquired": 0.0,
+        "total_value_disposed": 0.0,
+        "transaction_code_distribution": {
+          "G": 1,
+          "M": 1,
+          "A": 2
+        },
+        "date_range": [
+          "2019-08-01",
+          "2019-10-30"
+        ]
+      },
+      "anomalies": [],
+      "anomaly_count": 0,
+      "profile_generated_at": "2026-02-28T02:58:46.373746Z",
+      "data_sources_used": [
+        "Form 4 XML (parsed)"
+      ]
+    },
+    "NAME:Knight Travis A": {
+      "insider_name": "Knight Travis A",
+      "insider_cik": "NAME:Knight Travis A",
+      "company_cik": "",
+      "company_name": "",
+      "role": {
+        "is_officer": false,
+        "is_director": false,
+        "is_ten_percent_owner": false,
+        "officer_title": ""
+      },
+      "ownership_timeline": {
+        "form3_count": 0,
+        "form4_count": 0,
+        "form5_count": 0,
+        "schedule_13d_count": 0,
+        "schedule_13g_count": 0,
+        "form144_count": 0,
+        "total_ownership_filings": 0,
+        "has_form3": false,
+        "has_form5": false,
+        "has_schedule_13d": false,
+        "form3_filings": [],
+        "form4_filings": [],
+        "form5_filings": []
+      },
+      "form4_summary": {
+        "total_transactions": 3,
+        "total_shares_acquired": 0.0,
+        "total_shares_disposed": 0.0,
+        "total_value_acquired": 0.0,
+        "total_value_disposed": 0.0,
+        "transaction_code_distribution": {
+          "J": 2,
+          "A": 1
+        },
+        "date_range": [
+          "2019-09-19",
+          "2019-10-29"
+        ]
+      },
+      "anomalies": [],
+      "anomaly_count": 0,
+      "profile_generated_at": "2026-02-28T02:58:46.373754Z",
+      "data_sources_used": [
+        "Form 4 XML (parsed)"
+      ]
+    },
+    "NAME:KNIGHT PHILIP H": {
+      "insider_name": "KNIGHT PHILIP H",
+      "insider_cik": "NAME:KNIGHT PHILIP H",
+      "company_cik": "",
+      "company_name": "",
+      "role": {
+        "is_officer": false,
+        "is_director": false,
+        "is_ten_percent_owner": false,
+        "officer_title": ""
+      },
+      "ownership_timeline": {
+        "form3_count": 0,
+        "form4_count": 0,
+        "form5_count": 0,
+        "schedule_13d_count": 0,
+        "schedule_13g_count": 0,
+        "form144_count": 0,
+        "total_ownership_filings": 0,
+        "has_form3": false,
+        "has_form5": false,
+        "has_schedule_13d": false,
+        "form3_filings": [],
+        "form4_filings": [],
+        "form5_filings": []
+      },
+      "form4_summary": {
+        "total_transactions": 2,
+        "total_shares_acquired": 0.0,
+        "total_shares_disposed": 0.0,
+        "total_value_acquired": 0.0,
+        "total_value_disposed": 0.0,
+        "transaction_code_distribution": {
+          "J": 1,
+          "G": 1
+        },
+        "date_range": [
+          "2019-01-18",
+          "2019-10-29"
+        ]
+      },
+      "anomalies": [],
+      "anomaly_count": 0,
+      "profile_generated_at": "2026-02-28T02:58:46.373762Z",
+      "data_sources_used": [
+        "Form 4 XML (parsed)"
+      ]
+    },
+    "NAME:Swoosh, LLC": {
+      "insider_name": "Swoosh, LLC",
+      "insider_cik": "NAME:Swoosh, LLC",
+      "company_cik": "",
+      "company_name": "",
+      "role": {
+        "is_officer": false,
+        "is_director": false,
+        "is_ten_percent_owner": false,
+        "officer_title": ""
+      },
+      "ownership_timeline": {
+        "form3_count": 0,
+        "form4_count": 0,
+        "form5_count": 0,
+        "schedule_13d_count": 0,
+        "schedule_13g_count": 0,
+        "form144_count": 0,
+        "total_ownership_filings": 0,
+        "has_form3": false,
+        "has_form5": false,
+        "has_schedule_13d": false,
+        "form3_filings": [],
+        "form4_filings": [],
+        "form5_filings": []
+      },
+      "form4_summary": {
+        "total_transactions": 1,
+        "total_shares_acquired": 0.0,
+        "total_shares_disposed": 0.0,
+        "total_value_acquired": 0.0,
+        "total_value_disposed": 0.0,
+        "transaction_code_distribution": {
+          "J": 1
+        },
+        "date_range": [
+          "2019-10-29",
+          "2019-10-29"
+        ]
+      },
+      "anomalies": [],
+      "anomaly_count": 0,
+      "profile_generated_at": "2026-02-28T02:58:46.373766Z",
+      "data_sources_used": [
+        "Form 4 XML (parsed)"
+      ]
+    },
+    "NAME:Hill Elliott": {
+      "insider_name": "Hill Elliott",
+      "insider_cik": "NAME:Hill Elliott",
+      "company_cik": "",
+      "company_name": "",
+      "role": {
+        "is_officer": false,
+        "is_director": false,
+        "is_ten_percent_owner": false,
+        "officer_title": ""
+      },
+      "ownership_timeline": {
+        "form3_count": 0,
+        "form4_count": 0,
+        "form5_count": 0,
+        "schedule_13d_count": 0,
+        "schedule_13g_count": 0,
+        "form144_count": 0,
+        "total_ownership_filings": 0,
+        "has_form3": false,
+        "has_form5": false,
+        "has_schedule_13d": false,
+        "form3_filings": [],
+        "form4_filings": [],
+        "form5_filings": []
+      },
+      "form4_summary": {
+        "total_transactions": 4,
+        "total_shares_acquired": 0.0,
+        "total_shares_disposed": 0.0,
+        "total_value_acquired": 0.0,
+        "total_value_disposed": 0.0,
+        "transaction_code_distribution": {
+          "M": 2,
+          "A": 2
+        },
+        "date_range": [
+          "2019-07-09",
+          "2019-09-25"
+        ]
+      },
+      "anomalies": [],
+      "anomaly_count": 0,
+      "profile_generated_at": "2026-02-28T02:58:46.373770Z",
+      "data_sources_used": [
+        "Form 4 XML (parsed)"
+      ]
+    },
+    "NAME:Campion Andrew": {
+      "insider_name": "Campion Andrew",
+      "insider_cik": "NAME:Campion Andrew",
+      "company_cik": "",
+      "company_name": "",
+      "role": {
+        "is_officer": false,
+        "is_director": false,
+        "is_ten_percent_owner": false,
+        "officer_title": ""
+      },
+      "ownership_timeline": {
+        "form3_count": 0,
+        "form4_count": 0,
+        "form5_count": 0,
+        "schedule_13d_count": 0,
+        "schedule_13g_count": 0,
+        "form144_count": 0,
+        "total_ownership_filings": 0,
+        "has_form3": false,
+        "has_form5": false,
+        "has_schedule_13d": false,
+        "form3_filings": [],
+        "form4_filings": [],
+        "form5_filings": []
+      },
+      "form4_summary": {
+        "total_transactions": 3,
+        "total_shares_acquired": 0.0,
+        "total_shares_disposed": 0.0,
+        "total_value_acquired": 0.0,
+        "total_value_disposed": 0.0,
+        "transaction_code_distribution": {
+          "M": 1,
+          "A": 2
+        },
+        "date_range": [
+          "2019-08-01",
+          "2019-09-25"
+        ]
+      },
+      "anomalies": [],
+      "anomaly_count": 0,
+      "profile_generated_at": "2026-02-28T02:58:46.373775Z",
+      "data_sources_used": [
+        "Form 4 XML (parsed)"
+      ]
+    },
+    "NAME:COOK TIMOTHY D": {
+      "insider_name": "COOK TIMOTHY D",
+      "insider_cik": "NAME:COOK TIMOTHY D",
+      "company_cik": "",
+      "company_name": "",
+      "role": {
+        "is_officer": false,
+        "is_director": false,
+        "is_ten_percent_owner": false,
+        "officer_title": ""
+      },
+      "ownership_timeline": {
+        "form3_count": 0,
+        "form4_count": 0,
+        "form5_count": 0,
+        "schedule_13d_count": 0,
+        "schedule_13g_count": 0,
+        "form144_count": 0,
+        "total_ownership_filings": 0,
+        "has_form3": false,
+        "has_form5": false,
+        "has_schedule_13d": false,
+        "form3_filings": [],
+        "form4_filings": [],
+        "form5_filings": []
+      },
+      "form4_summary": {
+        "total_transactions": 1,
+        "total_shares_acquired": 0.0,
+        "total_shares_disposed": 0.0,
+        "total_value_acquired": 0.0,
+        "total_value_disposed": 0.0,
+        "transaction_code_distribution": {
+          "A": 1
+        },
+        "date_range": [
+          "2019-09-19",
+          "2019-09-19"
+        ]
+      },
+      "anomalies": [],
+      "anomaly_count": 0,
+      "profile_generated_at": "2026-02-28T02:58:46.373780Z",
+      "data_sources_used": [
+        "Form 4 XML (parsed)"
+      ]
+    },
+    "NAME:Donahoe John J": {
+      "insider_name": "Donahoe John J",
+      "insider_cik": "NAME:Donahoe John J",
+      "company_cik": "",
+      "company_name": "",
+      "role": {
+        "is_officer": false,
+        "is_director": false,
+        "is_ten_percent_owner": false,
+        "officer_title": ""
+      },
+      "ownership_timeline": {
+        "form3_count": 0,
+        "form4_count": 0,
+        "form5_count": 0,
+        "schedule_13d_count": 0,
+        "schedule_13g_count": 0,
+        "form144_count": 0,
+        "total_ownership_filings": 0,
+        "has_form3": false,
+        "has_form5": false,
+        "has_schedule_13d": false,
+        "form3_filings": [],
+        "form4_filings": [],
+        "form5_filings": []
+      },
+      "form4_summary": {
+        "total_transactions": 1,
+        "total_shares_acquired": 0.0,
+        "total_shares_disposed": 0.0,
+        "total_value_acquired": 0.0,
+        "total_value_disposed": 0.0,
+        "transaction_code_distribution": {
+          "A": 1
+        },
+        "date_range": [
+          "2019-09-19",
+          "2019-09-19"
+        ]
+      },
+      "anomalies": [],
+      "anomaly_count": 0,
+      "profile_generated_at": "2026-02-28T02:58:46.373785Z",
+      "data_sources_used": [
+        "Form 4 XML (parsed)"
+      ]
+    },
+    "NAME:Henry Peter B.": {
+      "insider_name": "Henry Peter B.",
+      "insider_cik": "NAME:Henry Peter B.",
+      "company_cik": "",
+      "company_name": "",
+      "role": {
+        "is_officer": false,
+        "is_director": false,
+        "is_ten_percent_owner": false,
+        "officer_title": ""
+      },
+      "ownership_timeline": {
+        "form3_count": 0,
+        "form4_count": 0,
+        "form5_count": 0,
+        "schedule_13d_count": 0,
+        "schedule_13g_count": 0,
+        "form144_count": 0,
+        "total_ownership_filings": 0,
+        "has_form3": false,
+        "has_form5": false,
+        "has_schedule_13d": false,
+        "form3_filings": [],
+        "form4_filings": [],
+        "form5_filings": []
+      },
+      "form4_summary": {
+        "total_transactions": 1,
+        "total_shares_acquired": 0.0,
+        "total_shares_disposed": 0.0,
+        "total_value_acquired": 0.0,
+        "total_value_disposed": 0.0,
+        "transaction_code_distribution": {
+          "A": 1
+        },
+        "date_range": [
+          "2019-09-19",
+          "2019-09-19"
+        ]
+      },
+      "anomalies": [],
+      "anomaly_count": 0,
+      "profile_generated_at": "2026-02-28T02:58:46.373788Z",
+      "data_sources_used": [
+        "Form 4 XML (parsed)"
+      ]
+    },
+    "NAME:ROGERS JOHN W JR": {
+      "insider_name": "ROGERS JOHN W JR",
+      "insider_cik": "NAME:ROGERS JOHN W JR",
+      "company_cik": "",
+      "company_name": "",
+      "role": {
+        "is_officer": false,
+        "is_director": false,
+        "is_ten_percent_owner": false,
+        "officer_title": ""
+      },
+      "ownership_timeline": {
+        "form3_count": 0,
+        "form4_count": 0,
+        "form5_count": 0,
+        "schedule_13d_count": 0,
+        "schedule_13g_count": 0,
+        "form144_count": 0,
+        "total_ownership_filings": 0,
+        "has_form3": false,
+        "has_form5": false,
+        "has_schedule_13d": false,
+        "form3_filings": [],
+        "form4_filings": [],
+        "form5_filings": []
+      },
+      "form4_summary": {
+        "total_transactions": 1,
+        "total_shares_acquired": 0.0,
+        "total_shares_disposed": 0.0,
+        "total_value_acquired": 0.0,
+        "total_value_disposed": 0.0,
+        "transaction_code_distribution": {
+          "A": 1
+        },
+        "date_range": [
+          "2019-09-19",
+          "2019-09-19"
+        ]
+      },
+      "anomalies": [],
+      "anomaly_count": 0,
+      "profile_generated_at": "2026-02-28T02:58:46.373791Z",
+      "data_sources_used": [
+        "Form 4 XML (parsed)"
+      ]
+    },
+    "NAME:Benko Cathleen A": {
+      "insider_name": "Benko Cathleen A",
+      "insider_cik": "NAME:Benko Cathleen A",
+      "company_cik": "",
+      "company_name": "",
+      "role": {
+        "is_officer": false,
+        "is_director": false,
+        "is_ten_percent_owner": false,
+        "officer_title": ""
+      },
+      "ownership_timeline": {
+        "form3_count": 0,
+        "form4_count": 0,
+        "form5_count": 0,
+        "schedule_13d_count": 0,
+        "schedule_13g_count": 0,
+        "form144_count": 0,
+        "total_ownership_filings": 0,
+        "has_form3": false,
+        "has_form5": false,
+        "has_schedule_13d": false,
+        "form3_filings": [],
+        "form4_filings": [],
+        "form5_filings": []
+      },
+      "form4_summary": {
+        "total_transactions": 1,
+        "total_shares_acquired": 0.0,
+        "total_shares_disposed": 0.0,
+        "total_value_acquired": 0.0,
+        "total_value_disposed": 0.0,
+        "transaction_code_distribution": {
+          "A": 1
+        },
+        "date_range": [
+          "2019-09-19",
+          "2019-09-19"
+        ]
+      },
+      "anomalies": [],
+      "anomaly_count": 0,
+      "profile_generated_at": "2026-02-28T02:58:46.373794Z",
+      "data_sources_used": [
+        "Form 4 XML (parsed)"
+      ]
+    },
+    "NAME:THOMPSON JOHN R JR": {
+      "insider_name": "THOMPSON JOHN R JR",
+      "insider_cik": "NAME:THOMPSON JOHN R JR",
+      "company_cik": "",
+      "company_name": "",
+      "role": {
+        "is_officer": false,
+        "is_director": false,
+        "is_ten_percent_owner": false,
+        "officer_title": ""
+      },
+      "ownership_timeline": {
+        "form3_count": 0,
+        "form4_count": 0,
+        "form5_count": 0,
+        "schedule_13d_count": 0,
+        "schedule_13g_count": 0,
+        "form144_count": 0,
+        "total_ownership_filings": 0,
+        "has_form3": false,
+        "has_form5": false,
+        "has_schedule_13d": false,
+        "form3_filings": [],
+        "form4_filings": [],
+        "form5_filings": []
+      },
+      "form4_summary": {
+        "total_transactions": 1,
+        "total_shares_acquired": 0.0,
+        "total_shares_disposed": 0.0,
+        "total_value_acquired": 0.0,
+        "total_value_disposed": 0.0,
+        "transaction_code_distribution": {
+          "A": 1
+        },
+        "date_range": [
+          "2019-09-19",
+          "2019-09-19"
+        ]
+      },
+      "anomalies": [],
+      "anomaly_count": 0,
+      "profile_generated_at": "2026-02-28T02:58:46.373797Z",
+      "data_sources_used": [
+        "Form 4 XML (parsed)"
+      ]
+    },
+    "NAME:PELUSO MICHELLE A": {
+      "insider_name": "PELUSO MICHELLE A",
+      "insider_cik": "NAME:PELUSO MICHELLE A",
+      "company_cik": "",
+      "company_name": "",
+      "role": {
+        "is_officer": false,
+        "is_director": false,
+        "is_ten_percent_owner": false,
+        "officer_title": ""
+      },
+      "ownership_timeline": {
+        "form3_count": 0,
+        "form4_count": 0,
+        "form5_count": 0,
+        "schedule_13d_count": 0,
+        "schedule_13g_count": 0,
+        "form144_count": 0,
+        "total_ownership_filings": 0,
+        "has_form3": false,
+        "has_form5": false,
+        "has_schedule_13d": false,
+        "form3_filings": [],
+        "form4_filings": [],
+        "form5_filings": []
+      },
+      "form4_summary": {
+        "total_transactions": 1,
+        "total_shares_acquired": 0.0,
+        "total_shares_disposed": 0.0,
+        "total_value_acquired": 0.0,
+        "total_value_disposed": 0.0,
+        "transaction_code_distribution": {
+          "A": 1
+        },
+        "date_range": [
+          "2019-09-19",
+          "2019-09-19"
+        ]
+      },
+      "anomalies": [],
+      "anomaly_count": 0,
+      "profile_generated_at": "2026-02-28T02:58:46.373803Z",
+      "data_sources_used": [
+        "Form 4 XML (parsed)"
+      ]
+    },
+    "NAME:Connors John G": {
+      "insider_name": "Connors John G",
+      "insider_cik": "NAME:Connors John G",
+      "company_cik": "",
+      "company_name": "",
+      "role": {
+        "is_officer": false,
+        "is_director": false,
+        "is_ten_percent_owner": false,
+        "officer_title": ""
+      },
+      "ownership_timeline": {
+        "form3_count": 0,
+        "form4_count": 0,
+        "form5_count": 0,
+        "schedule_13d_count": 0,
+        "schedule_13g_count": 0,
+        "form144_count": 0,
+        "total_ownership_filings": 0,
+        "has_form3": false,
+        "has_form5": false,
+        "has_schedule_13d": false,
+        "form3_filings": [],
+        "form4_filings": [],
+        "form5_filings": []
+      },
+      "form4_summary": {
+        "total_transactions": 1,
+        "total_shares_acquired": 0.0,
+        "total_shares_disposed": 0.0,
+        "total_value_acquired": 0.0,
+        "total_value_disposed": 0.0,
+        "transaction_code_distribution": {
+          "A": 1
+        },
+        "date_range": [
+          "2019-09-19",
+          "2019-09-19"
+        ]
+      },
+      "anomalies": [],
+      "anomaly_count": 0,
+      "profile_generated_at": "2026-02-28T02:58:46.373807Z",
+      "data_sources_used": [
+        "Form 4 XML (parsed)"
+      ]
+    },
+    "NAME:Slusher John F": {
+      "insider_name": "Slusher John F",
+      "insider_cik": "NAME:Slusher John F",
+      "company_cik": "",
+      "company_name": "",
+      "role": {
+        "is_officer": false,
+        "is_director": false,
+        "is_ten_percent_owner": false,
+        "officer_title": ""
+      },
+      "ownership_timeline": {
+        "form3_count": 0,
+        "form4_count": 0,
+        "form5_count": 0,
+        "schedule_13d_count": 0,
+        "schedule_13g_count": 0,
+        "form144_count": 0,
+        "total_ownership_filings": 0,
+        "has_form3": false,
+        "has_form5": false,
+        "has_schedule_13d": false,
+        "form3_filings": [],
+        "form4_filings": [],
+        "form5_filings": []
+      },
+      "form4_summary": {
+        "total_transactions": 8,
+        "total_shares_acquired": 0.0,
+        "total_shares_disposed": 0.0,
+        "total_value_acquired": 0.0,
+        "total_value_disposed": 0.0,
+        "transaction_code_distribution": {
+          "A": 2,
+          "M": 5,
+          "G": 1
+        },
+        "date_range": [
+          "2019-01-02",
+          "2019-08-01"
+        ]
+      },
+      "anomalies": [],
+      "anomaly_count": 0,
+      "profile_generated_at": "2026-02-28T02:58:46.373810Z",
+      "data_sources_used": [
+        "Form 4 XML (parsed)"
+      ]
+    },
+    "NAME:LECHLEITER JOHN C": {
+      "insider_name": "LECHLEITER JOHN C",
+      "insider_cik": "NAME:LECHLEITER JOHN C",
+      "company_cik": "",
+      "company_name": "",
+      "role": {
+        "is_officer": false,
+        "is_director": false,
+        "is_ten_percent_owner": false,
+        "officer_title": ""
+      },
+      "ownership_timeline": {
+        "form3_count": 0,
+        "form4_count": 0,
+        "form5_count": 0,
+        "schedule_13d_count": 0,
+        "schedule_13g_count": 0,
+        "form144_count": 0,
+        "total_ownership_filings": 0,
+        "has_form3": false,
+        "has_form5": false,
+        "has_schedule_13d": false,
+        "form3_filings": [],
+        "form4_filings": [],
+        "form5_filings": []
+      },
+      "form4_summary": {
+        "total_transactions": 2,
+        "total_shares_acquired": 0.0,
+        "total_shares_disposed": 0.0,
+        "total_value_acquired": 0.0,
+        "total_value_disposed": 0.0,
+        "transaction_code_distribution": {
+          "M": 2
+        },
+        "date_range": [
+          "2019-07-26",
+          "2019-07-26"
+        ]
+      },
+      "anomalies": [],
+      "anomaly_count": 0,
+      "profile_generated_at": "2026-02-28T02:58:46.373818Z",
+      "data_sources_used": [
+        "Form 4 XML (parsed)"
+      ]
+    }
+  },
+  "summary": {
+    "total_insiders_profiled": 23,
+    "officers": 0,
+    "directors": 0,
+    "ten_percent_owners": 0,
+    "total_transactions": 73,
+    "total_anomalies": 0,
+    "anomaly_types": {}
+  }
+}

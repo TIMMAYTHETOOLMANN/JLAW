@@ -83,12 +83,29 @@ def main():
     fsl_assessments = fsl_data if isinstance(fsl_data, list) else fsl_data.get('assessments', [])
     print(f'  FSL assessments: {len(fsl_assessments)}')
 
+    # Load insider trades (for executive profiles)
+    # Try dedicated insider_trades.json first, fall back to violations/transactions
+    insider_trades_data = load_json(str(input_dir / 'bundle' / 'insider_trades.json'))
+    insider_trades = (insider_trades_data if isinstance(insider_trades_data, list)
+                      else insider_trades_data.get('trades', []))
+    if not insider_trades:
+        # Fall back: extract trade-like records from violations
+        raw_results = load_json(str(input_dir / 'bundle' / 'analysis_results.json'))
+        violations = raw_results.get('violations', [])
+        insider_trades = [v for v in violations if v.get('reporting_owner')]
+    if not insider_trades:
+        # Final fallback: use economic_valuations transactions from enhanced results
+        econ_txns = enhanced_results.get('economic_valuations', {}).get('transactions', [])
+        insider_trades = econ_txns
+    print(f'  Insider trades: {len(insider_trades)}')
+
     # Run the full forensic tracing pipeline
     print('\n--- Executing Six-Domain Analysis ---')
     results = ForensicTracingOrchestrator.run_full_analysis(
         enhanced_results=enhanced_results,
         fsl_assessments=fsl_assessments,
         form144_notices=None,  # No Form 144 data for pre-2023 period
+        insider_trades=insider_trades,
     )
 
     # Save outputs
@@ -110,6 +127,10 @@ def main():
     save_json(
         results['domain3_ownership'],
         str(output_dir / 'domain3_ownership_resolution.json'),
+    )
+    save_json(
+        results.get('executive_profiles', {}),
+        str(output_dir / 'executive_financial_profiles.json'),
     )
     save_json(
         results['domain4_form144'],
@@ -192,6 +213,23 @@ def generate_summary(results: dict) -> str:
         if pa.get('risk_score', 0) > 0.2:
             lines.append(f'  PARKING ALERT: {pa.get("entity_a", "")} <-> {pa.get("entity_b", "")} '
                          f'(risk: {pa.get("risk_score", 0):.2f})')
+
+    # Executive Profiles
+    ep = results.get('executive_profiles', {})
+    ep_s = ep.get('summary', {})
+    lines.append(f'\nEXECUTIVE FINANCIAL PROFILES (Cross-Reference)')
+    lines.append(f'  Insiders profiled: {ep_s.get("total_insiders_profiled", 0)}')
+    lines.append(f'  Officers: {ep_s.get("officers", 0)}')
+    lines.append(f'  Directors: {ep_s.get("directors", 0)}')
+    lines.append(f'  10%+ owners: {ep_s.get("ten_percent_owners", 0)}')
+    lines.append(f'  Cross-reference anomalies: {ep_s.get("total_anomalies", 0)}')
+    for atype, acount in ep_s.get('anomaly_types', {}).items():
+        lines.append(f'    {atype}: {acount}')
+    for cik, profile in ep.get('profiles', {}).items():
+        name = profile.get('insider_name', 'Unknown')
+        txns = profile.get('form4_summary', {}).get('total_transactions', 0)
+        anom_count = profile.get('anomaly_count', 0)
+        lines.append(f'  [{cik}] {name}: {txns} transactions, {anom_count} anomalies')
 
     # Domain 4
     d4 = results['domain4_form144']

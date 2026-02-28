@@ -189,13 +189,13 @@
     }
   ],
   "all_extracted_entities": [
-    "held directly by the",
     "through the",
-    "reporting person disclaims beneficial ownership of all such shares held directly and indirectly by the",
-    "any units that have not vested shall be forfeited to the",
     "Inc. Stock",
-    "Irrevocable",
-    "shares were simultaneously distributed to the"
+    "shares were simultaneously distributed to the",
+    "any units that have not vested shall be forfeited to the",
+    "held directly by the",
+    "reporting person disclaims beneficial ownership of all such shares held directly and indirectly by the",
+    "Irrevocable"
   ],
   "all_signals": [
     "10b5-1 plan referenced without adoption date",

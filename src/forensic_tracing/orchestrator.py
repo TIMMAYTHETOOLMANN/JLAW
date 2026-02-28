@@ -30,6 +30,9 @@ from src.forensic_tracing.domain3_ownership_resolver import (
 from src.forensic_tracing.domain4_form144 import Form144CorrelationEngine
 from src.forensic_tracing.domain5_documentation import TwoTierDocumentationFramework
 from src.forensic_tracing.domain6_visualization import CourtroomVisualizationSpec
+from src.forensic_tracing.executive_profile import (
+    build_executive_profiles_from_pipeline,
+)
 
 
 class ForensicTracingOrchestrator:
@@ -40,7 +43,9 @@ class ForensicTracingOrchestrator:
     @classmethod
     def run_full_analysis(cls, enhanced_results: dict,
                           fsl_assessments: list = None,
-                          form144_notices: list = None) -> dict:
+                          form144_notices: list = None,
+                          insider_trades: list = None,
+                          submissions_cache: dict = None) -> dict:
         """
         Run the complete forensic tracing pipeline.
 
@@ -48,6 +53,8 @@ class ForensicTracingOrchestrator:
             enhanced_results: Output from JLAWEnhancementOrchestrator.enhance()
             fsl_assessments: FSL assessment records (with footnotes, entity data)
             form144_notices: Optional Form 144 notice records
+            insider_trades: Optional Form 4 parsed trade records (for exec profiles)
+            submissions_cache: Optional CIK -> submissions JSON (for exec profiles)
 
         Returns:
             Complete forensic tracing results across all six domains
@@ -128,6 +135,23 @@ class ForensicTracingOrchestrator:
         print(f'  -> {bo_count} determined beneficial owners')
 
         # ===============================================================
+        # EXECUTIVE FINANCIAL PROFILES (Cross-Reference Module)
+        # ===============================================================
+        print('\n[Exec Profiles] Building executive financial profiles...')
+        executive_profiles = build_executive_profiles_from_pipeline(
+            enhanced_results=enhanced_results,
+            insider_trades=insider_trades or [],
+            fsl_assessments=all_records,
+            submissions_cache=submissions_cache,
+        )
+        ep_summary = executive_profiles.get('summary', {})
+        print(f'  -> {ep_summary.get("total_insiders_profiled", 0)} insiders profiled')
+        print(f'  -> {ep_summary.get("officers", 0)} officers, '
+              f'{ep_summary.get("directors", 0)} directors, '
+              f'{ep_summary.get("ten_percent_owners", 0)} 10%+ owners')
+        print(f'  -> {ep_summary.get("total_anomalies", 0)} cross-reference anomalies detected')
+
+        # ===============================================================
         # DOMAIN 4: Form 144 Correlation
         # ===============================================================
         print('\n[Domain 4] Correlating Form 144 notices...')
@@ -177,6 +201,7 @@ class ForensicTracingOrchestrator:
                 'footnotes': footnote_results.get('total_footnotes'),
                 'chains': tracing_results.get('chains_constructed'),
                 'ownership': len(ownership_results.get('dual_test_results', [])),
+                'exec_profiles': ep_summary.get('total_insiders_profiled', 0),
             }, default=str).encode()
         ).hexdigest()
 
@@ -216,6 +241,7 @@ class ForensicTracingOrchestrator:
                 'chains': tracing_results['chains'],
             },
             'domain3_ownership': ownership_results,
+            'executive_profiles': executive_profiles,
             'domain4_form144': form144_results,
             'domain5_documentation': {
                 'tcr_submission': tcr.to_dict(),
@@ -249,6 +275,8 @@ class ForensicTracingOrchestrator:
         print(f'  Footnotes classified:   {footnote_results["total_footnotes"]}')
         print(f'  Chains constructed:     {tracing_results["chains_constructed"]}')
         print(f'  Ownership tests:        {len(ownership_results["dual_test_results"])}')
+        print(f'  Exec profiles:          {ep_summary.get("total_insiders_profiled", 0)}')
+        print(f'  Cross-ref anomalies:    {ep_summary.get("total_anomalies", 0)}')
         print(f'  TCR exhibits:           {tcr.exhibit_count}')
         print(f'  Chart specs:            {len(chart_specs)}')
         print('=' * 64 + '\n')
