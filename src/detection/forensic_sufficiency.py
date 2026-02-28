@@ -295,6 +295,7 @@ class FSLAssessment:
     """Full Forensic Sufficiency Layer assessment for one $0 transaction."""
     # Identity
     insider_name: str = ""
+    insider_cik: str = ""
     accession_number: str = ""
     transaction_date: str = ""
     transaction_code: str = ""
@@ -335,6 +336,7 @@ class FSLAssessment:
     def to_dict(self) -> Dict[str, Any]:
         return {
             "insider_name": self.insider_name,
+            "insider_cik": self.insider_cik,
             "accession_number": self.accession_number,
             "transaction_date": self.transaction_date,
             "transaction_code": self.transaction_code,
@@ -409,6 +411,7 @@ def classify_fsl(
 
     assessment = FSLAssessment(
         insider_name=txn_data.get('reporting_owner', ''),
+        insider_cik=txn_data.get('reporting_owner_cik', ''),
         accession_number=txn_data.get('accession_number', ''),
         transaction_date=txn_data.get('transaction_date', ''),
         transaction_code=code,

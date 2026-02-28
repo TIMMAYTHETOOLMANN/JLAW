@@ -605,6 +605,7 @@ class RecursiveProsecutorialEngine:
                     for txn in parsed.transactions:
                         all_insider_trades.append({
                             "reporting_person": parsed.reporting_owner_name,
+                            "reporting_owner_cik": parsed.reporting_owner_cik,
                             "transaction_date": txn.transaction_date,
                             "filing_date": parsed.filing_date,
                             "transaction_code": txn.transaction_code,
@@ -627,6 +628,7 @@ class RecursiveProsecutorialEngine:
                             "severity": "HIGH",
                             "accession_number": parsed.accession_number,
                             "reporting_owner": parsed.reporting_owner_name,
+                            "reporting_owner_cik": parsed.reporting_owner_cik,
                             "transaction_date": txn.transaction_date.isoformat() if txn.transaction_date else None,
                             "filing_date": parsed.filing_date.isoformat(),
                             "days_late": txn.days_late,
@@ -659,6 +661,7 @@ class RecursiveProsecutorialEngine:
                             "suspicion_level": suspicion_level,
                             "accession_number": parsed.accession_number,
                             "reporting_owner": parsed.reporting_owner_name,
+                            "reporting_owner_cik": parsed.reporting_owner_cik,
                             "transaction_code": txn.transaction_code,
                             "transaction_code_description": txn.transaction_code_description,
                             "shares": txn.shares,
@@ -686,6 +689,7 @@ class RecursiveProsecutorialEngine:
                             "severity": "MEDIUM",
                             "accession_number": parsed.accession_number,
                             "reporting_owner": parsed.reporting_owner_name,
+                            "reporting_owner_cik": parsed.reporting_owner_cik,
                             "shares": txn.shares,
                             "transaction_date": txn.transaction_date.isoformat() if txn.transaction_date else None,
                             "statutory_reference": "15 U.S.C. § 78p(a)"
