@@ -602,6 +602,129 @@ class ExecutiveProfileBuilder:
                 ))
 
 
+def _cross_reference_violations(
+    profiles: Dict[str, "ExecutiveFinancialProfile"],
+    enhanced_results: Dict[str, Any],
+) -> None:
+    """
+    Cross-reference violations from the enhanced analysis engine with
+    executive profiles.  Without this step, profiles only reflect
+    filing-pattern anomalies (missing Form 3/5/144, burst trading) and
+    miss the substantive violations detected by the 15-node recursive
+    engine (e.g. late filings, zero-dollar transaction scrutiny,
+    SOX certification deficiencies).
+
+    Matches violations to profiles using CIK or owner name, and creates
+    CrossReferenceAnomaly entries so that the final summary correctly
+    reflects the true anomaly count.
+    """
+    violations = enhanced_results.get("violations", [])
+    if not violations:
+        return
+
+    # Build lookup: normalised name -> CIK key in profiles dict
+    name_to_cik: Dict[str, str] = {}
+    for cik, profile in profiles.items():
+        normalised = profile.insider_name.strip().upper()
+        if normalised:
+            name_to_cik[normalised] = cik
+
+    # Track already-added (type, owner) to avoid duplicates
+    seen: set = set()
+    for profile in profiles.values():
+        for a in profile.anomalies:
+            key = (a.anomaly_type, profile.insider_cik)
+            seen.add(key)
+
+    for violation in violations:
+        v_type = violation.get("type", "") or violation.get("violation_type", "")
+        raw_sev = violation.get("severity", "MEDIUM") or "MEDIUM"
+        severity = str(raw_sev).upper()
+        # Resolve owner identity
+        owner_name = (violation.get("reporting_owner", "") or
+                      violation.get("reporting_owner_name", "") or
+                      violation.get("insider_name", "") or "")
+        owner_cik = str(violation.get("reporting_owner_cik", "") or
+                        violation.get("insider_cik", "") or "").strip()
+
+        # Match to a profile
+        target_cik: Optional[str] = None
+        if owner_cik and owner_cik in profiles:
+            target_cik = owner_cik
+        elif owner_name:
+            normalised = owner_name.strip().upper()
+            if normalised in name_to_cik:
+                target_cik = name_to_cik[normalised]
+            else:
+                # Partial match: check if violation owner name appears in
+                # any profile name (handles "Knight Philip H" vs
+                # "KNIGHT PHILIP H").
+                for prof_name, prof_cik in name_to_cik.items():
+                    if normalised in prof_name or prof_name in normalised:
+                        target_cik = prof_cik
+                        break
+
+        if target_cik is None:
+            continue
+
+        dedup_key = (v_type, target_cik)
+        if dedup_key in seen:
+            continue
+        seen.add(dedup_key)
+
+        profile = profiles[target_cik]
+
+        # Map engine severity to anomaly severity
+        sev_map = {"CRITICAL": "HIGH", "HIGH": "HIGH", "MEDIUM": "MEDIUM",
+                   "LOW": "LOW"}
+        mapped_severity = sev_map.get(severity, "MEDIUM")
+
+        description_parts = [
+            f"Engine violation ({v_type}) attributed to "
+            f"{profile.insider_name}.",
+        ]
+        if violation.get("accession_number"):
+            description_parts.append(
+                f"Filing: {violation['accession_number']}."
+            )
+        if violation.get("statutory_reference"):
+            description_parts.append(
+                f"Statutory ref: {violation['statutory_reference']}."
+            )
+        if violation.get("days_late"):
+            description_parts.append(
+                f"Filed {violation['days_late']} days late."
+            )
+        if violation.get("shares"):
+            description_parts.append(
+                f"Shares: {violation['shares']:,.0f}."
+            )
+
+        profile.anomalies.append(CrossReferenceAnomaly(
+            anomaly_type=f"VIOLATION_{v_type.upper().replace(' ', '_')}",
+            severity=mapped_severity,
+            description=" ".join(description_parts),
+            filing_a=violation.get("accession_number", "N/A"),
+            filing_b="Enhanced Analysis Engine",
+            details={
+                "violation_type": v_type,
+                "original_severity": severity,
+                "transaction_date": violation.get("transaction_date", ""),
+                "filing_date": violation.get("filing_date", ""),
+                "node_id": violation.get("node_id", ""),
+                "statutory_reference": violation.get("statutory_reference", ""),
+            },
+        ))
+
+    matched = sum(1 for p in profiles.values()
+                  if any(a.anomaly_type.startswith("VIOLATION_")
+                         for a in p.anomalies))
+    logger.info(
+        f"Cross-referenced {len(violations)} engine violations with "
+        f"{len(profiles)} profiles; {matched} profiles received new anomalies"
+    )
+
+
 def build_executive_profiles_from_pipeline(
     enhanced_results: Dict[str, Any],
     insider_trades: List[Dict[str, Any]],
@@ -639,6 +762,9 @@ def build_executive_profiles_from_pipeline(
         company_cik=company_cik,
         company_name=company_name,
     )
+
+    # Cross-reference violations from the enhanced analysis with profiles
+    _cross_reference_violations(profiles, enhanced_results)
 
     # Build summary
     total_anomalies = sum(len(p.anomalies) for p in profiles.values())
