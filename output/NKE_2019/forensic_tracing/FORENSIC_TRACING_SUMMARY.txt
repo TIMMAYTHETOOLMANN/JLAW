@@ -1,98 +1,50 @@
 ========================================================================
 JLAW FORENSIC TRACING SYSTEM — SIX-DOMAIN ANALYSIS REPORT
-Generated: 2026-02-28T02:58:46.377495+00:00
+Regenerated: 2026-02-28T07:42:45.031651Z
 ========================================================================
 
 DOMAIN 1: FORM 4 FOOTNOTE CLASSIFICATION
   Total footnotes classified: 104
   Average risk score: 0.177
-  Risk distribution: {'low_risk': 66, 'exculpatory': 28, 'high_risk': 10}
-  Code J missing explanations: 6
-  Extracted entities: through the, Inc. Stock, shares were simultaneously distributed to the, any units that have not vested shall be forfeited to the, held directly by the, reporting person disclaims beneficial ownership of all such shares held directly and indirectly by the, Irrevocable
 
 DOMAIN 2: GRANT-TO-SALE TRACING
-  Insiders tracked: 22
   Chains constructed: 49
-  Complete chains: 11
-  Total shares acquired: 2,429,053
-  Total acquisition market value: $206,470,719.69
-  Total shares disposed (traced): 671,737
-  Liquidation rate: 27.7%
-  Economic value transferred (FMV): $54,219,307.08
-  Cash proceeds (Code S sales): $0.00
-  Total profit (econ value - cost basis): $0.00
-  Obfuscation vector chains: 5
-  Chain type distribution:
-    M -> G: 3
-    A -> G: 4
-    G -> G: 9
-    M: 16
-    M -> G -> G: 1
-    A: 15
-    A -> J: 1
+  Economic value transferred: $54,219,307.08
 
 DOMAIN 3: BENEFICIAL OWNERSHIP RESOLUTION
   Entity transfers analyzed: 25
-  Beneficial owners identified: 25
   Parking risk flags: 1
-  PARKING ALERT: Knight Travis A <-> Multiple entities on 2019-10-29 (risk: 0.60)
 
 EXECUTIVE FINANCIAL PROFILES (Cross-Reference)
   Insiders profiled: 23
   Officers: 0
   Directors: 0
   10%+ owners: 0
-  Cross-reference anomalies: 0
-  [NAME:Comstock Elizabeth J] Comstock Elizabeth J: 6 transactions, 0 anomalies
-  [NAME:SPRUNK ERIC D] SPRUNK ERIC D: 11 transactions, 0 anomalies
-  [NAME:Abston Chris L] Abston Chris L: 2 transactions, 0 anomalies
-  [NAME:Matheson Monique S.] Matheson Monique S.: 6 transactions, 0 anomalies
-  [NAME:PARKER MARK G] PARKER MARK G: 10 transactions, 0 anomalies
-  [NAME:Duckett Thasunda] Duckett Thasunda: 1 transactions, 0 anomalies
-  [NAME:GRAF ALAN B JR] GRAF ALAN B JR: 2 transactions, 0 anomalies
-  [NAME:Krane Hilary K] Krane Hilary K: 4 transactions, 0 anomalies
-  [NAME:Knight Travis A] Knight Travis A: 3 transactions, 0 anomalies
-  [NAME:KNIGHT PHILIP H] KNIGHT PHILIP H: 2 transactions, 0 anomalies
-  [NAME:Swoosh, LLC] Swoosh, LLC: 1 transactions, 0 anomalies
-  [NAME:Hill Elliott] Hill Elliott: 4 transactions, 0 anomalies
-  [NAME:Campion Andrew] Campion Andrew: 3 transactions, 0 anomalies
-  [NAME:COOK TIMOTHY D] COOK TIMOTHY D: 1 transactions, 0 anomalies
-  [NAME:Donahoe John J] Donahoe John J: 1 transactions, 0 anomalies
-  [NAME:Henry Peter B.] Henry Peter B.: 1 transactions, 0 anomalies
-  [NAME:ROGERS JOHN W JR] ROGERS JOHN W JR: 1 transactions, 0 anomalies
-  [NAME:Benko Cathleen A] Benko Cathleen A: 1 transactions, 0 anomalies
-  [NAME:THOMPSON JOHN R JR] THOMPSON JOHN R JR: 1 transactions, 0 anomalies
-  [NAME:PELUSO MICHELLE A] PELUSO MICHELLE A: 1 transactions, 0 anomalies
-  [NAME:Connors John G] Connors John G: 1 transactions, 0 anomalies
-  [NAME:Slusher John F] Slusher John F: 8 transactions, 0 anomalies
-  [NAME:LECHLEITER JOHN C] LECHLEITER JOHN C: 2 transactions, 0 anomalies
+  Cross-reference anomalies: 26
+    VIOLATION_SECTION_16(A)_LATE_FORM_4_FILING: 3
+    VIOLATION_ZERO-DOLLAR_TRANSACTION_-_REQUIRES_SCRUTINY: 23
+  [NAME:Comstock Elizabeth J] Comstock Elizabeth J: 6 transactions, 2 anomalies
+  [NAME:SPRUNK ERIC D] SPRUNK ERIC D: 11 transactions, 2 anomalies
+  [NAME:Abston Chris L] Abston Chris L: 2 transactions, 2 anomalies
+  [NAME:Matheson Monique S.] Matheson Monique S.: 6 transactions, 1 anomalies
+  [NAME:PARKER MARK G] PARKER MARK G: 10 transactions, 1 anomalies
+  [NAME:Duckett Thasunda] Duckett Thasunda: 1 transactions, 1 anomalies
+  [NAME:GRAF ALAN B JR] GRAF ALAN B JR: 2 transactions, 1 anomalies
+  [NAME:Krane Hilary K] Krane Hilary K: 4 transactions, 1 anomalies
+  [NAME:Knight Travis A] Knight Travis A: 3 transactions, 1 anomalies
+  [NAME:KNIGHT PHILIP H] KNIGHT PHILIP H: 2 transactions, 1 anomalies
+  [NAME:Swoosh, LLC] Swoosh, LLC: 1 transactions, 1 anomalies
+  [NAME:Hill Elliott] Hill Elliott: 4 transactions, 1 anomalies
+  [NAME:Campion Andrew] Campion Andrew: 3 transactions, 1 anomalies
+  [NAME:COOK TIMOTHY D] COOK TIMOTHY D: 1 transactions, 1 anomalies
+  [NAME:Donahoe John J] Donahoe John J: 1 transactions, 1 anomalies
+  [NAME:Henry Peter B.] Henry Peter B.: 1 transactions, 1 anomalies
+  [NAME:ROGERS JOHN W JR] ROGERS JOHN W JR: 1 transactions, 1 anomalies
+  [NAME:Benko Cathleen A] Benko Cathleen A: 1 transactions, 1 anomalies
+  [NAME:THOMPSON JOHN R JR] THOMPSON JOHN R JR: 1 transactions, 1 anomalies
+  [NAME:PELUSO MICHELLE A] PELUSO MICHELLE A: 1 transactions, 1 anomalies
+  [NAME:Connors John G] Connors John G: 1 transactions, 1 anomalies
+  [NAME:Slusher John F] Slusher John F: 8 transactions, 1 anomalies
+  [NAME:LECHLEITER JOHN C] LECHLEITER JOHN C: 2 transactions, 1 anomalies
 
-DOMAIN 4: FORM 144 CORRELATION
-  Notices available: 0
-  Note: No Form 144 notices provided. Form 144 electronic filing became mandatory April 13, 2023. For pre-20
-
-DOMAIN 5: TWO-TIER DOCUMENTATION
-  TCR exhibits: 3
-  Violation types: 7
-  Statutory references: 7
-  Work product documents: 4
-    - 15 U.S.C. 78j(b) — Section 10(b) anti-fraud
-    - 15 U.S.C. 78p(a) — Section 16(a) reporting obligations
-    - 15 U.S.C. § 78p(a)
-    - 15 U.S.C. § 78p(a) - Section 16(a)
-    - 17 CFR 240.10b-5 — Rule 10b-5
-
-DOMAIN 6: VISUALIZATION SPECIFICATIONS
-  Chart specifications: 6
-    - CHART-001: Figure 1: Insider Transaction Timeline by Economic Value
-    - CHART-002: Figure 2: Top Beneficiaries by Economic Value
-    - CHART-003: Figure 3: Filing Party Relationship Network
-    - CHART-004: Figure 4: Economic Benefit Distribution by Insider
-    - CHART-005: Figure 5: Transaction Cluster Analysis
-    - CHART-006: Figure 6: Estimated Penalty Exposure Breakdown
-  New PDF sections: 4
-  Palette: Okabe-Ito (colorblind-safe)
-
-========================================================================
-END OF FORENSIC TRACING SUMMARY
 ========================================================================
