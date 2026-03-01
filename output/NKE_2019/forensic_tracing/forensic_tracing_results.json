@@ -2170,40 +2170,9 @@
             "2019-12-23"
           ]
         },
-        "anomalies": [
-          {
-            "anomaly_type": "VIOLATION_SECTION_16(A)_LATE_FORM_4_FILING",
-            "severity": "HIGH",
-            "description": "Engine violation (Section 16(a) Late Form 4 Filing) attributed to Comstock Elizabeth J. Filing: 0001127602-19-035840. Statutory ref: 15 U.S.C. \u00a7 78p(a) - Section 16(a). Filed 1 days late. Shares: 24,000.",
-            "filing_a": "0001127602-19-035840",
-            "filing_b": "Enhanced Analysis Engine",
-            "details": {
-              "violation_type": "Section 16(a) Late Form 4 Filing",
-              "original_severity": "HIGH",
-              "transaction_date": "2019-12-23",
-              "filing_date": "2019-12-26",
-              "node_id": "NODE_1",
-              "statutory_reference": "15 U.S.C. \u00a7 78p(a) - Section 16(a)"
-            }
-          },
-          {
-            "anomaly_type": "VIOLATION_ZERO-DOLLAR_TRANSACTION_-_REQUIRES_SCRUTINY",
-            "severity": "MEDIUM",
-            "description": "Engine violation (Zero-Dollar Transaction - Requires Scrutiny) attributed to Comstock Elizabeth J. Filing: 0001127602-19-035840. Statutory ref: 15 U.S.C. \u00a7 78p(a). Filed 1 days late. Shares: 24,000.",
-            "filing_a": "0001127602-19-035840",
-            "filing_b": "Enhanced Analysis Engine",
-            "details": {
-              "violation_type": "Zero-Dollar Transaction - Requires Scrutiny",
-              "original_severity": "MEDIUM",
-              "transaction_date": "2019-12-23",
-              "filing_date": "",
-              "node_id": "NODE_1",
-              "statutory_reference": "15 U.S.C. \u00a7 78p(a)"
-            }
-          }
-        ],
-        "anomaly_count": 2,
-        "profile_generated_at": "2026-02-28T07:42:45.024157Z",
+        "anomalies": [],
+        "anomaly_count": 0,
+        "profile_generated_at": "2026-02-28T02:58:46.373646Z",
         "data_sources_used": [
           "Form 4 XML (parsed)"
         ]
@@ -2250,40 +2219,9 @@
             "2019-12-24"
           ]
         },
-        "anomalies": [
-          {
-            "anomaly_type": "VIOLATION_SECTION_16(A)_LATE_FORM_4_FILING",
-            "severity": "HIGH",
-            "description": "Engine violation (Section 16(a) Late Form 4 Filing) attributed to SPRUNK ERIC D. Filing: 0000320187-19-000036. Statutory ref: 15 U.S.C. \u00a7 78p(a) - Section 16(a). Filed 2 days late. Shares: 489.",
-            "filing_a": "0000320187-19-000036",
-            "filing_b": "Enhanced Analysis Engine",
-            "details": {
-              "violation_type": "Section 16(a) Late Form 4 Filing",
-              "original_severity": "HIGH",
-              "transaction_date": "2019-04-30",
-              "filing_date": "2019-05-06",
-              "node_id": "NODE_1",
-              "statutory_reference": "15 U.S.C. \u00a7 78p(a) - Section 16(a)"
-            }
-          },
-          {
-            "anomaly_type": "VIOLATION_ZERO-DOLLAR_TRANSACTION_-_REQUIRES_SCRUTINY",
-            "severity": "MEDIUM",
-            "description": "Engine violation (Zero-Dollar Transaction - Requires Scrutiny) attributed to SPRUNK ERIC D. Filing: 0001127602-19-035842. Statutory ref: 15 U.S.C. \u00a7 78p(a). Shares: 120,000.",
-            "filing_a": "0001127602-19-035842",
-            "filing_b": "Enhanced Analysis Engine",
-            "details": {
-              "violation_type": "Zero-Dollar Transaction - Requires Scrutiny",
-              "original_severity": "MEDIUM",
-              "transaction_date": "2019-12-24",
-              "filing_date": "",
-              "node_id": "NODE_1",
-              "statutory_reference": "15 U.S.C. \u00a7 78p(a)"
-            }
-          }
-        ],
-        "anomaly_count": 2,
-        "profile_generated_at": "2026-02-28T07:42:45.024196Z",
+        "anomalies": [],
+        "anomaly_count": 0,
+        "profile_generated_at": "2026-02-28T02:58:46.373681Z",
         "data_sources_used": [
           "Form 4 XML (parsed)"
         ]
@@ -2328,40 +2266,9 @@
             "2019-09-01"
           ]
         },
-        "anomalies": [
-          {
-            "anomaly_type": "VIOLATION_SECTION_16(A)_LATE_FORM_4_FILING",
-            "severity": "HIGH",
-            "description": "Engine violation (Section 16(a) Late Form 4 Filing) attributed to Abston Chris L. Filing: 0000320187-19-000019. Statutory ref: 15 U.S.C. \u00a7 78p(a) - Section 16(a). Filed 1 days late. Shares: 245.",
-            "filing_a": "0000320187-19-000019",
-            "filing_b": "Enhanced Analysis Engine",
-            "details": {
-              "violation_type": "Section 16(a) Late Form 4 Filing",
-              "original_severity": "HIGH",
-              "transaction_date": "2019-02-14",
-              "filing_date": "2019-02-19",
-              "node_id": "NODE_1",
-              "statutory_reference": "15 U.S.C. \u00a7 78p(a) - Section 16(a)"
-            }
-          },
-          {
-            "anomaly_type": "VIOLATION_ZERO-DOLLAR_TRANSACTION_-_REQUIRES_SCRUTINY",
-            "severity": "MEDIUM",
-            "description": "Engine violation (Zero-Dollar Transaction - Requires Scrutiny) attributed to Abston Chris L. Filing: 0001127602-19-027760. Statutory ref: 15 U.S.C. \u00a7 78p(a). Shares: 23,670.",
-            "filing_a": "0001127602-19-027760",
-            "filing_b": "Enhanced Analysis Engine",
-            "details": {
-              "violation_type": "Zero-Dollar Transaction - Requires Scrutiny",
-              "original_severity": "MEDIUM",
-              "transaction_date": "2019-09-01",
-              "filing_date": "",
-              "node_id": "NODE_1",
-              "statutory_reference": "15 U.S.C. \u00a7 78p(a)"
-            }
-          }
-        ],
-        "anomaly_count": 2,
-        "profile_generated_at": "2026-02-28T07:42:45.024218Z",
+        "anomalies": [],
+        "anomaly_count": 0,
+        "profile_generated_at": "2026-02-28T02:58:46.373707Z",
         "data_sources_used": [
           "Form 4 XML (parsed)"
         ]
@@ -2408,25 +2315,9 @@
             "2019-12-30"
           ]
         },
-        "anomalies": [
-          {
-            "anomaly_type": "VIOLATION_ZERO-DOLLAR_TRANSACTION_-_REQUIRES_SCRUTINY",
-            "severity": "MEDIUM",
-            "description": "Engine violation (Zero-Dollar Transaction - Requires Scrutiny) attributed to Matheson Monique S.. Filing: 0001127602-19-035995. Statutory ref: 15 U.S.C. \u00a7 78p(a). Shares: 16,500.",
-            "filing_a": "0001127602-19-035995",
-            "filing_b": "Enhanced Analysis Engine",
-            "details": {
-              "violation_type": "Zero-Dollar Transaction - Requires Scrutiny",
-              "original_severity": "MEDIUM",
-              "transaction_date": "2019-12-30",
-              "filing_date": "",
-              "node_id": "NODE_1",
-              "statutory_reference": "15 U.S.C. \u00a7 78p(a)"
-            }
-          }
-        ],
-        "anomaly_count": 1,
-        "profile_generated_at": "2026-02-28T07:42:45.024235Z",
+        "anomalies": [],
+        "anomaly_count": 0,
+        "profile_generated_at": "2026-02-28T02:58:46.373714Z",
         "data_sources_used": [
           "Form 4 XML (parsed)"
         ]
@@ -2472,25 +2363,9 @@
             "2019-12-02"
           ]
         },
-        "anomalies": [
-          {
-            "anomaly_type": "VIOLATION_ZERO-DOLLAR_TRANSACTION_-_REQUIRES_SCRUTINY",
-            "severity": "MEDIUM",
-            "description": "Engine violation (Zero-Dollar Transaction - Requires Scrutiny) attributed to PARKER MARK G. Filing: 0001127602-19-034173. Statutory ref: 15 U.S.C. \u00a7 78p(a). Shares: 156,529.",
-            "filing_a": "0001127602-19-034173",
-            "filing_b": "Enhanced Analysis Engine",
-            "details": {
-              "violation_type": "Zero-Dollar Transaction - Requires Scrutiny",
-              "original_severity": "MEDIUM",
-              "transaction_date": "2019-12-02",
-              "filing_date": "",
-              "node_id": "NODE_1",
-              "statutory_reference": "15 U.S.C. \u00a7 78p(a)"
-            }
-          }
-        ],
-        "anomaly_count": 1,
-        "profile_generated_at": "2026-02-28T07:42:45.024257Z",
+        "anomalies": [],
+        "anomaly_count": 0,
+        "profile_generated_at": "2026-02-28T02:58:46.373725Z",
         "data_sources_used": [
           "Form 4 XML (parsed)"
         ]
@@ -2535,25 +2410,9 @@
             "2019-11-14"
           ]
         },
-        "anomalies": [
-          {
-            "anomaly_type": "VIOLATION_ZERO-DOLLAR_TRANSACTION_-_REQUIRES_SCRUTINY",
-            "severity": "MEDIUM",
-            "description": "Engine violation (Zero-Dollar Transaction - Requires Scrutiny) attributed to Duckett Thasunda. Filing: 0001127602-19-032863. Statutory ref: 15 U.S.C. \u00a7 78p(a). Shares: 1,918.",
-            "filing_a": "0001127602-19-032863",
-            "filing_b": "Enhanced Analysis Engine",
-            "details": {
-              "violation_type": "Zero-Dollar Transaction - Requires Scrutiny",
-              "original_severity": "MEDIUM",
-              "transaction_date": "2019-11-14",
-              "filing_date": "",
-              "node_id": "NODE_1",
-              "statutory_reference": "15 U.S.C. \u00a7 78p(a)"
-            }
-          }
-        ],
-        "anomaly_count": 1,
-        "profile_generated_at": "2026-02-28T07:42:45.024282Z",
+        "anomalies": [],
+        "anomaly_count": 0,
+        "profile_generated_at": "2026-02-28T02:58:46.373735Z",
         "data_sources_used": [
           "Form 4 XML (parsed)"
         ]
@@ -2599,25 +2458,9 @@
             "2019-10-30"
           ]
         },
-        "anomalies": [
-          {
-            "anomaly_type": "VIOLATION_ZERO-DOLLAR_TRANSACTION_-_REQUIRES_SCRUTINY",
-            "severity": "HIGH",
-            "description": "Engine violation (Zero-Dollar Transaction - Requires Scrutiny) attributed to GRAF ALAN B JR. Filing: 0001127602-19-031375. Statutory ref: 15 U.S.C. \u00a7 78p(a). Shares: 8,960.",
-            "filing_a": "0001127602-19-031375",
-            "filing_b": "Enhanced Analysis Engine",
-            "details": {
-              "violation_type": "Zero-Dollar Transaction - Requires Scrutiny",
-              "original_severity": "HIGH",
-              "transaction_date": "2019-10-30",
-              "filing_date": "",
-              "node_id": "NODE_1",
-              "statutory_reference": "15 U.S.C. \u00a7 78p(a)"
-            }
-          }
-        ],
-        "anomaly_count": 1,
-        "profile_generated_at": "2026-02-28T07:42:45.024294Z",
+        "anomalies": [],
+        "anomaly_count": 0,
+        "profile_generated_at": "2026-02-28T02:58:46.373740Z",
         "data_sources_used": [
           "Form 4 XML (parsed)"
         ]
@@ -2664,25 +2507,9 @@
             "2019-10-30"
           ]
         },
-        "anomalies": [
-          {
-            "anomaly_type": "VIOLATION_ZERO-DOLLAR_TRANSACTION_-_REQUIRES_SCRUTINY",
-            "severity": "HIGH",
-            "description": "Engine violation (Zero-Dollar Transaction - Requires Scrutiny) attributed to Krane Hilary K. Filing: 0001127602-19-031373. Statutory ref: 15 U.S.C. \u00a7 78p(a). Shares: 4,721.",
-            "filing_a": "0001127602-19-031373",
-            "filing_b": "Enhanced Analysis Engine",
-            "details": {
-              "violation_type": "Zero-Dollar Transaction - Requires Scrutiny",
-              "original_severity": "HIGH",
-              "transaction_date": "2019-10-30",
-              "filing_date": "",
-              "node_id": "NODE_1",
-              "statutory_reference": "15 U.S.C. \u00a7 78p(a)"
-            }
-          }
-        ],
-        "anomaly_count": 1,
-        "profile_generated_at": "2026-02-28T07:42:45.024308Z",
+        "anomalies": [],
+        "anomaly_count": 0,
+        "profile_generated_at": "2026-02-28T02:58:46.373746Z",
         "data_sources_used": [
           "Form 4 XML (parsed)"
         ]
@@ -2728,25 +2555,9 @@
             "2019-10-29"
           ]
         },
-        "anomalies": [
-          {
-            "anomaly_type": "VIOLATION_ZERO-DOLLAR_TRANSACTION_-_REQUIRES_SCRUTINY",
-            "severity": "HIGH",
-            "description": "Engine violation (Zero-Dollar Transaction - Requires Scrutiny) attributed to Knight Travis A. Filing: 0001127602-19-031371. Statutory ref: 15 U.S.C. \u00a7 78p(a). Shares: 9,000,000.",
-            "filing_a": "0001127602-19-031371",
-            "filing_b": "Enhanced Analysis Engine",
-            "details": {
-              "violation_type": "Zero-Dollar Transaction - Requires Scrutiny",
-              "original_severity": "HIGH",
-              "transaction_date": "2019-10-29",
-              "filing_date": "",
-              "node_id": "NODE_1",
-              "statutory_reference": "15 U.S.C. \u00a7 78p(a)"
-            }
-          }
-        ],
-        "anomaly_count": 1,
-        "profile_generated_at": "2026-02-28T07:42:45.024319Z",
+        "anomalies": [],
+        "anomaly_count": 0,
+        "profile_generated_at": "2026-02-28T02:58:46.373754Z",
         "data_sources_used": [
           "Form 4 XML (parsed)"
         ]
@@ -2792,25 +2603,9 @@
             "2019-10-29"
           ]
         },
-        "anomalies": [
-          {
-            "anomaly_type": "VIOLATION_ZERO-DOLLAR_TRANSACTION_-_REQUIRES_SCRUTINY",
-            "severity": "HIGH",
-            "description": "Engine violation (Zero-Dollar Transaction - Requires Scrutiny) attributed to KNIGHT PHILIP H. Filing: 0001127602-19-031367. Statutory ref: 15 U.S.C. \u00a7 78p(a). Shares: 8,100,000.",
-            "filing_a": "0001127602-19-031367",
-            "filing_b": "Enhanced Analysis Engine",
-            "details": {
-              "violation_type": "Zero-Dollar Transaction - Requires Scrutiny",
-              "original_severity": "HIGH",
-              "transaction_date": "2019-10-29",
-              "filing_date": "",
-              "node_id": "NODE_1",
-              "statutory_reference": "15 U.S.C. \u00a7 78p(a)"
-            }
-          }
-        ],
-        "anomaly_count": 1,
-        "profile_generated_at": "2026-02-28T07:42:45.024327Z",
+        "anomalies": [],
+        "anomaly_count": 0,
+        "profile_generated_at": "2026-02-28T02:58:46.373762Z",
         "data_sources_used": [
           "Form 4 XML (parsed)"
         ]
@@ -2855,25 +2650,9 @@
             "2019-10-29"
           ]
         },
-        "anomalies": [
-          {
-            "anomaly_type": "VIOLATION_ZERO-DOLLAR_TRANSACTION_-_REQUIRES_SCRUTINY",
-            "severity": "HIGH",
-            "description": "Engine violation (Zero-Dollar Transaction - Requires Scrutiny) attributed to Swoosh, LLC. Filing: 0000320187-19-000077. Statutory ref: 15 U.S.C. \u00a7 78p(a). Shares: 9,000,000.",
-            "filing_a": "0000320187-19-000077",
-            "filing_b": "Enhanced Analysis Engine",
-            "details": {
-              "violation_type": "Zero-Dollar Transaction - Requires Scrutiny",
-              "original_severity": "HIGH",
-              "transaction_date": "2019-10-29",
-              "filing_date": "",
-              "node_id": "NODE_1",
-              "statutory_reference": "15 U.S.C. \u00a7 78p(a)"
-            }
-          }
-        ],
-        "anomaly_count": 1,
-        "profile_generated_at": "2026-02-28T07:42:45.024334Z",
+        "anomalies": [],
+        "anomaly_count": 0,
+        "profile_generated_at": "2026-02-28T02:58:46.373766Z",
         "data_sources_used": [
           "Form 4 XML (parsed)"
         ]
@@ -2919,25 +2698,9 @@
             "2019-09-25"
           ]
         },
-        "anomalies": [
-          {
-            "anomaly_type": "VIOLATION_ZERO-DOLLAR_TRANSACTION_-_REQUIRES_SCRUTINY",
-            "severity": "MEDIUM",
-            "description": "Engine violation (Zero-Dollar Transaction - Requires Scrutiny) attributed to Hill Elliott. Filing: 0001127602-19-029186. Statutory ref: 15 U.S.C. \u00a7 78p(a). Shares: 90,000.",
-            "filing_a": "0001127602-19-029186",
-            "filing_b": "Enhanced Analysis Engine",
-            "details": {
-              "violation_type": "Zero-Dollar Transaction - Requires Scrutiny",
-              "original_severity": "MEDIUM",
-              "transaction_date": "2019-09-25",
-              "filing_date": "",
-              "node_id": "NODE_1",
-              "statutory_reference": "15 U.S.C. \u00a7 78p(a)"
-            }
-          }
-        ],
-        "anomaly_count": 1,
-        "profile_generated_at": "2026-02-28T07:42:45.024341Z",
+        "anomalies": [],
+        "anomaly_count": 0,
+        "profile_generated_at": "2026-02-28T02:58:46.373770Z",
         "data_sources_used": [
           "Form 4 XML (parsed)"
         ]
@@ -2983,25 +2746,9 @@
             "2019-09-25"
           ]
         },
-        "anomalies": [
-          {
-            "anomaly_type": "VIOLATION_ZERO-DOLLAR_TRANSACTION_-_REQUIRES_SCRUTINY",
-            "severity": "MEDIUM",
-            "description": "Engine violation (Zero-Dollar Transaction - Requires Scrutiny) attributed to Campion Andrew. Filing: 0001127602-19-029185. Statutory ref: 15 U.S.C. \u00a7 78p(a). Shares: 120,000.",
-            "filing_a": "0001127602-19-029185",
-            "filing_b": "Enhanced Analysis Engine",
-            "details": {
-              "violation_type": "Zero-Dollar Transaction - Requires Scrutiny",
-              "original_severity": "MEDIUM",
-              "transaction_date": "2019-09-25",
-              "filing_date": "",
-              "node_id": "NODE_1",
-              "statutory_reference": "15 U.S.C. \u00a7 78p(a)"
-            }
-          }
-        ],
-        "anomaly_count": 1,
-        "profile_generated_at": "2026-02-28T07:42:45.024350Z",
+        "anomalies": [],
+        "anomaly_count": 0,
+        "profile_generated_at": "2026-02-28T02:58:46.373775Z",
         "data_sources_used": [
           "Form 4 XML (parsed)"
         ]
@@ -3046,25 +2793,9 @@
             "2019-09-19"
           ]
         },
-        "anomalies": [
-          {
-            "anomaly_type": "VIOLATION_ZERO-DOLLAR_TRANSACTION_-_REQUIRES_SCRUTINY",
-            "severity": "MEDIUM",
-            "description": "Engine violation (Zero-Dollar Transaction - Requires Scrutiny) attributed to COOK TIMOTHY D. Filing: 0001127602-19-028946. Statutory ref: 15 U.S.C. \u00a7 78p(a). Shares: 1,996.",
-            "filing_a": "0001127602-19-028946",
-            "filing_b": "Enhanced Analysis Engine",
-            "details": {
-              "violation_type": "Zero-Dollar Transaction - Requires Scrutiny",
-              "original_severity": "MEDIUM",
-              "transaction_date": "2019-09-19",
-              "filing_date": "",
-              "node_id": "NODE_1",
-              "statutory_reference": "15 U.S.C. \u00a7 78p(a)"
-            }
-          }
-        ],
-        "anomaly_count": 1,
-        "profile_generated_at": "2026-02-28T07:42:45.024358Z",
+        "anomalies": [],
+        "anomaly_count": 0,
+        "profile_generated_at": "2026-02-28T02:58:46.373780Z",
         "data_sources_used": [
           "Form 4 XML (parsed)"
         ]
@@ -3109,25 +2840,9 @@
             "2019-09-19"
           ]
         },
-        "anomalies": [
-          {
-            "anomaly_type": "VIOLATION_ZERO-DOLLAR_TRANSACTION_-_REQUIRES_SCRUTINY",
-            "severity": "MEDIUM",
-            "description": "Engine violation (Zero-Dollar Transaction - Requires Scrutiny) attributed to Donahoe John J. Filing: 0001127602-19-028945. Statutory ref: 15 U.S.C. \u00a7 78p(a). Shares: 1,996.",
-            "filing_a": "0001127602-19-028945",
-            "filing_b": "Enhanced Analysis Engine",
-            "details": {
-              "violation_type": "Zero-Dollar Transaction - Requires Scrutiny",
-              "original_severity": "MEDIUM",
-              "transaction_date": "2019-09-19",
-              "filing_date": "",
-              "node_id": "NODE_1",
-              "statutory_reference": "15 U.S.C. \u00a7 78p(a)"
-            }
-          }
-        ],
-        "anomaly_count": 1,
-        "profile_generated_at": "2026-02-28T07:42:45.024364Z",
+        "anomalies": [],
+        "anomaly_count": 0,
+        "profile_generated_at": "2026-02-28T02:58:46.373785Z",
         "data_sources_used": [
           "Form 4 XML (parsed)"
         ]
@@ -3172,25 +2887,9 @@
             "2019-09-19"
           ]
         },
-        "anomalies": [
-          {
-            "anomaly_type": "VIOLATION_ZERO-DOLLAR_TRANSACTION_-_REQUIRES_SCRUTINY",
-            "severity": "MEDIUM",
-            "description": "Engine violation (Zero-Dollar Transaction - Requires Scrutiny) attributed to Henry Peter B.. Filing: 0001127602-19-028944. Statutory ref: 15 U.S.C. \u00a7 78p(a). Shares: 1,996.",
-            "filing_a": "0001127602-19-028944",
-            "filing_b": "Enhanced Analysis Engine",
-            "details": {
-              "violation_type": "Zero-Dollar Transaction - Requires Scrutiny",
-              "original_severity": "MEDIUM",
-              "transaction_date": "2019-09-19",
-              "filing_date": "",
-              "node_id": "NODE_1",
-              "statutory_reference": "15 U.S.C. \u00a7 78p(a)"
-            }
-          }
-        ],
-        "anomaly_count": 1,
-        "profile_generated_at": "2026-02-28T07:42:45.024370Z",
+        "anomalies": [],
+        "anomaly_count": 0,
+        "profile_generated_at": "2026-02-28T02:58:46.373788Z",
         "data_sources_used": [
           "Form 4 XML (parsed)"
         ]
@@ -3235,25 +2934,9 @@
             "2019-09-19"
           ]
         },
-        "anomalies": [
-          {
-            "anomaly_type": "VIOLATION_ZERO-DOLLAR_TRANSACTION_-_REQUIRES_SCRUTINY",
-            "severity": "MEDIUM",
-            "description": "Engine violation (Zero-Dollar Transaction - Requires Scrutiny) attributed to ROGERS JOHN W JR. Filing: 0001127602-19-028942. Statutory ref: 15 U.S.C. \u00a7 78p(a). Shares: 1,996.",
-            "filing_a": "0001127602-19-028942",
-            "filing_b": "Enhanced Analysis Engine",
-            "details": {
-              "violation_type": "Zero-Dollar Transaction - Requires Scrutiny",
-              "original_severity": "MEDIUM",
-              "transaction_date": "2019-09-19",
-              "filing_date": "",
-              "node_id": "NODE_1",
-              "statutory_reference": "15 U.S.C. \u00a7 78p(a)"
-            }
-          }
-        ],
-        "anomaly_count": 1,
-        "profile_generated_at": "2026-02-28T07:42:45.024376Z",
+        "anomalies": [],
+        "anomaly_count": 0,
+        "profile_generated_at": "2026-02-28T02:58:46.373791Z",
         "data_sources_used": [
           "Form 4 XML (parsed)"
         ]
@@ -3298,25 +2981,9 @@
             "2019-09-19"
           ]
         },
-        "anomalies": [
-          {
-            "anomaly_type": "VIOLATION_ZERO-DOLLAR_TRANSACTION_-_REQUIRES_SCRUTINY",
-            "severity": "MEDIUM",
-            "description": "Engine violation (Zero-Dollar Transaction - Requires Scrutiny) attributed to Benko Cathleen A. Filing: 0001127602-19-028938. Statutory ref: 15 U.S.C. \u00a7 78p(a). Shares: 1,996.",
-            "filing_a": "0001127602-19-028938",
-            "filing_b": "Enhanced Analysis Engine",
-            "details": {
-              "violation_type": "Zero-Dollar Transaction - Requires Scrutiny",
-              "original_severity": "MEDIUM",
-              "transaction_date": "2019-09-19",
-              "filing_date": "",
-              "node_id": "NODE_1",
-              "statutory_reference": "15 U.S.C. \u00a7 78p(a)"
-            }
-          }
-        ],
-        "anomaly_count": 1,
-        "profile_generated_at": "2026-02-28T07:42:45.024382Z",
+        "anomalies": [],
+        "anomaly_count": 0,
+        "profile_generated_at": "2026-02-28T02:58:46.373794Z",
         "data_sources_used": [
           "Form 4 XML (parsed)"
         ]
@@ -3361,25 +3028,9 @@
             "2019-09-19"
           ]
         },
-        "anomalies": [
-          {
-            "anomaly_type": "VIOLATION_ZERO-DOLLAR_TRANSACTION_-_REQUIRES_SCRUTINY",
-            "severity": "MEDIUM",
-            "description": "Engine violation (Zero-Dollar Transaction - Requires Scrutiny) attributed to THOMPSON JOHN R JR. Filing: 0001127602-19-028937. Statutory ref: 15 U.S.C. \u00a7 78p(a). Shares: 1,996.",
-            "filing_a": "0001127602-19-028937",
-            "filing_b": "Enhanced Analysis Engine",
-            "details": {
-              "violation_type": "Zero-Dollar Transaction - Requires Scrutiny",
-              "original_severity": "MEDIUM",
-              "transaction_date": "2019-09-19",
-              "filing_date": "",
-              "node_id": "NODE_1",
-              "statutory_reference": "15 U.S.C. \u00a7 78p(a)"
-            }
-          }
-        ],
-        "anomaly_count": 1,
-        "profile_generated_at": "2026-02-28T07:42:45.024387Z",
+        "anomalies": [],
+        "anomaly_count": 0,
+        "profile_generated_at": "2026-02-28T02:58:46.373797Z",
         "data_sources_used": [
           "Form 4 XML (parsed)"
         ]
@@ -3424,25 +3075,9 @@
             "2019-09-19"
           ]
         },
-        "anomalies": [
-          {
-            "anomaly_type": "VIOLATION_ZERO-DOLLAR_TRANSACTION_-_REQUIRES_SCRUTINY",
-            "severity": "MEDIUM",
-            "description": "Engine violation (Zero-Dollar Transaction - Requires Scrutiny) attributed to PELUSO MICHELLE A. Filing: 0001127602-19-028936. Statutory ref: 15 U.S.C. \u00a7 78p(a). Shares: 1,996.",
-            "filing_a": "0001127602-19-028936",
-            "filing_b": "Enhanced Analysis Engine",
-            "details": {
-              "violation_type": "Zero-Dollar Transaction - Requires Scrutiny",
-              "original_severity": "MEDIUM",
-              "transaction_date": "2019-09-19",
-              "filing_date": "",
-              "node_id": "NODE_1",
-              "statutory_reference": "15 U.S.C. \u00a7 78p(a)"
-            }
-          }
-        ],
-        "anomaly_count": 1,
-        "profile_generated_at": "2026-02-28T07:42:45.024393Z",
+        "anomalies": [],
+        "anomaly_count": 0,
+        "profile_generated_at": "2026-02-28T02:58:46.373803Z",
         "data_sources_used": [
           "Form 4 XML (parsed)"
         ]
@@ -3487,25 +3122,9 @@
             "2019-09-19"
           ]
         },
-        "anomalies": [
-          {
-            "anomaly_type": "VIOLATION_ZERO-DOLLAR_TRANSACTION_-_REQUIRES_SCRUTINY",
-            "severity": "MEDIUM",
-            "description": "Engine violation (Zero-Dollar Transaction - Requires Scrutiny) attributed to Connors John G. Filing: 0001127602-19-028934. Statutory ref: 15 U.S.C. \u00a7 78p(a). Shares: 1,996.",
-            "filing_a": "0001127602-19-028934",
-            "filing_b": "Enhanced Analysis Engine",
-            "details": {
-              "violation_type": "Zero-Dollar Transaction - Requires Scrutiny",
-              "original_severity": "MEDIUM",
-              "transaction_date": "2019-09-19",
-              "filing_date": "",
-              "node_id": "NODE_1",
-              "statutory_reference": "15 U.S.C. \u00a7 78p(a)"
-            }
-          }
-        ],
-        "anomaly_count": 1,
-        "profile_generated_at": "2026-02-28T07:42:45.024399Z",
+        "anomalies": [],
+        "anomaly_count": 0,
+        "profile_generated_at": "2026-02-28T02:58:46.373807Z",
         "data_sources_used": [
           "Form 4 XML (parsed)"
         ]
@@ -3552,25 +3171,9 @@
             "2019-08-01"
           ]
         },
-        "anomalies": [
-          {
-            "anomaly_type": "VIOLATION_ZERO-DOLLAR_TRANSACTION_-_REQUIRES_SCRUTINY",
-            "severity": "MEDIUM",
-            "description": "Engine violation (Zero-Dollar Transaction - Requires Scrutiny) attributed to Slusher John F. Filing: 0001127602-19-026077. Statutory ref: 15 U.S.C. \u00a7 78p(a). Shares: 110,000.",
-            "filing_a": "0001127602-19-026077",
-            "filing_b": "Enhanced Analysis Engine",
-            "details": {
-              "violation_type": "Zero-Dollar Transaction - Requires Scrutiny",
-              "original_severity": "MEDIUM",
-              "transaction_date": "2019-08-01",
-              "filing_date": "",
-              "node_id": "NODE_1",
-              "statutory_reference": "15 U.S.C. \u00a7 78p(a)"
-            }
-          }
-        ],
-        "anomaly_count": 1,
-        "profile_generated_at": "2026-02-28T07:42:45.024404Z",
+        "anomalies": [],
+        "anomaly_count": 0,
+        "profile_generated_at": "2026-02-28T02:58:46.373810Z",
         "data_sources_used": [
           "Form 4 XML (parsed)"
         ]
@@ -3615,25 +3218,9 @@
             "2019-07-26"
           ]
         },
-        "anomalies": [
-          {
-            "anomaly_type": "VIOLATION_ZERO-DOLLAR_TRANSACTION_-_REQUIRES_SCRUTINY",
-            "severity": "MEDIUM",
-            "description": "Engine violation (Zero-Dollar Transaction - Requires Scrutiny) attributed to LECHLEITER JOHN C. Filing: 0001127602-19-025344. Statutory ref: 15 U.S.C. \u00a7 78p(a). Shares: 18,594.",
-            "filing_a": "0001127602-19-025344",
-            "filing_b": "Enhanced Analysis Engine",
-            "details": {
-              "violation_type": "Zero-Dollar Transaction - Requires Scrutiny",
-              "original_severity": "MEDIUM",
-              "transaction_date": "2019-07-26",
-              "filing_date": "",
-              "node_id": "NODE_1",
-              "statutory_reference": "15 U.S.C. \u00a7 78p(a)"
-            }
-          }
-        ],
-        "anomaly_count": 1,
-        "profile_generated_at": "2026-02-28T07:42:45.024415Z",
+        "anomalies": [],
+        "anomaly_count": 0,
+        "profile_generated_at": "2026-02-28T02:58:46.373818Z",
         "data_sources_used": [
           "Form 4 XML (parsed)"
         ]
@@ -3645,11 +3232,8 @@
       "directors": 0,
       "ten_percent_owners": 0,
       "total_transactions": 73,
-      "total_anomalies": 26,
-      "anomaly_types": {
-        "VIOLATION_SECTION_16(A)_LATE_FORM_4_FILING": 3,
-        "VIOLATION_ZERO-DOLLAR_TRANSACTION_-_REQUIRES_SCRUTINY": 23
-      }
+      "total_anomalies": 0,
+      "anomaly_types": {}
     }
   },
   "domain4_form144": {
