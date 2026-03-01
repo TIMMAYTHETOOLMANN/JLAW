@@ -69,10 +69,10 @@ SEVERITY_COLORS_HEX = {
 }
 
 SEVERITY_COLORS_RL = {
-    "CRITICAL": colors.HexColor("#DC143C"),
-    "HIGH": colors.HexColor("#FF6347"),
-    "MEDIUM": colors.HexColor("#FFD700"),
-    "LOW": colors.HexColor("#32CD32"),
+    "CRITICAL": colors.HexColor("#DC143C") if REPORTLAB_AVAILABLE else "#DC143C",
+    "HIGH": colors.HexColor("#FF6347") if REPORTLAB_AVAILABLE else "#FF6347",
+    "MEDIUM": colors.HexColor("#FFD700") if REPORTLAB_AVAILABLE else "#FFD700",
+    "LOW": colors.HexColor("#32CD32") if REPORTLAB_AVAILABLE else "#32CD32",
 }
 
 ROLE_COLORS_HEX = {
@@ -89,8 +89,8 @@ ROLE_COLORS_HEX = {
 BRAND_DARK = "#1B2A4A"
 BRAND_ACCENT = "#C8102E"
 BRAND_LIGHT_BG = "#F8F9FA"
-HEADER_BG = colors.HexColor(BRAND_DARK)
-ACCENT_COLOR = colors.HexColor(BRAND_ACCENT)
+HEADER_BG = colors.HexColor(BRAND_DARK) if REPORTLAB_AVAILABLE else BRAND_DARK
+ACCENT_COLOR = colors.HexColor(BRAND_ACCENT) if REPORTLAB_AVAILABLE else BRAND_ACCENT
 
 
 class ForensicVisualReportGenerator:

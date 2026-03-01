@@ -11,6 +11,7 @@ This package provides visualization components for the prosecutorial dossier:
 - bubble_chart.py: Transaction and beneficiary bubble charts
 - filing_deadline_chart.py: Filing deadline compliance visualization
 - beneficiary_profit_chart.py: Financial beneficiary profit analysis
+- financial_network_map.py: Multi-layer financial network and capital-flow map
 """
 
 from .timeline_generator import TimelineGenerator
@@ -20,6 +21,12 @@ from .merkle_tree_viz import MerkleTreeVisualizer
 from .bubble_chart import BubbleChartGenerator
 from .filing_deadline_chart import FilingDeadlineChart
 from .beneficiary_profit_chart import BeneficiaryProfitChart
+from .financial_network_map import (
+    FinancialNetworkMapper,
+    FinancialNetworkData,
+    NetworkNode,
+    NetworkEdge,
+)
 
 __all__ = [
     "TimelineGenerator",
@@ -29,4 +36,9 @@ __all__ = [
     "BubbleChartGenerator",
     "FilingDeadlineChart",
     "BeneficiaryProfitChart",
+    # New: multi-layer financial network map
+    "FinancialNetworkMapper",
+    "FinancialNetworkData",
+    "NetworkNode",
+    "NetworkEdge",
 ]
