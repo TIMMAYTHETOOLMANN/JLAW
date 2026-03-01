@@ -608,7 +608,7 @@ class FinancialNetworkMapper:
                 xaxis={"showgrid": False, "zeroline": False, "showticklabels": False},
                 yaxis={"showgrid": False, "zeroline": False, "showticklabels": False},
                 paper_bgcolor="#fafaf9",
-                plot_bgcolor="#fafal9",
+                plot_bgcolor="#fafaf9",
                 margin={"l": 20, "r": 20, "t": 60, "b": 20},
                 annotations=[
                     {
