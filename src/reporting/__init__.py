@@ -83,6 +83,29 @@ from .chain_of_custody_logger import (
     ChainOfCustodyLogger,
     create_custody_logger,
 )
+from .investigative_article_generator import (
+    InvestigativeArticleGenerator,
+    InvestigativeArticle,
+    ArticleSection,
+)
+from .public_discrepancy_engine import (
+    PublicDiscrepancyEngine,
+    DiscrepancyReport,
+    Discrepancy,
+    PublicStatement,
+    SecDisclosure,
+)
+from .machine_log_generator import (
+    MachineLogGenerator,
+    MachineLog,
+    ForensicLogEntry,
+    ProvenanceChain,
+)
+from .investigation_bundle_generator import (
+    InvestigationBundleGenerator,
+    BundleManifest,
+    GeneratedFile,
+)
 
 __all__ = [
     # PDF Generators
@@ -139,7 +162,7 @@ __all__ = [
     'CustodyEvent',
     'CustodyChain',
     'ChainOfCustodyLogger',
-    
+
     # Factory functions
     'create_violation_evidence',
     'get_statute_for_violation',
@@ -148,4 +171,27 @@ __all__ = [
     'determine_regulatory_routing',
     'create_citation_engine',
     'create_custody_logger',
+
+    # Investigative Article Generator
+    'InvestigativeArticleGenerator',
+    'InvestigativeArticle',
+    'ArticleSection',
+
+    # Public Discrepancy Engine
+    'PublicDiscrepancyEngine',
+    'DiscrepancyReport',
+    'Discrepancy',
+    'PublicStatement',
+    'SecDisclosure',
+
+    # Machine Log Generator
+    'MachineLogGenerator',
+    'MachineLog',
+    'ForensicLogEntry',
+    'ProvenanceChain',
+
+    # Investigation Bundle Generator
+    'InvestigationBundleGenerator',
+    'BundleManifest',
+    'GeneratedFile',
 ]
