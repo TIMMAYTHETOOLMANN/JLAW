@@ -792,6 +792,8 @@ class UnifiedForensicOrchestrator:
         - Standalone chart images
         - JSON analysis results
         - Contradiction map JSON
+        - DOJ-format comprehensive report (markdown + JSON)
+        - Investigation bundle (narrative, machine logs, network map)
         """
         self._log("Phase 11: Analysis Bundle Export")
         import json
@@ -834,12 +836,87 @@ class UnifiedForensicOrchestrator:
                     json.dump(fsl["fsl_assessments"], f, indent=2, default=str)
                 exports.append(str(fsl_json_path))
 
+        # ── DOJ Report Generation ──
+        doj_outputs = {}
+        try:
+            from src.reporting.doj_report_generator import DOJReportGenerator
+
+            report_dir = self.output_dir / "reports"
+            report_dir.mkdir(parents=True, exist_ok=True)
+            doj_gen = DOJReportGenerator(output_dir=str(report_dir))
+
+            case_id = (
+                self._engine_result.case_id if self._engine_result else "UNKNOWN"
+            )
+
+            doj_outputs = doj_gen.generate_comprehensive_report(
+                case_id=case_id,
+                company_name=self.company_name,
+                cik=self.cik,
+                filing_reports=[],
+                chain_of_custody=[],
+                output_formats=["markdown", "json"],
+            )
+
+            for fmt, path in doj_outputs.items():
+                exports.append(str(path))
+            self._log(f"DOJ report generated: {len(doj_outputs)} format(s)")
+
+        except ImportError as e:
+            self._log(f"DOJ report generator unavailable: {e}", level="warning")
+        except Exception as e:
+            logger.warning(f"DOJ report generation failed (non-fatal): {e}", exc_info=True)
+            self._log(f"DOJ report generation error: {e}", level="warning")
+
+        # ── Investigation Bundle Generation ──
+        investigation_manifest = None
+        try:
+            from src.reporting.investigation_bundle_generator import (
+                InvestigationBundleGenerator,
+            )
+
+            inv_dir = self.output_dir / "investigation_bundle"
+            inv_dir.mkdir(parents=True, exist_ok=True)
+
+            bundle_gen = InvestigationBundleGenerator()
+
+            analysis_period = f"{self.start_date} to {self.end_date}"
+
+            investigation_manifest = bundle_gen.generate_bundle(
+                company_name=self.company_name,
+                cik=self.cik,
+                analysis_results=self._analysis_results or {},
+                output_dir=inv_dir,
+                analysis_period=analysis_period,
+                skip_visualizations=True,  # Visualizations handled in Phase 10
+            )
+
+            if investigation_manifest:
+                manifest_dict = investigation_manifest.to_dict()
+                manifest_path = bundle_dir / "investigation_manifest.json"
+                with open(manifest_path, "w") as f:
+                    json.dump(manifest_dict, f, indent=2, default=str)
+                exports.append(str(manifest_path))
+                self._log(
+                    f"Investigation bundle generated: "
+                    f"{len(investigation_manifest.files)} files, "
+                    f"{len(investigation_manifest.components_run)} components"
+                )
+
+        except ImportError as e:
+            self._log(f"Investigation bundle generator unavailable: {e}", level="warning")
+        except Exception as e:
+            logger.warning(f"Investigation bundle generation failed (non-fatal): {e}", exc_info=True)
+            self._log(f"Investigation bundle error: {e}", level="warning")
+
         self._log(f"Analysis bundle exported: {len(exports)} files")
         return {
             'status': 'success',
             'bundle_dir': str(bundle_dir),
             'files_exported': exports,
             'total_files': len(exports),
+            'doj_report_generated': bool(doj_outputs),
+            'investigation_bundle_generated': investigation_manifest is not None,
         }
 
     # ═══════════════════════════════════════════════════════════════════
