@@ -528,6 +528,7 @@ class BeneficialOwnershipCorrelator:
         if isinstance(val, str):
             try:
                 return datetime.strptime(val, '%Y-%m-%d').date()
-            except ValueError:
+            except ValueError as e:
+                logger.debug(f"Failed to parse date string '{val}': {e}")
                 return None
         return None

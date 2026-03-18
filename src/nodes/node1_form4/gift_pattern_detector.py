@@ -356,6 +356,7 @@ class GiftPatternDetector:
             try:
                 return datetime.strptime(val, '%Y-%m-%d').date()
             except ValueError:
+                logger.debug(f"Failed to parse date string: '{val}'")
                 return None
         return None
 

@@ -840,6 +840,7 @@ class SECDataResourcesClient:
                                     )
                                     records.append(record)
                                 except (ValueError, IndexError):
+                                    logger.debug(f"Skipping malformed fails-to-deliver record: {line.strip()!r}")
                                     continue
             
             return records
@@ -1460,6 +1461,7 @@ class SECDataResourcesClient:
                 )
                 records.append(record)
             except (ValueError, IndexError):
+                logger.debug(f"Skipping malformed insider transaction record at index {i}")
                 continue
         
         return records
@@ -1499,6 +1501,7 @@ class SECDataResourcesClient:
                     try:
                         offering_date = datetime.strptime(date_str[:10], "%Y-%m-%d").date()
                     except (ValueError, TypeError):
+                        logger.debug(f"Could not parse offering date: {date_str!r}")
                         pass
                 
                 offering = CrowdfundingOffering(
@@ -1595,6 +1598,7 @@ class SECDataResourcesClient:
                     )
                     offerings.append(offering)
                 except (ValueError, IndexError):
+                    logger.debug("Skipping malformed Form D offering record")
                     continue
             
             return offerings

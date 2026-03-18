@@ -24,7 +24,6 @@ from typing import Optional, Dict, Any
 from datetime import datetime
 import traceback
 
-
 class JSONFormatter(logging.Formatter):
     """
     JSON formatter for structured logging.
@@ -75,7 +74,8 @@ class JSONFormatter(logging.Formatter):
                     # Only add JSON-serializable values
                     json.dumps(value)
                     log_obj[key] = value
-                except (TypeError, ValueError):
+                except (TypeError, ValueError) as e:
+                    logging.getLogger(__name__).debug(f"Skipping non-serializable log record field '{key}': {e}")
                     pass
         
         return json.dumps(log_obj)

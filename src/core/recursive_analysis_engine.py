@@ -876,11 +876,13 @@ class RecursiveForensicAnalyzer:
             try:
                 # Try ISO format
                 return datetime.fromisoformat(date_value.replace('Z', '+00:00')).date()
-            except:
+            except Exception as e:
+                logger.debug(f"ISO date parsing failed for '{date_value}': {e}")
                 try:
                     # Try common formats
                     return datetime.strptime(date_value, '%Y-%m-%d').date()
-                except:
+                except Exception as e2:
+                    logger.debug(f"Date parsing failed for '{date_value}' with all formats: {e2}")
                     pass
         
         return None

@@ -325,6 +325,7 @@ class PolygonWebSocketClient:
                 
                 except asyncio.TimeoutError:
                     # Send ping to keep connection alive
+                    logger.debug("WebSocket receive timed out, sending keepalive ping")
                     if self.ws:
                         await self.ws.ping()
                     continue

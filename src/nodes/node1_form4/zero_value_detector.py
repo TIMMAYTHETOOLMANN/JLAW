@@ -682,6 +682,7 @@ class ZeroValueTransactionAnalyzer:
                             0.7,
                         )
                 except (ValueError, TypeError):
+                    logger.debug("Failed to parse exercise price for derivative transaction classification")
                     pass
             return (
                 ZeroValuePattern.DERIVATIVE_EXERCISE_ADVANTAGE,
@@ -769,6 +770,7 @@ class ZeroValueTransactionAnalyzer:
             try:
                 exercise_price = float(txn.get('exercise_price', 0) or 0)
             except (ValueError, TypeError):
+                logger.debug("Failed to parse exercise price for implied value calculation")
                 pass
             spread = max(0, market_price - exercise_price)
             return shares * spread
@@ -1460,6 +1462,7 @@ class ZeroValueTransactionAnalyzer:
         try:
             return float(price) == 0.0
         except (ValueError, TypeError):
+            logger.debug(f"Non-numeric price value encountered: {price}")
             return False
 
     def _parse_date(self, val: Any) -> Optional[date]:
@@ -1473,6 +1476,7 @@ class ZeroValueTransactionAnalyzer:
                 try:
                     return datetime.strptime(val, fmt).date()
                 except ValueError:
+                    logger.debug(f"Date string '{val}' did not match format '{fmt}'")
                     continue
             return None
         return None

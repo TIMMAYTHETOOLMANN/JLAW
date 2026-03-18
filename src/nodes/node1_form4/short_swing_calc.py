@@ -337,6 +337,7 @@ class ShortSwingCalculator:
                 from datetime import datetime
                 return datetime.strptime(date_val, '%Y-%m-%d').date()
             except ValueError:
+                logger.debug(f"Failed to parse date string: '{date_val}'")
                 return None
         return None
 

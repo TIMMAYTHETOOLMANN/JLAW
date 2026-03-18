@@ -248,7 +248,8 @@ class BenfordAnalyzer:
                 num *= 10
             
             return int(num)
-        except (ValueError, OverflowError):
+        except (ValueError, OverflowError) as e:
+            logger.debug(f"Failed to extract first digit from {number}: {e}")
             return None
     
     def _chi_square_p_value(self, chi_sq: float, df: int) -> float:
@@ -266,7 +267,8 @@ class BenfordAnalyzer:
             # Standard normal CDF approximation
             p = 0.5 * (1 + math.erf(-z / math.sqrt(2)))
             return max(0, min(1, p))
-        except (ValueError, OverflowError):
+        except (ValueError, OverflowError) as e:
+            logger.debug(f"Chi-square p-value computation failed (chi_sq={chi_sq}, df={df}): {e}")
             return 0.5
     
     def _generate_interpretation(

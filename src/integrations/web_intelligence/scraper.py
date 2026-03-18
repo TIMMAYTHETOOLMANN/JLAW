@@ -88,10 +88,12 @@ def _parse_money(text: str) -> Optional[float]:
             try:
                 return float(num_str) * mult
             except ValueError:
+                logger.debug(f"Could not parse numeric value with suffix '{suffix}': {num_str!r}")
                 return None
     try:
         return float(text)
     except ValueError:
+        logger.debug(f"Could not parse monetary value from text: {text!r}")
         return None
 
 
@@ -411,6 +413,7 @@ class WebIntelligenceEngine:
             try:
                 fdate = datetime.strptime(fdate_str, "%Y-%m-%d").date()
             except (ValueError, TypeError):
+                logger.debug(f"Skipping filing with unparseable date: {fdate_str!r}")
                 continue
 
             if fdate < start_date or fdate > end_date:
@@ -826,6 +829,7 @@ class WebIntelligenceEngine:
                 try:
                     pct_discrepancy = float(raw)
                 except ValueError:
+                    logger.debug(f"Could not parse percentage value: {raw!r}")
                     pass
                 break
 
@@ -880,6 +884,7 @@ class WebIntelligenceEngine:
                 try:
                     txn_date = datetime.strptime(txn_date[:10], "%Y-%m-%d")
                 except ValueError:
+                    logger.debug(f"Skipping transaction with unparseable date: {txn_date!r}")
                     continue
             if isinstance(txn_date, date) and not isinstance(txn_date, datetime):
                 txn_date = datetime.combine(txn_date, datetime.min.time())

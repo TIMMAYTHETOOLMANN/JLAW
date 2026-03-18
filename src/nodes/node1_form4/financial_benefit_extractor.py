@@ -186,6 +186,7 @@ class FinancialBenefitExtractor:
                 if float(price) != 0.0:
                     continue
             except (ValueError, TypeError):
+                logger.debug(f"Non-numeric price value in transaction, skipping: {price}")
                 continue
 
             shares = txn.get('shares', 0)
@@ -360,5 +361,6 @@ class FinancialBenefitExtractor:
                 try:
                     return datetime.strptime(val, fmt).date()
                 except ValueError:
+                    logger.debug(f"Date string '{val}' did not match format '{fmt}'")
                     continue
         return None

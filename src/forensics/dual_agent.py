@@ -575,12 +575,14 @@ class DualAgentCoordinator:
         if self.govinfo_client:
             try:
                 await self.govinfo_client.close()
-            except Exception:
+            except Exception as e:
+                logger.debug("Error closing govinfo_client during cleanup: %s", e)
                 pass
         if self.statute_integrator:
             try:
                 await self.statute_integrator.close()
-            except Exception:
+            except Exception as e:
+                logger.debug("Error closing statute_integrator during cleanup: %s", e)
                 pass
 
     def convert_to_filing_report(
