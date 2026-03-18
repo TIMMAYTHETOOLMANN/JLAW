@@ -64,8 +64,8 @@
             <a id="indexLink" class="nav" href="index.html">&Hat; index</a> &nbsp; &nbsp;
             <a id="nextFileLink" class="nav" href="z_1b96c8c8c2c6b5ef_insider_dossier_formatter_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
-            <a class="nav" href="https://coverage.readthedocs.io/en/7.13.4">coverage.py v7.13.4</a>,
-            created at 2026-02-23 04:35 +0000
+            <a class="nav" href="https://coverage.readthedocs.io/en/7.13.5">coverage.py v7.13.5</a>,
+            created at 2026-03-18 07:33 +0000
         </p>
         <aside class="hidden">
             <button type="button" class="button_next_chunk" data-shortcut="j"></button>
@@ -258,7 +258,7 @@
     <p class="mis show_mis"><span class="n"><a id="t176" href="#t176">176</a></span><span class="t">        <span class="nam">formatted</span> <span class="op">=</span> <span class="nam">content</span><span class="op">.</span><span class="nam">ljust</span><span class="op">(</span><span class="nam">available_width</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t177" href="#t177">177</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="mis show_mis"><span class="n"><a id="t178" href="#t178">178</a></span><span class="t">    <span class="nam">padded</span> <span class="op">=</span> <span class="op">(</span><span class="str">' '</span> <span class="op">*</span> <span class="nam">padding</span><span class="op">)</span> <span class="op">+</span> <span class="nam">formatted</span> <span class="op">+</span> <span class="op">(</span><span class="str">' '</span> <span class="op">*</span> <span class="nam">padding</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
-    <p class="mis show_mis"><span class="n"><a id="t179" href="#t179">179</a></span><span class="t">    <span class="key">return</span> <span class="str">f"{BOX_SINGLE_VERTICAL} {padded} {BOX_SINGLE_VERTICAL}"</span>&nbsp;</span><span class="r"></span></p>
+    <p class="mis show_mis"><span class="n"><a id="t179" href="#t179">179</a></span><span class="t">    <span class="key">return</span> <span class="fst">f"</span><span class="op">{</span><span class="nam">BOX_SINGLE_VERTICAL</span><span class="op">}</span><span class="fst"> </span><span class="op">{</span><span class="nam">padded</span><span class="op">}</span><span class="fst"> </span><span class="op">{</span><span class="nam">BOX_SINGLE_VERTICAL</span><span class="op">}</span><span class="fst">"</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t180" href="#t180">180</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t181" href="#t181">181</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="mis show_mis"><span class="n"><a id="t182" href="#t182">182</a></span><span class="t"><span class="key">def</span> <span class="nam">create_box_header</span><span class="op">(</span><span class="nam">title</span><span class="op">:</span> <span class="nam">str</span><span class="op">,</span> <span class="nam">width</span><span class="op">:</span> <span class="nam">int</span> <span class="op">=</span> <span class="nam">STANDARD_WIDTH</span> <span class="op">-</span> <span class="num">4</span><span class="op">)</span> <span class="op">-></span> <span class="nam">list</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
@@ -308,9 +308,9 @@
     <p class="pln"><span class="n"><a id="t226" href="#t226">226</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="mis show_mis"><span class="n"><a id="t227" href="#t227">227</a></span><span class="t">    <span class="key">return</span> <span class="op">[</span>&nbsp;</span><span class="r"></span></p>
     <p class="mis mis2 show_mis"><span class="n"><a id="t228" href="#t228">228</a></span><span class="t">        <span class="nam">BOX_DOUBLE_TOP_LEFT</span> <span class="op">+</span> <span class="nam">horizontal</span> <span class="op">+</span> <span class="nam">BOX_DOUBLE_TOP_RIGHT</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
-    <p class="mis mis2 show_mis"><span class="n"><a id="t229" href="#t229">229</a></span><span class="t">        <span class="str">f"{vertical}{'': ^{width + 2}}{vertical}"</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
-    <p class="mis mis2 show_mis"><span class="n"><a id="t230" href="#t230">230</a></span><span class="t">        <span class="str">f"{vertical} {title.center(width)} {vertical}"</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
-    <p class="mis mis2 show_mis"><span class="n"><a id="t231" href="#t231">231</a></span><span class="t">        <span class="str">f"{vertical}{'': ^{width + 2}}{vertical}"</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
+    <p class="mis mis2 show_mis"><span class="n"><a id="t229" href="#t229">229</a></span><span class="t">        <span class="fst">f"</span><span class="op">{</span><span class="nam">vertical</span><span class="op">}</span><span class="op">{</span><span class="str">''</span><span class="op">:</span><span class="fst"> ^</span><span class="op">{</span><span class="nam">width</span> <span class="op">+</span> <span class="num">2</span><span class="op">}</span><span class="op">}</span><span class="op">{</span><span class="nam">vertical</span><span class="op">}</span><span class="fst">"</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
+    <p class="mis mis2 show_mis"><span class="n"><a id="t230" href="#t230">230</a></span><span class="t">        <span class="fst">f"</span><span class="op">{</span><span class="nam">vertical</span><span class="op">}</span><span class="fst"> </span><span class="op">{</span><span class="nam">title</span><span class="op">.</span><span class="nam">center</span><span class="op">(</span><span class="nam">width</span><span class="op">)</span><span class="op">}</span><span class="fst"> </span><span class="op">{</span><span class="nam">vertical</span><span class="op">}</span><span class="fst">"</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
+    <p class="mis mis2 show_mis"><span class="n"><a id="t231" href="#t231">231</a></span><span class="t">        <span class="fst">f"</span><span class="op">{</span><span class="nam">vertical</span><span class="op">}</span><span class="op">{</span><span class="str">''</span><span class="op">:</span><span class="fst"> ^</span><span class="op">{</span><span class="nam">width</span> <span class="op">+</span> <span class="num">2</span><span class="op">}</span><span class="op">}</span><span class="op">{</span><span class="nam">vertical</span><span class="op">}</span><span class="fst">"</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="mis mis2 show_mis"><span class="n"><a id="t232" href="#t232">232</a></span><span class="t">    <span class="op">]</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t233" href="#t233">233</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t234" href="#t234">234</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
@@ -357,8 +357,8 @@
             <a class="nav" href="index.html">&Hat; index</a> &nbsp; &nbsp;
             <a class="nav" href="z_1b96c8c8c2c6b5ef_insider_dossier_formatter_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
-            <a class="nav" href="https://coverage.readthedocs.io/en/7.13.4">coverage.py v7.13.4</a>,
-            created at 2026-02-23 04:35 +0000
+            <a class="nav" href="https://coverage.readthedocs.io/en/7.13.5">coverage.py v7.13.5</a>,
+            created at 2026-03-18 07:33 +0000
         </p>
     </div>
 </footer>

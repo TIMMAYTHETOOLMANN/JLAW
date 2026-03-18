@@ -64,8 +64,8 @@
             <a id="indexLink" class="nav" href="index.html">&Hat; index</a> &nbsp; &nbsp;
             <a id="nextFileLink" class="nav" href="z_990bbba6a1643819_temporal_clustering_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
-            <a class="nav" href="https://coverage.readthedocs.io/en/7.13.4">coverage.py v7.13.4</a>,
-            created at 2026-02-23 04:35 +0000
+            <a class="nav" href="https://coverage.readthedocs.io/en/7.13.5">coverage.py v7.13.5</a>,
+            created at 2026-03-18 07:33 +0000
         </p>
         <aside class="hidden">
             <button type="button" class="button_next_chunk" data-shortcut="j"></button>
@@ -278,7 +278,7 @@
     <p class="mis show_mis"><span class="n"><a id="t196" href="#t196">196</a></span><span class="t">        <span class="nam">chain</span><span class="op">.</span><span class="nam">evidence_hash</span> <span class="op">=</span> <span class="nam">self</span><span class="op">.</span><span class="nam">compute_chain_hash</span><span class="op">(</span><span class="nam">chain</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t197" href="#t197">197</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="mis show_mis"><span class="n"><a id="t198" href="#t198">198</a></span><span class="t">        <span class="nam">self</span><span class="op">.</span><span class="nam">logger</span><span class="op">.</span><span class="nam">info</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
-    <p class="mis mis2 show_mis"><span class="n"><a id="t199" href="#t199">199</a></span><span class="t">            <span class="str">f"Constructed ownership chain {chain.chain_id} with {len(chain.nodes)} nodes"</span>&nbsp;</span><span class="r"></span></p>
+    <p class="mis mis2 show_mis"><span class="n"><a id="t199" href="#t199">199</a></span><span class="t">            <span class="fst">f"</span><span class="fst">Constructed ownership chain </span><span class="op">{</span><span class="nam">chain</span><span class="op">.</span><span class="nam">chain_id</span><span class="op">}</span><span class="fst"> with </span><span class="op">{</span><span class="nam">len</span><span class="op">(</span><span class="nam">chain</span><span class="op">.</span><span class="nam">nodes</span><span class="op">)</span><span class="op">}</span><span class="fst"> nodes</span><span class="fst">"</span>&nbsp;</span><span class="r"></span></p>
     <p class="mis mis2 show_mis"><span class="n"><a id="t200" href="#t200">200</a></span><span class="t">        <span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t201" href="#t201">201</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="mis show_mis"><span class="n"><a id="t202" href="#t202">202</a></span><span class="t">        <span class="key">return</span> <span class="nam">chain</span>&nbsp;</span><span class="r"></span></p>
@@ -352,8 +352,8 @@
     <p class="mis show_mis"><span class="n"><a id="t270" href="#t270">270</a></span><span class="t">                <span class="nam">chain</span><span class="op">.</span><span class="nam">add_node</span><span class="op">(</span><span class="nam">node</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t271" href="#t271">271</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="mis show_mis"><span class="n"><a id="t272" href="#t272">272</a></span><span class="t">                <span class="nam">self</span><span class="op">.</span><span class="nam">logger</span><span class="op">.</span><span class="nam">debug</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
-    <p class="mis mis2 show_mis"><span class="n"><a id="t273" href="#t273">273</a></span><span class="t">                    <span class="str">f"Added node {node.node_id} for entity {entity.entity_name} "</span>&nbsp;</span><span class="r"></span></p>
-    <p class="mis mis2 show_mis"><span class="n"><a id="t274" href="#t274">274</a></span><span class="t">                    <span class="str">f"(type: {entity.entity_type.value}, control: {control_assessment.overall_control_probability})"</span>&nbsp;</span><span class="r"></span></p>
+    <p class="mis mis2 show_mis"><span class="n"><a id="t273" href="#t273">273</a></span><span class="t">                    <span class="fst">f"</span><span class="fst">Added node </span><span class="op">{</span><span class="nam">node</span><span class="op">.</span><span class="nam">node_id</span><span class="op">}</span><span class="fst"> for entity </span><span class="op">{</span><span class="nam">entity</span><span class="op">.</span><span class="nam">entity_name</span><span class="op">}</span><span class="fst"> </span><span class="fst">"</span>&nbsp;</span><span class="r"></span></p>
+    <p class="mis mis2 show_mis"><span class="n"><a id="t274" href="#t274">274</a></span><span class="t">                    <span class="fst">f"</span><span class="fst">(type: </span><span class="op">{</span><span class="nam">entity</span><span class="op">.</span><span class="nam">entity_type</span><span class="op">.</span><span class="nam">value</span><span class="op">}</span><span class="fst">, control: </span><span class="op">{</span><span class="nam">control_assessment</span><span class="op">.</span><span class="nam">overall_control_probability</span><span class="op">}</span><span class="fst">)</span><span class="fst">"</span>&nbsp;</span><span class="r"></span></p>
     <p class="mis mis2 show_mis"><span class="n"><a id="t275" href="#t275">275</a></span><span class="t">                <span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t276" href="#t276">276</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="mis show_mis"><span class="n"><a id="t277" href="#t277">277</a></span><span class="t">        <span class="key">return</span> <span class="nam">chain</span>&nbsp;</span><span class="r"></span></p>
@@ -519,8 +519,8 @@
             <a class="nav" href="index.html">&Hat; index</a> &nbsp; &nbsp;
             <a class="nav" href="z_990bbba6a1643819_temporal_clustering_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
-            <a class="nav" href="https://coverage.readthedocs.io/en/7.13.4">coverage.py v7.13.4</a>,
-            created at 2026-02-23 04:35 +0000
+            <a class="nav" href="https://coverage.readthedocs.io/en/7.13.5">coverage.py v7.13.5</a>,
+            created at 2026-03-18 07:33 +0000
         </p>
     </div>
 </footer>

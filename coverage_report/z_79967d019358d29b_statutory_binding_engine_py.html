@@ -64,8 +64,8 @@
             <a id="indexLink" class="nav" href="index.html">&Hat; index</a> &nbsp; &nbsp;
             <a id="nextFileLink" class="nav" href="z_fe95c6d4fcf504b4___init___py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
-            <a class="nav" href="https://coverage.readthedocs.io/en/7.13.4">coverage.py v7.13.4</a>,
-            created at 2026-02-23 04:35 +0000
+            <a class="nav" href="https://coverage.readthedocs.io/en/7.13.5">coverage.py v7.13.5</a>,
+            created at 2026-03-18 07:33 +0000
         </p>
         <aside class="hidden">
             <button type="button" class="button_next_chunk" data-shortcut="j"></button>
@@ -433,7 +433,7 @@
     <p class="mis show_mis"><span class="n"><a id="t351" href="#t351">351</a></span><span class="t">        <span class="nam">confidence</span> <span class="op">=</span> <span class="nam">violation_details</span><span class="op">.</span><span class="nam">get</span><span class="op">(</span><span class="str">'confidence'</span><span class="op">,</span> <span class="num">0.85</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t352" href="#t352">352</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="mis show_mis"><span class="n"><a id="t353" href="#t353">353</a></span><span class="t">        <span class="nam">binding</span> <span class="op">=</span> <span class="nam">StatutoryBinding</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
-    <p class="mis mis2 show_mis"><span class="n"><a id="t354" href="#t354">354</a></span><span class="t">            <span class="nam">binding_id</span><span class="op">=</span><span class="str">f"BIND_{violation_id}"</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
+    <p class="mis mis2 show_mis"><span class="n"><a id="t354" href="#t354">354</a></span><span class="t">            <span class="nam">binding_id</span><span class="op">=</span><span class="fst">f"</span><span class="fst">BIND_</span><span class="op">{</span><span class="nam">violation_id</span><span class="op">}</span><span class="fst">"</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="mis mis2 show_mis"><span class="n"><a id="t355" href="#t355">355</a></span><span class="t">            <span class="nam">violation_id</span><span class="op">=</span><span class="nam">violation_id</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="mis mis2 show_mis"><span class="n"><a id="t356" href="#t356">356</a></span><span class="t">            <span class="nam">violation_type</span><span class="op">=</span><span class="nam">violation_type</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="mis mis2 show_mis"><span class="n"><a id="t357" href="#t357">357</a></span><span class="t">            <span class="nam">statutes</span><span class="op">=</span><span class="nam">statutes</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
@@ -461,7 +461,7 @@
     <p class="pln"><span class="n"><a id="t379" href="#t379">379</a></span><span class="t"><span class="str">        """</span>&nbsp;</span><span class="r"></span></p>
     <p class="mis show_mis"><span class="n"><a id="t380" href="#t380">380</a></span><span class="t">        <span class="nam">bindings</span> <span class="op">=</span> <span class="op">[</span><span class="op">]</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t381" href="#t381">381</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
-    <p class="mis show_mis"><span class="n"><a id="t382" href="#t382">382</a></span><span class="t">        <span class="nam">self</span><span class="op">.</span><span class="nam">logger</span><span class="op">.</span><span class="nam">info</span><span class="op">(</span><span class="str">f"Binding {len(violations)} violations to statutes..."</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="mis show_mis"><span class="n"><a id="t382" href="#t382">382</a></span><span class="t">        <span class="nam">self</span><span class="op">.</span><span class="nam">logger</span><span class="op">.</span><span class="nam">info</span><span class="op">(</span><span class="fst">f"</span><span class="fst">Binding </span><span class="op">{</span><span class="nam">len</span><span class="op">(</span><span class="nam">violations</span><span class="op">)</span><span class="op">}</span><span class="fst"> violations to statutes...</span><span class="fst">"</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t383" href="#t383">383</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="mis show_mis"><span class="n"><a id="t384" href="#t384">384</a></span><span class="t">        <span class="key">for</span> <span class="nam">violation</span> <span class="key">in</span> <span class="nam">violations</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
     <p class="mis show_mis"><span class="n"><a id="t385" href="#t385">385</a></span><span class="t">            <span class="key">try</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
@@ -477,10 +477,10 @@
     <p class="mis show_mis"><span class="n"><a id="t395" href="#t395">395</a></span><span class="t">                <span class="nam">bindings</span><span class="op">.</span><span class="nam">append</span><span class="op">(</span><span class="nam">binding</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t396" href="#t396">396</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="mis show_mis"><span class="n"><a id="t397" href="#t397">397</a></span><span class="t">            <span class="key">except</span> <span class="nam">Exception</span> <span class="key">as</span> <span class="nam">e</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
-    <p class="mis show_mis"><span class="n"><a id="t398" href="#t398">398</a></span><span class="t">                <span class="nam">self</span><span class="op">.</span><span class="nam">logger</span><span class="op">.</span><span class="nam">warning</span><span class="op">(</span><span class="str">f"Failed to bind violation {violation_id}: {e}"</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="mis show_mis"><span class="n"><a id="t398" href="#t398">398</a></span><span class="t">                <span class="nam">self</span><span class="op">.</span><span class="nam">logger</span><span class="op">.</span><span class="nam">warning</span><span class="op">(</span><span class="fst">f"</span><span class="fst">Failed to bind violation </span><span class="op">{</span><span class="nam">violation_id</span><span class="op">}</span><span class="fst">: </span><span class="op">{</span><span class="nam">e</span><span class="op">}</span><span class="fst">"</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="mis show_mis"><span class="n"><a id="t399" href="#t399">399</a></span><span class="t">                <span class="key">continue</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t400" href="#t400">400</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
-    <p class="mis show_mis"><span class="n"><a id="t401" href="#t401">401</a></span><span class="t">        <span class="nam">self</span><span class="op">.</span><span class="nam">logger</span><span class="op">.</span><span class="nam">info</span><span class="op">(</span><span class="str">f"&#10003; Successfully bound {len(bindings)} violations to statutes"</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="mis show_mis"><span class="n"><a id="t401" href="#t401">401</a></span><span class="t">        <span class="nam">self</span><span class="op">.</span><span class="nam">logger</span><span class="op">.</span><span class="nam">info</span><span class="op">(</span><span class="fst">f"</span><span class="fst">&#10003; Successfully bound </span><span class="op">{</span><span class="nam">len</span><span class="op">(</span><span class="nam">bindings</span><span class="op">)</span><span class="op">}</span><span class="fst"> violations to statutes</span><span class="fst">"</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t402" href="#t402">402</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="mis show_mis"><span class="n"><a id="t403" href="#t403">403</a></span><span class="t">        <span class="key">return</span> <span class="nam">bindings</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t404" href="#t404">404</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
@@ -540,8 +540,8 @@
     <p class="pln"><span class="n"><a id="t458" href="#t458">458</a></span><span class="t">        <span class="com"># Get base explanation or use default</span>&nbsp;</span><span class="r"></span></p>
     <p class="mis show_mis"><span class="n"><a id="t459" href="#t459">459</a></span><span class="t">        <span class="nam">explanation</span> <span class="op">=</span> <span class="nam">explanations</span><span class="op">.</span><span class="nam">get</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
     <p class="mis mis2 show_mis"><span class="n"><a id="t460" href="#t460">460</a></span><span class="t">            <span class="nam">violation_type</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
-    <p class="mis mis2 show_mis"><span class="n"><a id="t461" href="#t461">461</a></span><span class="t">            <span class="str">f"The {violation_type} violates federal securities regulations and may result in "</span>&nbsp;</span><span class="r"></span></p>
-    <p class="mis mis2 show_mis"><span class="n"><a id="t462" href="#t462">462</a></span><span class="t">            <span class="str">f"civil and/or criminal enforcement action."</span>&nbsp;</span><span class="r"></span></p>
+    <p class="mis mis2 show_mis"><span class="n"><a id="t461" href="#t461">461</a></span><span class="t">            <span class="fst">f"</span><span class="fst">The </span><span class="op">{</span><span class="nam">violation_type</span><span class="op">}</span><span class="fst"> violates federal securities regulations and may result in </span><span class="fst">"</span>&nbsp;</span><span class="r"></span></p>
+    <p class="mis mis2 show_mis"><span class="n"><a id="t462" href="#t462">462</a></span><span class="t">            <span class="fst">f"</span><span class="fst">civil and/or criminal enforcement action.</span><span class="fst">"</span>&nbsp;</span><span class="r"></span></p>
     <p class="mis mis2 show_mis"><span class="n"><a id="t463" href="#t463">463</a></span><span class="t">        <span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t464" href="#t464">464</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t465" href="#t465">465</a></span><span class="t">        <span class="com"># Add statute-specific context</span>&nbsp;</span><span class="r"></span></p>
@@ -700,8 +700,8 @@
             <a class="nav" href="index.html">&Hat; index</a> &nbsp; &nbsp;
             <a class="nav" href="z_fe95c6d4fcf504b4___init___py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
-            <a class="nav" href="https://coverage.readthedocs.io/en/7.13.4">coverage.py v7.13.4</a>,
-            created at 2026-02-23 04:35 +0000
+            <a class="nav" href="https://coverage.readthedocs.io/en/7.13.5">coverage.py v7.13.5</a>,
+            created at 2026-03-18 07:33 +0000
         </p>
     </div>
 </footer>

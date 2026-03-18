@@ -64,8 +64,8 @@
             <a id="indexLink" class="nav" href="index.html">&Hat; index</a> &nbsp; &nbsp;
             <a id="nextFileLink" class="nav" href="z_7d4ff52b5c825f8b___init___py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
-            <a class="nav" href="https://coverage.readthedocs.io/en/7.13.4">coverage.py v7.13.4</a>,
-            created at 2026-02-23 04:35 +0000
+            <a class="nav" href="https://coverage.readthedocs.io/en/7.13.5">coverage.py v7.13.5</a>,
+            created at 2026-03-18 07:33 +0000
         </p>
         <aside class="hidden">
             <button type="button" class="button_next_chunk" data-shortcut="j"></button>
@@ -348,10 +348,10 @@
     <p class="pln"><span class="n"><a id="t266" href="#t266">266</a></span><span class="t">        <span class="com"># Concatenate cluster identifiers and metadata</span>&nbsp;</span><span class="r"></span></p>
     <p class="mis show_mis"><span class="n"><a id="t267" href="#t267">267</a></span><span class="t">        <span class="nam">evidence_content</span> <span class="op">=</span> <span class="op">[</span><span class="op">]</span>&nbsp;</span><span class="r"></span></p>
     <p class="mis show_mis"><span class="n"><a id="t268" href="#t268">268</a></span><span class="t">        <span class="key">for</span> <span class="nam">cluster</span> <span class="key">in</span> <span class="nam">sorted</span><span class="op">(</span><span class="nam">clusters</span><span class="op">,</span> <span class="nam">key</span><span class="op">=</span><span class="key">lambda</span> <span class="nam">c</span><span class="op">:</span> <span class="nam">c</span><span class="op">.</span><span class="nam">cluster_id</span><span class="op">)</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
-    <p class="mis show_mis"><span class="n"><a id="t269" href="#t269">269</a></span><span class="t">            <span class="nam">evidence_content</span><span class="op">.</span><span class="nam">append</span><span class="op">(</span><span class="str">f"{cluster.cluster_id}"</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
-    <p class="mis show_mis"><span class="n"><a id="t270" href="#t270">270</a></span><span class="t">            <span class="nam">evidence_content</span><span class="op">.</span><span class="nam">append</span><span class="op">(</span><span class="str">f"{cluster.start_date.isoformat()}"</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
-    <p class="mis show_mis"><span class="n"><a id="t271" href="#t271">271</a></span><span class="t">            <span class="nam">evidence_content</span><span class="op">.</span><span class="nam">append</span><span class="op">(</span><span class="str">f"{cluster.end_date.isoformat()}"</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
-    <p class="mis show_mis"><span class="n"><a id="t272" href="#t272">272</a></span><span class="t">            <span class="nam">evidence_content</span><span class="op">.</span><span class="nam">append</span><span class="op">(</span><span class="str">f"{len(cluster.transactions)}"</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="mis show_mis"><span class="n"><a id="t269" href="#t269">269</a></span><span class="t">            <span class="nam">evidence_content</span><span class="op">.</span><span class="nam">append</span><span class="op">(</span><span class="fst">f"</span><span class="op">{</span><span class="nam">cluster</span><span class="op">.</span><span class="nam">cluster_id</span><span class="op">}</span><span class="fst">"</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="mis show_mis"><span class="n"><a id="t270" href="#t270">270</a></span><span class="t">            <span class="nam">evidence_content</span><span class="op">.</span><span class="nam">append</span><span class="op">(</span><span class="fst">f"</span><span class="op">{</span><span class="nam">cluster</span><span class="op">.</span><span class="nam">start_date</span><span class="op">.</span><span class="nam">isoformat</span><span class="op">(</span><span class="op">)</span><span class="op">}</span><span class="fst">"</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="mis show_mis"><span class="n"><a id="t271" href="#t271">271</a></span><span class="t">            <span class="nam">evidence_content</span><span class="op">.</span><span class="nam">append</span><span class="op">(</span><span class="fst">f"</span><span class="op">{</span><span class="nam">cluster</span><span class="op">.</span><span class="nam">end_date</span><span class="op">.</span><span class="nam">isoformat</span><span class="op">(</span><span class="op">)</span><span class="op">}</span><span class="fst">"</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="mis show_mis"><span class="n"><a id="t272" href="#t272">272</a></span><span class="t">            <span class="nam">evidence_content</span><span class="op">.</span><span class="nam">append</span><span class="op">(</span><span class="fst">f"</span><span class="op">{</span><span class="nam">len</span><span class="op">(</span><span class="nam">cluster</span><span class="op">.</span><span class="nam">transactions</span><span class="op">)</span><span class="op">}</span><span class="fst">"</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t273" href="#t273">273</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="mis show_mis"><span class="n"><a id="t274" href="#t274">274</a></span><span class="t">        <span class="nam">evidence_str</span> <span class="op">=</span> <span class="str">"|"</span><span class="op">.</span><span class="nam">join</span><span class="op">(</span><span class="nam">evidence_content</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="mis show_mis"><span class="n"><a id="t275" href="#t275">275</a></span><span class="t">        <span class="key">return</span> <span class="nam">hashlib</span><span class="op">.</span><span class="nam">sha256</span><span class="op">(</span><span class="nam">evidence_str</span><span class="op">.</span><span class="nam">encode</span><span class="op">(</span><span class="str">'utf-8'</span><span class="op">)</span><span class="op">)</span><span class="op">.</span><span class="nam">hexdigest</span><span class="op">(</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
@@ -427,8 +427,8 @@
             <a class="nav" href="index.html">&Hat; index</a> &nbsp; &nbsp;
             <a class="nav" href="z_7d4ff52b5c825f8b___init___py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
-            <a class="nav" href="https://coverage.readthedocs.io/en/7.13.4">coverage.py v7.13.4</a>,
-            created at 2026-02-23 04:35 +0000
+            <a class="nav" href="https://coverage.readthedocs.io/en/7.13.5">coverage.py v7.13.5</a>,
+            created at 2026-03-18 07:33 +0000
         </p>
     </div>
 </footer>
