@@ -92,6 +92,12 @@ class JLAWArgumentParser:
             action='store_true',
             help='Strict execution mode (enforce phase gates, halt on failures)'
         )
+        exec_group.add_argument(
+            '--skip-preflight',
+            dest='skip_preflight',
+            action='store_true',
+            help='Skip pre-flight validation checks (not recommended)'
+        )
         
         # ═══ Investigation Type (Legacy compatibility) ═══
         investigation_group = self.parser.add_argument_group('Investigation Focus')

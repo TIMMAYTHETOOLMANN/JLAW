@@ -224,7 +224,13 @@ class UnifiedAnalysisResult:
 
 class MasterExecutionController:
     """
-    Master Execution Controller - Single canonical entry point for forensic analysis.
+    Master Execution Controller - Legacy 9-phase entry point for forensic analysis.
+
+    .. deprecated::
+        Use :class:`UnifiedForensicOrchestrator` from
+        ``src.core.unified_orchestrator`` which provides an 11-phase pipeline
+        and supersedes this controller.  This class is retained for backward
+        compatibility and will be removed in a future version.
     
     Harmonizes the 9-phase orchestration architecture with the 15-node recursive
     engine to produce DOJ-grade forensic dossiers.

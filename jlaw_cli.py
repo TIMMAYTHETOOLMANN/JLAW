@@ -344,6 +344,48 @@ async def main() -> int:
     except Exception as e:
         OutputFormatter.print_error(f"Configuration error: {e}", console)
         return 1
+
+    # ── Pre-flight validation gate ──
+    # Validates environment variables, API keys, and critical dependencies
+    # before any analysis work begins.  Full stop on failure.
+    if not getattr(args, 'skip_preflight', False):
+        try:
+            from scripts.preflight_check import PreFlightChecker
+            OutputFormatter.print_info(
+                "Running pre-flight validation (use --skip-preflight to bypass)...",
+                console,
+            )
+            checker = PreFlightChecker(verbose=getattr(args, 'verbose', False))
+            preflight_report = await checker.run_all_checks()
+
+            if not preflight_report.passed:
+                failed = [
+                    c for c in preflight_report.checks if c.status == "fail"
+                ]
+                OutputFormatter.print_error(
+                    f"Pre-flight validation FAILED — {len(failed)} critical "
+                    f"check(s) did not pass.  Resolve the issues above before "
+                    f"running analysis.",
+                    console,
+                )
+                for c in failed:
+                    OutputFormatter.print_error(
+                        f"  ✗ {c.component}: {c.message}"
+                        + (f" — {c.error}" if c.error else ""),
+                        console,
+                    )
+                return 1
+
+            OutputFormatter.print_success(
+                "Pre-flight validation passed — all systems green.", console
+            )
+        except Exception as e:
+            # If the preflight module itself fails to load, warn but continue
+            logger.warning(f"Pre-flight check module error (non-fatal): {e}")
+            OutputFormatter.print_warning(
+                f"Pre-flight check unavailable: {e}. Proceeding with caution.",
+                console,
+            )
     
     # Prepare target configuration
     try:

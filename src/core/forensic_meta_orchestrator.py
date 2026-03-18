@@ -154,6 +154,11 @@ class InvestigationResult:
 class ForensicMetaOrchestrator:
     """
     Meta-orchestrator for dynamic forensic agent spawning and coordination.
+
+    .. deprecated::
+        Use :class:`UnifiedForensicOrchestrator` from
+        ``src.core.unified_orchestrator`` instead.  This class is retained
+        for backward compatibility and will be removed in a future version.
     
     Provides:
     - Dynamic agent selection based on violation patterns
