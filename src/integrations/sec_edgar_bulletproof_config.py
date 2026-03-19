@@ -825,6 +825,7 @@ class BulletproofSECEdgarClient:
             try:
                 filing_date = datetime.strptime(filing_date_str, '%Y-%m-%d').date()
             except ValueError:
+                logger.debug(f"Skipping filing with unparseable date: {filing_date_str!r}")
                 continue
             
             # Filter by date range
@@ -840,6 +841,7 @@ class BulletproofSECEdgarClient:
                 try:
                     report_date = datetime.strptime(report_date_str, '%Y-%m-%d').date()
                 except ValueError:
+                    logger.debug(f"Could not parse report date: {report_date_str!r}")
                     pass
             
             accession = accessions[i]

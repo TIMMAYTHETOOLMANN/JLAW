@@ -121,6 +121,11 @@ class UnifiedResult:
 class UnifiedAgentOrchestrator:
     """
     Master orchestrator for multi-tier agent coordination.
+
+    .. deprecated::
+        Use :class:`UnifiedForensicOrchestrator` from
+        ``src.core.unified_orchestrator`` instead.  This class is retained
+        for backward compatibility and will be removed in a future version.
     
     Coordinates all 4 agent tiers in a unified investigation workflow:
     - Tier 1: Primary dual-agent analysis

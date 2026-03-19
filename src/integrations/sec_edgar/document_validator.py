@@ -237,7 +237,8 @@ class SECDocumentValidator:
             try:
                 json.loads(content)
                 return DocumentType.JSON
-            except:
+            except json.JSONDecodeError:
+                logger.debug("Content starts with JSON delimiter but is not valid JSON")
                 pass
         
         # Check for HTML

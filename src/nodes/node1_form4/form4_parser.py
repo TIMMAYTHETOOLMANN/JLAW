@@ -535,6 +535,7 @@ class Form4Parser:
             try:
                 return float(text.replace(',', ''))
             except ValueError:
+                logger.debug(f"Failed to parse float from text: '{text}'")
                 return 0.0
         return 0.0
     
@@ -555,6 +556,7 @@ class Form4Parser:
             try:
                 return datetime.strptime(date_str, '%m/%d/%Y').date()
             except ValueError:
+                logger.debug(f"Failed to parse date string: '{date_str}'")
                 return None
 
     @staticmethod

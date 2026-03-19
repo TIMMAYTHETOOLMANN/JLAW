@@ -369,11 +369,13 @@ class EvidenceAttributionLinker:
         if isinstance(date_value, str):
             try:
                 return datetime.fromisoformat(date_value.replace('Z', '+00:00')).date()
-            except:
+            except Exception as e:
+                logger.debug(f"ISO date parsing failed for '{date_value}': {e}")
                 try:
                     from dateutil import parser
                     return parser.parse(date_value).date()
-                except:
+                except Exception as e2:
+                    logger.debug(f"Dateutil parsing also failed for '{date_value}': {e2}")
                     return None
         
         return None

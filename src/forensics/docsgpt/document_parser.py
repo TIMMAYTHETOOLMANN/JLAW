@@ -515,7 +515,8 @@ class XBRLParser:
                         })
                     
                     facts[concept].append(fact_info)
-                except (ValueError, AttributeError):
+                except (ValueError, AttributeError) as e:
+                    logger.debug("Failed to extract XBRL fact from element '%s': %s", elem.tag, e)
                     pass
         
         return {"facts": facts, "contexts": contexts}
@@ -540,7 +541,8 @@ class XBRLParser:
                         "context": elem.get('contextRef'),
                         "unit": elem.get('unitRef')
                     })
-                except (ValueError, AttributeError):
+                except (ValueError, AttributeError) as e:
+                    logger.debug("Failed to parse ElementTree XBRL value '%s': %s", elem.text.strip() if elem.text else 'None', e)
                     pass
         
         return {"facts": facts, "contexts": {}}

@@ -276,6 +276,7 @@ class TemporalConsistencyValidator:
                 try:
                     return datetime.strptime(date_val, fmt).date()
                 except ValueError:
+                    logger.debug(f"Date string '{date_val}' did not match format '{fmt}'")
                     continue
         return date.today()
     

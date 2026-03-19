@@ -83,6 +83,12 @@ class BatchResult:
 class BatchForensicOrchestrator:
     """
     Orchestrate multiple simultaneous investigations.
+
+    .. deprecated::
+        Use :class:`UnifiedForensicOrchestrator` from
+        ``src.core.unified_orchestrator`` for single-company analysis.
+        Batch functionality should invoke ``UnifiedForensicOrchestrator``
+        in a loop.  This class will be removed in a future version.
     
     Features:
     - Parallel execution with resource limits (semaphore)

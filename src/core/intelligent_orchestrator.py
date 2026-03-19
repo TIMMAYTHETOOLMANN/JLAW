@@ -45,6 +45,11 @@ class IntelligentOrchestrator:
     - Investigation objectives
     - Resource constraints
     - Prior node findings
+
+    .. deprecated::
+        Use :class:`UnifiedForensicOrchestrator` from
+        ``src.core.unified_orchestrator`` instead.  This class is retained
+        for backward compatibility and will be removed in a future version.
     """
     
     # Node requirements by investigation type

@@ -308,6 +308,7 @@ class PolygonClient:
             try:
                 exp_date = datetime.strptime(exp_str, "%Y-%m-%d").date()
             except ValueError:
+                logger.debug(f"Skipping option contract with invalid expiration date: {exp_str!r}")
                 continue
             
             contracts.append(OptionContract(

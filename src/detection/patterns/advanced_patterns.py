@@ -890,7 +890,8 @@ class AdvancedPatternDetector:
                     is_zero_dollar = False
                     try:
                         is_zero_dollar = (float(price) == 0.0 and shares > 0)
-                    except (ValueError, TypeError):
+                    except (ValueError, TypeError) as e:
+                        logger.debug(f"Failed to parse price '{price}' for zero-dollar check: {e}")
                         pass
 
                     # Classify transaction type
@@ -1651,7 +1652,8 @@ class AdvancedPatternDetector:
             try:
                 if float(price) == 0.0 and shares > 0:
                     zero_dollar_txns.append(trade)
-            except (ValueError, TypeError):
+            except (ValueError, TypeError) as e:
+                logger.debug(f"Failed to convert price '{price}' in zero-dollar forensic analysis: {e}")
                 continue
 
         if not zero_dollar_txns:
@@ -1713,7 +1715,8 @@ class AdvancedPatternDetector:
                         if nearest_event_days is None or delta < nearest_event_days:
                             nearest_event_days = delta
                             nearest_event_type = event['type']
-                    except (TypeError, AttributeError):
+                    except (TypeError, AttributeError) as e:
+                        logger.debug(f"Failed to compute event proximity for event '{event}': {e}")
                         continue
 
             # Build risk indicators

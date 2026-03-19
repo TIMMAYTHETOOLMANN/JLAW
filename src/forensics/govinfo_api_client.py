@@ -1841,6 +1841,7 @@ class GovInfoAPIClient:
         if self.session and not self.session.closed:
             try:
                 asyncio.get_event_loop().run_until_complete(self.close())
-            except Exception:
+            except Exception as e:
+                logger.debug("Error during GovInfoClient destructor cleanup: %s", e)
                 pass
 

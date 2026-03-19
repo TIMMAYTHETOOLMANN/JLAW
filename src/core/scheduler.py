@@ -368,6 +368,7 @@ class InvestigationScheduler:
             try:
                 await self._task
             except asyncio.CancelledError:
+                logger.debug("Scheduler task cancellation confirmed during stop")
                 pass
         
         # Wait for active investigations to complete

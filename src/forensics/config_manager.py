@@ -171,8 +171,9 @@ class ConfigurationManager:
             if not os.getenv('OPENAI_DEFAULT_MODEL'):
                 os.environ['OPENAI_DEFAULT_MODEL'] = openai.model
                 logger.info("OPENAI_DEFAULT_MODEL set to %s", openai.model)
-        except Exception:
+        except Exception as e:
             # Non-fatal if environment mutation is restricted
+            logger.debug("Could not set OPENAI_DEFAULT_MODEL env var: %s", e)
             pass
 
         # Anthropic Claude Configuration (for multi-pass deep analysis)

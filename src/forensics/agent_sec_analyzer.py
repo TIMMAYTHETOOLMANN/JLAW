@@ -218,7 +218,8 @@ Maintain forensic chain of custody:
                                             'filing_date': filing_date,
                                             'extraction_strategy': 'alternate_url'
                                         }
-                        except Exception:
+                        except Exception as e:
+                            logger.debug("Alternate URL fetch failed for %s: %s", alt_url, e)
                             continue
 
             # Strategy 3: Fall back to manual analyzer
@@ -312,7 +313,8 @@ Maintain forensic chain of custody:
                                 'statute': '15 USC § 78p(a)',
                                 'url': url
                             })
-                    except ValueError:
+                    except ValueError as e:
+                        logger.debug("Failed to parse price value '%s': %s", price, e)
                         continue
 
             logger.info(f"[Agent Tool] ✓ Found {len(violations)} violations")
