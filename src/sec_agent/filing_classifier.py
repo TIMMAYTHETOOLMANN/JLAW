@@ -30,7 +30,7 @@ from typing import Any, Dict, List, Optional, Tuple
 
 from src.detection.actor_role_classifier import ActorRoleClassifier, ActorRole
 from src.detection.actor_extraction_engine import ActorExtractionEngine, ActorProfile
-from src.integrations.sec_edgar.models import SECFiling, FormType
+from src.integrations.sec_edgar.models import SECFiling
 
 logger = logging.getLogger(__name__)
 

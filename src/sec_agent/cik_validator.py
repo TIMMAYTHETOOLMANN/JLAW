@@ -201,7 +201,7 @@ class CIKValidator:
         )
 
         # Basic format checks
-        if not normalized:
+        if not normalized or normalized == "0":
             result.errors.append("CIK is empty after normalization")
             return result
 

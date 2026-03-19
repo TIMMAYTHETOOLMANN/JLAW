@@ -151,8 +151,7 @@ class SECBundleGenerator:
         # Wire to JLAW production generators
         self._evidence_packager = EvidencePackager(output_dir=output_dir)
         self._citation_engine = StatutoryCitationEngine(
-            govinfo_api_key=govinfo_api_key,
-            use_cache=True,
+            api_key=govinfo_api_key,
         )
 
         logger.info(
