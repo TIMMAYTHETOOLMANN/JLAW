@@ -34,6 +34,8 @@ from pathlib import Path
 from typing import Dict, Any, Optional
 from dataclasses import dataclass, field
 
+from src.core.exceptions import PhaseGateFailure
+
 logger = logging.getLogger(__name__)
 
 
@@ -112,9 +114,26 @@ class UnifiedForensicOrchestrator:
         logger.info(f"Analysis Period: {start_date} to {end_date}")
         logger.info(f"Strict Mode: {strict_mode} | Web Intelligence: {enable_web_intelligence}")
 
+    # Phases whose failure MUST halt the pipeline.  A phase result
+    # whose ``status`` is not in {``"success"``, ``"skipped"``} will
+    # cause :class:`PhaseGateFailure` to be raised, preventing
+    # downstream phases from running on incomplete data.
+    _CRITICAL_PHASES = frozenset({
+        "phase_1",   # Configuration — cannot proceed without valid config
+        "phase_2",   # Data collection — no data means no analysis
+        "phase_4",   # 15-node recursive analysis — core findings
+        "phase_5",   # Pattern detection — 23 algorithms
+        "phase_8",   # Evidence chain — integrity is non-negotiable
+    })
+
     async def execute_full_analysis(self) -> UnifiedExecutionResult:
         """
         Execute complete 11-phase forensic analysis pipeline.
+
+        Phase gate validation is applied after every phase: if any
+        critical phase returns a status other than ``"success"`` or
+        ``"skipped"``, execution is halted immediately and a
+        :class:`PhaseGateFailure` is raised.
         """
         self._log("Starting unified forensic analysis (11-phase pipeline)")
 
@@ -131,27 +150,33 @@ class UnifiedForensicOrchestrator:
             # Phase 1: Configuration & Target Acquisition
             self._current_phase = 1
             results.phases['phase_1'] = await self._execute_phase_1()
+            self._enforce_phase_gate('phase_1', results.phases['phase_1'])
 
             # Phase 2: SEC EDGAR Data Collection
             self._current_phase = 2
             results.phases['phase_2'] = await self._execute_phase_2()
+            self._enforce_phase_gate('phase_2', results.phases['phase_2'])
 
             # Phase 3: Document Parsing & Indexing
             self._current_phase = 3
             results.phases['phase_3'] = await self._execute_phase_3()
+            self._enforce_phase_gate('phase_3', results.phases['phase_3'])
 
             # Phase 4: 15-Node Recursive Analysis
             self._current_phase = 4
             results.phases['phase_4'] = await self._execute_phase_4()
+            self._enforce_phase_gate('phase_4', results.phases['phase_4'])
 
             # Phase 5: Advanced Detection Patterns
             self._current_phase = 5
             results.phases['phase_5'] = await self._execute_phase_5()
+            self._enforce_phase_gate('phase_5', results.phases['phase_5'])
 
             # Phase 6: Dual-Agent AI Cross-Validation
             if self.enable_dual_agent:
                 self._current_phase = 6
                 results.phases['phase_6'] = await self._execute_phase_6()
+                self._enforce_phase_gate('phase_6', results.phases['phase_6'])
             else:
                 self._log("Phase 6 (Dual-Agent) skipped - disabled")
 
@@ -159,24 +184,29 @@ class UnifiedForensicOrchestrator:
             if self.enable_subagents:
                 self._current_phase = 7
                 results.phases['phase_7'] = await self._execute_phase_7()
+                self._enforce_phase_gate('phase_7', results.phases['phase_7'])
             else:
                 self._log("Phase 7 (Subagents) skipped - disabled")
 
             # Phase 8: Evidence Chain Finalization
             self._current_phase = 8
             results.phases['phase_8'] = await self._execute_phase_8()
+            self._enforce_phase_gate('phase_8', results.phases['phase_8'])
 
             # Phase 9: Web Intelligence & Contradiction Mapping
             self._current_phase = 9
             results.phases['phase_9'] = await self._execute_phase_9_web_intelligence()
+            self._enforce_phase_gate('phase_9', results.phases['phase_9'])
 
             # Phase 10: Forensic-Grade Visual Dossier Generation
             self._current_phase = 10
             results.phases['phase_10'] = await self._execute_phase_10_dossier()
+            self._enforce_phase_gate('phase_10', results.phases['phase_10'])
 
             # Phase 11: Analysis Bundle Export
             self._current_phase = 11
             results.phases['phase_11'] = await self._execute_phase_11_bundle()
+            self._enforce_phase_gate('phase_11', results.phases['phase_11'])
 
             results.status = 'complete'
             results.execution_log = self._execution_log
@@ -191,6 +221,49 @@ class UnifiedForensicOrchestrator:
             raise
 
         return results
+
+    def _enforce_phase_gate(
+        self,
+        phase_key: str,
+        phase_result: Dict[str, Any],
+    ) -> None:
+        """Validate that a phase completed successfully.
+
+        For **critical** phases (listed in :attr:`_CRITICAL_PHASES`),
+        any status other than ``"success"`` or ``"skipped"`` causes an
+        immediate :class:`PhaseGateFailure`.
+
+        For non-critical phases, a degraded/error status is logged as a
+        warning but does **not** halt execution.
+
+        Args:
+            phase_key: Identifier such as ``"phase_5"``.
+            phase_result: The dict returned by the phase method.
+
+        Raises:
+            PhaseGateFailure: If a critical phase did not succeed.
+        """
+        status = phase_result.get("status", "unknown")
+        if status in ("success", "skipped"):
+            return
+
+        error_detail = phase_result.get("error", "no details provided")
+        msg = (
+            f"Phase gate FAILED for {phase_key}: "
+            f"status={status!r}, error={error_detail!r}"
+        )
+
+        if phase_key in self._CRITICAL_PHASES:
+            logger.error(f"CRITICAL {msg} — halting pipeline")
+            self._log(msg, level="error")
+            raise PhaseGateFailure(
+                msg,
+                phase_id=phase_key,
+                rule="critical_phase_success_required",
+            )
+        else:
+            logger.warning(f"NON-CRITICAL {msg} — continuing pipeline")
+            self._log(msg, level="warning")
 
     # ═══════════════════════════════════════════════════════════════════
     # PHASES 1-8 (unchanged from v1)
@@ -404,9 +477,10 @@ class UnifiedForensicOrchestrator:
                 'patterns_triggered': patterns_triggered,
             }
         except Exception as e:
+            logger.error(f"Phase 5 error: {e}", exc_info=True)
             self._log(f"Phase 5 error: {e}", level="error")
             self._pattern_results = {}
-            return {'status': 'degraded', 'patterns_executed': 0, 'error': str(e)}
+            return {'status': 'error', 'patterns_executed': 0, 'error': str(e)}
 
     async def _execute_phase_6(self) -> Dict[str, Any]:
         """Phase 6: Dual-Agent AI Cross-Validation.

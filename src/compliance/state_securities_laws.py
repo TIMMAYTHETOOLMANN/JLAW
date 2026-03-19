@@ -433,7 +433,7 @@ class StateSecuritiesLawEngine:
                     years_str = criminal.split('years')[0].split()[-1]
                     years = int(years_str)
                     state_criminal_max = max(state_criminal_max, years)
-                except:
+                except (ValueError, IndexError):
                     pass
         
         # Federal typically has longer sentences for securities fraud (up to 25 years)

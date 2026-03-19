@@ -96,3 +96,29 @@ class PhaseTimeoutError(PhaseExecutionError):
     timely forensic analysis completion.
     """
     pass
+
+
+class NodeExecutionError(PhaseExecutionError):
+    """
+    A node in the recursive analysis engine failed to produce valid results.
+
+    Raised when:
+    - A node's ``analyze`` method returns ``None``, an empty list, or an
+      empty dict instead of meaningful output.
+    - A node catches an internal exception and cannot proceed.
+    - The FailLoud mixin detects that a node produced no results.
+
+    Attributes:
+        node_id: Identifier of the failing node (e.g. ``"NODE_5"``).
+    """
+
+    def __init__(self, message: str, node_id: Optional[str] = None):
+        """
+        Initialize node execution error.
+
+        Args:
+            message: Human-readable error message.
+            node_id: Identifier of the node that failed.
+        """
+        super().__init__(message)
+        self.node_id = node_id

@@ -448,6 +448,31 @@ class RecursiveProsecutorialEngine:
                 print(f"  ⚠ Cross-node correlation failed: {str(e)}")
                 logger.warning(f"Cross-node correlation failed: {e}", exc_info=True)
         
+        # ── Node result validation ──────────────────────────────────
+        # Count how many nodes returned status="error".  In strict mode
+        # the pipeline requires ≥80% of nodes to succeed (i.e. at most
+        # 3 of 16 may fail).  If more fail, raise to prevent downstream
+        # phases from running on incomplete data.
+        all_results = (
+            node_group_1_results + node_group_2_results
+            + node_group_3_results + node_group_4_results
+        )
+        failed_nodes = [r for r in all_results if r.status == "error"]
+        if failed_nodes:
+            failed_names = ", ".join(r.node_id for r in failed_nodes)
+            logger.warning(
+                f"{len(failed_nodes)}/{len(all_results)} nodes failed: "
+                f"{failed_names}"
+            )
+        if self.strict_mode and len(failed_nodes) > 3:
+            from src.core.exceptions import NodeExecutionError
+            raise NodeExecutionError(
+                f"{len(failed_nodes)}/{len(all_results)} nodes failed "
+                f"(strict mode requires ≥80% success). "
+                f"Failed: {', '.join(r.node_id for r in failed_nodes)}",
+                node_id=failed_nodes[0].node_id,
+            )
+
         execution_end = datetime.utcnow()
         total_time = (execution_end - execution_start).total_seconds()
         
@@ -757,6 +782,7 @@ class RecursiveProsecutorialEngine:
             
             return result
         except Exception as e:
+            logger.error(f"Node 1 error: {e}", exc_info=True)
             result = NodeResult(
                 node_id="NODE_1", node_name="Form 4 Analysis",
                 status="error", violations_found=0, alerts_generated=0,
@@ -932,7 +958,7 @@ class RecursiveProsecutorialEngine:
                 execution_time_seconds=time.time() - start
             )
         except Exception as e:
-            logger.error(f"Node 3 error: {e}")
+            logger.error(f"Node 3 error: {e}", exc_info=True)
             return NodeResult(
                 node_id="NODE_3", node_name="10-Q Analysis",
                 status="error", violations_found=0, alerts_generated=0,
@@ -981,7 +1007,7 @@ class RecursiveProsecutorialEngine:
                 execution_time_seconds=time.time() - start
             )
         except Exception as e:
-            logger.error(f"Node 4 error: {e}")
+            logger.error(f"Node 4 error: {e}", exc_info=True)
             return NodeResult(
                 node_id="NODE_4", node_name="10-K SOX Analysis",
                 status="error", violations_found=0, alerts_generated=0,
@@ -1030,7 +1056,7 @@ class RecursiveProsecutorialEngine:
                 execution_time_seconds=time.time() - start
             )
         except Exception as e:
-            logger.error(f"Node 5 error: {e}")
+            logger.error(f"Node 5 error: {e}", exc_info=True)
             return NodeResult(
                 node_id="NODE_5", node_name="IRC §83 Analysis",
                 status="error", violations_found=0, alerts_generated=0,
@@ -1117,7 +1143,7 @@ class RecursiveProsecutorialEngine:
             )
             
         except Exception as e:
-            logger.error(f"Node 6 error: {e}")
+            logger.error(f"Node 6 error: {e}", exc_info=True)
             return NodeResult(
                 node_id="NODE_6",
                 node_name="Enforcement Router",

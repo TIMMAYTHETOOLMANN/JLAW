@@ -428,7 +428,7 @@ class SECForensicAnalyzer:
             if filing_date:
                 try:
                     filing_dt = datetime.fromisoformat(filing_date.replace('Z', '+00:00'))
-                except:
+                except (ValueError, TypeError):
                     filing_dt = datetime.now()
             else:
                 filing_dt = datetime.now()

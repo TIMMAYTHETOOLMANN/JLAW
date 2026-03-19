@@ -556,12 +556,12 @@ class ActorExtractionEngine:
             try:
                 # Try ISO format first
                 return datetime.fromisoformat(date_value.replace('Z', '+00:00')).date()
-            except:
+            except (ValueError, TypeError):
                 try:
                     # Try common date formats
                     from dateutil import parser
                     return parser.parse(date_value).date()
-                except:
+                except Exception:
                     self.logger.debug(f"Could not parse date: {date_value}")
                     return None
         

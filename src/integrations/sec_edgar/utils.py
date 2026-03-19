@@ -228,7 +228,7 @@ def validate_cik(cik: str) -> bool:
     try:
         cik_clean = re.sub(r'\D', '', str(cik))
         return len(cik_clean) > 0 and len(cik_clean) <= 10 and cik_clean.isdigit()
-    except:
+    except (ValueError, TypeError, AttributeError):
         return False
 
 
@@ -245,5 +245,5 @@ def validate_accession_number(accession: str) -> bool:
     try:
         clean = accession.replace('-', '')
         return len(clean) >= 18 and clean.isdigit()
-    except:
+    except (ValueError, TypeError, AttributeError):
         return False

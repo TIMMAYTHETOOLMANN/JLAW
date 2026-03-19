@@ -932,7 +932,7 @@ class XMLParser:
             # Fallback to text extraction
             try:
                 return content.decode('utf-8', errors='ignore')
-            except:
+            except Exception:
                 return ""
     
     def _is_form4(self, root) -> bool:

@@ -6,7 +6,7 @@ def load_json(path):
     try:
         with open(path) as f:
             return json.load(f)
-    except:
+    except Exception:
         return None
 
 prev_base = "output/NKE_2019_PREVIOUS_SNAPSHOT"
