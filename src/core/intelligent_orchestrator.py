@@ -1,6 +1,12 @@
 """
 Intelligent Orchestrator - Meta-agent for dynamic execution optimization.
 
+.. deprecated::
+    **DEPRECATED** — Use :class:`UnifiedForensicOrchestrator` from
+    ``src.core.unified_orchestrator`` instead. See ``EXECUTION_AUTHORITY.md``
+    for the canonical execution path. This module is retained for backward
+    compatibility and will be removed in a future version.
+
 Selects optimal execution strategy based on:
 - Investigation type (insider trading, financial fraud, compliance)
 - Available data (which filing types exist)
@@ -98,6 +104,16 @@ class IntelligentOrchestrator:
     DERIVED_DATA_NODES = [5, 6, 11, 13, 14, 15]
     
     def __init__(self):
+        # DEPRECATION WARNING
+        import warnings
+        warnings.warn(
+            "IntelligentOrchestrator is deprecated. "
+            "Use UnifiedForensicOrchestrator from src.core.unified_orchestrator for DOJ-grade compliance. "
+            "This class will be removed in a future version.",
+            DeprecationWarning,
+            stacklevel=2
+        )
+
         self.logger = logging.getLogger(self.__class__.__name__)
     
     def create_execution_plan(

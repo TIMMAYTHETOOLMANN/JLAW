@@ -2,7 +2,12 @@
 Master Execution Controller - JLAW Unified Forensic Analysis Platform
 =====================================================================
 
-SINGLE CANONICAL ENTRY POINT for DOJ-grade forensic analysis.
+.. deprecated::
+    **DEPRECATED** — Use :class:`UnifiedForensicOrchestrator` from
+    ``src.core.unified_orchestrator`` which provides an 11-phase pipeline
+    and supersedes this controller. See ``EXECUTION_AUTHORITY.md`` for the
+    canonical execution path. This module is retained for backward
+    compatibility and will be removed in a future version.
 
 This controller harmonizes the 9-phase orchestration architecture with the
 16-node recursive engine to produce prosecution-ready forensic dossiers from

@@ -2,6 +2,14 @@
 Strict Execution Controller
 ============================
 
+.. deprecated::
+    **DEPRECATED** — Use :class:`UnifiedForensicOrchestrator` from
+    ``src.core.unified_orchestrator`` instead. See ``EXECUTION_AUTHORITY.md``
+    for the canonical execution path. Strict mode is now built into
+    ``UnifiedForensicOrchestrator`` via the ``strict_mode=True`` parameter.
+    This module is retained for backward compatibility and will be removed
+    in a future version.
+
 Orchestrates forensic analysis in strict mode with mandatory gate validation,
 cascade abort protocol, and comprehensive audit trails.
 """
@@ -32,6 +40,12 @@ class ExecutionAbortException(Exception):
 class StrictExecutionController:
     """
     Strict mode orchestrator for DOJ-grade forensic analysis.
+
+    .. deprecated::
+        Use :class:`UnifiedForensicOrchestrator` from
+        ``src.core.unified_orchestrator`` with ``strict_mode=True`` instead.
+        This class is retained for backward compatibility and will be removed
+        in a future version.
     
     Enforces:
     - Mandatory phase gate validation
@@ -55,6 +69,17 @@ class StrictExecutionController:
             case_id: Unique case identifier
             output_dir: Output directory for artifacts
         """
+        # DEPRECATION WARNING
+        import warnings
+        warnings.warn(
+            "StrictExecutionController is deprecated. "
+            "Use UnifiedForensicOrchestrator from src.core.unified_orchestrator "
+            "with strict_mode=True for DOJ-grade compliance. "
+            "This class will be removed in a future version.",
+            DeprecationWarning,
+            stacklevel=2
+        )
+
         self.config = config
         self.case_id = case_id
         self.output_dir = output_dir

@@ -2,6 +2,12 @@
 Supreme Orchestrator - Unified Meta-Controller
 ==============================================
 
+.. deprecated::
+    **DEPRECATED** — Use :class:`UnifiedForensicOrchestrator` from
+    ``src.core.unified_orchestrator`` instead. See ``EXECUTION_AUTHORITY.md``
+    for the canonical execution path. This module is retained for backward
+    compatibility and will be removed in a future version.
+
 Supreme meta-controller that intelligently selects execution strategy based on
 investigation priority and automatically routes to the optimal orchestrator.
 
@@ -171,6 +177,11 @@ class SupremeExecutionResult:
 class SupremeOrchestrator:
     """
     Supreme meta-controller that intelligently selects execution strategy.
+
+    .. deprecated::
+        Use :class:`UnifiedForensicOrchestrator` from
+        ``src.core.unified_orchestrator`` instead. This class is retained
+        for backward compatibility and will be removed in a future version.
     
     This is the highest-level orchestrator in JLAW, providing a unified entry
     point that automatically routes to the optimal execution strategy based on

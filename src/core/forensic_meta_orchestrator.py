@@ -2,6 +2,12 @@
 Forensic Meta-Orchestrator
 ==========================
 
+.. deprecated::
+    **DEPRECATED** — Use :class:`UnifiedForensicOrchestrator` from
+    ``src.core.unified_orchestrator`` instead. See ``EXECUTION_AUTHORITY.md``
+    for the canonical execution path. This module is retained for backward
+    compatibility and will be removed in a future version.
+
 Dynamic agent spawning and orchestration system for complex forensic
 investigations requiring specialized analysis and parallel execution.
 

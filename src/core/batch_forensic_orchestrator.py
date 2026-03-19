@@ -2,6 +2,13 @@
 Batch Forensic Orchestrator - Multi-Company Analysis
 ===================================================
 
+.. deprecated::
+    **DEPRECATED** — Use :class:`UnifiedForensicOrchestrator` from
+    ``src.core.unified_orchestrator`` instead. See ``EXECUTION_AUTHORITY.md``
+    for the canonical execution path. Batch functionality should invoke
+    ``UnifiedForensicOrchestrator`` in a loop. This module is retained for
+    backward compatibility and will be removed in a future version.
+
 Orchestrates multiple simultaneous forensic investigations with:
 - Parallel execution with resource limits
 - Comparative peer analysis

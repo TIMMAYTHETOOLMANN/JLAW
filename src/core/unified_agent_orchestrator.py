@@ -2,6 +2,12 @@
 Unified Agent Orchestrator - JLAW Multi-Tier Investigation Coordinator
 ======================================================================
 
+.. deprecated::
+    **DEPRECATED** — Use :class:`UnifiedForensicOrchestrator` from
+    ``src.core.unified_orchestrator`` instead. See ``EXECUTION_AUTHORITY.md``
+    for the canonical execution path. This module is retained for backward
+    compatibility and will be removed in a future version.
+
 Master orchestrator that harmonizes ALL agent tiers into a single, 
 coordinated investigation workflow.
 
@@ -153,6 +159,16 @@ class UnifiedAgentOrchestrator:
             max_cost_usd: Maximum cost budget in USD (optional)
             enable_profiling: Enable enhanced profiling features (default: True)
         """
+        # DEPRECATION WARNING
+        import warnings
+        warnings.warn(
+            "UnifiedAgentOrchestrator is deprecated. "
+            "Use UnifiedForensicOrchestrator from src.core.unified_orchestrator for DOJ-grade compliance. "
+            "This class will be removed in a future version.",
+            DeprecationWarning,
+            stacklevel=2
+        )
+
         # Legacy metrics collector (for backward compatibility)
         self.metrics_collector = ExecutionMetricsCollector()
         
