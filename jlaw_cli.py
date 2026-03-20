@@ -393,20 +393,16 @@ async def main() -> int:
         cik = args.cik
         company_name = args.company_name
         
-        # Handle company lookup (if COMPANY_LOOKUP exists)
+        # Handle company lookup
         if company_name and not cik:
-            # Try to import company lookup
-            try:
-                from JLAW_UNIFIED import COMPANY_LOOKUP
-                company_upper = company_name.upper()
-                if company_upper in COMPANY_LOOKUP:
-                    cik, company_name = COMPANY_LOOKUP[company_upper]
-                    OutputFormatter.print_info(
-                        f"Resolved {args.company_name} → CIK: {cik}",
-                        console
-                    )
-            except ImportError:
-                pass
+            from src.cli.company_lookup import COMPANY_LOOKUP
+            company_upper = company_name.upper()
+            if company_upper in COMPANY_LOOKUP:
+                cik, company_name = COMPANY_LOOKUP[company_upper]
+                OutputFormatter.print_info(
+                    f"Resolved {args.company_name} → CIK: {cik}",
+                    console
+                )
         
         if not cik:
             OutputFormatter.print_error(

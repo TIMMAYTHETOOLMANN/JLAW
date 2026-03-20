@@ -93,7 +93,7 @@ Repository = "https://github.com/TIMMAYTHETOOLMANN/JLAW"
 Documentation = "https://github.com/TIMMAYTHETOOLMANN/JLAW/blob/main/README.md"
 
 [project.scripts]
-jlaw = "JLAW_UNIFIED:main"
+jlaw = "jlaw_cli:main"
 jlaw-preflight = "scripts.preflight_check:main"
 
 [project.optional-dependencies]

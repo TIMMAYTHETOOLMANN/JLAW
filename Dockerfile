@@ -49,7 +49,6 @@ COPY src/ ./src/
 COPY scripts/ ./scripts/
 COPY sql/ ./sql/
 COPY jlaw_cli.py ./
-COPY JLAW_UNIFIED.py ./
 
 # Create non-root user for security
 RUN useradd --create-home --shell /bin/bash --uid 1000 jlaw && \

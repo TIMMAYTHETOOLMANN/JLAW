@@ -4,7 +4,7 @@ Verification script for JLAW_UNIFIED.py command-line interface.
 
 This script verifies that the company lookup functionality works correctly
 for the command:
-    python JLAW_UNIFIED.py --cik 320187 --company "NIKE" --year 2019 --auto
+    python jlaw_cli.py --cik 320187 --company "NIKE" --year 2019 --auto
 """
 
 import sys
@@ -14,11 +14,11 @@ from pathlib import Path
 PROJECT_ROOT = Path(__file__).parent
 sys.path.insert(0, str(PROJECT_ROOT))
 
-# Import COMPANY_LOOKUP from JLAW_UNIFIED.py (single source of truth)
+# Import COMPANY_LOOKUP from canonical module
 try:
-    from JLAW_UNIFIED import COMPANY_LOOKUP
+    from src.cli.company_lookup import COMPANY_LOOKUP
 except ImportError as e:
-    print(f"ERROR: Could not import COMPANY_LOOKUP from JLAW_UNIFIED.py: {e}")
+    print(f"ERROR: Could not import COMPANY_LOOKUP: {e}")
     print("This script must be run from the JLAW root directory.")
     sys.exit(1)
 
@@ -62,7 +62,7 @@ def verify_company_lookup():
         print("✓ All tests PASSED")
         print()
         print("The command should work correctly:")
-        print("  python JLAW_UNIFIED.py --cik 320187 --company \"NIKE\" --year 2019 --auto")
+        print("  python jlaw_cli.py --cik 320187 --company \"NIKE\" --year 2019 --auto")
         print()
         print("This will use:")
         print("  - CIK: 320187")

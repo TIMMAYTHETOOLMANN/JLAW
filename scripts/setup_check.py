@@ -3,7 +3,7 @@
 JLAW Setup Verification Script
 
 This script checks that all necessary components are configured
-before running JLAW_UNIFIED.py commands.
+before running jlaw_cli.py commands.
 """
 
 import sys
@@ -114,16 +114,16 @@ def print_example_commands():
     print("=" * 70)
     
     print("\n# Interactive mode (recommended for first-time users)")
-    print("python JLAW_UNIFIED.py")
+    print("python jlaw_cli.py")
     
     print("\n# CLI mode with NIKE")
-    print("python JLAW_UNIFIED.py --cik 320187 --company \"NIKE\" --year 2019 --auto")
+    print("python jlaw_cli.py --cik 320187 --company \"NIKE\" --year 2019 --auto")
     
     print("\n# CLI mode with Apple")
-    print("python JLAW_UNIFIED.py --cik 320193 --company \"APPLE\" --year 2019 --auto")
+    print("python jlaw_cli.py --cik 320193 --company \"APPLE\" --year 2019 --auto")
     
     print("\n# Strict mode (DOJ-grade with phase gates)")
-    print("python JLAW_UNIFIED.py --cik 320187 --company \"NIKE\" --year 2019 --strict --auto")
+    print("python jlaw_cli.py --cik 320187 --company \"NIKE\" --year 2019 --strict --auto")
 
 def main():
     """Main entry point."""
@@ -148,7 +148,7 @@ def main():
         return 0
     else:
         print("\n✗ Some checks FAILED")
-        print("\nPlease fix the issues above before running JLAW_UNIFIED.py")
+        print("\nPlease fix the issues above before running jlaw_cli.py")
         return 1
 
 if __name__ == "__main__":

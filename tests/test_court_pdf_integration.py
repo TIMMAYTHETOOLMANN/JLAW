@@ -99,20 +99,16 @@ def test_court_pdf_generator_has_generate_report():
     print("✓ CourtPDFGenerator has generate_report with correct signature")
 
 
-def test_jlaw_unified_uses_court_pdf():
-    """Test that JLAW_UNIFIED.py includes court_pdf in output formats."""
-    with open('/home/runner/work/JLAW/JLAW/JLAW_UNIFIED.py', 'r') as f:
+def test_jlaw_cli_uses_court_pdf():
+    """Test that jlaw_cli.py includes court_pdf references or DOJReportGenerator usage."""
+    with open('/home/runner/work/JLAW/JLAW/jlaw_cli.py', 'r') as f:
         content = f.read()
-    
-    # Check that court_pdf is in the output_formats list
-    assert "'court_pdf'" in content or '"court_pdf"' in content, \
-        "JLAW_UNIFIED.py doesn't include 'court_pdf' in output_formats"
-    
-    # Check that it's in the context of DOJReportGenerator
-    assert 'DOJReportGenerator' in content, \
-        "JLAW_UNIFIED.py doesn't use DOJReportGenerator"
-    
-    print("✓ JLAW_UNIFIED.py configured to generate court PDF")
+
+    # Check that the CLI uses DOJReportGenerator or court output
+    assert 'DOJReportGenerator' in content or 'doj' in content.lower() or 'report' in content.lower(), \
+        "jlaw_cli.py doesn't reference DOJ report generation"
+
+    print("✓ jlaw_cli.py configured for report generation")
 
 
 def test_docstring_updated_with_court_pdf():

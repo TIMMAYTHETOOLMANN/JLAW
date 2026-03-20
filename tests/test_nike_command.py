@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """
-End-to-end test for JLAW_UNIFIED.py command execution.
+End-to-end test for jlaw_cli.py command execution.
 
 This script tests the complete command workflow:
-    python JLAW_UNIFIED.py --cik 320187 --company "NIKE" --year 2019 --auto
+    python jlaw_cli.py --cik 320187 --company "NIKE" --year 2019 --auto
 """
 
 import sys
@@ -12,11 +12,11 @@ import subprocess
 import re
 from pathlib import Path
 
-# Import COMPANY_LOOKUP from JLAW_UNIFIED.py (single source of truth)
+# Import COMPANY_LOOKUP from canonical module
 try:
-    from JLAW_UNIFIED import COMPANY_LOOKUP
+    from src.cli.company_lookup import COMPANY_LOOKUP
 except ImportError as e:
-    print(f"ERROR: Could not import COMPANY_LOOKUP from JLAW_UNIFIED.py: {e}")
+    print(f"ERROR: Could not import COMPANY_LOOKUP: {e}")
     print("This script must be run from the JLAW root directory.")
     sys.exit(1)
 
@@ -26,7 +26,7 @@ def test_command_parsing():
     print("TEST 1: Command-Line Argument Parsing")
     print("=" * 70)
     
-    # Simulate the argument parsing logic from JLAW_UNIFIED.py
+    # Simulate the argument parsing logic from jlaw_cli.py
     # Derive expected values from COMPANY_LOOKUP to avoid duplication
     nike_cik, nike_name = COMPANY_LOOKUP["NIKE"]
     
@@ -48,7 +48,7 @@ def test_command_parsing():
         },
     ]
     
-    # COMPANY_LOOKUP is imported from JLAW_UNIFIED.py at the top of the file
+    # COMPANY_LOOKUP is imported from jlaw_cli.py at the top of the file
     
     all_passed = True
     
@@ -85,7 +85,7 @@ def test_command_parsing():
     return all_passed
 
 def test_actual_execution():
-    """Test actual execution of JLAW_UNIFIED.py (Phase 1 only)."""
+    """Test actual execution of jlaw_cli.py (Phase 1 only)."""
     print("\n" + "=" * 70)
     print("TEST 2: Actual Command Execution (Phase 1)")
     print("=" * 70)
@@ -100,7 +100,7 @@ def test_actual_execution():
     # Increased default to 30 seconds to account for slower systems
     timeout_seconds = int(os.environ.get('JLAW_TEST_TIMEOUT', '30'))
     
-    print(f"\nExecuting: {sys.executable} JLAW_UNIFIED.py --cik 320187 --company \"NIKE\" --year 2019 --auto")
+    print(f"\nExecuting: {sys.executable} jlaw_cli.py --cik 320187 --company \"NIKE\" --year 2019 --auto")
     print(f"(Testing Phase 1 configuration only with {timeout_seconds}s timeout)")
     
     try:
@@ -108,7 +108,7 @@ def test_actual_execution():
         # Use sys.executable to ensure same Python interpreter
         # We expect the process to timeout during Phase 2, which is fine for our test
         result = subprocess.run(
-            [sys.executable, "JLAW_UNIFIED.py", 
+            [sys.executable, "jlaw_cli.py", 
              "--cik", "320187", "--company", "NIKE", "--year", "2019", "--auto"],
             capture_output=True,
             text=True,
@@ -151,7 +151,7 @@ def main():
     print("JLAW Command Execution End-to-End Test")
     print("=" * 70)
     print("\nTesting command:")
-    print("  python JLAW_UNIFIED.py --cik 320187 --company \"NIKE\" --year 2019 --auto")
+    print("  python jlaw_cli.py --cik 320187 --company \"NIKE\" --year 2019 --auto")
     
     results = []
     
@@ -176,7 +176,7 @@ def main():
     if all(results):
         print("\n✓ All tests PASSED")
         print("\nThe command is working correctly:")
-        print("  python JLAW_UNIFIED.py --cik 320187 --company \"NIKE\" --year 2019 --auto")
+        print("  python jlaw_cli.py --cik 320187 --company \"NIKE\" --year 2019 --auto")
         return 0
     else:
         print("\n✗ Some tests FAILED")
