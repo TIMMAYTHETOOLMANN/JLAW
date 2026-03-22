@@ -10,12 +10,14 @@ Architecture:
     - Wraps JLAW's UnifiedSDKManager for centralized API access
     - Exposes JLAW's AnthropicAgentAnalyzer for Claude-powered analysis
     - Orchestrates multi-agent workflows via UnifiedAgentOrchestrator
+    - Integrates Claude Agent layer (Tool Runner, MCP, multi-agent prosecutor)
     - Manages agent lifecycle, rate limiting, and cost tracking
 
 Source Integration:
     JLAW anthropic_agent_analyzer.py (389 LOC) → Claude forensic analysis
     JLAW sdk_manager.py (563 LOC) → Unified SDK management (singleton)
     JLAW unified_agent_orchestrator.py (1,003 LOC) → Multi-tier orchestration
+    JLAW claude_agent/ → Tool Runner, MCP servers, multi-agent prosecutor
 """
 
 import asyncio
@@ -27,6 +29,17 @@ from enum import Enum
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
+from src.claude_agent import (
+    ContextManager,
+    ForensicToolRunner,
+    InvestigationState,
+    MCPConfiguration,
+    ModelTier,
+    ProsecutorOrchestrator,
+    ToolExecutor,
+    get_default_mcp_config,
+    get_forensic_tools,
+)
 from src.forensics.anthropic_agent_analyzer import AnthropicAgentAnalyzer
 from src.forensics.sdk_manager import (
     UnifiedSDKManager,
@@ -273,6 +286,12 @@ class ClaudeCompositor:
         self._orchestrator: Optional[UnifiedAgentOrchestrator] = None
         self._sdk_manager: Optional[UnifiedSDKManager] = None
 
+        # Claude Agent layer components (lazy-loaded)
+        self._tool_runner: Optional[ForensicToolRunner] = None
+        self._mcp_config: Optional[MCPConfiguration] = None
+        self._context_manager: Optional[ContextManager] = None
+        self._prosecutor: Optional[ProsecutorOrchestrator] = None
+
         # Tracking
         self._total_tokens_used = 0
         self._total_cost_usd = 0.0
@@ -302,6 +321,93 @@ class ClaudeCompositor:
                 enable_profiling=True,
             )
         return self._orchestrator
+
+    @property
+    def tool_runner(self) -> ForensicToolRunner:
+        """Lazy-load the Claude forensic tool runner.
+
+        Provides the agentic loop with forensic tool definitions for
+        Claude to invoke during analysis.
+        """
+        if self._tool_runner is None:
+            self._tool_runner = ForensicToolRunner(
+                model=ModelTier.SONNET.value,
+                max_tokens=4096,
+                enable_prompt_caching=True,
+            )
+        return self._tool_runner
+
+    @property
+    def mcp_config(self) -> MCPConfiguration:
+        """Lazy-load MCP server configuration.
+
+        Returns configuration for SEC EDGAR, anomaly database,
+        and evidence chain MCP servers.
+        """
+        if self._mcp_config is None:
+            self._mcp_config = get_default_mcp_config()
+        return self._mcp_config
+
+    @property
+    def context_manager(self) -> ContextManager:
+        """Lazy-load the context degradation prevention manager."""
+        if self._context_manager is None:
+            self._context_manager = ContextManager(
+                max_context_tokens=200_000,
+                compaction_threshold=0.92,
+            )
+        return self._context_manager
+
+    @property
+    def prosecutor(self) -> ProsecutorOrchestrator:
+        """Lazy-load the multi-agent prosecutor orchestrator.
+
+        Configures the prosecutor pattern with Opus master agent
+        and Sonnet subagents for parallel domain analysis.
+        """
+        if self._prosecutor is None:
+            self._prosecutor = ProsecutorOrchestrator(
+                master_model=ModelTier.OPUS.value,
+                enable_parallel=True,
+            )
+        return self._prosecutor
+
+    def get_claude_agent_capabilities(self) -> Dict[str, Any]:
+        """Return available Claude agent layer capabilities.
+
+        Provides a summary of all integrated Claude agent features
+        including tool runner, MCP servers, multi-agent orchestration,
+        and context management.
+
+        Returns:
+            Dict describing available capabilities and their status.
+        """
+        return {
+            "tool_runner": {
+                "available": True,
+                "model": self.tool_runner.model,
+                "tools_count": len(get_forensic_tools()),
+                "prompt_caching": self.tool_runner.enable_prompt_caching,
+            },
+            "mcp_servers": {
+                "available": True,
+                "servers": {
+                    name: {"enabled": cfg.enabled}
+                    for name, cfg in self.mcp_config.servers.items()
+                },
+            },
+            "multi_agent": {
+                "available": True,
+                "master_model": self.prosecutor.master_model,
+                "subagent_count": len(self.prosecutor.subagents),
+                "parallel_enabled": self.prosecutor.enable_parallel,
+            },
+            "context_management": {
+                "available": True,
+                "max_tokens": self.context_manager.max_context_tokens,
+                "compaction_threshold": self.context_manager.compaction_threshold,
+            },
+        }
 
     def get_enabled_agents(self) -> List[AgentConfig]:
         """Get list of enabled agent configurations."""
