@@ -385,6 +385,66 @@ class TestForensicToolRunner:
         assert result.stop_reason == "end_turn"
         assert result.loop_iterations == 1
 
+    async def test_run_with_tool_execution(self):
+        """Runner should execute tool calls and loop until end_turn."""
+        mock_client = AsyncMock()
+
+        # First response: Claude calls a tool
+        mock_tool_block = MagicMock()
+        mock_tool_block.type = "tool_use"
+        mock_tool_block.name = "search_sec_filings"
+        mock_tool_block.input = {"cik": "320187"}
+        mock_tool_block.id = "tool-call-1"
+        mock_tool_block.text = None
+        # Ensure hasattr(block, "text") is False for tool blocks
+        del mock_tool_block.text
+
+        mock_response_1 = MagicMock()
+        mock_response_1.stop_reason = "tool_use"
+        mock_response_1.content = [mock_tool_block]
+        mock_response_1.usage = MagicMock(
+            input_tokens=200, output_tokens=100,
+            cache_read_input_tokens=0, cache_creation_input_tokens=0
+        )
+
+        # Second response: Claude returns final text
+        mock_text_block = MagicMock()
+        mock_text_block.type = "text"
+        mock_text_block.text = "Found 3 filings for CIK 320187"
+        mock_response_2 = MagicMock()
+        mock_response_2.stop_reason = "end_turn"
+        mock_response_2.content = [mock_text_block]
+        mock_response_2.usage = MagicMock(
+            input_tokens=300, output_tokens=150,
+            cache_read_input_tokens=50, cache_creation_input_tokens=0
+        )
+
+        mock_client.messages.create = AsyncMock(
+            side_effect=[mock_response_1, mock_response_2]
+        )
+
+        # Register a tool handler
+        executor = ToolExecutor()
+        executor.register(
+            "search_sec_filings",
+            lambda inp: {"filings": [{"type": "10-K"}], "count": 3},
+        )
+
+        runner = ForensicToolRunner(tool_executor=executor)
+        runner._client = mock_client
+        result = await runner.run("Search NIKE filings")
+
+        assert result.loop_iterations == 2
+        assert len(result.tool_calls) == 1
+        assert result.tool_calls[0]["name"] == "search_sec_filings"
+        assert len(result.tool_results) == 1
+        assert result.tool_results[0].is_error is False
+        assert result.response_text == "Found 3 filings for CIK 320187"
+        assert result.stop_reason == "end_turn"
+        assert result.total_input_tokens == 500  # 200 + 300
+        assert result.total_output_tokens == 250  # 100 + 150
+        assert result.cache_read_tokens == 50
+
 
 # ═══════════════════════════════════════════════════════════════════════
 # MCP Servers Tests

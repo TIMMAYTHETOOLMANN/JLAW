@@ -158,7 +158,7 @@ FORENSIC_TOOLS: list[dict[str, Any]] = [
             "range based on sanctions potential and program-specific rules. Use this "
             "tool after violations have been detected and penalties calculated to assess "
             "whistleblower reward potential under Dodd-Frank Section 21F (SEC program "
-            "pays 10-30%% of sanctions exceeding $1M)."
+            "pays 10-30% of sanctions exceeding $1M)."
         ),
         "input_schema": {
             "type": "object",

@@ -364,6 +364,10 @@ class ForensicToolRunner:
                 )
             else:
                 # No tool calls and not end_turn — safety break
+                logger.warning(
+                    "Tool Runner safety break: stop_reason='%s' with no tool calls",
+                    response.stop_reason,
+                )
                 break
 
         result.total_time = time.monotonic() - start_time
