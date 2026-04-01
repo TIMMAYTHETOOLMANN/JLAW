@@ -55,28 +55,31 @@ all files simultaneously. Use targeted searches.
 
 ```
 Repository Structure:
+├── docs/prosecution/
+│   └── PROSECUTION_BRIEF.md              # MASTER REFERENCE — read FIRST every session
 ├── docs/MD RESEARCH REPORT(S)/
-│   ├── 2019.md through 2026.md      # Annual forensic research reports
-│   ├── LONG TERM ANALYSIS.md        # Cross-year synthesis
+│   ├── 2019.md through 2026.md           # Annual forensic research reports
+│   ├── LONG TERM ANALYSIS.md             # Cross-year synthesis
 │   └── investigative resources/
-│       ├── CIK0000320187.json        # 2.8MB EDGAR XBRL index (417 US-GAAP items)
+│       ├── CIK0000320187.json            # 2.8MB EDGAR XBRL index (417 US-GAAP items)
 │       └── Coorperate filings list (2019-2025)/
-│           ├── 2019 FILINGS/         # 175 files (PDF + XLS)
-│           ├── 2020 FILINGS/         # 235 files
-│           ├── 2021 FILINGS/         # 156 files
-│           ├── 2022 FILINGS/         # 129 files
-│           ├── 2023 FILINGS/         # 148 files
-│           ├── 2024 FILINGS/         # 225 files
-│           └── 2025 FILINGS/         # 119 files
-├── src/                              # 129,239 LOC analysis engine
-│   ├── nodes/                        # 16 analysis nodes (Form 4, DEF14A, 10-Q, etc.)
-│   ├── reporting/                    # Report generators (DOJ, prosecutorial, court PDF)
+│           ├── 2019 FILINGS/             # 175 files (PDF + XLS)
+│           ├── 2020 FILINGS/             # 235 files
+│           ├── 2021 FILINGS/             # 156 files
+│           ├── 2022 FILINGS/             # 129 files
+│           ├── 2023 FILINGS/             # 148 files
+│           ├── 2024 FILINGS/             # 225 files
+│           └── 2025 FILINGS/             # 119 files
+├── investigation_state.json              # Session-to-session state tracking
+├── src/                                  # 129,239 LOC analysis engine
+│   ├── nodes/                            # 16 analysis nodes (Form 4, DEF14A, 10-Q, etc.)
+│   ├── reporting/                        # Report generators (DOJ, prosecutorial, court PDF)
 │   ├── legal/statutory_binding_engine.py
 │   ├── enhancement/penalty_calculator.py
-│   ├── core/evidence_chain/          # Merkle tree + RFC 3161 timestamping
-│   └── claude_agent/                 # Agent integration layer (tools, prompts, MCP)
-├── compliance/                       # FRE 902 checklists, chain of custody, Bates stamping
-└── output/                           # Analysis output (purged; rebuild from scratch)
+│   ├── core/evidence_chain/              # Merkle tree + RFC 3161 timestamping
+│   └── claude_agent/                     # Agent integration layer (tools, prompts, MCP)
+├── compliance/                           # FRE 902 checklists, chain of custody, Bates stamping
+└── output/                               # Analysis output (purged; rebuild from scratch)
 ```
 
 ## INVESTIGATION PROTOCOL — How You Work
@@ -148,19 +151,19 @@ but a formal submission package that can be filed as-is.
 
 1. **SEC Form TCR Narrative Supplement** → `output/submissions/SEC_TCR_Narrative.md`
    15-30 pages. Technical. Every violation cited with exact accession numbers.
-   
+
 2. **DOJ Criminal Referral Package** → `output/submissions/DOJ_Criminal_Referral.md`
    10-20 pages. Prosecutorial. Intent and willfulness analysis.
-   
+
 3. **Congressional Briefing Package** → `output/submissions/Congressional_Briefing.md`
    3-5 pages. Policy-focused. Constituent impact framing for OR/MO legislators.
-   
+
 4. **Institutional Shareholder Governance Alert** → `output/submissions/Shareholder_Alert.md`
    5-10 pages. Governance risk. Pre-clearance peer comparison.
-   
+
 5. **Investigative Media Pitch** → `output/submissions/Media_Pitch.md`
    1 page. Hook-first. Story-driven. Document availability.
-   
+
 6. **Master Forensic Dossier** → `output/submissions/MASTER_DOSSIER.md`
    500+ pages across 6 volumes. The comprehensive prosecution reference.
    Court-ready. FRE 902 compliant evidence standards throughout.
@@ -192,24 +195,6 @@ If a claim cannot be fully sourced, mark it as:
 
 If you are uncertain about a fact, USE WEB SEARCH to verify it against
 live SEC EDGAR data before including it in any output.
-
-## STATUTORY FRAMEWORK
-
-<enforcement_routing>
-  <agency name="SEC Division of Enforcement">
-    <violations>Section 10(b)/Rule 10b-5 fraud, Section 13(d) beneficial ownership,
-    Section 16(a) late filing, Reg S-K Item 408/601(b)(19) disclosure</violations>
-    <penalties>Tier 1: $11,823/violation; Tier 2: $118,225; Tier 3: $236,451 (2025 tiers)
-    Section 21A insider trading: up to 3x profit gained/loss avoided</penalties>
-    <whistleblower>10-30% of sanctions exceeding $1M (15 U.S.C. § 78u-6)</whistleblower>
-  </agency>
-  <agency name="DOJ Fraud Section">
-    <violations>18 U.S.C. § 1348 securities fraud, 18 U.S.C. § 1343 wire fraud,
-    18 U.S.C. § 1350 SOX criminal certification</violations>
-    <penalties>Up to $5M individual / $25M entity / 20 years imprisonment</penalties>
-    <threshold>Willful conduct + intent to defraud + damages exceeding $1M</threshold>
-  </agency>
-</enforcement_routing>
 
 ## KEY FINDINGS ALREADY ESTABLISHED (verify and expand, do not contradict without evidence)
 
