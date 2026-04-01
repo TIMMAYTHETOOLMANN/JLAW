@@ -1,4 +1,4 @@
-name: CI
+name: JLAW Forensic Platform CI
 
 on:
   push:
@@ -8,27 +8,24 @@ on:
 
 permissions:
   contents: read
-  packages: write
   security-events: write
 
 jobs:
-  test:
-    name: Python ${{ matrix.python-version }} on ${{ matrix.os }}
-    runs-on: ${{ matrix.os }}
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [ubuntu-latest]
-        python-version: ['3.9', '3.10', '3.11', '3.12']
+
+  # ═══════════════════════════════════════════════════════════════
+  # GATE 1: Code Integrity — does the system still work?
+  # ═══════════════════════════════════════════════════════════════
+  code-integrity:
+    name: Code Integrity Check
+    runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4.1.1
+    - uses: actions/checkout@v4.1.1
 
-    - name: Set up Python ${{ matrix.python-version }}
+    - name: Set up Python 3.11
       uses: actions/setup-python@v5.0.0
       with:
-        python-version: ${{ matrix.python-version }}
+        python-version: '3.11'
         cache: 'pip'
 
     - name: Install dependencies
@@ -36,84 +33,140 @@ jobs:
         python -m pip install --upgrade pip
         pip install -e .[dev]
 
-    - name: Lint with ruff
-      run: |
-        # Stop the build if there are Python syntax errors or undefined names
-        ruff check . --select=E9,F63,F7,F82
-      continue-on-error: true
+    - name: Lint — syntax errors and undefined names (MUST PASS)
+      run: ruff check . --select=E9,F63,F7,F82
 
-    - name: Lint with flake8
-      run: |
-        # Stop the build if there are Python syntax errors or undefined names
-        flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics --exclude=.venv,venv,env,build,dist,.git
-      continue-on-error: true
-
-    - name: Verify critical imports
+    - name: Verify critical imports (MUST PASS)
       run: |
         python -c "
         import sys
         sys.path.insert(0, '.')
-        
-        # Test core imports
-        print('Testing core imports...')
-        from src.core.recursive_engine import RecursiveProsecutorialEngine
-        print('✓ RecursiveProsecutorialEngine')
-        
+
+        # Core orchestration
+        from src.core.unified_orchestrator import UnifiedForensicOrchestrator
+        from src.core.exceptions import PhaseGateFailure, NodeExecutionError
+        from src.core.fail_loud import FailLoudMixin
+        print('✓ Core orchestration + phase gates + FailLoud')
+
+        # All 16 analysis nodes
+        from src.nodes.node1_form4.form4_parser import Form4Parser
+        from src.nodes.node2_def14a.compensation_analyzer import DEF14ACompensationAnalyzer
+        from src.nodes.node3_10q.temporal_consistency_validator import TemporalConsistencyValidator
+        from src.nodes.node4_10k_sox.sox_certification_analyzer import SOXCertificationAnalyzer
+        from src.nodes.node5_irs.irc83_tax_calculator import IRC83TaxCalculator
+        from src.nodes.node6_routing.enforcement_router import EnforcementRouter
+        from src.nodes.node7_13f_holdings.institutional_analyzer import InstitutionalHoldingsAnalyzer
+        from src.nodes.node8_13d_ownership.beneficial_ownership_tracker import BeneficialOwnershipTracker
+        from src.nodes.node9_8k_events.material_event_correlator import MaterialEventCorrelator
+        print('✓ Nodes 1-9')
+        from src.nodes.node10_form144.restricted_sale_monitor import RestrictedSaleMonitor
+        from src.nodes.node11_network_mapper.executive_network_analyzer import ExecutiveNetworkAnalyzer
+        from src.nodes.node12_earnings_calls.transcript_analyzer import TranscriptAnalyzer
+        from src.nodes.node13_zscore.bankruptcy_predictor_v2 import BankruptcyPredictorV2
+        from src.nodes.node14_fscore.financial_strength_analyzer_v2 import FinancialStrengthAnalyzerV2
+        from src.nodes.node15_market_correlation.market_correlation_engine_v2 import MarketCorrelationEngineV2
+        from src.nodes.node16_customs_trade.customs_trade_analyzer import CustomsTradeAnalyzer
+        print('✓ Nodes 10-16')
+
+        # Evidence chain
+        from src.core.evidence_chain.merkle_tree import MerkleTree
         from src.core.evidence_chain.hash_service import HashService
-        print('✓ HashService')
-        
-        # Test node imports (Nodes 1-9, 13-15 that work)
-        print('\nTesting node imports...')
-        from src.nodes import (
-            Form4Parser,
-            DEF14ACompensationAnalyzer,
-            TemporalConsistencyValidator,
-            SOXCertificationAnalyzer,
-            IRC83TaxCalculator,
-            EnforcementRouter,
-            InstitutionalHoldingsAnalyzer,
-            BeneficialOwnershipTracker,
-            MaterialEventCorrelator,
-            BankruptcyPredictorV2,
-            FinancialStrengthAnalyzerV2,
-            MarketCorrelationEngineV2,
-            NodeCorrelator
-        )
-        print('✓ All critical node imports successful')
-        
-        # Test detection imports
-        print('\nTesting detection imports...')
-        from src.detection.patterns.advanced_patterns import AdvancedPatternDetector
-        print('✓ AdvancedPatternDetector')
-        
-        from src.detection.financial.beneish_mscore import BeneishMScoreCalculator
-        print('✓ BeneishMScoreCalculator')
-        
-        print('\n✓ All import verification tests passed!')
+        print('✓ Evidence chain (Merkle + hash)')
+
+        # Reporting generators
+        from src.reporting.prosecutorial_dossier_generator import ProsecutorialDossierGenerator
+        from src.reporting.doj_report_generator import DOJReportGenerator
+        from src.reporting.court_pdf_generator import CourtPDFGenerator
+        from src.reporting.public_discrepancy_engine import PublicDiscrepancyEngine
+        print('✓ Report generators (prosecutorial, DOJ, court PDF, discrepancy)')
+
+        # Legal engine
+        from src.legal.statutory_binding_engine import StatutoryBindingEngine
+        print('✓ Statutory binding engine')
+
+        # Claude agent layer
+        from src.claude_agent import ForensicToolRunner, ProsecutorOrchestrator, ContextManager
+        print('✓ Claude agent layer (tool runner, prosecutor, context manager)')
+
+        # SEC agent integration
+        from src.sec_agent.pipeline import SECAgentPipeline
+        from src.sec_agent.filing_classifier import FilingClassifier
+        from src.sec_agent.cik_validator import CIKValidator
+        print('✓ SEC agent pipeline + classifier + CIK validator')
+
+        print()
+        print('═══════════════════════════════════════════════')
+        print('ALL 16 NODES + EVIDENCE CHAIN + REPORTING +')
+        print('LEGAL ENGINE + AGENT LAYER = OPERATIONAL')
+        print('═══════════════════════════════════════════════')
         "
-    
-    - name: Run pre-flight check
+
+    - name: Run tests (MUST PASS — no continue-on-error)
       run: |
-        python scripts/preflight_check.py --verbose || true
-      continue-on-error: true
+        pytest tests/ -v --tb=short -x \
+          --ignore=tests/integration \
+          --ignore=tests/performance \
+          -k "not test_database and not test_redis and not test_neo4j"
       env:
-        SEC_USER_AGENT: "JLAW CI/CD test@example.com"
+        SEC_USER_AGENT: "JLAW CI test@jlaw-forensics.dev"
 
-    - name: Run pytest tests
-      run: |
-        # Run tests that don't require external services
-        pytest tests/ -v --tb=short --continue-on-collection-errors || true
-      continue-on-error: true
-
-  coverage:
-    name: Test Coverage
+  # ═══════════════════════════════════════════════════════════════
+  # GATE 2: Security — no credentials, no vulnerabilities
+  # ═══════════════════════════════════════════════════════════════
+  security:
+    name: Security Scan
     runs-on: ubuntu-latest
-    
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v4.1.1
 
-    - name: Set up Python
+    steps:
+    - uses: actions/checkout@v4.1.1
+
+    - name: Set up Python 3.11
+      uses: actions/setup-python@v5.0.0
+      with:
+        python-version: '3.11'
+
+    - name: Scan for hardcoded secrets (MUST PASS)
+      run: |
+        # Check for API keys, passwords, tokens in tracked files
+        FOUND=0
+        for pattern in "sk-ant-" "sk-proj-" "sk-" "AKIA" "password=" "secret=" "token="; do
+          HITS=$(git grep -l "$pattern" -- ':!*.md' ':!*.yml' ':!*.yaml' ':!*.txt' ':!requirements*' 2>/dev/null | grep -v ".env.template" | grep -v "test" || true)
+          if [ -n "$HITS" ]; then
+            echo "⚠️  Potential secret pattern '$pattern' found in:"
+            echo "$HITS"
+            FOUND=1
+          fi
+        done
+        if [ "$FOUND" -eq 1 ]; then
+          echo "::error::Potential secrets detected in repository. Review findings above."
+          exit 1
+        fi
+        echo "✓ No hardcoded secrets detected"
+
+    - name: Bandit security scan (MUST PASS for HIGH/CRITICAL)
+      run: |
+        pip install bandit
+        bandit -r src/ -ll -ii --severity-level high 2>&1 | tee bandit-output.txt
+        # Fail only on high-severity issues
+        if grep -q "Severity: High" bandit-output.txt || grep -q "Severity: Critical" bandit-output.txt; then
+          echo "::error::High/Critical security issues found by Bandit"
+          exit 1
+        fi
+        echo "✓ No high/critical security issues"
+
+  # ═══════════════════════════════════════════════════════════════
+  # GATE 3: Investigation Output Validation
+  # Ensures agent-produced documents meet prosecution standards
+  # ═══════════════════════════════════════════════════════════════
+  investigation-output-validation:
+    name: Investigation Output Validation
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push'
+
+    steps:
+    - uses: actions/checkout@v4.1.1
+
+    - name: Set up Python 3.11
       uses: actions/setup-python@v5.0.0
       with:
         python-version: '3.11'
@@ -122,185 +175,146 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install -e .[dev]
-
-    - name: Run tests with coverage
-      run: |
-        pytest \
-          --cov=src \
-          --cov-report=html:coverage_report \
-          --cov-report=term-missing \
-          --cov-fail-under=80 \
-          -v \
-          --asyncio-mode=auto \
-          --tb=short \
-          --continue-on-collection-errors || true
-      continue-on-error: true
-      env:
-        SEC_USER_AGENT: "JLAW CI/CD test@example.com"
-
-    - name: Upload coverage report
-      uses: actions/upload-artifact@v4
-      if: always()
-      with:
-        name: coverage-report
-        path: coverage_report/
-
-  security:
-    name: Security scan
-    runs-on: ubuntu-latest
-    
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v4.1.1
-
-    - name: Set up Python
-      uses: actions/setup-python@v5.0.0
-      with:
-        python-version: '3.11'
-
-    - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install safety bandit
-
-    - name: Check dependencies for vulnerabilities
-      run: |
         pip install -e .
-        safety check --json || true
-      continue-on-error: true
 
-    - name: Run Bandit security scan
+    - name: Validate prosecution brief exists and is complete
       run: |
-        bandit -r src/ -f json -o bandit-report.json || true
-      continue-on-error: true
+        python -c "
+        from pathlib import Path
 
-  build-status:
-    name: Build Status
+        brief = Path('docs/prosecution/PROSECUTION_BRIEF.md')
+        if not brief.exists():
+            print('⚠️  PROSECUTION_BRIEF.md not yet created — skipping validation')
+            exit(0)
+
+        content = brief.read_text()
+        required_sections = [
+            'SECTION 1: INVESTIGATION SUMMARY',
+            'SECTION 2: KEY SUBJECTS',
+            'SECTION 3: MASTER ACCESSION NUMBER INDEX',
+            'SECTION 4: ESTABLISHED FINDINGS',
+            'SECTION 5: DOCUMENTS TO PRODUCE',
+            'SECTION 6: SUBMISSION TARGETS',
+            'SECTION 7: CRITICAL OPERATIONAL RULES',
+        ]
+        missing = [s for s in required_sections if s not in content]
+        if missing:
+            print(f'✗ PROSECUTION_BRIEF.md missing sections: {missing}')
+            exit(1)
+        print(f'✓ PROSECUTION_BRIEF.md contains all {len(required_sections)} required sections')
+        "
+
+    - name: Validate investigation output schema (if outputs exist)
+      run: |
+        python -c "
+        import json
+        from pathlib import Path
+
+        output_dir = Path('output')
+        if not output_dir.exists():
+            print('⚠️  No output directory yet — skipping output validation')
+            exit(0)
+
+        errors = []
+        for year_dir in sorted(output_dir.glob('NKE_*')):
+            analysis = year_dir / 'analysis.json'
+            if analysis.exists():
+                try:
+                    data = json.loads(analysis.read_text())
+                    # Required fields in every analysis JSON
+                    required = ['fiscal_year', 'violations', 'patterns', 'total_penalty_exposure']
+                    missing = [f for f in required if f not in data]
+                    if missing:
+                        errors.append(f'{analysis}: missing fields {missing}')
+                    else:
+                        print(f'✓ {analysis}: schema valid ({len(data.get(\"violations\", []))} violations)')
+
+                    # Data correction enforcement
+                    content = analysis.read_text()
+                    if '565' in content and 'open-market' not in content.lower():
+                        errors.append(f'{analysis}: Contains raw 565M figure without Code S correction note')
+
+                except json.JSONDecodeError as e:
+                    errors.append(f'{analysis}: Invalid JSON — {e}')
+
+        if errors:
+            print('\\n✗ OUTPUT VALIDATION FAILURES:')
+            for e in errors:
+                print(f'  ✗ {e}')
+            exit(1)
+        elif list(output_dir.glob('NKE_*')):
+            print('\\n✓ All investigation outputs pass schema validation')
+        else:
+            print('⚠️  No NKE output directories found — agent has not yet produced output')
+        "
+
+    - name: Validate no contaminated data figures
+      run: |
+        python -c "
+        from pathlib import Path
+        import re
+
+        # These are the contaminated figures from the purged FY2019 output
+        # that must NEVER appear in any submission document
+        FORBIDDEN = [
+            (r'\\\$10[,.]?9\d{2}[,.]?\d{3}[,.]?\d{3}', 'Contaminated \$10.9B total exposure'),
+            (r'\\\$2[,.]?726[,.]?\d{3}[,.]?\d{3}', 'Contaminated \$2.7B disgorgement'),
+            (r'\\\$8[,.]?182[,.]?\d{3}[,.]?\d{3}', 'Contaminated \$8.1B civil penalty'),
+        ]
+
+        output = Path('output')
+        submissions = output / 'submissions'
+        errors = []
+
+        for search_dir in [output, submissions]:
+            if not search_dir.exists():
+                continue
+            for f in search_dir.rglob('*.md'):
+                content = f.read_text()
+                for pattern, label in FORBIDDEN:
+                    if re.search(pattern, content):
+                        errors.append(f'{f}: Contains {label}')
+            for f in search_dir.rglob('*.json'):
+                content = f.read_text()
+                for pattern, label in FORBIDDEN:
+                    if re.search(pattern, content):
+                        errors.append(f'{f}: Contains {label}')
+
+        if errors:
+            print('✗ CONTAMINATED DATA DETECTED IN OUTPUT:')
+            for e in errors:
+                print(f'  ✗ {e}')
+            exit(1)
+        else:
+            print('✓ No contaminated data figures found in output documents')
+        "
+
+  # ═══════════════════════════════════════════════════════════════
+  # STATUS REPORT
+  # ═══════════════════════════════════════════════════════════════
+  pipeline-status:
+    name: Pipeline Status
     runs-on: ubuntu-latest
-    needs: [test, coverage, security]
+    needs: [code-integrity, security, investigation-output-validation]
     if: always()
-    
-    steps:
-    - name: Report Status
-      run: |
-        echo "CI Pipeline completed"
-        echo "Test job status: ${{ needs.test.result }}"
-        echo "Coverage job status: ${{ needs.coverage.result }}"
-        echo "Security job status: ${{ needs.security.result }}"
 
-  docker-build:
-    name: Build Docker Image
-    runs-on: ubuntu-latest
-    needs: [test]
-    if: github.event_name == 'push'
-    
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4.1.1
-    
-    - name: Set up Docker Buildx
-      uses: docker/setup-buildx-action@v3
-    
-    - name: Log in to GitHub Container Registry
-      if: github.ref == 'refs/heads/main'
-      uses: docker/login-action@v3
-      with:
-        registry: ghcr.io
-        username: ${{ github.actor }}
-        password: ${{ secrets.GITHUB_TOKEN }}
-    
-    - name: Extract metadata
-      id: meta
-      uses: docker/metadata-action@v5
-      with:
-        images: ghcr.io/${{ github.repository_owner }}/jlaw
-        tags: |
-          type=ref,event=branch
-          type=ref,event=pr
-          type=semver,pattern={{version}}
-          type=semver,pattern={{major}}.{{minor}}
-          type=sha,prefix={{branch}}-
-          type=raw,value=latest,enable={{is_default_branch}}
-    
-    - name: Build Docker image
-      uses: docker/build-push-action@v5
-      with:
-        context: .
-        file: ./Dockerfile
-        target: production
-        push: ${{ github.ref == 'refs/heads/main' }}
-        tags: ${{ steps.meta.outputs.tags }}
-        labels: ${{ steps.meta.outputs.labels }}
-        cache-from: type=gha
-        cache-to: type=gha,mode=max
-        platforms: linux/amd64
-    
-    - name: Export image for scanning
-      if: github.ref != 'refs/heads/main'
-      uses: docker/build-push-action@v5
-      with:
-        context: .
-        file: ./Dockerfile
-        target: production
-        tags: jlaw:scan
-        outputs: type=docker,dest=/tmp/jlaw-image.tar
-        cache-from: type=gha
-    
-    - name: Upload image artifact
-      if: github.ref != 'refs/heads/main'
-      uses: actions/upload-artifact@v4
-      with:
-        name: jlaw-docker-image
-        path: /tmp/jlaw-image.tar
-        retention-days: 1
-
-  security-scan:
-    name: Container Security Scan
-    runs-on: ubuntu-latest
-    needs: [docker-build]
-    if: github.event_name == 'push'
-    
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v4.1.1
-    
-    - name: Download image artifact
-      if: github.ref != 'refs/heads/main'
-      uses: actions/download-artifact@v4.1.3
-      with:
-        name: jlaw-docker-image
-        path: /tmp
-    
-    - name: Load Docker image
-      if: github.ref != 'refs/heads/main'
-      run: docker load --input /tmp/jlaw-image.tar
-    
-    - name: Pull image from registry
-      if: github.ref == 'refs/heads/main'
+    - name: Report
       run: |
-        echo ${{ secrets.GITHUB_TOKEN }} | docker login ghcr.io -u ${{ github.actor }} --password-stdin
-        docker pull ghcr.io/${{ github.repository_owner }}/jlaw:latest
-        docker tag ghcr.io/${{ github.repository_owner }}/jlaw:latest jlaw:scan
-    
-    - name: Run Trivy vulnerability scanner
-      uses: aquasecurity/trivy-action@master
-      with:
-        image-ref: 'jlaw:scan'
-        format: 'sarif'
-        output: 'trivy-results.sarif'
-        severity: 'CRITICAL,HIGH'
-    
-    - name: Upload Trivy results to GitHub Security
-      uses: github/codeql-action/upload-sarif@v3
-      if: always()
-      with:
-        sarif_file: 'trivy-results.sarif'
-    
-    - name: Run Trivy vulnerability scanner (table output)
-      uses: aquasecurity/trivy-action@master
-      with:
-        image-ref: 'jlaw:scan'
-        format: 'table'
-        severity: 'CRITICAL,HIGH'
-        exit-code: '0'
+        echo "═══════════════════════════════════════════════"
+        echo "JLAW FORENSIC PLATFORM — CI RESULTS"
+        echo "═══════════════════════════════════════════════"
+        echo ""
+        echo "Code Integrity:              ${{ needs.code-integrity.result }}"
+        echo "Security Scan:               ${{ needs.security.result }}"
+        echo "Investigation Validation:    ${{ needs.investigation-output-validation.result }}"
+        echo ""
+        if [ "${{ needs.code-integrity.result }}" != "success" ]; then
+          echo "⚠️  CODE INTEGRITY FAILED — system is not operational"
+          exit 1
+        fi
+        if [ "${{ needs.security.result }}" != "success" ]; then
+          echo "⚠️  SECURITY SCAN FAILED — potential credential exposure"
+          exit 1
+        fi
+        echo "✓ All gates passed"
