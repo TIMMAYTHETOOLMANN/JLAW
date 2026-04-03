@@ -8,14 +8,18 @@ filing corpus into the JLAW analysis pipeline.
 Modules:
     corpus_scanner  — Scan raw EDGAR file trees (PDF/XLS/JSON)
     xbrl_indexer    — Index CIK XBRL Company Facts JSON
+    fy_analyzer     — Fiscal year filing analysis with binary extraction
 """
 
 from src.sec_agent.ingestion.corpus_scanner import CorpusScanner, CorpusManifest
+from src.sec_agent.ingestion.fy_analyzer import FYAnalyzer, FYAnalysisResult
 from src.sec_agent.ingestion.xbrl_indexer import XBRLIndexer, XBRLIndex
 
 __all__ = [
     "CorpusScanner",
     "CorpusManifest",
+    "FYAnalyzer",
+    "FYAnalysisResult",
     "XBRLIndexer",
     "XBRLIndex",
 ]
