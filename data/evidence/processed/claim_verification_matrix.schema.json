@@ -1,0 +1,126 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Claim Verification Matrix",
+  "type": "object",
+  "required": ["output_type", "claims", "summary", "hostile_review"],
+  "properties": {
+    "output_type": {"const": "claim_verification_matrix"},
+    "hostile_review": {"type": "boolean"},
+    "claims": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "claim_id",
+          "claim_text",
+          "claim_source",
+          "claim_date",
+          "claim_type",
+          "corporate_speaker",
+          "filing_type",
+          "public_statement_context",
+          "source_file",
+          "line_reference",
+          "extraction_confidence",
+          "claim_classification",
+          "supporting_evidence_ids",
+          "contradictory_evidence_ids",
+          "contextual_evidence_ids",
+          "matched_evidence",
+          "confidence_score",
+          "confidence_rationale",
+          "evidence_basis",
+          "verification_needed",
+          "safe_wording_level",
+          "safe_report_language",
+          "verification_status",
+          "analysis_bucket",
+          "inference_bucket",
+          "defamation_risk",
+          "language_guard_flags"
+        ],
+        "properties": {
+          "claim_id": {"type": "string"},
+          "claim_text": {"type": "string"},
+          "claim_source": {"type": "string"},
+          "claim_date": {"type": "string"},
+          "claim_type": {"type": "string"},
+          "corporate_speaker": {"type": "string"},
+          "filing_type": {"type": "string"},
+          "public_statement_context": {"type": "string"},
+          "source_file": {"type": "string"},
+          "line_reference": {"type": "string"},
+          "extraction_confidence": {"type": "integer", "minimum": 1, "maximum": 5},
+          "claim_classification": {"const": "public corporate claim"},
+          "supporting_evidence_ids": {"type": "array", "items": {"type": "string"}},
+          "contradictory_evidence_ids": {"type": "array", "items": {"type": "string"}},
+          "contextual_evidence_ids": {"type": "array", "items": {"type": "string"}},
+          "matched_evidence": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "evidence_id",
+                "evidence_title",
+                "relationship",
+                "relationship_score",
+                "direct_textual_alignment",
+                "matched_keywords",
+                "evidence_classification",
+                "legal_domain",
+                "source_type",
+                "related_entities",
+                "rationale"
+              ],
+              "properties": {
+                "evidence_id": {"type": "string"},
+                "evidence_title": {"type": "string"},
+                "relationship": {
+                  "enum": ["supports", "contradicts", "contextualizes", "requires verification", "unrelated"]
+                },
+                "relationship_score": {"type": "integer", "minimum": 0, "maximum": 4},
+                "direct_textual_alignment": {"type": "boolean"},
+                "matched_keywords": {"type": "array", "items": {"type": "string"}},
+                "evidence_classification": {
+                  "enum": [
+                    "verified documentary fact",
+                    "firsthand testimony",
+                    "generated analysis",
+                    "reasonable inference",
+                    "unverified lead"
+                  ]
+                },
+                "legal_domain": {"type": "string"},
+                "source_type": {"type": "string"},
+                "related_entities": {"type": "array", "items": {"type": "string"}},
+                "rationale": {"type": "string"}
+              }
+            }
+          },
+          "confidence_score": {"type": "integer", "minimum": 0, "maximum": 5},
+          "confidence_rationale": {"type": "string"},
+          "evidence_basis": {"type": "array", "items": {"type": "string"}},
+          "verification_needed": {"type": "array", "items": {"type": "string"}},
+          "safe_wording_level": {"type": "string"},
+          "safe_report_language": {"type": "string"},
+          "verification_status": {"type": "string"},
+          "analysis_bucket": {"const": "generated analysis"},
+          "inference_bucket": {
+            "enum": ["reasonable inference", "unverified lead", "unsupported/speculative claim"]
+          },
+          "defamation_risk": {"type": "string"},
+          "language_guard_flags": {"type": "array", "items": {"type": "object"}}
+        }
+      }
+    },
+    "summary": {
+      "type": "object",
+      "required": ["total_extracted_claims", "included_claims", "excluded_claims"],
+      "properties": {
+        "total_extracted_claims": {"type": "integer", "minimum": 0},
+        "included_claims": {"type": "integer", "minimum": 0},
+        "excluded_claims": {"type": "integer", "minimum": 0}
+      }
+    }
+  }
+}

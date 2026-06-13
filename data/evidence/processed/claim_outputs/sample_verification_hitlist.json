@@ -1,0 +1,19 @@
+{
+  "claims": [
+    {
+      "claim_id": "claim-sample-001",
+      "claim_text": "We are committed to worker safety across all facilities.",
+      "claim_type": "safety claim",
+      "evidence_gap": ["Independent documentary records are still needed."],
+      "priority": "high",
+      "rationale": "Additional records are needed to verify or disprove the public claim.",
+      "required_records": [
+        "OSHA logs",
+        "internal maintenance logs",
+        "HMI/PLC telemetry",
+        "machine fault logs"
+      ]
+    }
+  ],
+  "output_type": "verification_hitlist"
+}
