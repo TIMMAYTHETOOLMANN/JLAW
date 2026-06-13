@@ -1,0 +1,141 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://github.com/TIMMAYTHETOOLMANN/JLAW/evidence_manifest.schema.json",
+  "title": "Evidence Manifest Record",
+  "description": "Schema for a single evidence item in the JLAW chain-of-custody manifest. Records are descriptive and do not constitute legal findings. Inclusion does not imply wrongdoing by any party.",
+  "type": "object",
+  "required": [
+    "evidence_id",
+    "title",
+    "source_type",
+    "source_origin",
+    "date_obtained",
+    "custodian",
+    "file_path",
+    "hash_sha256",
+    "confidentiality_level"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "evidence_id": {
+      "type": "string",
+      "description": "Unique identifier for this evidence item. Use a stable, sequential format such as 'EV-0001'.",
+      "pattern": "^EV-[0-9]{4,}$"
+    },
+    "title": {
+      "type": "string",
+      "description": "Short descriptive title for this evidence item."
+    },
+    "source_type": {
+      "type": "string",
+      "description": "High-level category of the source document.",
+      "enum": [
+        "sec_filing",
+        "whistleblower_exhibit",
+        "vendor_record",
+        "maintenance_log",
+        "regulatory_report",
+        "internal_document",
+        "public_statement",
+        "news_article",
+        "legal_filing",
+        "generated_report",
+        "other"
+      ]
+    },
+    "source_origin": {
+      "type": "string",
+      "description": "Organization or system from which this document originated (e.g., 'SEC EDGAR', 'Beckwood Press Inc.', 'Nike Inc. internal')."
+    },
+    "date_created": {
+      "type": ["string", "null"],
+      "format": "date",
+      "description": "Date the source document was originally created or published (YYYY-MM-DD). Null if unknown."
+    },
+    "date_obtained": {
+      "type": "string",
+      "format": "date",
+      "description": "Date this item was obtained and added to the evidence workspace (YYYY-MM-DD)."
+    },
+    "custodian": {
+      "type": "string",
+      "description": "Name or identifier of the person or system responsible for maintaining this evidence item."
+    },
+    "file_path": {
+      "type": "string",
+      "description": "Relative path to the file within this repository, e.g., 'data/evidence/sec_filings/0000320187_10-K_2019.htm'."
+    },
+    "hash_sha256": {
+      "type": "string",
+      "description": "SHA-256 hex digest of the file as obtained. Used to verify integrity.",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "confidentiality_level": {
+      "type": "string",
+      "description": "Access restriction level for this item.",
+      "enum": [
+        "public",
+        "restricted",
+        "confidential",
+        "attorney_client_privileged"
+      ]
+    },
+    "legal_domain": {
+      "type": ["array", "null"],
+      "description": "Legal or regulatory domains potentially relevant to this item.",
+      "items": {
+        "type": "string",
+        "enum": [
+          "SEC",
+          "OSHA",
+          "EPA",
+          "DOJ",
+          "IRS",
+          "NLRB",
+          "other"
+        ]
+      }
+    },
+    "related_claims": {
+      "type": ["array", "null"],
+      "description": "List of claim IDs (from the claim verification matrix) that this evidence item supports or contradicts.",
+      "items": {
+        "type": "string",
+        "pattern": "^CL-[0-9]{4,}$"
+      }
+    },
+    "related_entities": {
+      "type": ["array", "null"],
+      "description": "Names of companies, individuals, or systems referenced in or relevant to this evidence item.",
+      "items": {
+        "type": "string"
+      }
+    },
+    "evidence_strength": {
+      "type": ["integer", "null"],
+      "description": "Strength rating on a 1–5 scale. 5 = direct documentary proof; 1 = weak or speculative.",
+      "minimum": 1,
+      "maximum": 5
+    },
+    "firsthand_observation": {
+      "type": ["boolean", "null"],
+      "description": "True if this item includes or is derived from firsthand observation or testimony."
+    },
+    "documentary_support": {
+      "type": ["boolean", "null"],
+      "description": "True if this item is a primary source document (record, filing, log, etc.) rather than a derived or testimonial account."
+    },
+    "inference_required": {
+      "type": ["boolean", "null"],
+      "description": "True if using this item to support a claim requires inferential reasoning beyond what the document directly states."
+    },
+    "verification_needed": {
+      "type": ["boolean", "null"],
+      "description": "True if this item has not yet been independently verified against corroborating sources."
+    },
+    "notes": {
+      "type": ["string", "null"],
+      "description": "Additional context, limitations, or chain-of-custody notes for this evidence item."
+    }
+  }
+}

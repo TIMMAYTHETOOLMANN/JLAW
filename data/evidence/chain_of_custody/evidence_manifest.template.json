@@ -1,0 +1,22 @@
+{
+  "$schema": "../chain_of_custody/evidence_manifest.schema.json",
+  "evidence_id": "EV-0001",
+  "title": "",
+  "source_type": "sec_filing",
+  "source_origin": "",
+  "date_created": null,
+  "date_obtained": "",
+  "custodian": "",
+  "file_path": "data/evidence/",
+  "hash_sha256": "",
+  "confidentiality_level": "public",
+  "legal_domain": [],
+  "related_claims": [],
+  "related_entities": [],
+  "evidence_strength": null,
+  "firsthand_observation": false,
+  "documentary_support": true,
+  "inference_required": false,
+  "verification_needed": true,
+  "notes": ""
+}

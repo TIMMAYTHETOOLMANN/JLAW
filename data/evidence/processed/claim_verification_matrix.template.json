@@ -1,0 +1,19 @@
+{
+  "$schema": "./claim_verification_matrix.schema.json",
+  "claim_id": "CL-0001",
+  "claim_text": "",
+  "claim_source": "",
+  "claim_date": null,
+  "claim_type": "other",
+  "corporate_speaker": null,
+  "filing_type": null,
+  "public_statement_context": null,
+  "contradictory_evidence_ids": [],
+  "supporting_evidence_ids": [],
+  "confidence_score": null,
+  "legal_relevance": [],
+  "verification_status": "unreviewed",
+  "verification_needed": true,
+  "defamation_risk": "review_required",
+  "safe_report_language": null
+}
