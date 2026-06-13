@@ -1677,6 +1677,17 @@ pytest tests/test_nike_2019_baseline.py -v
 
 ---
 
+## Repository Structure After Cleanup
+
+- `src/` — forensic analysis engine
+- `docs/` — system documentation and reporting guidance
+- `data/evidence/` — evidence packages, manifests, and claim verification templates
+- `archive/implementation_notes/` — historical development notes
+- `scripts/` — utility scripts
+- `agents/` — LLM agent specifications
+
+---
+
 ## LICENSE
 
 MIT License

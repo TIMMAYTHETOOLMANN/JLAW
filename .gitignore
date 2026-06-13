@@ -98,10 +98,22 @@ celerybeat.pid
 # SageMath parsed files
 *.sage.py
 
-# Environment files with raw secrets (use restore_env.sh to decode env.encoded)
+# Environment and secret files — NEVER commit credentials
 .env
-.env.local
+.env.*
+!.env.example
+env.encoded
+restore_env.sh
+*.key
+*.pem
+*.token
+*.p12
+*.pfx
+credentials.json
+secrets/
 env.keys.backup
+*.secret
+*.credentials
 
 # Virtual Environments
 .python-version

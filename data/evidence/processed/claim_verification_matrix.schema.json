@@ -1,0 +1,134 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://github.com/TIMMAYTHETOOLMANN/JLAW/claim_verification_matrix.schema.json",
+  "title": "Claim Verification Matrix Record",
+  "description": "Schema for a single claim record in the JLAW claim verification matrix. Records track the analytical status of a specific corporate or public statement against available evidence. Inclusion does not constitute a legal finding. Claims are not treated as proven until supported by verified documentary evidence.",
+  "type": "object",
+  "required": [
+    "claim_id",
+    "claim_text",
+    "claim_source",
+    "claim_type",
+    "verification_status"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "claim_id": {
+      "type": "string",
+      "description": "Unique identifier for this claim record. Use a stable, sequential format such as 'CL-0001'.",
+      "pattern": "^CL-[0-9]{4,}$"
+    },
+    "claim_text": {
+      "type": "string",
+      "description": "Verbatim or close-paraphrase of the claim as made by the source. Quote directly where possible."
+    },
+    "claim_source": {
+      "type": "string",
+      "description": "Document, filing, or public statement in which the claim appears."
+    },
+    "claim_date": {
+      "type": ["string", "null"],
+      "format": "date",
+      "description": "Date the claim was made or published (YYYY-MM-DD). Null if unknown."
+    },
+    "claim_type": {
+      "type": "string",
+      "description": "Category of claim.",
+      "enum": [
+        "safety_compliance",
+        "environmental_compliance",
+        "esg_disclosure",
+        "financial_disclosure",
+        "executive_compensation",
+        "insider_transaction",
+        "operational_practice",
+        "regulatory_compliance",
+        "public_relations",
+        "other"
+      ]
+    },
+    "corporate_speaker": {
+      "type": ["string", "null"],
+      "description": "Name of the company, executive, or spokesperson making the claim."
+    },
+    "filing_type": {
+      "type": ["string", "null"],
+      "description": "If the claim appears in an SEC filing, the form type (e.g., '10-K', 'DEF 14A', '8-K')."
+    },
+    "public_statement_context": {
+      "type": ["string", "null"],
+      "description": "Additional context about where and how the claim was made (e.g., earnings call Q3 2022, ESG report page 14)."
+    },
+    "contradictory_evidence_ids": {
+      "type": ["array", "null"],
+      "description": "List of evidence IDs from the evidence manifest that appear inconsistent with or contradict this claim.",
+      "items": {
+        "type": "string",
+        "pattern": "^EV-[0-9]{4,}$"
+      }
+    },
+    "supporting_evidence_ids": {
+      "type": ["array", "null"],
+      "description": "List of evidence IDs from the evidence manifest that support or corroborate this claim.",
+      "items": {
+        "type": "string",
+        "pattern": "^EV-[0-9]{4,}$"
+      }
+    },
+    "confidence_score": {
+      "type": ["integer", "null"],
+      "description": "Analytical confidence score on a 1–5 scale. 5 = direct documentary contradiction; 4 = documentary support plus firsthand corroboration; 3 = firsthand testimony plus circumstantial support; 2 = plausible lead requiring records; 1 = weak or speculative — do not include in final report.",
+      "minimum": 1,
+      "maximum": 5
+    },
+    "legal_relevance": {
+      "type": ["array", "null"],
+      "description": "Legal or regulatory frameworks potentially implicated if this claim is found to be materially inaccurate.",
+      "items": {
+        "type": "string",
+        "enum": [
+          "SEC Rule 10b-5",
+          "SEC Regulation S-K",
+          "SOX Section 302",
+          "SOX Section 906",
+          "OSHA 29 CFR 1910",
+          "EPA RCRA",
+          "IRC Section 83",
+          "Securities Exchange Act Section 16",
+          "other"
+        ]
+      }
+    },
+    "verification_status": {
+      "type": "string",
+      "description": "Current analytical status of this claim.",
+      "enum": [
+        "unreviewed",
+        "under_review",
+        "verified_consistent",
+        "appears_inconsistent",
+        "requires_records",
+        "insufficient_evidence",
+        "excluded_speculative"
+      ]
+    },
+    "verification_needed": {
+      "type": ["boolean", "null"],
+      "description": "True if additional records, testimony, or independent verification are needed before this claim can be assessed."
+    },
+    "defamation_risk": {
+      "type": ["string", "null"],
+      "description": "Assessment of defamation or overstatement risk if this claim analysis is published.",
+      "enum": [
+        "low",
+        "medium",
+        "high",
+        "review_required"
+      ]
+    },
+    "safe_report_language": {
+      "type": ["string", "null"],
+      "description": "Suggested defensible language for use in any public or regulatory report concerning this claim. Should avoid conclusory legal assertions unsupported by official determinations."
+    }
+  }
+}
