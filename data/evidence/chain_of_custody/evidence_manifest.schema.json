@@ -1,0 +1,70 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://jlaw.local/schemas/evidence-manifest.schema.json",
+  "title": "Evidence Manifest",
+  "type": "object",
+  "required": ["manifest_version", "generated_at", "input_directories", "evidence_items"],
+  "properties": {
+    "manifest_version": {"type": "string"},
+    "generated_at": {"type": "string", "format": "date-time"},
+    "input_directories": {
+      "type": "array",
+      "items": {"type": "string"}
+    },
+    "evidence_items": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "evidence_id",
+          "title",
+          "source_type",
+          "source_origin",
+          "date_created",
+          "date_obtained",
+          "custodian",
+          "file_path",
+          "hash_sha256",
+          "confidentiality_level",
+          "legal_domain",
+          "related_claims",
+          "related_entities",
+          "evidence_strength",
+          "firsthand_observation",
+          "documentary_support",
+          "inference_required",
+          "verification_needed",
+          "notes"
+        ],
+        "properties": {
+          "evidence_id": {"type": "string"},
+          "title": {"type": "string"},
+          "source_type": {"type": "string"},
+          "source_origin": {"type": "string"},
+          "date_created": {"type": "string", "format": "date-time"},
+          "date_obtained": {"type": "string", "format": "date"},
+          "custodian": {"type": "string"},
+          "file_path": {"type": "string"},
+          "file_extension": {"type": "string"},
+          "mime_category": {"type": "string"},
+          "hash_sha256": {
+            "type": "string",
+            "pattern": "^[a-fA-F0-9]{64}$"
+          },
+          "confidentiality_level": {"type": "string"},
+          "legal_domain": {"type": "array", "items": {"type": "string"}},
+          "related_claims": {"type": "array", "items": {"type": "string"}},
+          "related_entities": {"type": "array", "items": {"type": "string"}},
+          "evidence_strength": {"type": "string"},
+          "firsthand_observation": {"type": "boolean"},
+          "documentary_support": {"type": "boolean"},
+          "inference_required": {"type": "string"},
+          "verification_needed": {"type": "boolean"},
+          "notes": {"type": "string"}
+        },
+        "additionalProperties": true
+      }
+    }
+  },
+  "additionalProperties": false
+}

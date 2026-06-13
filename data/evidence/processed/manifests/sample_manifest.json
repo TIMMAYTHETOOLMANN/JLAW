@@ -1,0 +1,30 @@
+{
+  "manifest_version": "1.0",
+  "generated_at": "2026-01-01T00:00:00Z",
+  "input_directories": [
+    "data/evidence/raw"
+  ],
+  "evidence_items": [
+    {
+      "evidence_id": "EVID-DUMMY000001",
+      "title": "Sample public claim",
+      "source_type": "MARKETING_PUBLIC_CLAIM",
+      "source_origin": "dummy_sample_data",
+      "date_created": "2026-01-01T00:00:00Z",
+      "date_obtained": "2026-01-01",
+      "custodian": "sample_user",
+      "file_path": "data/evidence/processed/extracted_text/sample_public_claim.txt",
+      "hash_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "confidentiality_level": "restricted_local",
+      "legal_domain": ["unclassified"],
+      "related_claims": [],
+      "related_entities": [],
+      "evidence_strength": "unscored",
+      "firsthand_observation": false,
+      "documentary_support": true,
+      "inference_required": "unknown",
+      "verification_needed": true,
+      "notes": "Dummy sample data for schema/example validation only."
+    }
+  ]
+}
