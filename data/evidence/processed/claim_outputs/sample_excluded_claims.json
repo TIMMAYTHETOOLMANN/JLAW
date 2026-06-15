@@ -1,0 +1,17 @@
+{
+  "claims": [
+    {
+      "can_be_revived_later": true,
+      "evidence_gap": ["Claim provenance must be tied to a dated public statement."],
+      "original_claim": {
+        "claim_id": "claim-sample-weak-001",
+        "claim_source": "Dummy company website",
+        "claim_text": "Our operations are always perfect.",
+        "claim_type": "unknown claim"
+      },
+      "reason_for_exclusion": "Source or date metadata is incomplete.",
+      "remediation_needed": "Confirm the originating document, speaker, and date."
+    }
+  ],
+  "output_type": "excluded_claims"
+}

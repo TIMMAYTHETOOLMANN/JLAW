@@ -1,0 +1,67 @@
+{
+  "claims": [
+    {
+      "analysis_bucket": "generated analysis",
+      "claim_classification": "public corporate claim",
+      "claim_date": "2025-01-15",
+      "claim_id": "claim-sample-001",
+      "claim_source": "Acme Fabrication Sustainability Report",
+      "claim_text": "We are committed to worker safety across all facilities.",
+      "claim_type": "safety claim",
+      "confidence_rationale": "Documentary evidence is reinforced by firsthand corroboration.",
+      "confidence_score": 4,
+      "contextual_evidence_ids": [],
+      "contradictory_evidence_ids": ["OSHA-001"],
+      "corporate_speaker": "Acme Fabrication",
+      "defamation_risk": "moderate",
+      "evidence_basis": ["OSHA-001: contradicts", "WIT-001: contextualizes"],
+      "extraction_confidence": 5,
+      "filing_type": "ESG Report",
+      "inference_bucket": "reasonable inference",
+      "language_guard_flags": [],
+      "line_reference": "line 1",
+      "matched_evidence": [
+        {
+          "direct_textual_alignment": true,
+          "evidence_classification": "verified documentary fact",
+          "evidence_id": "OSHA-001",
+          "evidence_title": "Sample OSHA inspection summary",
+          "legal_domain": "safety",
+          "matched_keywords": ["safety", "worker"],
+          "rationale": "Evidence text contains relevant overlap and contradiction cues.",
+          "related_entities": ["acme fabrication"],
+          "relationship": "contradicts",
+          "relationship_score": 4,
+          "source_type": "osha log"
+        },
+        {
+          "direct_textual_alignment": false,
+          "evidence_classification": "firsthand testimony",
+          "evidence_id": "WIT-001",
+          "evidence_title": "Sample witness interview",
+          "legal_domain": "safety",
+          "matched_keywords": ["safety"],
+          "rationale": "Evidence appears related but does not directly support or contradict the claim.",
+          "related_entities": ["acme fabrication"],
+          "relationship": "contextualizes",
+          "relationship_score": 2,
+          "source_type": "whistleblower testimony"
+        }
+      ],
+      "public_statement_context": "Annual sustainability summary",
+      "safe_report_language": "available documents appear inconsistent with the statement 'We are committed to worker safety across all facilities.'.",
+      "safe_wording_level": "LEVEL 4: "available documents appear inconsistent with"",
+      "source_file": "acme_esg.txt",
+      "supporting_evidence_ids": [],
+      "verification_needed": ["No firsthand corroboration has been identified."],
+      "verification_status": "requires focused verification"
+    }
+  ],
+  "hostile_review": false,
+  "output_type": "claim_verification_matrix",
+  "summary": {
+    "excluded_claims": 0,
+    "included_claims": 1,
+    "total_extracted_claims": 1
+  }
+}
