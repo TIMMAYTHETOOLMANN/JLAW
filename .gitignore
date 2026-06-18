@@ -103,6 +103,12 @@ celerybeat.pid
 .env.local
 env.keys.backup
 
+# SECURITY: env.encoded and restore_env.sh are already committed but should be
+# rotated and removed. They are flagged here to prevent re-adding after removal.
+# ACTION REQUIRED: Rotate any secrets contained in env.encoded and delete both files.
+env.encoded
+restore_env.sh
+
 # Virtual Environments
 .python-version
 .venv
